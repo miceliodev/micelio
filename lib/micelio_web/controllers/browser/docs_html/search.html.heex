@@ -1,0 +1,77 @@
+<Layouts.app
+  flash={@flash}
+  current_scope={assigns[:current_scope]}
+  current_user={assigns[:current_user]}
+  locale={assigns[:locale] || "en"}
+  current_path={assigns[:current_path] || "/"}
+>
+  <div class="docs-container">
+    <nav class="docs-breadcrumb" aria-label={gettext("Breadcrumb")}>
+      <a href={~p"/docs"}>{gettext("Documentation")}</a>
+      <span class="docs-breadcrumb-separator">/</span>
+      <span class="docs-breadcrumb-current">{gettext("Search")}</span>
+    </nav>
+
+    <.header>
+      {gettext("Search Documentation")}
+      <:subtitle>
+        {ngettext(
+          "%{count} result for \"%{query}\"",
+          "%{count} results for \"%{query}\"",
+          length(@results),
+          count: length(@results),
+          query: @query
+        )}
+      </:subtitle>
+    </.header>
+
+    <form action={~p"/docs"} method="get" class="docs-search-form">
+      <div class="docs-search-input-wrapper">
+        <input
+          type="search"
+          name="q"
+          value={@query}
+          placeholder={gettext("Search docs...")}
+          class="docs-search-input"
+          autofocus
+        />
+        <button type="submit" class="docs-search-button">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" />
+          </svg>
+        </button>
+      </div>
+    </form>
+
+    <%= if length(@results) > 0 do %>
+      <div class="docs-search-results">
+        <%= for {page, _score} <- @results do %>
+          <a href={~p"/docs/#{page.category}/#{page.id}"} class="docs-search-result">
+            <div class="docs-search-result-category">
+              {category_title(page.category, @categories)}
+            </div>
+            <h3 class="docs-search-result-title">{page.title}</h3>
+            <p class="docs-search-result-description">{page.description}</p>
+          </a>
+        <% end %>
+      </div>
+    <% else %>
+      <div class="docs-search-empty">
+        <p>{gettext("No results found. Try a different search term.")}</p>
+        <a href={~p"/docs"} class="docs-search-browse-link">
+          {gettext("Browse all documentation")}
+        </a>
+      </div>
+    <% end %>
+  </div>
+</Layouts.app>

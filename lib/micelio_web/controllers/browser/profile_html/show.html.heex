@@ -1,0 +1,427 @@
+<Layouts.app
+  flash={@flash}
+  current_scope={assigns[:current_scope]}
+  current_user={assigns[:current_user]}
+  locale={assigns[:locale] || "en"}
+  current_path={assigns[:current_path] || "/"}
+>
+  <div class="account-profile">
+    <div class="account-profile-header">
+      <.gravatar email={@user.email} size={96} class="account-profile-avatar" />
+      <.header>
+        {@user.account.handle}
+        <:subtitle>
+          <p class="account-profile-meta">{@user.email}</p>
+        </:subtitle>
+      </.header>
+    </div>
+
+    <section class="account-section" id="account-activity">
+      <h2 class="account-section-title">Activity</h2>
+      <.activity_graph activity_counts={@activity_counts} weeks={52} />
+    </section>
+
+    <nav class="account-profile-nav" aria-label="Account">
+      <ul class="account-profile-nav-list">
+        <li>
+          <a id="account-devices-link" class="account-profile-link" href={~p"/account/devices"}>
+            Devices
+          </a>
+        </li>
+        <li>
+          <a id="account-repositories-link" class="account-profile-link" href={~p"/projects"}>
+            Projects
+          </a>
+        </li>
+      </ul>
+    </nav>
+
+    <section class="account-profile-section" id="account-profile-settings">
+      <div class="account-profile-section-header">
+        <h2 class="account-profile-section-title">Profile</h2>
+        <span class="account-profile-section-meta">Shown publicly on your profile.</span>
+      </div>
+      <.form
+        for={@profile_form}
+        id="account-profile-form"
+        action={~p"/account/profile"}
+        method="patch"
+        class="account-profile-form"
+      >
+        <div class="account-profile-form-group">
+          <.input
+            field={@profile_form[:bio]}
+            type="textarea"
+            label="Bio"
+            maxlength="160"
+            placeholder="A short description about you."
+            class="account-profile-input"
+            error_class="account-profile-input account-profile-input-error"
+          />
+          <p class="account-profile-form-hint">Keep it under 160 characters.</p>
+        </div>
+
+        <div class="account-profile-form-grid">
+          <div class="account-profile-form-group">
+            <.input
+              field={@profile_form[:website_url]}
+              type="url"
+              label="Website"
+              placeholder="https://example.com"
+              class="account-profile-input"
+              error_class="account-profile-input account-profile-input-error"
+            />
+          </div>
+          <div class="account-profile-form-group">
+            <.input
+              field={@profile_form[:twitter_url]}
+              type="url"
+              label="Twitter/X"
+              placeholder="https://x.com/handle"
+              class="account-profile-input"
+              error_class="account-profile-input account-profile-input-error"
+            />
+          </div>
+          <div class="account-profile-form-group">
+            <.input
+              field={@profile_form[:github_url]}
+              type="url"
+              label="GitHub"
+              placeholder="https://github.com/handle"
+              class="account-profile-input"
+              error_class="account-profile-input account-profile-input-error"
+            />
+          </div>
+          <div class="account-profile-form-group">
+            <.input
+              field={@profile_form[:gitlab_url]}
+              type="url"
+              label="GitLab"
+              placeholder="https://gitlab.com/handle"
+              class="account-profile-input"
+              error_class="account-profile-input account-profile-input-error"
+            />
+          </div>
+          <div class="account-profile-form-group">
+            <.input
+              field={@profile_form[:mastodon_url]}
+              type="url"
+              label="Mastodon"
+              placeholder="https://mastodon.social/@handle"
+              class="account-profile-input"
+              error_class="account-profile-input account-profile-input-error"
+            />
+          </div>
+          <div class="account-profile-form-group">
+            <.input
+              field={@profile_form[:linkedin_url]}
+              type="url"
+              label="LinkedIn"
+              placeholder="https://www.linkedin.com/in/handle"
+              class="account-profile-input"
+              error_class="account-profile-input account-profile-input-error"
+            />
+          </div>
+        </div>
+
+        <div class="account-profile-form-actions">
+          <button type="submit" class="account-profile-button" id="account-profile-save">
+            Save profile
+          </button>
+        </div>
+      </.form>
+    </section>
+
+    <section class="account-profile-section" id="account-storage">
+      <div class="account-profile-section-header">
+        <h2 class="account-profile-section-title">Storage</h2>
+        <span class="account-profile-section-meta">
+          Store session artifacts in your own bucket.
+        </span>
+      </div>
+      <%= if @s3_config do %>
+        <p class="account-profile-form-hint account-profile-status" id="account-s3-status">
+          <%= cond do %>
+            <% @s3_config.validated_at -> %>
+              Validated on {format_date(@s3_config.validated_at)}.
+            <% @s3_config.last_error -> %>
+              Validation failed.
+            <% true -> %>
+              Validation pending.
+          <% end %>
+        </p>
+        <%= if @s3_config.last_error do %>
+          <p class="account-profile-form-hint account-profile-status account-profile-status-error">
+            {@s3_config.last_error}
+          </p>
+        <% end %>
+      <% else %>
+        <p class="account-profile-form-hint account-profile-status" id="account-s3-status">
+          Add credentials to route storage to your S3-compatible provider.
+        </p>
+      <% end %>
+      <div class="account-profile-form-actions">
+        <.link
+          navigate={~p"/settings/storage"}
+          class="account-profile-button"
+          id="account-storage-settings"
+        >
+          Manage storage settings
+        </.link>
+      </div>
+    </section>
+
+    <section class="account-profile-section" id="account-passkeys">
+      <div class="account-profile-section-header">
+        <h2 class="account-profile-section-title">Passkeys</h2>
+        <button type="button" class="account-passkey-button" id="account-passkey-add">
+          Add passkey
+        </button>
+      </div>
+      <p class="account-passkey-status" id="account-passkey-status" hidden></p>
+      <%= if @passkeys == [] do %>
+        <p class="account-profile-empty" id="account-passkeys-empty">
+          No passkeys yet.
+        </p>
+      <% else %>
+        <ul class="account-profile-list" id="account-passkeys-list">
+          <li
+            :for={passkey <- @passkeys}
+            class="account-profile-list-item"
+            id={"passkey-#{passkey.id}"}
+          >
+            <div class="account-passkey-entry">
+              <div class="account-passkey-details">
+                <span class="account-profile-list-name">{passkey.name}</span>
+                <span class="account-passkey-meta">
+                  Added {format_date(passkey.inserted_at)}
+                </span>
+              </div>
+              <button
+                type="button"
+                class="account-passkey-remove"
+                data-passkey-id={passkey.id}
+                id={"passkey-remove-#{passkey.id}"}
+              >
+                Remove
+              </button>
+            </div>
+          </li>
+        </ul>
+      <% end %>
+    </section>
+
+    <section class="account-profile-section" id="account-security">
+      <div class="account-profile-section-header">
+        <h2 class="account-profile-section-title">Two-factor authentication</h2>
+        <span class="account-profile-section-meta">Extra protection for your account.</span>
+      </div>
+
+      <%= if @totp_enabled do %>
+        <p class="account-profile-form-hint">
+          Two-factor authentication is enabled.
+        </p>
+        <form
+          action={~p"/account/totp/disable"}
+          method="post"
+          class="account-profile-form"
+          id="account-totp-disable-form"
+        >
+          <input type="hidden" name="_csrf_token" value={Phoenix.Controller.get_csrf_token()} />
+
+          <div class="account-profile-form-group">
+            <label for="totp-disable-code">Authentication code</label>
+            <input
+              type="text"
+              id="totp-disable-code"
+              name="code"
+              placeholder="123456"
+              inputmode="numeric"
+              autocomplete="one-time-code"
+              required
+              class="account-profile-input"
+            />
+          </div>
+
+          <div class="account-profile-form-actions">
+            <button type="submit" class="account-profile-button" id="account-totp-disable">
+              Disable 2FA
+            </button>
+          </div>
+        </form>
+      <% else %>
+        <%= if @totp_setup do %>
+          <p class="account-profile-form-hint">
+            Scan the QR code with your authenticator app or enter the secret manually.
+          </p>
+
+          <div class="account-profile-form">
+            <div class="account-profile-form-group">
+              <label for="totp-secret">Secret</label>
+              <input
+                type="text"
+                id="totp-secret"
+                value={@totp_setup.secret}
+                readonly
+                class="account-profile-input"
+              />
+            </div>
+            <div class="account-profile-form-group">
+              <label for="totp-uri">Setup URI</label>
+              <input
+                type="text"
+                id="totp-uri"
+                value={@totp_setup.uri}
+                readonly
+                class="account-profile-input"
+              />
+            </div>
+          </div>
+
+          <form
+            action={~p"/account/totp/verify"}
+            method="post"
+            class="account-profile-form"
+            id="account-totp-verify-form"
+          >
+            <input type="hidden" name="_csrf_token" value={Phoenix.Controller.get_csrf_token()} />
+
+            <div class="account-profile-form-group">
+              <label for="totp-verify-code">Authentication code</label>
+              <input
+                type="text"
+                id="totp-verify-code"
+                name="code"
+                placeholder="123456"
+                inputmode="numeric"
+                autocomplete="one-time-code"
+                required
+                class="account-profile-input"
+              />
+            </div>
+
+            <div class="account-profile-form-actions">
+              <button type="submit" class="account-profile-button" id="account-totp-verify">
+                Enable 2FA
+              </button>
+              <button
+                type="submit"
+                form="account-totp-cancel-form"
+                class="account-profile-button"
+                id="account-totp-cancel"
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+
+          <form
+            action={~p"/account/totp/cancel"}
+            method="post"
+            id="account-totp-cancel-form"
+          >
+            <input type="hidden" name="_csrf_token" value={Phoenix.Controller.get_csrf_token()} />
+          </form>
+        <% else %>
+          <p class="account-profile-form-hint">
+            Add an authenticator app to verify your sign-ins.
+          </p>
+          <form action={~p"/account/totp/start"} method="post" id="account-totp-start-form">
+            <input type="hidden" name="_csrf_token" value={Phoenix.Controller.get_csrf_token()} />
+            <button type="submit" class="account-profile-button" id="account-totp-start">
+              Enable 2FA
+            </button>
+          </form>
+        <% end %>
+      <% end %>
+    </section>
+
+    <section class="account-profile-section" id="account-owned-repositories">
+      <h2 class="account-profile-section-title">Projects</h2>
+      <%= if @owned_repositories == [] do %>
+        <p class="account-profile-empty" id="account-owned-repositories-empty">
+          No repositories yet.
+        </p>
+      <% else %>
+        <ul class="account-profile-list" id="account-owned-repositories-list">
+          <li :for={repository <- @owned_repositories} class="account-profile-list-item">
+            <a
+              href={~p"/#{repository.organization.account.handle}/#{repository.handle}"}
+              class="account-profile-list-link"
+              id={"owned-project-#{repository.id}"}
+            >
+              <span class="account-profile-list-name">{repository.name}</span>
+              <span class="account-profile-list-handle">
+                {repository.organization.account.handle}/{repository.handle}
+              </span>
+            </a>
+            <%= if repository.description do %>
+              <p class="account-profile-list-description">{repository.description}</p>
+            <% end %>
+          </li>
+        </ul>
+      <% end %>
+    </section>
+
+    <section class="account-profile-section" id="account-organizations">
+      <h2 class="account-profile-section-title">Organizations</h2>
+      <%= if @organizations == [] do %>
+        <p class="account-profile-empty" id="account-organizations-empty">
+          No organizations yet.
+        </p>
+      <% else %>
+        <ul class="account-profile-list" id="account-organizations-list">
+          <li :for={organization <- @organizations} class="account-profile-list-item">
+            <a
+              href={~p"/#{organization.account.handle}"}
+              class="account-profile-list-link account-profile-org-link"
+              id={"organization-#{organization.id}"}
+            >
+              <span class="account-profile-org">
+                <span class="account-profile-org-avatar" aria-hidden="true">
+                  {organization.account.handle |> String.first() |> String.upcase()}
+                </span>
+                <span class="account-profile-org-details">
+                  <span class="account-profile-list-name">{organization.name}</span>
+                  <span class="account-profile-list-handle">@{organization.account.handle}</span>
+                </span>
+              </span>
+              <span class="account-profile-org-members">
+                {organization.member_count} {if organization.member_count == 1,
+                  do: "member",
+                  else: "members"}
+              </span>
+            </a>
+          </li>
+        </ul>
+      <% end %>
+    </section>
+
+    <section class="account-profile-section" id="account-favorites">
+      <h2 class="account-profile-section-title">Favorites</h2>
+      <%= if @starred_repositories == [] do %>
+        <p class="account-profile-empty" id="account-favorites-empty">
+          No favorites yet.
+        </p>
+      <% else %>
+        <ul class="account-profile-list" id="account-favorites-list">
+          <li :for={repository <- @starred_repositories} class="account-profile-list-item">
+            <a
+              href={~p"/#{repository.organization.account.handle}/#{repository.handle}"}
+              class="account-profile-list-link"
+              id={"favorite-#{repository.id}"}
+            >
+              <span class="account-profile-list-name">{repository.name}</span>
+              <span class="account-profile-list-handle">
+                {repository.organization.account.handle}/{repository.handle}
+              </span>
+            </a>
+            <%= if repository.description do %>
+              <p class="account-profile-list-description">{repository.description}</p>
+            <% end %>
+          </li>
+        </ul>
+      <% end %>
+    </section>
+  </div>
+</Layouts.app>

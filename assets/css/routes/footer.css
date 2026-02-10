@@ -1,0 +1,108 @@
+/* Footer */
+
+.site-footer {
+  width: 100%;
+  margin: 0 auto;
+  padding: var(--theme-ui-space-3) var(--theme-ui-space-2);
+  border-top: var(--theme-ui-borders-thin);
+  color: var(--theme-ui-colors-muted);
+}
+
+.site-footer-content {
+  max-width: var(--theme-ui-sizes-container);
+  margin: 0 auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--theme-ui-space-2);
+}
+
+.site-footer-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--theme-ui-space-2);
+  align-items: flex-start;
+}
+
+.site-footer a {
+  color: var(--theme-ui-colors-text);
+  text-decoration: none;
+}
+
+.site-footer a:hover {
+  text-decoration: underline;
+}
+
+.site-footer-meta {
+  color: var(--theme-ui-colors-muted);
+}
+
+.site-footer-personality {
+  margin-top: var(--theme-ui-space-2);
+  color: var(--theme-ui-colors-text);
+}
+
+.site-footer-locale {
+  margin: 0;
+}
+
+.site-footer-meta-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--theme-ui-space-2);
+}
+
+.footer-theme-toggle {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: var(--theme-ui-colors-text);
+  font: inherit;
+  text-decoration: none;
+  padding: 0;
+}
+
+.footer-theme-toggle:hover {
+  text-decoration: underline;
+}
+
+/* Language selector */
+.language-selector {
+  display: inline-block;
+}
+
+.language-selector-select {
+  padding: var(--theme-ui-space-1) var(--theme-ui-space-2);
+  background: var(--theme-ui-colors-background);
+  border: var(--theme-ui-borders-thin);
+  border-radius: var(--theme-ui-radii-small);
+  color: var(--theme-ui-colors-text);
+  font-size: var(--theme-ui-font-sizes-0);
+  cursor: pointer;
+}
+
+.language-selector-select:hover {
+  border-color: var(--theme-ui-colors-primary);
+}
+
+.language-selector-select:focus {
+  outline: none;
+  border-color: var(--theme-ui-colors-primary);
+  box-shadow: 0 0 0 2px var(--theme-ui-colors-primary-alpha);
+}
+
+/* Screen reader only */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

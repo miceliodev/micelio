@@ -1,0 +1,73 @@
+/* Settings sidebar layout */
+
+.settings-layout {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: var(--theme-ui-space-4);
+}
+
+@media (max-width: 768px) {
+  .settings-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.settings-sidebar {
+  position: sticky;
+  top: calc(56px + var(--theme-ui-space-2));
+  align-self: start;
+}
+
+.settings-sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.settings-sidebar-link {
+  display: block;
+  padding: var(--theme-ui-space-1);
+  font-size: var(--theme-ui-font-sizes-body);
+  color: var(--theme-ui-colors-text);
+  text-decoration: none;
+  border-radius: var(--theme-ui-radii-small);
+  transition: background-color 0.15s ease;
+}
+
+.settings-sidebar-link:hover {
+  background-color: var(--theme-ui-colors-surface);
+}
+
+.settings-sidebar-link-active {
+  background-color: var(--theme-ui-colors-primary);
+  color: white;
+}
+
+.settings-sidebar-link-active:hover {
+  background-color: var(--theme-ui-colors-primary);
+}
+
+/* Settings content area */
+
+.settings-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--theme-ui-space-4);
+}
+
+.settings-content .page-header {
+  margin-bottom: 0;
+  padding-bottom: var(--theme-ui-space-1);
+}
+
+.settings-content .page-header-title {
+  font-size: var(--theme-ui-font-size-lg);
+}
+
+/* Section titles within settings */
+
+.settings-content .webhooks-section-title {
+  font-size: var(--theme-ui-font-size-md);
+  font-weight: var(--theme-ui-font-weights-semibold);
+  margin: 0 0 var(--theme-ui-space-2) 0;
+}

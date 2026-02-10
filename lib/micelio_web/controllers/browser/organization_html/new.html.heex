@@ -1,0 +1,59 @@
+<Layouts.app
+  flash={@flash}
+  current_scope={assigns[:current_scope]}
+  current_user={assigns[:current_user]}
+  locale={assigns[:locale] || "en"}
+  current_path={assigns[:current_path] || "/"}
+>
+  <div class="organization-form-container">
+    <header class="organization-form-header">
+      <h1>Create a new organization</h1>
+      <p>Organizations help teams collaborate under a shared handle.</p>
+    </header>
+
+    <.form
+      for={@form}
+      id="organization-new-form"
+      action={~p"/organizations"}
+      method="post"
+      class="organization-form"
+    >
+      <div class="organization-form-group">
+        <.input
+          field={@form[:name]}
+          type="text"
+          label="Organization name"
+          placeholder="Micelio Collective"
+          required
+          autofocus
+          class="organization-input"
+          error_class="organization-input organization-input-error"
+        />
+      </div>
+
+      <div class="organization-form-group">
+        <.input
+          field={@form[:handle]}
+          type="text"
+          label="Handle"
+          placeholder="micelio-collective"
+          required
+          pattern="^[a-zA-Z0-9](?:[a-zA-Z0-9]|-(?=[a-zA-Z0-9])){0,38}$"
+          title="Must contain only alphanumeric characters and single hyphens, cannot start or end with a hyphen"
+          class="organization-input"
+          error_class="organization-input organization-input-error"
+        />
+        <p class="organization-form-hint">This will appear in your repository URLs.</p>
+      </div>
+
+      <div class="organization-form-actions">
+        <button type="submit" class="organization-button" id="organization-submit">
+          Create organization
+        </button>
+        <a href={~p"/projects"} class="organization-button organization-button-secondary">
+          Cancel
+        </a>
+      </div>
+    </.form>
+  </div>
+</Layouts.app>

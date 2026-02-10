@@ -1,0 +1,47 @@
+<Layouts.app
+  flash={@flash}
+  current_scope={assigns[:current_scope]}
+  current_user={assigns[:current_user]}
+  locale={assigns[:locale] || "en"}
+  current_path={assigns[:current_path] || "/"}
+>
+  <div class="docs-container docs-show">
+    <aside class="docs-sidebar">
+      <h4 class="docs-sidebar-title">{@category_info.title}</h4>
+      <nav class="docs-sidebar-nav">
+        <%= for page <- @pages do %>
+          <a
+            href={~p"/docs/#{@category}/#{page.id}"}
+            class={["docs-sidebar-link", page.id == @page.id && "docs-sidebar-link-active"]}
+          >
+            {page.title}
+          </a>
+        <% end %>
+      </nav>
+      <div class="docs-sidebar-back">
+        <a href={~p"/docs"}>{gettext("All documentation")}</a>
+      </div>
+    </aside>
+
+    <article class="docs-content">
+      <nav class="docs-breadcrumb" aria-label={gettext("Breadcrumb")}>
+        <a href={~p"/docs"}>{gettext("Documentation")}</a>
+        <span class="docs-breadcrumb-separator">/</span>
+        <a href={~p"/docs/#{@category}"}>{@category_info.title}</a>
+        <span class="docs-breadcrumb-separator">/</span>
+        <span class="docs-breadcrumb-current">{@page.title}</span>
+      </nav>
+
+      <.header>
+        {@page.title}
+        <:subtitle>
+          {@page.description}
+        </:subtitle>
+      </.header>
+
+      <div class="docs-page-content">
+        {raw(@page.body)}
+      </div>
+    </article>
+  </div>
+</Layouts.app>

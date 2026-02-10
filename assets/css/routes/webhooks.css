@@ -1,0 +1,79 @@
+/* Repository webhooks */
+
+.webhooks-form-section,
+.webhooks-list-section {
+  display: flex;
+  flex-direction: column;
+}
+
+.webhooks-list-section {
+  padding-top: var(--theme-ui-space-2);
+  border-top: var(--theme-ui-borders-thin);
+}
+
+.webhooks-empty {
+  color: var(--theme-ui-colors-muted);
+  padding: var(--theme-ui-space-1) 0;
+}
+
+.webhook-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--theme-ui-space-2);
+}
+
+.webhook-card {
+  border: var(--theme-ui-borders-thin);
+  background-color: var(--theme-ui-colors-background);
+  padding: var(--theme-ui-space-2);
+  display: flex;
+  flex-direction: column;
+  gap: var(--theme-ui-space-2);
+}
+
+.webhook-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--theme-ui-space-1);
+}
+
+.webhook-url {
+  font-weight: var(--theme-ui-font-weights-semibold);
+  word-break: break-word;
+  margin: 0;
+}
+
+.webhook-events {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--theme-ui-space-1);
+}
+
+.webhook-actions {
+  display: flex;
+  gap: var(--theme-ui-space-1);
+  flex-wrap: wrap;
+}
+
+.webhook-action {
+  padding: calc(var(--theme-ui-space-1) * 0.75) var(--theme-ui-space-1);
+  border: var(--theme-ui-borders-thin);
+  background-color: var(--theme-ui-colors-background);
+  color: var(--theme-ui-colors-text);
+  cursor: pointer;
+}
+
+.webhook-action:hover {
+  border-color: var(--theme-ui-colors-primary);
+}
+
+.webhook-action-danger {
+  border-color: var(--theme-ui-colors-danger);
+  color: var(--theme-ui-colors-danger);
+}
+
+.webhook-action-danger:hover {
+  background-color: var(--theme-ui-colors-danger);
+  color: var(--theme-ui-colors-danger-text);
+}

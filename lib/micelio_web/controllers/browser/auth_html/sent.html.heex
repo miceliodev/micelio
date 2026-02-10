@@ -1,0 +1,28 @@
+<Layouts.app
+  flash={@flash}
+  current_scope={assigns[:current_scope]}
+  current_user={assigns[:current_user]}
+  locale={assigns[:locale] || "en"}
+  current_path={assigns[:current_path] || "/"}
+>
+  <div class="auth-screen">
+    <div class="auth-container auth-container--sent">
+      <header class="auth-header">
+        <h1>Check your email</h1>
+        <p>We've sent you a magic link. Click it to sign in.</p>
+      </header>
+
+      <div class="auth-body">
+        <p>
+          The link will expire in 15 minutes. If you don't see the email, check your spam folder.
+        </p>
+      </div>
+
+      <div class="auth-actions">
+        <.link href={~p"/auth/login"} class="auth-link">
+          Try again with a different email
+        </.link>
+      </div>
+    </div>
+  </div>
+</Layouts.app>

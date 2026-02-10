@@ -1,0 +1,109 @@
+//! Tree command - list directory contents from the forge.
+
+use crate::cli::{parse_project_ref, TreeCommand};
+use crate::config::{self, Config};
+use crate::error::{MicError, Result};
+use crate::grpc::client::{
+    read_field, read_string, read_varint_value, write_length_delimited, write_varint_field,
+};
+use crate::grpc::{Endpoint, GrpcClient};
+use crate::workspace::{parse_position, PositionOrLatest};
+
+/// Run the tree command.
+pub async fn run(cmd: TreeCommand) -> Result<()> {
+    // Parse project reference
+    let (org, project) = parse_project_ref(&cmd.project).ok_or_else(|| {
+        MicError::InvalidProjectRef(format!(
+            "Invalid project reference '{}'. Use format: org/project",
+            cmd.project
+        ))
+    })?;
+
+    let config = Config::load()?;
+    let server = config.get_default_server().ok_or(MicError::NoDefaultServer)?;
+    let tokens = config::require_tokens()?;
+    let endpoint = Endpoint::parse(server)?;
+    let client = GrpcClient::new(endpoint);
+
+    // Parse position if provided
+    let position: Option<u64> = if let Some(ref pos_str) = cmd.r#ref {
+        match parse_position(pos_str) {
+            Some(PositionOrLatest::Position(p)) => Some(p),
+            Some(PositionOrLatest::Latest) => None,
+            None => return Err(MicError::Other("Invalid position format".to_string())),
+        }
+    } else {
+        None
+    };
+
+    // Build request
+    let mut request = Vec::new();
+    write_length_delimited(&mut request, 1, org.as_bytes());
+    write_length_delimited(&mut request, 2, project.as_bytes());
+    if let Some(ref path) = cmd.path {
+        write_length_delimited(&mut request, 3, path.as_bytes());
+    }
+    if let Some(pos) = position {
+        write_varint_field(&mut request, 4, pos);
+    }
+
+    let response = client
+        .unary_call(
+            "/micelio.content.v1.ContentService/ListTree",
+            &request,
+            Some(&tokens.access_token),
+        )
+        .await?;
+
+    // Parse response
+    let entries = parse_tree_response(&response);
+    for entry in entries {
+        let type_indicator = if entry.is_dir { "/" } else { "" };
+        println!("{}{}", entry.path, type_indicator);
+    }
+
+    Ok(())
+}
+
+/// Tree entry.
+struct TreeEntry {
+    path: String,
+    is_dir: bool,
+}
+
+/// Parse tree response.
+fn parse_tree_response(data: &[u8]) -> Vec<TreeEntry> {
+    let mut entries = Vec::new();
+    let mut pos = 0;
+
+    while pos < data.len() {
+        if let Some((field_number, _, field_data)) = read_field(data, &mut pos) {
+            if field_number == 1 {
+                // Parse entry
+                let entry = parse_tree_entry(field_data);
+                entries.push(entry);
+            }
+        }
+    }
+
+    entries
+}
+
+/// Parse tree entry.
+fn parse_tree_entry(data: &[u8]) -> TreeEntry {
+    let mut pos = 0;
+    let mut path = String::new();
+    let mut is_dir = false;
+
+    while pos < data.len() {
+        if let Some((field_number, _, field_data)) = read_field(data, &mut pos) {
+            match field_number {
+                1 => path = read_string(field_data),
+                3 => is_dir = read_varint_value(field_data) != 0,
+                _ => {}
+            }
+        }
+    }
+
+    TreeEntry { path, is_dir }
+}

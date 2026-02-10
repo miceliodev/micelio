@@ -1,0 +1,107 @@
+/* Admin dashboard styles */
+
+.admin-dashboard {
+}
+
+.admin-section {
+  margin-top: var(--theme-ui-space-3);
+}
+
+.admin-section-title {
+  font-weight: var(--theme-ui-font-weights-bold);
+  margin-bottom: var(--theme-ui-space-1);
+}
+
+.admin-metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--theme-ui-space-2);
+}
+
+.admin-metric-card {
+  border: var(--theme-ui-borders-thin);
+  background-color: var(--theme-ui-colors-background);
+  padding: var(--theme-ui-space-2);
+}
+
+.admin-metric-label {
+  color: var(--theme-ui-colors-muted);
+  font-size: var(--theme-ui-font-sizes-1);
+  margin-bottom: var(--theme-ui-space-1);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.admin-metric-value {
+  font-size: var(--theme-ui-font-sizes-4);
+  font-weight: var(--theme-ui-font-weights-bold);
+  color: var(--theme-ui-colors-text);
+}
+
+.admin-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--theme-ui-space-2);
+}
+
+.admin-list-item {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--theme-ui-space-2);
+  padding: var(--theme-ui-space-2);
+  border: var(--theme-ui-borders-thin);
+  background-color: var(--theme-ui-colors-background);
+  align-items: center;
+}
+
+.admin-list-primary {
+  display: flex;
+  flex-direction: column;
+  gap: var(--theme-ui-space-1);
+}
+
+.admin-list-title {
+  font-weight: var(--theme-ui-font-weights-bold);
+  color: var(--theme-ui-colors-text);
+}
+
+.admin-list-subtitle {
+  color: var(--theme-ui-colors-muted);
+}
+
+.admin-list-meta {
+  color: var(--theme-ui-colors-muted);
+  font-size: var(--theme-ui-font-sizes-1);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--theme-ui-space-1);
+}
+
+.admin-badge {
+  border: var(--theme-ui-borders-thin);
+  color: var(--theme-ui-colors-text);
+  font-size: var(--theme-ui-font-sizes-0);
+  font-weight: var(--theme-ui-font-weights-bold);
+  letter-spacing: 0.08em;
+  padding: 0 var(--theme-ui-space-1);
+  text-transform: uppercase;
+}
+
+.admin-divider {
+  color: var(--theme-ui-colors-muted);
+}
+
+.admin-empty {
+  color: var(--theme-ui-colors-muted);
+}
+
+@media (max-width: 720px) {
+  .admin-list-item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .admin-list-meta {
+    font-size: var(--theme-ui-font-sizes-0);
+  }
+}

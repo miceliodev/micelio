@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Micelio Blog</title>
+    <description>Updates and insights from the Micelio team about building the future of agent-first software development.</description>
+    <link>https://micelio.dev/blog</link>
+    <atom:link href="https://micelio.dev/blog/rss" rel="self" type="application/rss+xml"/>
+    <language>en-us</language>
+    <lastBuildDate><%= DateTime.utc_now() |> DateTime.to_iso8601() %></lastBuildDate>
+
+    <%= for post <- @posts do %>
+      <item>
+        <title><%= post.title %></title>
+        <description><%= post.description %></description>
+        <link>https://micelio.dev/blog/<%= post.id %></link>
+        <guid>https://micelio.dev/blog/<%= post.id %></guid>
+        <pubDate><%= DateTime.new!(post.date, ~T[00:00:00]) |> DateTime.to_iso8601() %></pubDate>
+        <author><%= author_name(post.author) %></author>
+        <%= for tag <- post.tags do %>
+          <category><%= tag %></category>
+        <% end %>
+      </item>
+    <% end %>
+  </channel>
+</rss>

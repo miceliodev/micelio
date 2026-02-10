@@ -1,0 +1,71 @@
+syntax = "proto3";
+
+package micelio.projects.v1;
+
+message Project {
+  string id = 1;
+  string organization_id = 2;
+  string organization_handle = 3;
+  string handle = 4;
+  string name = 5;
+  string description = 6;
+  string inserted_at = 7;
+  string updated_at = 8;
+  string visibility = 9;
+}
+
+message ListProjectsRequest {
+  string user_id = 1;
+  string organization_handle = 2;
+}
+
+message ListProjectsResponse {
+  repeated Project projects = 1;
+}
+
+message GetProjectRequest {
+  string user_id = 1;
+  string organization_handle = 2;
+  string handle = 3;
+}
+
+message CreateProjectRequest {
+  string user_id = 1;
+  string organization_handle = 2;
+  string handle = 3;
+  string name = 4;
+  string description = 5;
+  string visibility = 6;
+}
+
+message UpdateProjectRequest {
+  string user_id = 1;
+  string organization_handle = 2;
+  string handle = 3;
+  string new_handle = 4;
+  string name = 5;
+  string description = 6;
+  string visibility = 7;
+}
+
+message DeleteProjectRequest {
+  string user_id = 1;
+  string organization_handle = 2;
+  string handle = 3;
+}
+
+message ProjectResponse {
+  Project project = 1;
+}
+
+message DeleteProjectResponse {
+  bool success = 1;
+}
+
+service ProjectService {
+  rpc ListProjects(ListProjectsRequest) returns (ListProjectsResponse);
+  rpc GetProject(GetProjectRequest) returns (ProjectResponse);
+  rpc CreateProject(CreateProjectRequest) returns (ProjectResponse);
+  rpc UpdateProject(UpdateProjectRequest) returns (ProjectResponse);
+  rpc DeleteProject(DeleteProjectRequest) returns (DeleteProjectResponse);
+}

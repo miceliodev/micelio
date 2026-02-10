@@ -1,0 +1,392 @@
+/* Account profile styles */
+
+.account-profile {
+}
+
+.account-profile-header {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--theme-ui-space-3);
+}
+
+.account-profile-avatar {
+  border-radius: var(--theme-ui-radii-full);
+  flex-shrink: 0;
+}
+
+.account-profile-meta {
+  color: var(--theme-ui-colors-muted);
+}
+
+.account-profile-nav {
+  margin: 0;
+}
+
+.account-profile-nav-list {
+  list-style: none;
+  display: grid;
+  gap: var(--theme-ui-space-1);
+}
+
+.account-profile-link {
+  text-decoration: none;
+  color: var(--theme-ui-colors-text);
+  display: inline-block;
+}
+
+.account-profile-link:hover {
+  text-decoration: underline;
+}
+
+.account-profile-section {
+  margin-top: var(--theme-ui-space-4);
+}
+
+.account-profile-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--theme-ui-space-2);
+}
+
+.account-profile-section-title {
+  margin-bottom: var(--theme-ui-space-1);
+  font-size: var(--theme-ui-font-sizes-2);
+}
+
+.account-profile-section-meta {
+  color: var(--theme-ui-colors-muted);
+  font-size: var(--theme-ui-font-sizes-small);
+}
+
+.account-passkey-button {
+  padding: var(--theme-ui-space-1) var(--theme-ui-space-2);
+  border: var(--theme-ui-borders-thin);
+  background-color: var(--theme-ui-colors-background);
+  color: var(--theme-ui-colors-text);
+  font-weight: var(--theme-ui-font-weights-bold);
+  cursor: pointer;
+}
+
+.account-passkey-button:hover {
+  background-color: var(--theme-ui-colors-border);
+}
+
+.account-passkey-status {
+  margin-top: var(--theme-ui-space-1);
+  color: var(--theme-ui-colors-muted);
+}
+
+.account-profile-empty {
+  color: var(--theme-ui-colors-muted);
+}
+
+.account-profile-list {
+  list-style: none;
+  display: grid;
+  gap: var(--theme-ui-space-2);
+  margin: 0;
+  padding: 0;
+}
+
+.account-profile-list-item {
+  padding: var(--theme-ui-space-1) 0;
+  border-bottom: var(--theme-ui-borders-thin);
+}
+
+.account-passkey-entry {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--theme-ui-space-2);
+}
+
+.account-passkey-details {
+  display: flex;
+  flex-direction: column;
+  gap: var(--theme-ui-space-1);
+}
+
+.account-passkey-meta {
+  color: var(--theme-ui-colors-muted);
+  font-size: var(--theme-ui-font-sizes-small);
+}
+
+.account-passkey-remove {
+  padding: var(--theme-ui-space-1) var(--theme-ui-space-2);
+  border: var(--theme-ui-borders-thin);
+  background-color: var(--theme-ui-colors-background);
+  color: var(--theme-ui-colors-text);
+  cursor: pointer;
+}
+
+.account-passkey-remove:hover {
+  background-color: var(--theme-ui-colors-border);
+}
+
+.account-profile-list-link {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--theme-ui-space-2);
+  text-decoration: none;
+  color: var(--theme-ui-colors-text);
+}
+
+.account-profile-list-link:hover {
+  text-decoration: underline;
+}
+
+.account-profile-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--theme-ui-space-2);
+  margin-top: var(--theme-ui-space-2);
+}
+
+.account-profile-form-grid {
+  display: grid;
+  gap: var(--theme-ui-space-2);
+}
+
+.account-profile-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--theme-ui-space-1);
+}
+
+.account-profile-form .fieldset {
+  display: flex;
+  flex-direction: column;
+  gap: var(--theme-ui-space-1);
+  margin: 0;
+}
+
+.account-profile-form .label {
+  font-weight: var(--theme-ui-font-weights-bold);
+  color: var(--theme-ui-colors-text);
+}
+
+.account-profile-input {
+  width: 100%;
+  padding: var(--theme-ui-space-1);
+  border: var(--theme-ui-borders-thin);
+  background-color: var(--theme-ui-colors-background);
+}
+
+.account-profile-input:focus {
+  outline: none;
+  border-color: var(--theme-ui-colors-primary);
+}
+
+.account-profile-input::placeholder {
+  color: var(--theme-ui-colors-muted);
+}
+
+.account-profile-input-error {
+  border-color: var(--theme-ui-colors-danger);
+}
+
+.account-profile-input-error:focus {
+  border-color: var(--theme-ui-colors-danger);
+}
+
+.account-profile-form-hint {
+  color: var(--theme-ui-colors-muted);
+  font-size: var(--theme-ui-font-sizes-small);
+}
+
+.account-profile-status {
+  margin-top: var(--theme-ui-space-1);
+}
+
+.account-profile-status-error {
+  color: var(--theme-ui-colors-danger);
+}
+
+.account-profile-form-actions {
+  display: flex;
+}
+
+.account-profile-button {
+  padding: var(--theme-ui-space-1) var(--theme-ui-space-2);
+  border: none;
+  background-color: var(--theme-ui-colors-primary);
+  color: var(--theme-ui-colors-background);
+  font-weight: var(--theme-ui-font-weights-bold);
+  cursor: pointer;
+}
+
+.account-profile-button:hover {
+  background-color: var(--theme-ui-colors-muted);
+}
+
+.account-profile-list-name {
+  font-weight: var(--theme-ui-font-weights-bold);
+}
+
+.account-profile-list-handle {
+  color: var(--theme-ui-colors-muted);
+  font-family: var(--theme-ui-fonts-mono);
+  font-size: var(--theme-ui-font-sizes-small);
+}
+
+.account-profile-list-description {
+  margin: var(--theme-ui-space-1) 0 0;
+  color: var(--theme-ui-colors-muted);
+}
+
+.account-profile-org-link {
+  align-items: center;
+}
+
+.account-profile-org {
+  display: flex;
+  align-items: center;
+  gap: var(--theme-ui-space-2);
+}
+
+.account-profile-org-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--theme-ui-radii-full);
+  background-color: var(--theme-ui-colors-border);
+  color: var(--theme-ui-colors-text);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: var(--theme-ui-font-weights-bold);
+  text-transform: uppercase;
+}
+
+.account-profile-org-details {
+  display: flex;
+  flex-direction: column;
+  gap: var(--theme-ui-space-1);
+}
+
+.account-profile-org-members {
+  color: var(--theme-ui-colors-muted);
+  font-size: var(--theme-ui-font-sizes-small);
+}
+
+@media (min-width: 48rem) {
+  .account-profile-form-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 40rem) {
+  .account-profile-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .account-profile-section-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .account-passkey-entry {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .account-profile-list-link {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+/* Activity Graph */
+#account-activity {
+  display: grid;
+  gap: 0;
+  --activity-graph-0: var(--theme-ui-colors-activity-0);
+  --activity-graph-1: var(--theme-ui-colors-activity-1);
+  --activity-graph-2: var(--theme-ui-colors-activity-2);
+  --activity-graph-3: var(--theme-ui-colors-activity-3);
+  --activity-graph-4: var(--theme-ui-colors-activity-4);
+}
+
+#account-activity .account-section-title {
+  margin: 0;
+  padding: 0 0 0.125rem;
+  line-height: 1;
+}
+
+.activity-graph {
+  margin: 0;
+}
+
+.activity-graph-container {
+  overflow-x: auto;
+  padding-bottom: var(--theme-ui-space-1);
+}
+
+.activity-graph-svg {
+  display: block;
+}
+
+.activity-graph-cell {
+  display: inline-block;
+  width: 11px;
+  height: 11px;
+  border-radius: var(--theme-ui-radii-small);
+}
+
+/* Level colors - GitHub-style greens with theme awareness */
+.activity-graph-cell--0 {
+  fill: var(--activity-graph-0);
+  background-color: var(--activity-graph-0);
+}
+
+.activity-graph-cell--1 {
+  fill: var(--activity-graph-1);
+  background-color: var(--activity-graph-1);
+}
+
+.activity-graph-cell--2 {
+  fill: var(--activity-graph-2);
+  background-color: var(--activity-graph-2);
+}
+
+.activity-graph-cell--3 {
+  fill: var(--activity-graph-3);
+  background-color: var(--activity-graph-3);
+}
+
+.activity-graph-cell--4 {
+  fill: var(--activity-graph-4);
+  background-color: var(--activity-graph-4);
+}
+
+/* Legend styles */
+.activity-graph-legend {
+  display: flex;
+  align-items: center;
+  gap: var(--theme-ui-space-1);
+  margin-top: var(--theme-ui-space-2);
+  font-size: var(--theme-ui-font-sizes-xs);
+  color: var(--theme-ui-colors-muted);
+}
+
+.activity-graph-legend .activity-graph-cell--1 {
+  background-color: var(--activity-graph-1);
+}
+
+.activity-graph-legend .activity-graph-cell--2 {
+  background-color: var(--activity-graph-2);
+}
+
+.activity-graph-legend .activity-graph-cell--3 {
+  background-color: var(--activity-graph-3);
+}
+
+.activity-graph-legend .activity-graph-cell--4 {
+  background-color: var(--activity-graph-4);
+}
+
+.activity-graph-legend-label {
+  padding: 0 var(--theme-ui-space-1);
+}

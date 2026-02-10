@@ -1,0 +1,123 @@
+/* Changelog styles */
+
+.changelog-container {
+}
+
+.changelog-filters {
+  margin-bottom: var(--theme-ui-space-3);
+}
+
+.changelog-categories {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--theme-ui-space-1);
+  align-items: center;
+}
+
+.changelog-category-label {
+  color: var(--theme-ui-colors-muted);
+}
+
+.changelog-entry-meta {
+  color: var(--theme-ui-colors-muted);
+  display: flex;
+  align-items: center;
+  gap: var(--theme-ui-space-1);
+  flex-wrap: wrap;
+}
+
+.changelog-entry-description {
+  color: var(--theme-ui-colors-text);
+}
+
+.changelog-empty {
+  text-align: center;
+  padding: var(--theme-ui-space-4);
+}
+
+.changelog-empty-icon {
+  width: 2rem;
+  height: 2rem;
+  color: var(--theme-ui-colors-muted);
+  margin: 0 auto var(--theme-ui-space-2);
+  opacity: 0.5;
+}
+
+.changelog-empty-icon svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.changelog-empty-title {
+  font-weight: var(--theme-ui-font-weights-bold);
+  color: var(--theme-ui-colors-text);
+  margin-bottom: var(--theme-ui-space-1);
+}
+
+.changelog-empty-message {
+  color: var(--theme-ui-colors-muted);
+}
+
+/* Individual changelog entry page */
+.changelog-detail {
+  max-width: 42rem;
+  margin: 0 auto;
+}
+
+.changelog-detail-header {
+  margin-bottom: var(--theme-ui-space-3);
+}
+
+.changelog-detail-content h1,
+.changelog-detail-content h2,
+.changelog-detail-content h3,
+.changelog-detail-content h4,
+.changelog-detail-content h5,
+.changelog-detail-content h6 {
+  margin-top: var(--theme-ui-space-3);
+  margin-bottom: var(--theme-ui-space-2);
+  font-weight: var(--theme-ui-font-weights-bold);
+  border-bottom: var(--theme-ui-borders-thin);
+  padding-bottom: var(--theme-ui-space-1);
+}
+
+.changelog-detail-content p {
+  margin: var(--theme-ui-space-2) 0;
+}
+
+.changelog-detail-content ul,
+.changelog-detail-content ol {
+  margin: var(--theme-ui-space-2) 0;
+  padding-left: var(--theme-ui-space-2);
+}
+
+.changelog-detail-content li {
+  margin: var(--theme-ui-space-1) 0;
+}
+
+.changelog-detail-content blockquote {
+  border-left: 3px solid var(--theme-ui-colors-border);
+  padding-left: var(--theme-ui-space-2);
+  margin: var(--theme-ui-space-2) 0;
+  color: var(--theme-ui-colors-muted);
+  font-style: italic;
+}
+
+.changelog-detail-content code {
+  background: var(--theme-ui-colors-border);
+  padding: var(--theme-ui-space-1);
+  font-family: var(--theme-ui-fonts-mono);
+}
+
+.changelog-detail-content pre {
+  background: var(--theme-ui-colors-border);
+  padding: var(--theme-ui-space-2);
+  margin: var(--theme-ui-space-2) 0;
+  overflow-x: auto;
+}
+
+.changelog-detail-content pre code {
+  background: none;
+  padding: 0;
+}

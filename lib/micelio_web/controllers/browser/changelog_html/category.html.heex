@@ -1,0 +1,69 @@
+<Layouts.app
+  flash={@flash}
+  current_scope={assigns[:current_scope]}
+  current_user={assigns[:current_user]}
+  locale={assigns[:locale] || "en"}
+  current_path={assigns[:current_path] || "/"}
+>
+  <div class="changelog-container">
+    <.header>
+      {String.capitalize(@category)}
+      <:subtitle>
+        All changelog entries categorized under "{@category}".
+      </:subtitle>
+    </.header>
+
+    <div class="changelog-filters">
+      <div class="changelog-categories">
+        <span class="changelog-category-label">Filter by category:</span>
+        <.badge navigate={~p"/changelog"}>All</.badge>
+        <%= for category <- @categories do %>
+          <.badge
+            navigate={~p"/changelog/category/#{category}"}
+            active={category == @category}
+            caps
+          >
+            {category}
+          </.badge>
+        <% end %>
+      </div>
+    </div>
+
+    <div class="content-card-list">
+      <%= for entry <- @entries do %>
+        <.content_card navigate={~p"/changelog/#{entry.id}"} id={"changelog-entry-#{entry.id}"}>
+          <:title>{entry.title}</:title>
+          <:subtitle>
+            <time datetime={Date.to_iso8601(entry.date)}>
+              {Calendar.strftime(entry.date, "%B %d, %Y")}
+            </time>
+            <.badge mono>v{entry.version}</.badge>
+            <%= for category <- entry.categories do %>
+              <.badge variant={:solid} caps>{category}</.badge>
+            <% end %>
+          </:subtitle>
+          <:description>{entry.description}</:description>
+        </.content_card>
+      <% end %>
+    </div>
+
+    <%= if Enum.empty?(@entries) do %>
+      <div class="changelog-empty">
+        <div class="changelog-empty-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path
+              d="M7 3h7l3 3v15a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"
+              stroke-linejoin="round"
+            />
+            <path d="M14 3v4h4" stroke-linejoin="round" />
+            <path d="M8 11h8M8 15h8M8 19h6" stroke-linecap="round" />
+          </svg>
+        </div>
+        <h3 class="changelog-empty-title">No entries in this category</h3>
+        <p class="changelog-empty-message">
+          No changelog entries found for the "{@category}" category.
+        </p>
+      </div>
+    <% end %>
+  </div>
+</Layouts.app>

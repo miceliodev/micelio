@@ -1,0 +1,115 @@
+# The directory Mix will write compiled artifacts to.
+_build/
+
+# If you run "mix test --cover", coverage assets end up here.
+cover/
+
+# The directory Mix downloads your dependencies sources to.
+deps/
+
+# Where 3rd-party dependencies like ExDoc output generated docs.
+doc/
+
+# Ignore .fetch files in case you like to edit your project deps locally.
+.fetch
+
+# If the VM crashes, it generates a dump, let's ignore it too.
+erl_crash.dump
+
+# Also ignore archive artifacts (built via "mix archive.build").
+*.ez
+
+# Temporary files, for example, from tests.
+tmp/
+
+# Local seed workspaces
+seeds/
+
+# Ignore package tarball (built via "mix hex.build").
+micelio-*.tar
+
+# Ignore assets that are produced by build tools.
+priv/static/assets/
+
+# Ignore digested assets cache.
+priv/static/cache_manifest.json
+
+# In case you use Node.js/npm, you want to ignore these.
+npm-debug.log
+assets/node_modules/
+
+# Zigler build artifacts
+.Elixir.*.zig
+.zig-cache/
+zig-out/
+priv/lib/
+
+# Environment files
+.env
+.env.*
+
+# Mic CLI build artifacts
+mic/zig-out
+mic/zig-cache
+mic/.zig-cache
+
+# Vendor directories (large external dependencies)
+mic/vendor
+
+# Git directories
+.git
+**/.git
+
+# IDE and editor files
+.idea
+.vscode
+.elixir_ls
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Binary files
+*.ico
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.woff
+*.woff2
+*.ttf
+*.eot
+*.pdf
+*.zip
+*.tar
+*.gz
+*.dylib
+*.so
+*.jar
+*.dll
+*.a
+*.o
+*.plt
+*.beam
+
+# Kamal secrets
+.kamal/secrets
+
+# Cache directories
+.cache
+.nix-mix
+.nix-hex
+.direnv
+.postgres
+
+# Android client artifacts
+mobile/android/.gradle/
+mobile/android/local.properties
+mobile/android/**/build/
+
+# Log files
+*.log
+*.tmp

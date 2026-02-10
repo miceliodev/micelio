@@ -1,0 +1,70 @@
+/* Account devices styles */
+
+.device-management {
+}
+
+.device-management-header h1 {
+  font-weight: var(--theme-ui-font-weights-bold);
+  margin-bottom: var(--theme-ui-space-1);
+}
+
+.device-management-header p {
+  color: var(--theme-ui-colors-muted);
+  margin-bottom: var(--theme-ui-space-3);
+}
+
+.device-management-empty {
+  border: 1px dashed var(--theme-ui-colors-border);
+  padding: var(--theme-ui-space-3);
+  color: var(--theme-ui-colors-muted);
+}
+
+.device-management-list {
+  display: grid;
+  gap: var(--theme-ui-space-2);
+}
+
+.device-management-card {
+  border: var(--theme-ui-borders-thin);
+  padding: var(--theme-ui-space-2);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--theme-ui-space-2);
+}
+
+.device-management-title {
+  font-weight: var(--theme-ui-font-weights-bold);
+  margin-bottom: var(--theme-ui-space-1);
+}
+
+.device-management-meta {
+  color: var(--theme-ui-colors-muted);
+  display: flex;
+  flex-direction: column;
+  gap: var(--theme-ui-space-1);
+}
+
+.device-management-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.device-management-revoke {
+  background: transparent;
+  border: var(--theme-ui-borders-thin);
+  padding: var(--theme-ui-space-1);
+  color: var(--theme-ui-colors-primary);
+  cursor: pointer;
+}
+
+.device-management-revoke:hover {
+  border-color: var(--theme-ui-colors-primary);
+}
+
+@media (max-width: 40rem) {
+  .device-management-card {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

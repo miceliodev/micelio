@@ -1,0 +1,55 @@
+<Layouts.app
+  flash={@flash}
+  current_scope={assigns[:current_scope]}
+  current_user={assigns[:current_user]}
+  locale={assigns[:locale] || "en"}
+  current_path={assigns[:current_path] || "/"}
+>
+  <div class="device-management">
+    <header class="device-management-header">
+      <h1>Connected devices</h1>
+      <p>Manage CLI tools and revoke access when needed.</p>
+    </header>
+
+    <%= if @sessions == [] do %>
+      <div class="device-management-empty">
+        <p>No devices connected yet.</p>
+      </div>
+    <% else %>
+      <div class="device-management-list" id="device-sessions">
+        <%= for session <- @sessions do %>
+          <div class="device-management-card" id={"device-session-#{session.id}"}>
+            <div class="device-management-card-main">
+              <div class="device-management-title">{session.client_name}</div>
+              <div class="device-management-meta">
+                <%= if session.device_name do %>
+                  <span>{session.device_name}</span>
+                <% else %>
+                  <span>Unnamed device</span>
+                <% end %>
+                <%= if session.last_used_at do %>
+                  <span>
+                    Last used {Calendar.strftime(session.last_used_at, "%Y-%m-%d %H:%M UTC")}
+                  </span>
+                <% end %>
+              </div>
+            </div>
+            <div class="device-management-actions">
+              <.form
+                for={:revoke}
+                id={"device-revoke-#{session.id}"}
+                action={~p"/account/devices/#{session.id}"}
+                method="post"
+              >
+                <input type="hidden" name="_method" value="delete" />
+                <button type="submit" class="device-management-revoke">
+                  Revoke
+                </button>
+              </.form>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+</Layouts.app>

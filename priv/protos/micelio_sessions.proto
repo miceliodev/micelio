@@ -1,0 +1,96 @@
+syntax = "proto3";
+
+package micelio.sessions.v1;
+
+message ConversationMessage {
+  string role = 1;
+  string content = 2;
+}
+
+message Decision {
+  string decision = 1;
+  string reasoning = 2;
+}
+
+message FileChange {
+  string path = 1;
+  string content = 2;
+  string change_type = 3;
+}
+
+message Session {
+  string id = 1;
+  string session_id = 2;
+  string goal = 3;
+  string organization_handle = 4;
+  string project_handle = 5;
+  string status = 6;
+  uint32 conversation_count = 7;
+  uint32 decisions_count = 8;
+  string started_at = 9;
+  string landed_at = 10;
+  uint64 landing_position = 11;
+}
+
+message StartSessionRequest {
+  string user_id = 1;
+  string organization_handle = 2;
+  string project_handle = 3;
+  string session_id = 4;
+  string goal = 5;
+  repeated ConversationMessage conversation = 6;
+  repeated Decision decisions = 7;
+}
+
+message LandSessionRequest {
+  string user_id = 1;
+  string session_id = 2;
+  repeated ConversationMessage conversation = 3;
+  repeated Decision decisions = 4;
+  repeated FileChange files = 5;
+  uint32 epoch = 6;
+  bool finalize = 7;
+  reserved 8;
+  reserved "target_branch";
+}
+
+message GetSessionRequest {
+  string user_id = 1;
+  string session_id = 2;
+}
+
+message ListSessionsRequest {
+  string user_id = 1;
+  string organization_handle = 2;
+  string project_handle = 3;
+  string status = 4;
+}
+
+message CaptureSessionEventRequest {
+  string user_id = 1;
+  string session_id = 2;
+  string payload = 3;
+  string stream = 4;
+  string format = 5;
+}
+
+message CaptureSessionEventResponse {
+  string storage_key = 1;
+  string event_json = 2;
+}
+
+message SessionResponse {
+  Session session = 1;
+}
+
+message ListSessionsResponse {
+  repeated Session sessions = 1;
+}
+
+service SessionService {
+  rpc StartSession(StartSessionRequest) returns (SessionResponse);
+  rpc LandSession(LandSessionRequest) returns (SessionResponse);
+  rpc GetSession(GetSessionRequest) returns (SessionResponse);
+  rpc ListSessions(ListSessionsRequest) returns (ListSessionsResponse);
+  rpc CaptureSessionEvent(CaptureSessionEventRequest) returns (CaptureSessionEventResponse);
+}

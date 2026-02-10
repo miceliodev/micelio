@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang={assigns[:locale] || "en"}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="csrf-token" content={get_csrf_token()} />
+    <% meta = MicelioWeb.PageMeta.from_assigns(assigns) %>
+    <.live_title default={MicelioWeb.PageMeta.site_name()}>
+      {MicelioWeb.PageMeta.title(meta)}
+    </.live_title>
+
+    <%= if description = MicelioWeb.PageMeta.description(meta) do %>
+      <meta name="description" content={description} />
+      <meta property="og:description" content={description} />
+    <% end %>
+
+    <%= if canonical_url = meta.canonical_url do %>
+      <link rel="canonical" href={canonical_url} />
+      <meta property="og:url" content={canonical_url} />
+    <% end %>
+
+    <meta property="og:site_name" content={MicelioWeb.PageMeta.site_name()} />
+    <meta property="og:title" content={MicelioWeb.PageMeta.og_title(meta)} />
+    <meta property="og:type" content={MicelioWeb.PageMeta.og_type(meta)} />
+
+    <%= for {property, content} <- MicelioWeb.PageMeta.og_extra_tags(meta) do %>
+      <meta property={property} content={content} />
+    <% end %>
+
+    <%!-- Twitter Card tags --%>
+    <meta name="twitter:card" content={MicelioWeb.PageMeta.twitter_card(meta)} />
+    <meta name="twitter:title" content={MicelioWeb.PageMeta.og_title(meta)} />
+    <%= if description do %>
+      <meta name="twitter:description" content={description} />
+    <% end %>
+    <%= for {name, content} <- MicelioWeb.PageMeta.twitter_extra_tags(meta) do %>
+      <meta name={name} content={content} />
+    <% end %>
+
+    <%!-- Fediverse/Mastodon author attribution --%>
+    <%= if fediverse_creator = MicelioWeb.PageMeta.fediverse_creator(meta) do %>
+      <meta name="fediverse:creator" content={fediverse_creator} />
+    <% end %>
+
+    <%= if schema_json_ld = assigns[:schema_json_ld] do %>
+      <script type="application/ld+json">
+        <%= raw(schema_json_ld) %>
+      </script>
+    <% end %>
+
+    <link rel="icon" type="image/x-icon" href={~p"/favicon.ico"} />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap"
+      rel="stylesheet"
+    />
+    <link phx-track-static rel="stylesheet" href={~p"/assets/js/app.css"} />
+    <script defer phx-track-static type="text/javascript" src={~p"/assets/js/app.js"}>
+    </script>
+  </head>
+  <body>
+    {@inner_content}
+  </body>
+</html>

@@ -1,0 +1,254 @@
+/* Admin error dashboard styles */
+
+.admin-errors,
+.admin-error {
+  display: flex;
+  flex-direction: column;
+  gap: var(--theme-ui-space-3);
+}
+
+.admin-errors-header-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.admin-errors-overview {
+  border: var(--theme-ui-borders-thin);
+  background: var(--theme-ui-colors-background);
+  padding: var(--theme-ui-space-3);
+}
+
+.admin-errors-metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--theme-ui-space-2);
+}
+
+.admin-errors-metric {
+  border: var(--theme-ui-borders-thin);
+  padding: var(--theme-ui-space-2);
+  background-color: var(--theme-ui-colors-background);
+}
+
+.admin-errors-metric-title {
+  font-weight: var(--theme-ui-fontWeights-bold);
+  margin-bottom: var(--theme-ui-space-1);
+}
+
+.admin-errors-metric-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--theme-ui-space-1);
+}
+
+.admin-errors-metric-row {
+  display: flex;
+  justify-content: space-between;
+  color: var(--theme-ui-colors-muted);
+  font-size: var(--theme-ui-fontSizes-1);
+}
+
+.admin-errors-metric-value {
+  color: var(--theme-ui-colors-text);
+  font-weight: var(--theme-ui-fontWeights-bold);
+}
+
+.admin-errors-trend {
+  margin-top: var(--theme-ui-space-3);
+}
+
+.admin-errors-trend-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+  gap: var(--theme-ui-space-1);
+}
+
+.admin-errors-trend-item {
+  border: var(--theme-ui-borders-thin);
+  padding: var(--theme-ui-space-1);
+  display: flex;
+  flex-direction: column;
+  gap: var(--theme-ui-space-1);
+  align-items: center;
+}
+
+.admin-errors-trend-count {
+  font-weight: var(--theme-ui-fontWeights-bold);
+}
+
+.admin-errors-trend-date {
+  font-size: var(--theme-ui-fontSizes-0);
+  color: var(--theme-ui-colors-muted);
+}
+
+.admin-errors-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--theme-ui-space-2);
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.admin-errors-filters,
+.admin-errors-sort {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--theme-ui-space-1);
+}
+
+.admin-errors-filters input,
+.admin-errors-filters select,
+.admin-errors-sort select {
+  min-height: 36px;
+}
+
+.admin-errors-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--theme-ui-space-2);
+}
+
+.admin-errors-card {
+  border: var(--theme-ui-borders-thin);
+  background: var(--theme-ui-colors-background);
+  padding: var(--theme-ui-space-2);
+  display: flex;
+  flex-direction: column;
+  gap: var(--theme-ui-space-2);
+}
+
+.admin-errors-card-header {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--theme-ui-space-2);
+}
+
+.admin-errors-card-title {
+  font-weight: var(--theme-ui-fontWeights-bold);
+  color: var(--theme-ui-colors-text);
+}
+
+.admin-errors-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--theme-ui-space-1);
+  color: var(--theme-ui-colors-muted);
+  font-size: var(--theme-ui-fontSizes-1);
+}
+
+.admin-errors-card-actions {
+  display: flex;
+  gap: var(--theme-ui-space-1);
+}
+
+.admin-errors-card-actions button {
+  min-height: 36px;
+}
+
+.admin-errors-severity {
+  border: var(--theme-ui-borders-thin);
+  padding: 0 var(--theme-ui-space-1);
+  font-size: var(--theme-ui-fontSizes-0);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.admin-errors-severity-error,
+.admin-errors-severity-critical {
+  color: var(--theme-ui-colors-danger);
+}
+
+.admin-errors-severity-warning {
+  color: var(--theme-ui-colors-warning, #a16207);
+}
+
+.admin-errors-pagination {
+  display: flex;
+  align-items: center;
+  gap: var(--theme-ui-space-2);
+  margin-top: var(--theme-ui-space-2);
+}
+
+.admin-error-summary {
+  border: var(--theme-ui-borders-thin);
+  background: var(--theme-ui-colors-background);
+  padding: var(--theme-ui-space-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--theme-ui-space-2);
+}
+
+.admin-error-summary-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--theme-ui-space-1);
+  color: var(--theme-ui-colors-muted);
+}
+
+.admin-error-summary-details {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--theme-ui-space-1);
+  font-size: var(--theme-ui-fontSizes-1);
+  color: var(--theme-ui-colors-muted);
+}
+
+.admin-error-actions {
+  border: var(--theme-ui-borders-thin);
+  background: var(--theme-ui-colors-background);
+  padding: var(--theme-ui-space-3);
+}
+
+.admin-error-actions textarea {
+  width: 100%;
+  margin-top: var(--theme-ui-space-1);
+}
+
+.admin-error-actions-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--theme-ui-space-1);
+  margin-top: var(--theme-ui-space-2);
+}
+
+.admin-error-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--theme-ui-space-2);
+}
+
+.admin-error-stacktrace,
+.admin-error-metadata,
+.admin-error-context {
+  border: var(--theme-ui-borders-thin);
+  background: var(--theme-ui-colors-background);
+  padding: var(--theme-ui-space-3);
+}
+
+.admin-error-stacktrace pre,
+.admin-error-metadata pre,
+.admin-error-context pre {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+@media (max-width: 720px) {
+  .admin-errors-header-actions {
+    justify-content: flex-start;
+  }
+
+  .admin-errors-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .admin-errors-card-actions {
+    flex-direction: column;
+  }
+
+  .admin-errors-pagination {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

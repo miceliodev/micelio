@@ -1,0 +1,25 @@
+#cloud-config
+autoinstall:
+  version: 1
+  locale: en_US
+  keyboard:
+    layout: us
+  identity:
+    hostname: micelio-firecracker
+    username: micelio
+    password: "$6$kLMHyFw4WRoOaP8/$iuOmsNTwzYip53lgrGNlD.eYDm5b2f2udSLRPGh4VAEFZ48Yto5VCisKGITKwdx3l1V8ngSIVyigcNF8EmdtV0"
+  ssh:
+    install-server: true
+    allow-pw: true
+  storage:
+    layout:
+      name: direct
+  packages:
+    - ca-certificates
+    - curl
+    - git
+    - qemu-guest-agent
+  late-commands:
+    - curtin in-target --target=/target -- systemctl enable ssh
+    - curtin in-target --target=/target -- sed -i 's/^#PasswordAuthentication yes/PasswordAuthentication yes/' /etc/ssh/sshd_config
+    - curtin in-target --target=/target -- systemctl restart ssh

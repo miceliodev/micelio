@@ -1,0 +1,225 @@
+/* Navbar - GitHub Primer-inspired header */
+
+.navbar-wrapper {
+  background: var(--theme-ui-colors-surface);
+  border-bottom: var(--theme-ui-borders-thin);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+
+.navbar {
+  padding: var(--theme-ui-space-1) var(--theme-ui-space-2);
+  max-width: var(--theme-ui-sizes-container);
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--theme-ui-space-2);
+}
+
+.navbar-left,
+.navbar-right {
+  display: flex;
+  align-items: center;
+  gap: var(--theme-ui-space-2);
+}
+
+.navbar a:not(.navbar-cta) {
+  color: var(--theme-ui-colors-surface-text);
+  text-decoration: none;
+}
+
+.navbar a:not(.navbar-cta):hover {
+  text-decoration: underline;
+}
+
+.navbar-user-avatar {
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 9999px;
+  border: 1px solid var(--theme-ui-colors-border);
+  display: inline-block;
+  overflow: hidden;
+}
+
+.navbar-user-avatar img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+
+.navbar .brand {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--theme-ui-space-1);
+}
+
+.navbar .brand .icon {
+  color: var(--theme-ui-colors-surface-text);
+}
+
+.navbar .brand a {
+  text-decoration: none;
+  color: var(--theme-ui-colors-surface-text);
+  font-weight: var(--theme-ui-font-weights-bold);
+}
+
+.navbar-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--theme-ui-space-1);
+  padding: 5px 16px;
+  font-size: var(--theme-ui-font-sizes-body);
+  font-weight: var(--theme-ui-font-weights-medium);
+  line-height: 20px;
+  border: 1px solid transparent;
+  border-radius: var(--theme-ui-radii-default);
+  background-color: var(--theme-ui-colors-button-primary-bg);
+  color: var(--theme-ui-colors-button-primary-fg);
+  text-decoration: none;
+  transition: background-color 0.15s ease;
+}
+
+.navbar-cta:hover {
+  text-decoration: none;
+  background-color: var(--theme-ui-colors-button-primary-bg-hover);
+}
+
+.navbar-cta:focus-visible {
+  outline: 2px solid var(--theme-ui-colors-primary);
+  outline-offset: 2px;
+}
+
+.navbar-logout-form {
+  display: inline-flex;
+  margin: 0;
+}
+
+.navbar-link-button {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: var(--theme-ui-colors-surface-text);
+  font: inherit;
+  text-decoration: none;
+  padding: 0;
+}
+
+.navbar-link-button:hover {
+  text-decoration: underline;
+}
+
+.navbar-theme-toggle {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: var(--theme-ui-colors-surface-text);
+  font: inherit;
+  text-decoration: none;
+  padding: 0;
+}
+
+.navbar-theme-toggle:hover {
+  text-decoration: underline;
+}
+
+/* Icon styles are defined in tokens.css */
+
+/* Add dropdown */
+.navbar-add-dropdown {
+  position: relative;
+  display: inline-flex;
+}
+
+.navbar-add-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border: none;
+  border-radius: var(--theme-ui-radii-default);
+  background: transparent;
+  color: var(--theme-ui-colors-surface-text);
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.navbar-add-button:hover {
+  background: var(--theme-ui-colors-hover);
+}
+
+.navbar-add-button:focus-visible {
+  outline: 2px solid var(--theme-ui-colors-primary);
+  outline-offset: 2px;
+}
+
+.navbar-add-button[aria-expanded="true"] {
+  background: var(--theme-ui-colors-hover);
+}
+
+.navbar-add-menu {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  min-width: 12rem;
+  padding: var(--theme-ui-space-1) 0;
+  background: var(--theme-ui-colors-surface);
+  border: 1px solid var(--theme-ui-colors-border);
+  border-radius: var(--theme-ui-radii-default);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 100;
+}
+
+.navbar-add-menu[hidden] {
+  display: none;
+}
+
+.navbar-add-menu-item {
+  display: flex;
+  align-items: center;
+  gap: var(--theme-ui-space-1);
+  width: 100%;
+  padding: var(--theme-ui-space-1) var(--theme-ui-space-2);
+  color: var(--theme-ui-colors-surface-text);
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+  white-space: nowrap;
+}
+
+.navbar-add-menu-item:hover {
+  background: var(--theme-ui-colors-hover);
+  text-decoration: none;
+}
+
+.navbar-add-menu-item:focus-visible {
+  outline: 2px solid var(--theme-ui-colors-primary);
+  outline-offset: -2px;
+}
+
+@media (max-width: 60rem) {
+  .navbar {
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    row-gap: var(--theme-ui-space-1);
+  }
+
+  .navbar-left,
+  .navbar-right {
+    flex-wrap: wrap;
+    gap: var(--theme-ui-space-1) var(--theme-ui-space-2);
+  }
+
+  .navbar-right {
+    margin-left: auto;
+    justify-content: flex-end;
+  }
+
+  .navbar .hidden-small {
+    display: none;
+  }
+}

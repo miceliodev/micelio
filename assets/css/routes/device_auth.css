@@ -1,0 +1,59 @@
+/* Device auth styles */
+
+.device-auth-container {
+}
+
+.device-auth-header h1 {
+  font-weight: var(--theme-ui-font-weights-bold);
+  margin-bottom: var(--theme-ui-space-1);
+}
+
+.device-auth-header p {
+  color: var(--theme-ui-colors-muted);
+  margin-bottom: var(--theme-ui-space-3);
+}
+
+.device-auth-form {
+  border: var(--theme-ui-borders-thin);
+  padding: var(--theme-ui-space-3);
+  background: var(--theme-ui-colors-background);
+}
+
+.device-auth-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--theme-ui-space-1);
+}
+
+.device-auth-input {
+  border: var(--theme-ui-borders-thin);
+  padding: var(--theme-ui-space-1);
+}
+
+.device-auth-actions {
+  margin-top: var(--theme-ui-space-3);
+}
+
+.device-auth-button {
+  background: var(--theme-ui-colors-primary);
+  color: var(--theme-ui-colors-background);
+  border: none;
+  padding: var(--theme-ui-space-1);
+  font-weight: var(--theme-ui-font-weights-bold);
+  cursor: pointer;
+}
+
+.device-auth-button:hover {
+  background: var(--theme-ui-colors-muted);
+}
+
+.device-auth-success {
+  border: var(--theme-ui-borders-thin);
+  padding: var(--theme-ui-space-3);
+  background: var(--theme-ui-colors-background);
+}
+
+.device-auth-success-code {
+  font-weight: var(--theme-ui-font-weights-bold);
+  margin-bottom: var(--theme-ui-space-1);
+}

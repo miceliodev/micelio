@@ -1,0 +1,39 @@
+<Layouts.app
+  flash={@flash}
+  current_scope={assigns[:current_scope]}
+  current_user={assigns[:current_user]}
+  locale={assigns[:locale] || "en"}
+  current_path={assigns[:current_path] || "/"}
+>
+  <div class="auth-screen">
+    <div class="auth-container">
+      <header class="auth-header">
+        <h1>Enter authentication code</h1>
+        <p>Open your authenticator app and enter the 6-digit code.</p>
+      </header>
+
+      <form action={~p"/auth/totp"} method="post" class="auth-form" id="auth-totp-form">
+        <input type="hidden" name="_csrf_token" value={Phoenix.Controller.get_csrf_token()} />
+
+        <div class="auth-form-group">
+          <label for="code">Authentication code</label>
+          <input
+            type="text"
+            name="code"
+            id="code"
+            placeholder="123456"
+            inputmode="numeric"
+            autocomplete="one-time-code"
+            required
+            autofocus
+            class="auth-input"
+          />
+        </div>
+
+        <button type="submit" class="auth-button">
+          Verify code
+        </button>
+      </form>
+    </div>
+  </div>
+</Layouts.app>

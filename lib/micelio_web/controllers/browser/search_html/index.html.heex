@@ -1,0 +1,68 @@
+<Layouts.app
+  flash={@flash}
+  current_scope={assigns[:current_scope]}
+  current_user={assigns[:current_user]}
+  locale={assigns[:locale] || "en"}
+  current_path={assigns[:current_path] || "/"}
+>
+  <section class="search-page" id="repository-search">
+    <header class="search-header">
+      <h1>Repository search</h1>
+      <p>Search public repositories by name or description.</p>
+    </header>
+
+    <.form
+      for={@form}
+      id="repository-search-form"
+      method="get"
+      action={~p"/search"}
+      class="search-form"
+    >
+      <.input
+        field={@form[:q]}
+        id="repository-search-query"
+        type="search"
+        placeholder="Search repositories"
+        class="search-input"
+        autocomplete="off"
+      />
+      <button type="submit" class="search-submit" id="repository-search-submit">Search</button>
+    </.form>
+
+    <div class="search-results" id="repository-search-results">
+      <%= if @query != "" do %>
+        <p class="search-results-count" id="repository-search-count">
+          {length(@results)} result(s) for "{@query}"
+        </p>
+      <% end %>
+
+      <%= if @query != "" and @results == [] do %>
+        <p class="search-empty" id="repository-search-empty">
+          No repositories matched your query.
+        </p>
+      <% end %>
+
+      <ul class="search-results-list" id="repository-search-list">
+        <%= for repository <- @results do %>
+          <li class="search-result" id={"repository-search-result-#{repository.id}"}>
+            <a
+              href={~p"/#{repository.organization.account.handle}/#{repository.handle}"}
+              class="search-result-link"
+            >
+              <span class="search-result-name">
+                {repository.organization.account.handle}/{repository.handle}
+              </span>
+              <span class="search-result-title">{repository.name}</span>
+            </a>
+            <p class="search-result-description">
+              {repository.description || "No description provided."}
+            </p>
+            <span class="search-result-visibility badge badge--caps">
+              {repository.visibility}
+            </span>
+          </li>
+        <% end %>
+      </ul>
+    </div>
+  </section>
+</Layouts.app>

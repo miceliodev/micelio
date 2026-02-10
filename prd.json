@@ -1,0 +1,112 @@
+{
+  "project": "Micelio",
+  "branchName": "ralph/session-first-mvp",
+  "description": "Session-first forge MVP: magic-link auth + ToS, project creation, agent-driven sessions with full conversation + model metadata, CI gate, and public shareable UI.",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Magic-link account creation with ToS acceptance",
+      "description": "As a user, I can create an account via magic-link and must accept terms of service before first use.",
+      "acceptanceCriteria": [
+        "User can request a magic-link and sign in via web UI",
+        "User must accept terms of service on first sign-in (existing /terms page)",
+        "CLI can authenticate via token obtained from the forge",
+        "Auth tokens are stored in SQLite only",
+        "Typecheck/tests pass"
+      ],
+      "priority": 1,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-002",
+      "title": "Project creation and public visibility",
+      "description": "As a user, I can create a project and make it public so I can share work.",
+      "acceptanceCriteria": [
+        "User can create a project from the web UI",
+        "CLI can create a project via command",
+        "Project can be marked public or private",
+        "Public project is viewable without login and is indexed for discovery",
+        "Typecheck/tests pass"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-003",
+      "title": "Session capture with full conversation and model metadata",
+      "description": "As an agent or user, sessions capture goal, full transcript, decisions, and detailed model metadata for audit and reproducibility.",
+      "acceptanceCriteria": [
+        "Session stores goal, transcript, decisions, and changes",
+        "Transcript is immutable and append-only",
+        "Per-message metadata includes provider, model, version, system prompt hash, tools/permissions, temperature, max tokens, seed when available, tool calls, tool outputs, and token usage",
+        "System prompt text is stored alongside a stable hash",
+        "CLI can start a session and attach messages/decisions",
+        "Typecheck/tests pass"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-004",
+      "title": "Landing via CI checks",
+      "description": "As a user, agent work is gated by CI checks before landing.",
+      "acceptanceCriteria": [
+        "Landing requires `mix precommit` and `zig build test` for hif",
+        "CLI can initiate land and show check status",
+        "Forge stores check results alongside the session",
+        "UI shows check status per session",
+        "Typecheck/tests pass"
+      ],
+      "priority": 4,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-005",
+      "title": "Session browsing, sharing, and SEO",
+      "description": "As a user, I can browse sessions and share a public URL showing reasoning and changes, with SEO-ready metadata.",
+      "acceptanceCriteria": [
+        "Project page lists sessions with goal, author, timestamp, and status",
+        "Session detail shows conversation, decisions, and file changes",
+        "Public URL renders session detail for public projects",
+        "Public pages include canonical URL, meta description, OG tags, and Twitter Card tags",
+        "Private pages set noindex and omit OG share data",
+        "Typecheck/tests pass"
+      ],
+      "priority": 5,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-006",
+      "title": "Storage abstraction with disk and S3 backends",
+      "description": "As an operator, I can choose disk or S3 storage via env vars without changing app behavior.",
+      "acceptanceCriteria": [
+        "Elixir storage layer supports disk and S3 behind a common interface",
+        "Disk layout mirrors S3 structure from DESIGN.md",
+        "Backend selection is configurable via env vars (MICELIO_* only)",
+        "Typecheck/tests pass"
+      ],
+      "priority": 6,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-007",
+      "title": "CLI polish for core flows",
+      "description": "As a user, the CLI is reliable and user-friendly for core workflows.",
+      "acceptanceCriteria": [
+        "Commands: auth, project create, checkout/clone, status, session start/list, land",
+        "Clear error messages and recovery guidance",
+        "Help text aligns with SKILL.md",
+        "Typecheck/tests pass"
+      ],
+      "priority": 7,
+      "passes": false,
+      "notes": ""
+    }
+  ]
+}

@@ -1,0 +1,174 @@
+<Layouts.app
+  flash={@flash}
+  current_scope={assigns[:current_scope]}
+  current_user={assigns[:current_user]}
+  locale={assigns[:locale] || "en"}
+  current_path={assigns[:current_path] || "/"}
+>
+  <div class="admin-dashboard" id="admin-dashboard">
+    <.header>
+      Admin dashboard
+      <:subtitle>Instance metrics and recent activity.</:subtitle>
+      <:actions>
+        <.link navigate={~p"/admin/usage"} class="button button--secondary">
+          Usage dashboard
+        </.link>
+        <.link navigate={~p"/admin/prompts"} class="button button--secondary">
+          Prompt registry
+        </.link>
+        <.link navigate={~p"/admin/prompt-templates"} class="button button--secondary">
+          Prompt templates
+        </.link>
+        <.link navigate={~p"/admin/errors"} class="button">
+          Error dashboard
+        </.link>
+      </:actions>
+    </.header>
+
+    <section class="admin-section" id="admin-metrics">
+      <h2 class="admin-section-title">Instance overview</h2>
+      <div class="admin-metrics">
+        <article class="admin-metric-card" id="admin-metric-users">
+          <h3 class="admin-metric-label">Users</h3>
+          <div class="admin-metric-value">{@stats.users}</div>
+        </article>
+        <article class="admin-metric-card" id="admin-metric-admin-users">
+          <h3 class="admin-metric-label">Admin users</h3>
+          <div class="admin-metric-value">{@stats.admin_users}</div>
+        </article>
+        <article class="admin-metric-card" id="admin-metric-admin-emails">
+          <h3 class="admin-metric-label">Admin emails configured</h3>
+          <div class="admin-metric-value">{@stats.admin_emails_configured}</div>
+        </article>
+        <article class="admin-metric-card" id="admin-metric-organizations">
+          <h3 class="admin-metric-label">Organizations</h3>
+          <div class="admin-metric-value">{@stats.organizations}</div>
+        </article>
+        <article class="admin-metric-card" id="admin-metric-repositories">
+          <h3 class="admin-metric-label">Projects</h3>
+          <div class="admin-metric-value">{@stats.repositories}</div>
+        </article>
+        <article class="admin-metric-card" id="admin-metric-sessions">
+          <h3 class="admin-metric-label">Sessions</h3>
+          <div class="admin-metric-value">{@stats.sessions}</div>
+        </article>
+        <article class="admin-metric-card" id="admin-metric-public-repositories">
+          <h3 class="admin-metric-label">Public repositories</h3>
+          <div class="admin-metric-value">{@stats.public_repositories}</div>
+        </article>
+        <article class="admin-metric-card" id="admin-metric-private-repositories">
+          <h3 class="admin-metric-label">Private repositories</h3>
+          <div class="admin-metric-value">{@stats.private_repositories}</div>
+        </article>
+      </div>
+    </section>
+
+    <section class="admin-section" id="admin-access">
+      <h2 class="admin-section-title">Admin access</h2>
+      <%= if Enum.empty?(@admin_emails) do %>
+        <p class="admin-empty">No admin emails configured.</p>
+      <% else %>
+        <div class="admin-list" id="admin-admins-list">
+          <%= for {email, index} <- Enum.with_index(@admin_emails) do %>
+            <div class="admin-list-item" id={"admin-email-#{index}"}>
+              <div class="admin-list-primary">
+                <span class="admin-list-title">{email}</span>
+                <span class="admin-list-subtitle">Configured admin email</span>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
+    </section>
+
+    <section class="admin-section" id="admin-users">
+      <h2 class="admin-section-title">Recent users</h2>
+      <%= if Enum.empty?(@recent_users) do %>
+        <p class="admin-empty">No users yet.</p>
+      <% else %>
+        <div class="admin-list" id="admin-users-list">
+          <%= for user <- @recent_users do %>
+            <div class="admin-list-item" id={"admin-user-#{user.id}"}>
+              <div class="admin-list-primary">
+                <span class="admin-list-title">{user.email}</span>
+                <span class="admin-list-subtitle">@{user.account.handle}</span>
+              </div>
+              <div class="admin-list-meta">
+                <%= if Micelio.Admin.admin_user?(user) do %>
+                  <span class="admin-badge" id={"admin-user-role-#{user.id}"}>Admin</span>
+                  <span class="admin-divider" aria-hidden="true">·</span>
+                <% end %>
+                {format_datetime(user.inserted_at)}
+              </div>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
+    </section>
+
+    <section class="admin-section" id="admin-organizations">
+      <h2 class="admin-section-title">Recent organizations</h2>
+      <%= if Enum.empty?(@recent_organizations) do %>
+        <p class="admin-empty">No organizations yet.</p>
+      <% else %>
+        <div class="admin-list" id="admin-organizations-list">
+          <%= for organization <- @recent_organizations do %>
+            <div class="admin-list-item" id={"admin-organization-#{organization.id}"}>
+              <div class="admin-list-primary">
+                <span class="admin-list-title">{organization.name}</span>
+                <span class="admin-list-subtitle">@{organization.account.handle}</span>
+              </div>
+              <div class="admin-list-meta">{format_datetime(organization.inserted_at)}</div>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
+    </section>
+
+    <section class="admin-section" id="admin-repositories">
+      <h2 class="admin-section-title">Recent repositories</h2>
+      <%= if Enum.empty?(@recent_repositories) do %>
+        <p class="admin-empty">No repositories yet.</p>
+      <% else %>
+        <div class="admin-list" id="admin-repositories-list">
+          <%= for repository <- @recent_repositories do %>
+            <div class="admin-list-item" id={"admin-project-#{repository.id}"}>
+              <div class="admin-list-primary">
+                <span class="admin-list-title">{repository.name}</span>
+                <span class="admin-list-subtitle">
+                  {repository.organization.account.handle}/{repository.handle}
+                </span>
+              </div>
+              <div class="admin-list-meta">{format_datetime(repository.inserted_at)}</div>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
+    </section>
+
+    <section class="admin-section" id="admin-sessions">
+      <h2 class="admin-section-title">Recent sessions</h2>
+      <%= if Enum.empty?(@recent_sessions) do %>
+        <p class="admin-empty">No sessions yet.</p>
+      <% else %>
+        <div class="admin-list" id="admin-sessions-list">
+          <%= for session <- @recent_sessions do %>
+            <div class="admin-list-item" id={"admin-session-#{session.id}"}>
+              <div class="admin-list-primary">
+                <span class="admin-list-title">{session.goal}</span>
+                <span class="admin-list-subtitle">
+                  {session.repository.organization.account.handle}/{session.repository.handle} · {session.user.email}
+                </span>
+              </div>
+              <div class="admin-list-meta">
+                {String.capitalize(session.status)} · {format_datetime(
+                  session.started_at || session.inserted_at
+                )}
+              </div>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
+    </section>
+  </div>
+</Layouts.app>

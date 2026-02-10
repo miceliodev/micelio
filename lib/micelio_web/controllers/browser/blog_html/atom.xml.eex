@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>Micelio Blog</title>
+  <subtitle>Updates and insights from the Micelio team about building the future of agent-first software development.</subtitle>
+  <link href="https://micelio.dev/blog"/>
+  <link rel="self" href="https://micelio.dev/blog/atom"/>
+  <id>https://micelio.dev/blog</id>
+  <updated><%= DateTime.utc_now() |> DateTime.to_iso8601() %></updated>
+
+  <%= for post <- @posts do %>
+    <entry>
+      <title><%= post.title %></title>
+      <link href="https://micelio.dev/blog/<%= post.id %>"/>
+      <id>https://micelio.dev/blog/<%= post.id %></id>
+      <updated><%= DateTime.new!(post.date, ~T[00:00:00]) |> DateTime.to_iso8601() %></updated>
+      <summary><%= post.description %></summary>
+      <author>
+        <name><%= author_name(post.author) %></name>
+      </author>
+      <%= for tag <- post.tags do %>
+        <category term="<%= tag %>"/>
+      <% end %>
+    </entry>
+  <% end %>
+</feed>

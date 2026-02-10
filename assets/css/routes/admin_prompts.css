@@ -1,0 +1,140 @@
+/* Admin prompt registry & templates */
+
+.admin-prompts {
+}
+
+.admin-prompts-section {
+  margin-top: var(--theme-ui-space-3);
+}
+
+.admin-prompts-toolbar {
+  display: flex;
+  justify-content: flex-start;
+  margin-bottom: var(--theme-ui-space-2);
+}
+
+.admin-prompts-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--theme-ui-space-2);
+  align-items: center;
+}
+
+.admin-prompts-filters input,
+.admin-prompts-filters select {
+  border: var(--theme-ui-borders-thin);
+  padding: var(--theme-ui-space-1);
+  background-color: var(--theme-ui-colors-background);
+}
+
+.admin-prompts-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--theme-ui-space-1);
+  color: var(--theme-ui-colors-muted);
+  font-size: var(--theme-ui-fontSizes-1);
+}
+
+.admin-prompts-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--theme-ui-space-2);
+}
+
+.admin-prompts-card {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--theme-ui-space-2);
+  padding: var(--theme-ui-space-2);
+  border: var(--theme-ui-borders-thin);
+  background-color: var(--theme-ui-colors-background);
+  align-items: center;
+}
+
+.admin-prompts-card-main {
+  display: flex;
+  flex-direction: column;
+  gap: var(--theme-ui-space-1);
+}
+
+.admin-prompts-card-header {
+  display: flex;
+  align-items: center;
+  gap: var(--theme-ui-space-2);
+  flex-wrap: wrap;
+}
+
+.admin-prompts-card-title {
+  font-weight: var(--theme-ui-fontWeights-bold);
+  margin: 0;
+}
+
+.admin-prompts-card-meta {
+  color: var(--theme-ui-colors-muted);
+  font-size: var(--theme-ui-fontSizes-1);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--theme-ui-space-1);
+}
+
+.admin-prompts-card-actions {
+  display: flex;
+  gap: var(--theme-ui-space-1);
+}
+
+.admin-prompts-status {
+  font-size: var(--theme-ui-fontSizes-0);
+  padding: 0 var(--theme-ui-space-1);
+  border: var(--theme-ui-borders-thin);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.admin-prompts-status-accepted {
+  border-color: var(--theme-ui-colors-success, #2c9f45);
+  color: var(--theme-ui-colors-success, #2c9f45);
+}
+
+.admin-prompts-status-rejected {
+  border-color: var(--theme-ui-colors-danger, #cf3a2b);
+  color: var(--theme-ui-colors-danger, #cf3a2b);
+}
+
+.admin-prompts-status-pending {
+  border-color: var(--theme-ui-colors-muted);
+  color: var(--theme-ui-colors-muted);
+}
+
+.admin-prompts-status-approved {
+  border-color: var(--theme-ui-colors-success, #2c9f45);
+  color: var(--theme-ui-colors-success, #2c9f45);
+}
+
+.admin-prompts-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--theme-ui-space-2);
+}
+
+.admin-prompts-form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--theme-ui-space-2);
+}
+
+.admin-prompts-form-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--theme-ui-space-2);
+}
+
+@media (max-width: 720px) {
+  .admin-prompts-card {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .admin-prompts-card-actions {
+    width: 100%;
+  }
+}

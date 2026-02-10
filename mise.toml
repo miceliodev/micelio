@@ -1,0 +1,15 @@
+[env]
+# Development-only encryption key (32 bytes, base64 encoded)
+# DO NOT use this key in production - generate a unique key with: openssl rand -base64 32
+ENCRYPTION_KEY = "qzyRtI6urxJU7CID/s/OI9/hE6lkWGVu+g31nk6Grdg="
+_.path = ['{{config_root}}/mic/target/release/']
+
+[tools]
+elixir = "1.19.4-otp-28"
+erlang = "28.3"
+fnox = "1.7.0"
+"gem:kamal" = "2.9.0"
+ruby = "3.4.7"
+rust = "1.87.0"
+zig = "0.15.2"
+git-cliff = "2.7.0"

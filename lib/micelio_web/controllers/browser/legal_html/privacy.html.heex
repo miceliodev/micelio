@@ -1,0 +1,183 @@
+<Layouts.app
+  flash={@flash}
+  current_scope={assigns[:current_scope]}
+  current_user={assigns[:current_user]}
+  locale={assigns[:locale] || "en"}
+  current_path={assigns[:current_path] || "/"}
+>
+  <div class="legal-container" id="privacy-policy">
+    <.header>
+      Privacy Policy
+      <:subtitle>
+        This policy applies to a service operated from Germany. It references GDPR (EU) and German
+        data protection and cookie rules.
+      </:subtitle>
+    </.header>
+
+    <div class="legal-content">
+      <p class="legal-updated">
+        <strong>Last updated:</strong> {Date.utc_today() |> Date.to_iso8601()}
+      </p>
+
+      <h2>1. Controller</h2>
+      <p>
+        <strong>Controller (Art. 4(7) GDPR):</strong>
+        <em>{MicelioWeb.LegalInfo.operator_name()}</em> <br />
+        <strong>Address:</strong> {MicelioWeb.LegalInfo.address_one_line()} <br />
+        <strong>Email:</strong>
+        <a href={"mailto:#{MicelioWeb.LegalInfo.privacy_email()}"}>
+          {MicelioWeb.LegalInfo.privacy_email()}
+        </a>
+      </p>
+
+      <h2>2. Data protection contact</h2>
+      <p>
+        <strong>Data protection contact (Art. 13(1)(b) GDPR):</strong>
+        <a href={"mailto:#{MicelioWeb.LegalInfo.privacy_email()}"}>
+          {MicelioWeb.LegalInfo.privacy_email()}
+        </a>
+        <br />
+        <strong>Data protection officer (if applicable):</strong>
+        Not appointed
+      </p>
+
+      <h2>3. Scope</h2>
+      <p>
+        This privacy policy explains how Micelio (the “Service”) processes personal data when you
+        visit our website, create an account, use the Service, or contact us.
+      </p>
+
+      <h2>4. Categories of personal data</h2>
+      <ul>
+        <li>
+          <strong>Account data:</strong>
+          email address, authentication details, organization and billing metadata.
+        </li>
+        <li>
+          <strong>Usage data:</strong>
+          interactions with the Service, feature usage, and preferences.
+        </li>
+        <li>
+          <strong>Device and log data:</strong>
+          IP address, user agent, timestamps, and security logs.
+        </li>
+        <li>
+          <strong>Support communications:</strong> messages you send to us and related metadata.
+        </li>
+      </ul>
+
+      <h2>5. Purposes and legal bases</h2>
+      <p>
+        We process personal data for the following purposes and under the following legal bases:
+      </p>
+      <ul>
+        <li>
+          <strong>Provide the Service</strong>
+          (Art. 6(1)(b) GDPR - performance of a contract / pre-contractual measures).
+        </li>
+        <li>
+          <strong>Security and fraud prevention</strong>
+          (Art. 6(1)(f) GDPR - legitimate interests).
+        </li>
+        <li>
+          <strong>Billing and compliance</strong>
+          (Art. 6(1)(c) GDPR - legal obligation; Art. 6(1)(b) GDPR - contract).
+        </li>
+        <li>
+          <strong>Product improvement</strong>
+          (Art. 6(1)(f) GDPR - legitimate interests), where applicable.
+        </li>
+        <li>
+          <strong>Marketing communications</strong>
+          (Art. 6(1)(a) GDPR - consent), where applicable.
+        </li>
+      </ul>
+
+      <h2>6. Recipients and processors</h2>
+      <p>
+        We may share personal data with service providers acting as processors (Art. 28 GDPR), such as:
+        hosting, email delivery, customer support tools, analytics (if used), and payment processors.
+      </p>
+      <p>
+        <strong>Processors used:</strong>
+        hosting via <a
+          href={MicelioWeb.LegalInfo.hosting_provider().url}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          {MicelioWeb.LegalInfo.hosting_provider().name}
+        </a>;
+        email delivery via <a
+          href={MicelioWeb.LegalInfo.email_provider().url}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          {MicelioWeb.LegalInfo.email_provider().name}
+        </a>.
+      </p>
+
+      <h2>7. International transfers</h2>
+      <p>
+        If we transfer personal data outside the EEA, we rely on appropriate safeguards under
+        Chapter V GDPR (e.g., adequacy decisions, Standard Contractual Clauses), as applicable.
+      </p>
+
+      <h2>8. Retention</h2>
+      <p>
+        We retain personal data only as long as necessary for the purposes described above or as
+        required by law (e.g., commercial and tax retention obligations under German law).
+      </p>
+      <ul>
+        <li>
+          <strong>Account data:</strong>
+          for the duration of your account; deleted within 30 days after account closure, unless required by law.
+        </li>
+        <li><strong>Security/authentication logs:</strong> 90 days.</li>
+        <li><strong>Application logs:</strong> 30 days.</li>
+        <li><strong>Backups:</strong> 30 days.</li>
+        <li><strong>Support communications:</strong> 24 months.</li>
+      </ul>
+
+      <h2>9. Your rights</h2>
+      <p>
+        You have the following rights under GDPR (subject to legal conditions and limitations):
+      </p>
+      <ul>
+        <li>Access (Art. 15 GDPR)</li>
+        <li>Rectification (Art. 16 GDPR)</li>
+        <li>Erasure (Art. 17 GDPR)</li>
+        <li>Restriction (Art. 18 GDPR)</li>
+        <li>Data portability (Art. 20 GDPR)</li>
+        <li>Objection (Art. 21 GDPR)</li>
+        <li>Withdraw consent (Art. 7(3) GDPR), where processing is based on consent</li>
+      </ul>
+
+      <h2>10. Supervisory authority</h2>
+      <p>
+        You have the right to lodge a complaint with a supervisory authority (Art. 77 GDPR).
+        In Germany, the competent authority depends on the federal state (Land) where we are
+        established.
+        <span>
+          For Berlin:
+          <a
+            href={MicelioWeb.LegalInfo.berlin_supervisory_authority().url}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {MicelioWeb.LegalInfo.berlin_supervisory_authority().name}
+          </a>
+        </span>
+      </p>
+
+      <h2>11. Cookies and similar technologies</h2>
+      <p>
+        For details on cookies and similar technologies, please see our <a href={~p"/cookies"}>Cookie Policy</a>.
+        In Germany, storing information or accessing information on your device may require consent
+        under § 25 TTDSG (with exceptions for strictly necessary technologies).
+      </p>
+
+      <h2>12. Changes</h2>
+      <p>We may update this policy. We will post the current version on this page.</p>
+    </div>
+  </div>
+</Layouts.app>

@@ -1,0 +1,113 @@
+<%= if assigns[:current_user] do %>
+  <%!-- Authenticated users see their dashboard --%>
+  <Layouts.app
+    flash={@flash}
+    current_scope={assigns[:current_scope]}
+    current_user={assigns[:current_user]}
+    locale={assigns[:locale] || "en"}
+    current_path={assigns[:current_path] || "/"}
+  >
+    <div class="home-container">
+      <.popular_repositories_section
+        repositories={@popular_repositories}
+        current_user={assigns[:current_user]}
+        current_path={assigns[:current_path] || "/"}
+        page={@popular_page}
+        has_more={@popular_has_more}
+      />
+    </div>
+  </Layouts.app>
+<% else %>
+  <%!-- Unauthenticated users see the landing page --%>
+  <Layouts.app
+    flash={@flash}
+    current_scope={assigns[:current_scope]}
+    current_user={assigns[:current_user]}
+    locale={assigns[:locale] || "en"}
+    current_path={assigns[:current_path] || "/"}
+  >
+    <div class="home-container">
+      <div class="home-content">
+        <div class="home-main">
+          <div class="home-overview">
+            <p>
+              {gettext("Micelio is both a CLI")} (<code>mic</code>) {gettext(
+                "and a forge, fully open source under"
+              )}
+              <a href="https://github.com/micelio/micelio/blob/main/LICENSE">MPL-2.0</a>. {gettext(
+                "Micelio is to"
+              )} <code>mic</code> {gettext("what GitHub is to")} <code>git</code>.
+            </p>
+            <ul>
+              <li>
+                {gettext(
+                  "Built for hundreds of AI agents working concurrently on massive codebases"
+                )}
+              </li>
+              <li>{gettext("Sessions capture goal, reasoning, and changes together")}</li>
+              <li>{gettext("Forge-first architecture with object storage at the core")}</li>
+              <li>
+                {gettext(
+                  "Scales to billions of files and hundreds of thousands of landings per day"
+                )}
+              </li>
+              <li>
+                {gettext("Inspired by")}
+                <a href="https://ai.google/research/pubs/pub45424">Google Piper</a>, <a href="https://engineering.fb.com/2019/05/06/developer-tools/making-monorepo-development-faster/">Meta Sapling</a>, <a href="https://www.turbopuffer.com/">Turbopuffer</a>, {gettext(
+                  "and"
+                )}
+                <a href="https://www.warpstream.com/">WarpStream</a>
+              </li>
+            </ul>
+          </div>
+
+          <div class="home-feature">
+            <h3 class="home-feature-title">{gettext("Agent-Native by Design")}</h3>
+            <p class="home-feature-description">
+              {gettext(
+                "Sessions capture goal, reasoning, and changes together. Built for hundreds of AI agents working concurrently, with stateless compute that auto-scales based on demand."
+              )}
+            </p>
+          </div>
+
+          <div class="home-feature">
+            <h3 class="home-feature-title">{gettext("Human + AI Collaboration")}</h3>
+            <p class="home-feature-description">
+              {gettext(
+                "Designed for a future where humans review, not write most code. Conversation, decisions, and changes are unified in one workflow."
+              )}
+            </p>
+          </div>
+        </div>
+
+        <div class="home-sidebar">
+          <div class="home-feature">
+            <h3 class="home-feature-title">{gettext("Massive Scale")}</h3>
+            <p class="home-feature-description">
+              {gettext(
+                "Targets Google/Meta scale: 1B+ files, 500k+ landings per day, 100k+ concurrent sessions. Object storage-first architecture with O(log n) operations."
+              )}
+            </p>
+          </div>
+
+          <div class="home-feature">
+            <h3 class="home-feature-title">{gettext("Forge-First")}</h3>
+            <p class="home-feature-description">
+              {gettext(
+                "The forge is the source of truth. Coordinator-free landing with content-addressed conditional writes. No single bottleneck."
+              )}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <.popular_repositories_section
+        repositories={@popular_repositories}
+        current_user={assigns[:current_user]}
+        current_path={assigns[:current_path] || "/"}
+        page={@popular_page}
+        has_more={@popular_has_more}
+      />
+    </div>
+  </Layouts.app>
+<% end %>

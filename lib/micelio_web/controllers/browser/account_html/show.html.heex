@@ -1,0 +1,163 @@
+<Layouts.app
+  flash={@flash}
+  current_scope={assigns[:current_scope]}
+  current_user={assigns[:current_user]}
+  locale={assigns[:locale] || "en"}
+  current_path={assigns[:current_path] || "/"}
+>
+  <div class="account-page">
+    <.header>
+      <%= if @organization do %>
+        {@organization.name}
+      <% else %>
+        {@account.handle}
+      <% end %>
+      <:actions>
+        <%= if @organization && @organization_admin? do %>
+          <.link
+            navigate={~p"/organizations/#{@organization.account.handle}/settings"}
+            class="repository-button repository-button-secondary"
+            id="organization-settings-link"
+          >
+            Settings
+          </.link>
+        <% end %>
+      </:actions>
+      <:subtitle>
+        <% social_links = MicelioWeb.ProfileLinks.social_links(@user) %>
+        <div class="account-subtitle">
+          <span class="account-handle">@{@account.handle}</span>
+          <%= if @reputation do %>
+            <div class="account-reputation" id="account-reputation">
+              <div class="account-reputation-score">
+                <span class="account-reputation-label">Trust</span>
+                <span class="account-reputation-value">{@reputation.overall}</span>
+              </div>
+              <div class="account-reputation-tracks">
+                <%= for type <- Micelio.Reputation.types() do %>
+                  <div class="account-reputation-track">
+                    <span class="account-reputation-track-label">
+                      {String.capitalize(Atom.to_string(type))}
+                    </span>
+                    <span class="account-reputation-track-value">
+                      {Map.get(@reputation.by_type, type, 0)}
+                    </span>
+                  </div>
+                <% end %>
+              </div>
+            </div>
+          <% end %>
+          <%= if @user && @user.bio && @user.bio != "" do %>
+            <p class="account-bio">{@user.bio}</p>
+          <% end %>
+          <%= if @user && social_links != [] do %>
+            <div class="account-social-links" aria-label="Social links">
+              <%= for link <- social_links do %>
+                <a
+                  class="account-social-link"
+                  href={link.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={link.label}
+                  data-tooltip={link.label}
+                >
+                  <.icon name={link.icon} class="account-social-icon" />
+                </a>
+              <% end %>
+            </div>
+          <% end %>
+        </div>
+      </:subtitle>
+    </.header>
+
+    <%= if @user do %>
+      <section class="account-section" id="account-activity">
+        <h2 class="account-section-title">Activity</h2>
+        <.activity_graph activity_counts={@activity_counts} weeks={52} />
+        <div class="account-activity-feed" id="account-activity-feed">
+          <%= if Enum.empty?(@activity_items) do %>
+            <p class="account-empty">No recent activity yet.</p>
+          <% else %>
+            <ul class="account-activity-list">
+              <li
+                :for={activity <- @activity_items}
+                class="account-activity-item"
+                id={"account-activity-#{activity.type}-#{activity.id}"}
+              >
+                <div class="account-activity-details">
+                  <span class="account-activity-action">
+                    {activity_action_label(activity.type)}
+                  </span>
+                  <%= if activity.type == :prompt_request_submitted do %>
+                    <span class={
+                      "badge badge--caps prompt-request-origin prompt-request-origin-#{prompt_request_origin_value(activity.origin)}"
+                    }>
+                      {prompt_request_origin_label(activity.origin)}
+                    </span>
+                  <% end %>
+                  <a
+                    class="account-activity-repository"
+                    href={
+                      ~p"/#{activity.repository.organization.account.handle}/#{activity.repository.handle}"
+                    }
+                  >
+                    {activity.repository.organization.account.handle}/{activity.repository.handle}
+                  </a>
+                </div>
+                <time
+                  class="account-activity-time"
+                  datetime={DateTime.to_iso8601(activity.occurred_at)}
+                >
+                  {Calendar.strftime(activity.occurred_at, "%b %d, %Y %H:%M UTC")}
+                </time>
+              </li>
+            </ul>
+          <% end %>
+          <%= if @activity_has_more && @activity_next_before do %>
+            <div class="account-activity-more">
+              <a
+                class="account-activity-more-link"
+                href={~p"/#{@account.handle}?#{%{before: @activity_next_before}}"}
+              >
+                Load more activity
+              </a>
+            </div>
+          <% end %>
+        </div>
+      </section>
+    <% end %>
+
+    <section class="account-section" id="account-owned-repositories">
+      <div class="account-section-header">
+        <h2 class="account-section-title">{@repositories_title}</h2>
+        <%= unless Enum.empty?(@repositories) do %>
+          <span class="account-section-count">{length(@repositories)}</span>
+        <% end %>
+      </div>
+      <%= if Enum.empty?(@repositories) do %>
+        <div class="account-empty">
+          <p>{@empty_message}</p>
+        </div>
+      <% else %>
+        <div class="account-repositories-grid" id="account-repositories-list">
+          <%= for repository <- @repositories do %>
+            <.content_card
+              navigate={~p"/#{repository.organization.account.handle}/#{repository.handle}"}
+              id={"account-repository-#{repository.id}"}
+            >
+              <:title>{repository.name}</:title>
+              <:subtitle>
+                @{repository.organization.account.handle}/{repository.handle}
+              </:subtitle>
+              <:description>
+                <%= if repository.description do %>
+                  {repository.description}
+                <% end %>
+              </:description>
+            </.content_card>
+          <% end %>
+        </div>
+      <% end %>
+    </section>
+  </div>
+</Layouts.app>

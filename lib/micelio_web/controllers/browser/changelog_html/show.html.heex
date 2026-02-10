@@ -1,0 +1,44 @@
+<Layouts.app
+  flash={@flash}
+  current_scope={assigns[:current_scope]}
+  current_user={assigns[:current_user]}
+  locale={assigns[:locale] || "en"}
+  current_path={assigns[:current_path] || "/"}
+>
+  <div class="changelog-container">
+    <article class="changelog-detail">
+      <.header>
+        {@entry.title}
+        <:subtitle>
+          <div class="changelog-entry-meta">
+            <time datetime={Date.to_iso8601(@entry.date)}>
+              {Calendar.strftime(@entry.date, "%B %d, %Y")}
+            </time>
+
+            <.badge mono>v{@entry.version}</.badge>
+
+            <%= if @entry.author do %>
+              <span class="changelog-entry-author">by {@entry.author}</span>
+            <% end %>
+
+            <%= for category <- @entry.categories do %>
+              <.badge navigate={~p"/changelog/category/#{category}"} variant={:solid} caps>
+                {category}
+              </.badge>
+            <% end %>
+          </div>
+
+          <%= if @entry.description && @entry.description != "" do %>
+            <p class="changelog-entry-description">
+              {@entry.description}
+            </p>
+          <% end %>
+        </:subtitle>
+      </.header>
+
+      <div class="changelog-detail-content">
+        {raw(@entry.body)}
+      </div>
+    </article>
+  </div>
+</Layouts.app>

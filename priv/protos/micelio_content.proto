@@ -1,0 +1,80 @@
+syntax = "proto3";
+
+package micelio.content.v1;
+
+message TreeEntry {
+  string path = 1;
+  bytes hash = 2;
+}
+
+message Tree {
+  repeated TreeEntry entries = 1;
+}
+
+message GetHeadTreeRequest {
+  string user_id = 1;
+  string account_handle = 2;
+  string project_handle = 3;
+}
+
+message GetTreeRequest {
+  string user_id = 1;
+  string account_handle = 2;
+  string project_handle = 3;
+  bytes tree_hash = 4;
+}
+
+message GetTreeResponse {
+  Tree tree = 1;
+  bytes tree_hash = 2;
+}
+
+message GetBlobRequest {
+  string user_id = 1;
+  string account_handle = 2;
+  string project_handle = 3;
+  bytes blob_hash = 4;
+}
+
+message GetBlobResponse {
+  bytes content = 1;
+}
+
+message GetPathRequest {
+  string user_id = 1;
+  string account_handle = 2;
+  string project_handle = 3;
+  string path = 4;
+}
+
+message GetPathResponse {
+  bytes content = 1;
+  bytes blob_hash = 2;
+}
+
+message BlameLine {
+  uint32 line_number = 1;
+  string text = 2;
+  string session_id = 3;
+  string author_handle = 4;
+  string landed_at = 5;
+}
+
+message GetBlameRequest {
+  string user_id = 1;
+  string account_handle = 2;
+  string project_handle = 3;
+  string path = 4;
+}
+
+message GetBlameResponse {
+  repeated BlameLine lines = 1;
+}
+
+service ContentService {
+  rpc GetHeadTree(GetHeadTreeRequest) returns (GetTreeResponse);
+  rpc GetTree(GetTreeRequest) returns (GetTreeResponse);
+  rpc GetBlob(GetBlobRequest) returns (GetBlobResponse);
+  rpc GetPath(GetPathRequest) returns (GetPathResponse);
+  rpc GetBlame(GetBlameRequest) returns (GetBlameResponse);
+}

@@ -1,0 +1,31 @@
+<Layouts.app
+  flash={@flash}
+  current_scope={assigns[:current_scope]}
+  current_user={assigns[:current_user]}
+  locale={assigns[:locale] || "en"}
+  current_path={assigns[:current_path] || "/"}
+>
+  <div class="docs-container">
+    <nav class="docs-breadcrumb" aria-label={gettext("Breadcrumb")}>
+      <a href={~p"/docs"}>{gettext("Documentation")}</a>
+      <span class="docs-breadcrumb-separator">/</span>
+      <span class="docs-breadcrumb-current">{@category_info.title}</span>
+    </nav>
+
+    <.header>
+      {@category_info.title}
+      <:subtitle>
+        {@category_info.description}
+      </:subtitle>
+    </.header>
+
+    <div class="docs-page-list">
+      <%= for page <- @pages do %>
+        <a href={~p"/docs/#{@category}/#{page.id}"} class="docs-page-item">
+          <h3 class="docs-page-title">{page.title}</h3>
+          <p class="docs-page-description">{page.description}</p>
+        </a>
+      <% end %>
+    </div>
+  </div>
+</Layouts.app>

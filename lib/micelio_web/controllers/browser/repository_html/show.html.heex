@@ -1,0 +1,389 @@
+<Layouts.app
+  flash={@flash}
+  current_scope={assigns[:current_scope]}
+  current_user={assigns[:current_user]}
+  locale={assigns[:locale] || "en"}
+  current_path={assigns[:current_path] || "/"}
+>
+  <div class="repository-page">
+    <%!-- Repository header --%>
+    <div class="repository-header" id="repository-header">
+      <div class="repository-header-info">
+        <div class="repository-header-name">
+          <svg
+            class="repository-header-icon"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M3 19a9 9 0 0 1 9 0a9 9 0 0 1 9 0" />
+            <path d="M3 6a9 9 0 0 1 9 0a9 9 0 0 1 9 0" />
+            <path d="M3 6v13" />
+            <path d="M12 6v13" />
+            <path d="M21 6v13" />
+          </svg>
+          <a href={~p"/#{@account.handle}"} class="repository-header-owner">{@account.handle}</a>
+          <span class="repository-header-sep">/</span>
+          <a href={~p"/#{@account.handle}/#{@repository.handle}"} class="repository-header-repo">
+            {@repository.handle}
+          </a>
+          <span class="repository-visibility-badge">{@repository.visibility}</span>
+        </div>
+      </div>
+      <div class="repository-header-actions">
+        <div class="repository-stars">
+          <%= if @current_user do %>
+            <.form
+              for={@star_form}
+              id="repository-star-form"
+              class="repository-star-form"
+              action={~p"/#{@account.handle}/#{@repository.handle}/star"}
+              method="post"
+            >
+              <.input field={@star_form[:return_to]} type="hidden" />
+              <button
+                type="submit"
+                class={["repository-star-toggle", @starred? && "is-starred"]}
+                id="repository-star-toggle"
+                aria-pressed={@starred?}
+                aria-label={if @starred?, do: gettext("Unpulse"), else: gettext("Pulse")}
+                title={if @starred?, do: gettext("Unpulse"), else: gettext("Pulse")}
+              >
+                <svg
+                  class="repository-pulse-toggle-icon"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M3 12h4l3 8l4-16l3 8h4" />
+                </svg>
+                <span>{if @starred?, do: gettext("Unpulse"), else: gettext("Pulse")}</span>
+                <span class="repository-star-count">{@stars_count}</span>
+              </button>
+            </.form>
+          <% else %>
+            <span class="repository-star-badge" id="repository-stars-count">
+              <svg
+                class="repository-pulse-toggle-icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M3 12h4l3 8l4-16l3 8h4" />
+              </svg>
+              <span>{@stars_count}</span>
+            </span>
+          <% end %>
+        </div>
+      </div>
+    </div>
+
+    <%!-- Tab navigation --%>
+    <nav
+      class="repository-tabs"
+      aria-label={gettext("Repository navigation")}
+      id="repository-tabs"
+    >
+      <a
+        href={~p"/#{@account.handle}/#{@repository.handle}"}
+        class="repository-tab is-active"
+        aria-current="page"
+      >
+        <svg
+          class="repository-tab-icon"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.5"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
+          <path d="M10 20l4-16m4.5 4l4.5 4-4.5 4M5.5 8L1 12l4.5 4" />
+        </svg>
+        {gettext("Code")}
+      </a>
+      <a
+        href={~p"/projects/#{@account.handle}/#{@repository.handle}/sessions"}
+        class="repository-tab"
+      >
+        <svg
+          class="repository-tab-icon"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.5"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
+          <path d="M12 8v4l3 3" />
+          <circle cx="12" cy="12" r="9" />
+        </svg>
+        {gettext("Sessions")}
+      </a>
+      <%= if Micelio.Authorization.authorize(:repository_update, @current_user, @repository) == :ok do %>
+        <a href={~p"/#{@account.handle}/#{@repository.handle}/settings"} class="repository-tab">
+          <svg
+            class="repository-tab-icon"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 0 0 1.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 0 0-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 0 0-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 0 0-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 0 0-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 0 0 1.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+            <circle cx="12" cy="12" r="3" />
+          </svg>
+          {gettext("Settings")}
+        </a>
+      <% end %>
+    </nav>
+
+    <%!-- Main content area --%>
+    <div class="repository-layout">
+      <div class="repository-main">
+        <%!-- File browser --%>
+        <div class="repository-file-browser" id="repository-file-browser">
+          <% segments = if @dir_path == "", do: [], else: String.split(@dir_path, "/") %>
+          <% last_segment_index = length(segments) - 1 %>
+          <% repo_href = ~p"/#{@account.handle}/#{@repository.handle}" %>
+
+          <%= if @dir_path != "" do %>
+            <div class="repository-file-browser-path">
+              <nav
+                class="repository-breadcrumb"
+                aria-label={gettext("Path")}
+                id="repository-breadcrumb"
+              >
+                <a href={repo_href}>{@repository.handle}</a>
+                <%= for {segment, idx} <- Enum.with_index(segments) do %>
+                  <span class="repository-breadcrumb-sep">/</span>
+                  <% segment_path = Enum.take(segments, idx + 1) %>
+                  <%= if idx == last_segment_index do %>
+                    <span class="repository-breadcrumb-current">{segment}</span>
+                  <% else %>
+                    <a href={~p"/#{@account.handle}/#{@repository.handle}/tree/#{segment_path}"}>
+                      {segment}
+                    </a>
+                  <% end %>
+                <% end %>
+              </nav>
+            </div>
+          <% end %>
+
+          <%= if @entries == [] do %>
+            <div class="repository-empty-state">
+              <p>{gettext("This repository is empty")}</p>
+            </div>
+          <% else %>
+            <ul class="repository-tree" id="repository-tree">
+              <%= if @dir_path != "" do %>
+                <% parent_dir = Path.dirname(@dir_path) %>
+                <% parent_dir = if parent_dir == ".", do: "", else: parent_dir %>
+                <% parent_segments =
+                  if parent_dir == "", do: [], else: String.split(parent_dir, "/") %>
+                <li class="repository-tree-item">
+                  <a
+                    href={
+                      if parent_dir == "" do
+                        repo_href
+                      else
+                        ~p"/#{@account.handle}/#{@repository.handle}/tree/#{parent_segments}"
+                      end
+                    }
+                    class="repository-tree-link repository-tree-parent-link"
+                    id="repository-tree-parent"
+                  >
+                    <span class="repository-tree-icon">
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.5"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        aria-hidden="true"
+                      >
+                        <path d="M9 14l-4-4l4-4" />
+                      </svg>
+                    </span>
+                    <span class="repository-tree-name">..</span>
+                  </a>
+                </li>
+              <% end %>
+              <li :for={entry <- @entries} class="repository-tree-item">
+                <% entry_segments = String.split(entry.path, "/") %>
+                <a
+                  href={
+                    if entry.type == :tree do
+                      ~p"/#{@account.handle}/#{@repository.handle}/tree/#{entry_segments}"
+                    else
+                      ~p"/#{@account.handle}/#{@repository.handle}/blob/#{entry_segments}"
+                    end
+                  }
+                  class="repository-tree-link"
+                >
+                  <span class="repository-tree-icon">
+                    <%= if entry.type == :tree do %>
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="currentColor"
+                        aria-hidden="true"
+                        class="repository-tree-icon-folder"
+                      >
+                        <path d="M2 6a2 2 0 0 1 2-2h5l2 2h9a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6z" />
+                      </svg>
+                    <% else %>
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.5"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        aria-hidden="true"
+                        class="repository-tree-icon-file"
+                      >
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                        <polyline points="14 2 14 8 20 8" />
+                      </svg>
+                    <% end %>
+                  </span>
+                  <span class="repository-tree-name">{entry.name}</span>
+                </a>
+              </li>
+            </ul>
+          <% end %>
+        </div>
+
+        <%!-- README --%>
+        <%= if @readme do %>
+          <section class="repository-readme" id="repository-readme">
+            <header class="repository-readme-header">
+              <svg
+                class="repository-readme-icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M3 19a9 9 0 0 1 9 0a9 9 0 0 1 9 0" />
+                <path d="M3 6a9 9 0 0 1 9 0a9 9 0 0 1 9 0" />
+                <path d="M3 6v13" />
+                <path d="M12 6v13" />
+                <path d="M21 6v13" />
+              </svg>
+              <a
+                class="repository-readme-link"
+                href={
+                  ~p"/#{@account.handle}/#{@repository.handle}/blob/#{String.split(@readme.path, "/")}"
+                }
+              >
+                {@readme.path}
+              </a>
+            </header>
+            <div class="repository-readme-body">
+              <%= case @readme.content do %>
+                <% {:html, html} -> %>
+                  <div class="repository-readme-markdown" id="repository-readme-content">
+                    {raw(html)}
+                  </div>
+                <% {:text, content} -> %>
+                  <pre class="repository-readme-content" id="repository-readme-content">{content}</pre>
+                <% {:binary, size} -> %>
+                  <p class="repository-readme-binary">
+                    {gettext("Binary file (%{size} bytes) cannot be displayed.", size: size)}
+                  </p>
+              <% end %>
+            </div>
+          </section>
+        <% end %>
+      </div>
+
+      <%!-- Sidebar --%>
+      <aside class="repository-sidebar" id="repository-sidebar">
+        <div class="repository-about">
+          <h2 class="repository-about-title">{gettext("About")}</h2>
+          <%= if @repository.description do %>
+            <p class="repository-about-description">{@repository.description}</p>
+          <% end %>
+          <%= if @repository.url do %>
+            <a
+              href={@repository.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              class="repository-about-link"
+            >
+              <svg
+                class="repository-about-link-icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+              </svg>
+              {@repository.url}
+            </a>
+          <% end %>
+        </div>
+        <div class="repository-sidebar-stats">
+          <div class="repository-sidebar-stat">
+            <svg
+              class="repository-sidebar-stat-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M3 12h4l3 8l4-16l3 8h4" />
+            </svg>
+            <span>{@stars_count} {gettext("pulses")}</span>
+          </div>
+          <div class="repository-sidebar-stat">
+            <svg
+              class="repository-sidebar-stat-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M15 3v4a1 1 0 0 0 1 1h4" />
+              <path d="M18 17h-7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4l5 5v7a2 2 0 0 1-2 2z" />
+              <path d="M16 17v2a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h2" />
+            </svg>
+            <span>{length(@entries)} {gettext("items")}</span>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
+</Layouts.app>

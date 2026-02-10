@@ -1,0 +1,38 @@
+<Layouts.app
+  flash={@flash}
+  current_scope={assigns[:current_scope]}
+  current_user={assigns[:current_user]}
+  locale={assigns[:locale] || "en"}
+  current_path={assigns[:current_path] || "/"}
+>
+  <div class="device-auth-container">
+    <header class="device-auth-header">
+      <h1>Authorize a device</h1>
+      <p>Enter the code shown on your CLI to connect it to your account.</p>
+    </header>
+
+    <.form
+      for={@form}
+      id="device-auth-form"
+      action={~p"/device/auth/verify"}
+      class="device-auth-form"
+    >
+      <div class="device-auth-form-group">
+        <.input
+          field={@form[:user_code]}
+          type="text"
+          label="Device code"
+          placeholder="ABCD-1234"
+          class="device-auth-input"
+          error_class="device-auth-input device-auth-input-error"
+        />
+      </div>
+
+      <div class="device-auth-actions">
+        <button type="submit" class="device-auth-button" id="device-auth-submit">
+          Authorize device
+        </button>
+      </div>
+    </.form>
+  </div>
+</Layouts.app>

@@ -1,0 +1,71 @@
+<Layouts.app
+  flash={@flash}
+  current_scope={assigns[:current_scope]}
+  current_user={assigns[:current_user]}
+>
+  <div class="admin-dashboard" id="admin-usage-dashboard">
+    <.header>
+      Usage dashboard
+      <:subtitle>Token usage and value delivered across prompt requests.</:subtitle>
+      <:actions>
+        <.link navigate={~p"/admin"} class="button button--secondary">
+          Back to admin
+        </.link>
+      </:actions>
+    </.header>
+
+    <section class="admin-section" id="admin-usage-overview">
+      <h2 class="admin-section-title">Usage overview</h2>
+      <div class="admin-metrics">
+        <article class="admin-metric-card" id="admin-usage-tokens">
+          <h3 class="admin-metric-label">Tokens spent</h3>
+          <div class="admin-metric-value">{@usage_stats.tokens_spent}</div>
+        </article>
+        <article class="admin-metric-card" id="admin-usage-value">
+          <h3 class="admin-metric-label">Value delivered</h3>
+          <div class="admin-metric-value">{@usage_stats.accepted_prompt_requests}</div>
+        </article>
+        <article class="admin-metric-card" id="admin-usage-total-prompts">
+          <h3 class="admin-metric-label">Prompt requests</h3>
+          <div class="admin-metric-value">{@usage_stats.total_prompt_requests}</div>
+        </article>
+        <article class="admin-metric-card" id="admin-usage-acceptance-rate">
+          <h3 class="admin-metric-label">Acceptance rate</h3>
+          <div class="admin-metric-value">
+            {format_acceptance_rate(
+              @usage_stats.accepted_prompt_requests,
+              @usage_stats.total_prompt_requests
+            )}
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="admin-section" id="admin-usage-repositories">
+      <h2 class="admin-section-title">Project usage</h2>
+      <%= if Enum.empty?(@usage_repositories) do %>
+        <p class="admin-empty">No usage yet.</p>
+      <% else %>
+        <div class="admin-list" id="admin-usage-repositories-list">
+          <%= for repository <- @usage_repositories do %>
+            <div class="admin-list-item" id={"admin-usage-project-#{repository.repository_id}"}>
+              <div class="admin-list-primary">
+                <span class="admin-list-title">{repository.repository_name}</span>
+                <span class="admin-list-subtitle">
+                  {repository.account_handle}/{repository.repository_handle}
+                </span>
+              </div>
+              <div class="admin-list-meta">
+                {repository.tokens_spent} tokens · {repository.accepted_prompt_requests}/ {repository.total_prompt_requests} accepted
+                ({format_acceptance_rate(
+                  repository.accepted_prompt_requests,
+                  repository.total_prompt_requests
+                )})
+              </div>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
+    </section>
+  </div>
+</Layouts.app>

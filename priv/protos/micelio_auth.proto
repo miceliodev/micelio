@@ -1,0 +1,47 @@
+syntax = "proto3";
+
+package micelio.auth.v1;
+
+service DeviceAuthService {
+  rpc RegisterDevice(DeviceClientRegistrationRequest) returns (DeviceClientRegistrationResponse);
+  rpc StartDeviceAuthorization(DeviceAuthorizationRequest) returns (DeviceAuthorizationResponse);
+  rpc ExchangeDeviceCode(DeviceTokenRequest) returns (DeviceTokenResponse);
+}
+
+message DeviceClientRegistrationRequest {
+  string name = 1;
+}
+
+message DeviceClientRegistrationResponse {
+  string client_id = 1;
+  string client_secret = 2;
+}
+
+message DeviceAuthorizationRequest {
+  string client_id = 1;
+  string client_secret = 2;
+  string device_name = 3;
+  string scope = 4;
+}
+
+message DeviceAuthorizationResponse {
+  string device_code = 1;
+  string user_code = 2;
+  string verification_uri = 3;
+  string verification_uri_complete = 4;
+  uint32 expires_in = 5;
+  uint32 interval = 6;
+}
+
+message DeviceTokenRequest {
+  string client_id = 1;
+  string client_secret = 2;
+  string device_code = 3;
+}
+
+message DeviceTokenResponse {
+  string token_type = 1;
+  string access_token = 2;
+  string refresh_token = 3;
+  uint32 expires_in = 4;
+}

@@ -1,0 +1,149 @@
+<Layouts.app
+  flash={@flash}
+  current_scope={assigns[:current_scope]}
+  current_user={assigns[:current_user]}
+  locale={assigns[:locale] || "en"}
+  current_path={assigns[:current_path] || "/"}
+>
+  <div class="project-container">
+    <% file_segments = String.split(@file_path, "/") %>
+    <% dir_segments = Enum.drop(file_segments, -1) %>
+    <.header>
+      {@account.handle}/{@repository.handle}
+      <:subtitle>
+        <p class="project-file-path">{@file_path}</p>
+      </:subtitle>
+      <:actions>
+        <% repo_href = ~p"/#{@account.handle}/#{@repository.handle}" %>
+        <% parent_dir = Path.dirname(@file_path) %>
+        <% parent_dir = if parent_dir == ".", do: "", else: parent_dir %>
+
+        <div class="repository-stars">
+          <%= if @current_user do %>
+            <.form
+              for={@star_form}
+              id="repository-star-form"
+              class="repository-star-form"
+              action={~p"/#{@account.handle}/#{@repository.handle}/star"}
+              method="post"
+            >
+              <.input field={@star_form[:return_to]} type="hidden" />
+              <button
+                type="submit"
+                class={["repository-star-toggle", @starred? && "is-starred"]}
+                id="repository-star-toggle"
+                aria-pressed={@starred?}
+                aria-label={if @starred?, do: gettext("Unpulse"), else: gettext("Pulse")}
+                title={if @starred?, do: gettext("Unpulse"), else: gettext("Pulse")}
+              >
+                <span class="sr-only">
+                  <%= if @starred? do %>
+                    {gettext("Unpulse")}
+                  <% else %>
+                    {gettext("Pulse")}
+                  <% end %>
+                </span>
+                <%= if @starred? do %>
+                  <svg
+                    class="repository-pulse-toggle-icon"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                  >
+                    <path d="M3 12h4l3 8l4-16l3 8h4" />
+                  </svg>
+                <% else %>
+                  <svg
+                    class="repository-pulse-toggle-icon"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                  >
+                    <path d="M3 12h4l3 8l4-16l3 8h4" />
+                  </svg>
+                <% end %>
+                <span class="repository-star-count">{@stars_count}</span>
+              </button>
+            </.form>
+          <% end %>
+          <%= if is_nil(@current_user) do %>
+            <span class="repository-stars-count" id="repository-stars-count">
+              <span class="sr-only">{gettext("Pulses")}</span>
+              {@stars_count}
+            </span>
+          <% end %>
+        </div>
+
+        <a
+          class="project-file-back"
+          href={~p"/#{@account.handle}/#{@repository.handle}/blame/#{file_segments}"}
+          id="project-blame-link"
+        >
+          Blame
+        </a>
+
+        <%= if @blob_download_url do %>
+          <a
+            class="project-file-back"
+            href={@blob_download_url}
+            rel="noopener"
+            target="_blank"
+            id="project-blob-download"
+          >
+            Download
+          </a>
+        <% end %>
+
+        <%= if parent_dir == "" do %>
+          <a class="project-file-back" href={repo_href}>Back</a>
+        <% else %>
+          <a
+            class="project-file-back"
+            href={~p"/#{@account.handle}/#{@repository.handle}/tree/#{dir_segments}"}
+          >
+            Back
+          </a>
+        <% end %>
+      </:actions>
+    </.header>
+
+    <% filename = List.last(file_segments) %>
+    <% repo_href = ~p"/#{@account.handle}/#{@repository.handle}" %>
+
+    <div class="project-browser">
+      <nav class="project-breadcrumb" aria-label="Path" id="project-breadcrumb">
+        <a href={repo_href}>{@repository.handle}</a>
+        <%= for {segment, idx} <- Enum.with_index(dir_segments) do %>
+          <span class="project-breadcrumb-sep">/</span>
+          <% segment_path = Enum.take(dir_segments, idx + 1) %>
+          <a href={~p"/#{@account.handle}/#{@repository.handle}/tree/#{segment_path}"}>
+            {segment}
+          </a>
+        <% end %>
+        <span class="project-breadcrumb-sep">/</span>
+        <span class="project-breadcrumb-current">{filename}</span>
+      </nav>
+    </div>
+
+    <div class="project-file">
+      <%= case @file_content do %>
+        <% {:highlighted, highlighted} -> %>
+          <pre class="project-file-content highlight" id="project-file-content"><code><%= raw(highlighted) %></code></pre>
+        <% {:text, content} -> %>
+          <pre class="project-file-content" id="project-file-content">{content}</pre>
+        <% {:binary, size} -> %>
+          <p class="project-file-binary">
+            Binary file ({size} bytes) cannot be displayed.
+          </p>
+      <% end %>
+    </div>
+  </div>
+</Layouts.app>

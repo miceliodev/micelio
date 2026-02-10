@@ -1,0 +1,230 @@
+/* Storage settings styles */
+
+.storage-settings {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: var(--theme-ui-space-4) var(--theme-ui-space-3) var(--theme-ui-space-4);
+}
+
+.storage-settings-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+  gap: var(--theme-ui-space-4);
+  margin-top: var(--theme-ui-space-3);
+  align-items: start;
+}
+
+.storage-settings-panel {
+  border: var(--theme-ui-borders-thin);
+  padding: var(--theme-ui-space-3);
+  background-color: var(--theme-ui-colors-background);
+  border-radius: var(--theme-ui-radii-small);
+}
+
+.storage-settings-title {
+  margin-bottom: var(--theme-ui-space-2);
+  font-size: var(--theme-ui-fontSizes-body);
+}
+
+.storage-settings-subtitle {
+  margin: 0 0 var(--theme-ui-space-1) 0;
+  font-size: var(--theme-ui-fontSizes-body);
+}
+
+.storage-settings-meta {
+  color: var(--theme-ui-colors-muted);
+  font-size: var(--theme-ui-fontSizes-small);
+}
+
+.storage-settings-muted {
+  display: block;
+  margin-top: var(--theme-ui-space-1);
+}
+
+.storage-settings-alert {
+  margin-top: var(--theme-ui-space-2);
+  padding: var(--theme-ui-space-2);
+  border-radius: var(--theme-ui-radii-small);
+  font-size: var(--theme-ui-fontSizes-small);
+}
+
+.storage-settings-alert-success {
+  background-color: var(--theme-ui-colors-activity-1);
+  color: var(--theme-ui-colors-text);
+}
+
+.storage-settings-alert-error {
+  background-color: var(--theme-ui-colors-danger);
+  color: var(--theme-ui-colors-dangerText);
+}
+
+.storage-settings-test {
+  margin-top: var(--theme-ui-space-3);
+}
+
+.storage-settings-test-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--theme-ui-space-2);
+}
+
+.storage-settings-test-status {
+  color: var(--theme-ui-colors-muted);
+  font-size: var(--theme-ui-fontSizes-small);
+  margin-top: var(--theme-ui-space-1);
+}
+
+.storage-settings-spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--theme-ui-colors-border);
+  border-top-color: var(--theme-ui-colors-primary);
+  border-radius: var(--theme-ui-radii-full);
+  animation: storage-spin 0.8s linear infinite;
+}
+
+.storage-settings-errors {
+  margin: var(--theme-ui-space-2) 0 0;
+  padding-left: var(--theme-ui-space-3);
+  color: var(--theme-ui-colors-danger);
+  font-size: var(--theme-ui-fontSizes-small);
+}
+
+.storage-settings-steps {
+  list-style: none;
+  padding: 0;
+  margin: var(--theme-ui-space-2) 0 0;
+  display: grid;
+  gap: var(--theme-ui-space-1);
+  font-size: var(--theme-ui-fontSizes-small);
+}
+
+.storage-settings-steps li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--theme-ui-space-2);
+}
+
+.storage-settings-step {
+  padding: 0 var(--theme-ui-space-1);
+  border-radius: var(--theme-ui-radii-small);
+  border: var(--theme-ui-borders-thin);
+  font-size: var(--theme-ui-fontSizes-small);
+}
+
+.storage-settings-step-ok {
+  color: var(--theme-ui-colors-activity-3);
+  border-color: var(--theme-ui-colors-activity-3);
+}
+
+.storage-settings-step-warning {
+  color: var(--theme-ui-colors-muted);
+  border-color: var(--theme-ui-colors-muted);
+}
+
+.storage-settings-step-error {
+  color: var(--theme-ui-colors-danger);
+  border-color: var(--theme-ui-colors-danger);
+}
+
+.storage-settings-grid {
+  margin-top: var(--theme-ui-space-2);
+}
+
+.storage-settings-secret {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--theme-ui-space-2);
+  align-items: center;
+}
+
+.storage-settings-label {
+  font-weight: var(--theme-ui-fontWeights-bold);
+  color: var(--theme-ui-colors-text);
+}
+
+.storage-settings-toggle {
+  padding: var(--theme-ui-space-1) var(--theme-ui-space-2);
+  border: var(--theme-ui-borders-thin);
+  background-color: var(--theme-ui-colors-background);
+  color: var(--theme-ui-colors-text);
+  cursor: pointer;
+}
+
+.storage-settings-toggle:hover {
+  background-color: var(--theme-ui-colors-border);
+}
+
+.storage-settings-help {
+  margin-top: var(--theme-ui-space-3);
+  padding: var(--theme-ui-space-2);
+  border: var(--theme-ui-borders-thin);
+  border-radius: var(--theme-ui-radii-small);
+  background-color: var(--theme-ui-colors-background);
+}
+
+.storage-settings-help-list {
+  margin: 0;
+  padding-left: var(--theme-ui-space-3);
+  color: var(--theme-ui-colors-muted);
+  font-size: var(--theme-ui-fontSizes-small);
+}
+
+.storage-settings-help-empty {
+  color: var(--theme-ui-colors-muted);
+  font-size: var(--theme-ui-fontSizes-small);
+}
+
+.storage-settings-docs {
+  display: inline-flex;
+  margin-top: var(--theme-ui-space-2);
+  color: var(--theme-ui-colors-primary);
+  text-decoration: none;
+  font-size: var(--theme-ui-fontSizes-small);
+}
+
+.storage-settings-docs:hover {
+  text-decoration: underline;
+}
+
+.storage-settings-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--theme-ui-space-2);
+  margin-top: var(--theme-ui-space-3);
+}
+
+.storage-settings-danger {
+  border-color: var(--theme-ui-colors-danger);
+  color: var(--theme-ui-colors-danger);
+}
+
+@keyframes storage-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 900px) {
+  .storage-settings-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 540px) {
+  .storage-settings {
+    padding-left: var(--theme-ui-space-2);
+    padding-right: var(--theme-ui-space-2);
+  }
+
+  .storage-settings-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .storage-settings-toggle {
+    width: 100%;
+  }
+}

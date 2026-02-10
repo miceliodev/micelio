@@ -1,0 +1,221 @@
+/* Auth styles */
+
+.auth-screen {
+  display: grid;
+  place-items: center;
+  padding: var(--theme-ui-space-1) 0;
+}
+
+.page-main.page-main-auth {
+  display: flex;
+}
+
+.page-content.page-main-auth {
+  flex: 1;
+  display: flex;
+}
+
+.page-content.page-main-auth .auth-screen {
+  flex: 1;
+  min-height: 100%;
+}
+
+.auth-container {
+  width: min(24rem, 90vw);
+  display: grid;
+  align-content: center;
+  gap: var(--theme-ui-space-1);
+  padding: var(--theme-ui-space-2);
+}
+
+.auth-header {
+  text-align: center;
+  margin-bottom: var(--theme-ui-space-1);
+}
+
+.auth-header h1 {
+  font-weight: var(--theme-ui-font-weights-bold);
+  margin-bottom: var(--theme-ui-space-1);
+}
+
+.auth-header p {
+  color: var(--theme-ui-colors-muted);
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--theme-ui-space-1);
+}
+
+.auth-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--theme-ui-space-1);
+}
+
+.auth-form-group label {
+  font-weight: var(--theme-ui-font-weights-bold);
+}
+
+/* Auth input uses shared .input styles from tokens.css */
+.auth-input {
+  width: 100%;
+  padding: 5px 12px;
+  font-size: var(--theme-ui-font-sizes-body);
+  font-family: inherit;
+  line-height: 20px;
+  color: var(--theme-ui-colors-text);
+  background-color: var(--theme-ui-colors-control-bg);
+  border: 1px solid var(--theme-ui-colors-control-border);
+  border-radius: var(--theme-ui-radii-default);
+  box-shadow: inset 0 1px 0 rgba(208, 215, 222, 0.2);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.auth-input:focus {
+  border-color: var(--theme-ui-colors-primary);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(9, 105, 218, 0.3);
+}
+
+.auth-input-error {
+  border-color: var(--theme-ui-colors-danger);
+}
+
+.auth-input-error:focus {
+  box-shadow: 0 0 0 3px rgba(209, 36, 47, 0.3);
+}
+
+.auth-input::placeholder {
+  color: var(--theme-ui-colors-muted);
+  opacity: 1;
+}
+
+/* Auth button uses shared .btn styles from tokens.css */
+.auth-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--theme-ui-space-1);
+  width: 100%;
+  padding: 5px 16px;
+  font-size: var(--theme-ui-font-sizes-body);
+  font-weight: var(--theme-ui-font-weights-medium);
+  font-family: inherit;
+  line-height: 20px;
+  color: var(--theme-ui-colors-button-primary-fg);
+  background-color: var(--theme-ui-colors-button-primary-bg);
+  border: 1px solid transparent;
+  border-radius: var(--theme-ui-radii-default);
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.auth-button:hover {
+  background-color: var(--theme-ui-colors-button-primary-bg-hover);
+}
+
+.auth-button:focus-visible {
+  outline: 2px solid var(--theme-ui-colors-primary);
+  outline-offset: 2px;
+}
+
+.auth-button-passkey {
+  background-color: var(--theme-ui-colors-button-default-bg);
+  color: var(--theme-ui-colors-button-default-fg);
+  border: 1px solid var(--theme-ui-colors-button-default-border);
+}
+
+.auth-button-passkey:hover {
+  background-color: var(--theme-ui-colors-button-default-bg-hover);
+}
+
+.auth-button-secondary {
+  background-color: var(--theme-ui-colors-button-default-bg);
+  color: var(--theme-ui-colors-button-default-fg);
+  border: 1px solid var(--theme-ui-colors-button-default-border);
+}
+
+.auth-button-secondary:hover {
+  background-color: var(--theme-ui-colors-button-default-bg-hover);
+}
+
+.auth-passkey-status {
+  text-align: center;
+  color: var(--theme-ui-colors-muted);
+}
+
+.auth-divider {
+  position: relative;
+  text-align: center;
+  color: var(--theme-ui-colors-muted);
+  margin: var(--theme-ui-space-1) 0;
+}
+
+.auth-divider::before,
+.auth-divider::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  width: 40%;
+  border-top: var(--theme-ui-borders-thin);
+}
+
+.auth-divider::before {
+  left: 0;
+}
+
+.auth-divider::after {
+  right: 0;
+}
+
+.auth-divider span {
+  background-color: var(--theme-ui-colors-background);
+  padding: 0 var(--theme-ui-space-1);
+}
+
+/* OAuth buttons share secondary button styling */
+.auth-button-github,
+.auth-button-gitlab {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--theme-ui-space-1);
+  width: 100%;
+  padding: 5px 16px;
+  font-size: var(--theme-ui-font-sizes-body);
+  font-weight: var(--theme-ui-font-weights-medium);
+  line-height: 20px;
+  background-color: var(--theme-ui-colors-button-default-bg);
+  color: var(--theme-ui-colors-button-default-fg);
+  border: 1px solid var(--theme-ui-colors-button-default-border);
+  border-radius: var(--theme-ui-radii-default);
+  text-align: center;
+  text-decoration: none;
+  transition: background-color 0.15s ease;
+}
+
+.auth-button-github:hover,
+.auth-button-gitlab:hover {
+  background-color: var(--theme-ui-colors-button-default-bg-hover);
+  text-decoration: none;
+}
+
+.auth-body {
+  text-align: center;
+  color: var(--theme-ui-colors-muted);
+}
+
+.auth-actions {
+  text-align: center;
+}
+
+.auth-link {
+  color: var(--theme-ui-colors-primary);
+  text-decoration: none;
+}
+
+.auth-link:hover {
+  text-decoration: underline;
+}

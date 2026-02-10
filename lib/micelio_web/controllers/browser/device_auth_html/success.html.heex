@@ -1,0 +1,19 @@
+<Layouts.app
+  flash={@flash}
+  current_scope={assigns[:current_scope]}
+  current_user={assigns[:current_user]}
+  locale={assigns[:locale] || "en"}
+  current_path={assigns[:current_path] || "/"}
+>
+  <div class="device-auth-container">
+    <header class="device-auth-header">
+      <h1>Device connected</h1>
+      <p>Your CLI is now authorized. You can return to the terminal.</p>
+    </header>
+
+    <div class="device-auth-success">
+      <div class="device-auth-success-code">Code: {@grant.user_code}</div>
+      <p>This device can now request access tokens.</p>
+    </div>
+  </div>
+</Layouts.app>

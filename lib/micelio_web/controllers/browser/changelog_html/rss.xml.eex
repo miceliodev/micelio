@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Micelio Changelog</title>
+    <description>Latest changes, improvements, and new features in Micelio</description>
+    <link>https://micelio.dev/changelog</link>
+    <atom:link href="https://micelio.dev/changelog/rss" rel="self" type="application/rss+xml" />
+    <language>en-us</language>
+    <lastBuildDate><%= Calendar.strftime(DateTime.utc_now(), "%a, %d %b %Y %H:%M:%S %Z") %></lastBuildDate>
+    <generator>Micelio</generator>
+
+    <%= for entry <- @entries do %>
+    <item>
+      <title><%= entry.title %></title>
+      <description><![CDATA[<%= entry.description %>]]></description>
+      <link>https://micelio.dev/changelog/<%= entry.id %></link>
+      <guid isPermaLink="true">https://micelio.dev/changelog/<%= entry.id %></guid>
+      <pubDate><%= Calendar.strftime(DateTime.new!(entry.date, ~T[00:00:00]), "%a, %d %b %Y %H:%M:%S %Z") %></pubDate>
+      <category><%= Enum.join(entry.categories, ", ") %></category>
+      <%= if entry.author do %>
+      <author><%= entry.author %></author>
+      <% end %>
+    </item>
+    <% end %>
+  </channel>
+</rss>

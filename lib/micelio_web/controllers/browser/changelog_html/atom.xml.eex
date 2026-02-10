@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>Micelio Changelog</title>
+  <subtitle>Latest changes, improvements, and new features in Micelio</subtitle>
+  <link rel="alternate" type="text/html" href="https://micelio.dev/changelog"/>
+  <link rel="self" type="application/atom+xml" href="https://micelio.dev/changelog/atom"/>
+  <id>https://micelio.dev/changelog/atom</id>
+  <updated><%= DateTime.utc_now() |> DateTime.to_iso8601() %></updated>
+  <generator uri="https://micelio.dev" version="1.0">Micelio</generator>
+
+  <%= for entry <- @entries do %>
+  <entry>
+    <title><%= entry.title %></title>
+    <link rel="alternate" type="text/html" href="https://micelio.dev/changelog/<%= entry.id %>"/>
+    <id>https://micelio.dev/changelog/<%= entry.id %></id>
+    <published><%= DateTime.new!(entry.date, ~T[00:00:00]) |> DateTime.to_iso8601() %></published>
+    <updated><%= DateTime.new!(entry.date, ~T[00:00:00]) |> DateTime.to_iso8601() %></updated>
+    <summary><%= entry.description %></summary>
+    <content type="html"><![CDATA[<%= entry.body %>]]></content>
+    <%= if entry.author do %>
+    <author>
+      <name><%= entry.author %></name>
+    </author>
+    <% end %>
+    <%= for category <- entry.categories do %>
+    <category term="<%= category %>" label="<%= String.capitalize(category) %>"/>
+    <% end %>
+  </entry>
+  <% end %>
+</feed>

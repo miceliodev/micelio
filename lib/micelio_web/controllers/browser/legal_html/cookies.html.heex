@@ -1,0 +1,66 @@
+<Layouts.app
+  flash={@flash}
+  current_scope={assigns[:current_scope]}
+  current_user={assigns[:current_user]}
+  locale={assigns[:locale] || "en"}
+  current_path={assigns[:current_path] || "/"}
+>
+  <div class="legal-container" id="cookie-policy">
+    <.header>
+      Cookie Policy
+      <:subtitle>
+        Cookie policy for a service operated from Germany. This references GDPR and § 25 TTDSG
+        (device storage/access consent rules).
+      </:subtitle>
+    </.header>
+
+    <div class="legal-content">
+      <p class="legal-updated">
+        <strong>Last updated:</strong> {Date.utc_today() |> Date.to_iso8601()}
+      </p>
+
+      <h2>1. What are cookies?</h2>
+      <p>
+        Cookies are small text files stored on your device. Similar technologies (like local storage)
+        can also store or access information on your device.
+      </p>
+
+      <h2>2. Legal framework (Germany/EU)</h2>
+      <ul>
+        <li>
+          <strong>GDPR</strong> applies when cookies/similar technologies process personal data.
+        </li>
+        <li>
+          <strong>§ 25 TTDSG</strong>
+          (Germany) generally requires prior consent for storing or accessing
+          information on an end user’s device, unless strictly necessary for providing a service
+          explicitly requested by the user.
+        </li>
+      </ul>
+
+      <h2>3. Cookies we use</h2>
+      <p>We only use strictly necessary technologies for authentication and basic operation.</p>
+      <ul>
+        <li>
+          <strong>Session cookie</strong>
+          (<code>_micelio_key</code>) - required to maintain your authenticated session.
+        </li>
+        <li>
+          <strong>Theme preference</strong>
+          (local storage key <code>micelio:theme</code>) - stored only if you change the
+          theme; used to remember your preference.
+        </li>
+      </ul>
+
+      <h2>4. Managing cookies</h2>
+      <p>
+        You can control cookies through your browser settings. We do not use analytics or marketing cookies.
+      </p>
+
+      <h2>5. Contact</h2>
+      <p>
+        If you have questions, contact <a href={"mailto:#{MicelioWeb.LegalInfo.privacy_email()}"}>{MicelioWeb.LegalInfo.privacy_email()}</a>.
+      </p>
+    </div>
+  </div>
+</Layouts.app>

@@ -1,0 +1,28 @@
+.error-boundary {
+  margin: var(--theme-ui-space-3) 0;
+}
+
+.error-boundary-card {
+  border: var(--theme-ui-borders-thin);
+  border-left: 4px solid var(--theme-ui-colors-danger);
+  border-radius: var(--theme-ui-radii-small);
+  padding: var(--theme-ui-space-2);
+  background: var(--theme-ui-colors-background);
+}
+
+.error-boundary-title {
+  font-size: var(--theme-ui-font-sizes-body);
+  font-weight: var(--theme-ui-fontWeights-bold);
+  margin-bottom: var(--theme-ui-space-1);
+}
+
+.error-boundary-message {
+  color: var(--theme-ui-colors-muted);
+  margin-bottom: var(--theme-ui-space-2);
+}
+
+.error-boundary-actions {
+  display: flex;
+  gap: var(--theme-ui-space-1);
+  flex-wrap: wrap;
+}

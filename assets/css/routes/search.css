@@ -1,0 +1,113 @@
+/* Search styles */
+
+.search-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--theme-ui-space-3);
+}
+
+.search-header h1 {
+  font-weight: var(--theme-ui-font-weights-bold);
+  font-size: var(--theme-ui-font-sizes-body);
+  margin-bottom: var(--theme-ui-space-1);
+}
+
+.search-header p {
+  color: var(--theme-ui-colors-muted);
+  max-width: calc(var(--theme-ui-sizes-container) * 0.75);
+}
+
+.search-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--theme-ui-space-1);
+  align-items: flex-end;
+}
+
+.search-form .fieldset {
+  margin: 0;
+  flex: 1 1 16rem;
+}
+
+.search-input {
+  width: 100%;
+  padding: var(--theme-ui-space-1);
+  border: var(--theme-ui-borders-thin);
+  background-color: var(--theme-ui-colors-background);
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: var(--theme-ui-colors-primary);
+}
+
+.search-input::placeholder {
+  color: var(--theme-ui-colors-muted);
+}
+
+.search-submit {
+  padding: var(--theme-ui-space-1) var(--theme-ui-space-2);
+  border: var(--theme-ui-borders-thin);
+  background-color: var(--theme-ui-colors-background);
+  color: var(--theme-ui-colors-text);
+  font: inherit;
+  cursor: pointer;
+}
+
+.search-submit:hover {
+  border-color: var(--theme-ui-colors-primary);
+}
+
+.search-results {
+  display: flex;
+  flex-direction: column;
+  gap: var(--theme-ui-space-2);
+}
+
+.search-results-count {
+  color: var(--theme-ui-colors-muted);
+}
+
+.search-results-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--theme-ui-space-2);
+}
+
+.search-result {
+  border: var(--theme-ui-borders-thin);
+  padding: var(--theme-ui-space-2);
+  display: flex;
+  flex-direction: column;
+  gap: var(--theme-ui-space-1);
+}
+
+.search-result-link {
+  text-decoration: none;
+  color: inherit;
+  display: flex;
+  flex-direction: column;
+  gap: var(--theme-ui-space-1);
+}
+
+.search-result-link:hover .search-result-name {
+  text-decoration: underline;
+}
+
+.search-result-name {
+  font-family: var(--theme-ui-fonts-mono);
+  color: var(--theme-ui-colors-muted);
+}
+
+.search-result-title {
+  font-weight: var(--theme-ui-font-weights-bold);
+}
+
+.search-result-description {
+  color: var(--theme-ui-colors-muted);
+}
+
+.search-result-visibility {
+  align-self: flex-start;
+}
