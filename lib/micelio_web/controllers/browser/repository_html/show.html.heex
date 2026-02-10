@@ -382,6 +382,26 @@
             </svg>
             <span>{length(@entries)} {gettext("items")}</span>
           </div>
+          <%= if @license do %>
+            <div class="repository-sidebar-stat">
+              <svg
+                class="repository-sidebar-stat-icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M12 3v18" />
+                <path d="M5 7l-2 6a5 5 0 0 0 4 0l-2-6" />
+                <path d="M19 7l-2 6a5 5 0 0 0 4 0l-2-6" />
+                <path d="M5 7h14" />
+              </svg>
+              <span>{@license.name || gettext("View license")}</span>
+            </div>
+          <% end %>
         </div>
       </aside>
     </div>

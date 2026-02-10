@@ -184,6 +184,11 @@ defmodule MicelioWeb.Browser.RepositoryController do
         readme_for_root(repository.id, tree, entries)
       end
 
+    license =
+      if dir_path == "" do
+        detect_license(repository.id, tree, entries)
+      end
+
     title_parts =
       if dir_path == "" do
         ["#{account_handle}/#{repository_handle}"]
@@ -208,6 +213,7 @@ defmodule MicelioWeb.Browser.RepositoryController do
     |> assign(:dir_path, dir_path)
     |> assign(:entries, entries)
     |> assign(:readme, readme)
+    |> assign(:license, license)
     |> assign_star_data(repository)
     |> assign_token_pool_data(repository)
     |> maybe_assign_schema_json_ld(dir_path, account, repository)
@@ -497,6 +503,58 @@ defmodule MicelioWeb.Browser.RepositoryController do
     |> Path.extname()
     |> String.downcase()
     |> Kernel.in(@readme_markdown_extensions)
+  end
+
+  @license_candidates [
+    "license",
+    "license.md",
+    "license.txt",
+    "licence",
+    "licence.md",
+    "licence.txt",
+    "copying",
+    "copying.md"
+  ]
+
+  defp detect_license(repository_id, tree, entries) do
+    case find_license_entry(entries) do
+      nil ->
+        nil
+
+      entry ->
+        with blob_hash when is_binary(blob_hash) <-
+               MicProject.blob_hash_for_path(tree, entry.path),
+             {:ok, content} <- MicProject.get_blob(repository_id, blob_hash) do
+          %{name: identify_license(content), file: entry.name}
+        else
+          _ -> nil
+        end
+    end
+  end
+
+  defp find_license_entry(entries) do
+    Enum.find_value(@license_candidates, fn candidate ->
+      Enum.find(entries, fn entry ->
+        entry.type == :blob and String.downcase(entry.name) == candidate
+      end)
+    end)
+  end
+
+  defp identify_license(content) when is_binary(content) do
+    cond do
+      String.contains?(content, "Permission is hereby granted, free of charge") -> "MIT License"
+      String.contains?(content, "Apache License") and String.contains?(content, "Version 2.0") -> "Apache License 2.0"
+      String.contains?(content, "GNU GENERAL PUBLIC LICENSE") and String.contains?(content, "Version 3") -> "GPL-3.0"
+      String.contains?(content, "GNU GENERAL PUBLIC LICENSE") and String.contains?(content, "Version 2") -> "GPL-2.0"
+      String.contains?(content, "GNU LESSER GENERAL PUBLIC LICENSE") -> "LGPL"
+      String.contains?(content, "GNU AFFERO GENERAL PUBLIC LICENSE") -> "AGPL-3.0"
+      String.contains?(content, "BSD 2-Clause") -> "BSD-2-Clause"
+      String.contains?(content, "BSD 3-Clause") -> "BSD-3-Clause"
+      String.contains?(content, "Mozilla Public License") and String.contains?(content, "2.0") -> "MPL-2.0"
+      String.contains?(content, "ISC License") -> "ISC License"
+      String.contains?(content, "The Unlicense") -> "Unlicense"
+      true -> nil
+    end
   end
 
   defp format_blame_line(%{attribution: attribution} = line) do
