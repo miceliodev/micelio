@@ -386,7 +386,24 @@
 .repository-readme-markdown h3,
 .repository-readme-markdown h4 {
   margin: var(--theme-ui-space-3) 0 var(--theme-ui-space-1);
+  font-weight: var(--theme-ui-font-weights-semibold);
+}
+
+.repository-readme-markdown h1 {
+  font-size: var(--theme-ui-font-size-lg);
   font-weight: var(--theme-ui-font-weights-bold);
+}
+
+.repository-readme-markdown h2 {
+  font-size: var(--theme-ui-font-size-md);
+}
+
+.repository-readme-markdown h3 {
+  font-size: var(--theme-ui-font-size-base);
+}
+
+.repository-readme-markdown h4 {
+  font-size: var(--theme-ui-font-size-sm);
 }
 
 .repository-readme-markdown h1:first-child,
