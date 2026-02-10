@@ -247,6 +247,21 @@ defmodule MicelioWeb.Router do
     post("/auth/verify", DeviceAuthController, :verify)
   end
 
+  # Redirect legacy /projects URLs to new paths
+  scope "/projects", MicelioWeb.Browser do
+    pipe_through(:browser)
+
+    get("/", RedirectController, :projects_index)
+    get("/new", RedirectController, :projects_new)
+    get("/:account/:repository", RedirectController, :projects_show)
+    get("/:account/:repository/edit", RedirectController, :projects_edit)
+    get("/:account/:repository/sessions", RedirectController, :projects_sessions)
+    get("/:account/:repository/sessions/:id", RedirectController, :projects_session)
+    get("/:account/:repository/prompt-requests", RedirectController, :projects_prompt_requests)
+    get("/:account/:repository/prompt-requests/new", RedirectController, :projects_prompt_request_new)
+    get("/:account/:repository/prompt-requests/:id", RedirectController, :projects_prompt_request)
+  end
+
   # Repository list routes (require authentication)
   scope "/repositories", MicelioWeb do
     pipe_through([:browser, :require_auth])
