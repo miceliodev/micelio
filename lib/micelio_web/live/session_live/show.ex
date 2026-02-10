@@ -9,11 +9,7 @@ defmodule MicelioWeb.SessionLive.Show do
 
   @impl true
   def mount(
-        %{
-          "organization_handle" => org_handle,
-          "repository_handle" => repository_handle,
-          "id" => session_id
-        },
+        %{"account" => org_handle, "repository" => repository_handle, "id" => session_id},
         _session,
         socket
       ) do
@@ -30,7 +26,7 @@ defmodule MicelioWeb.SessionLive.Show do
               {:ok,
                socket
                |> put_flash(:error, "Session not found.")
-               |> push_navigate(to: ~p"/projects/#{org_handle}/#{repository_handle}/sessions")}
+               |> push_navigate(to: ~p"/#{org_handle}/#{repository_handle}/sessions")}
 
             session ->
               if session.repository_id == repository.id do
@@ -43,7 +39,7 @@ defmodule MicelioWeb.SessionLive.Show do
                     description: "Session details for #{repository.name}.",
                     canonical_url:
                       url(
-                        ~p"/projects/#{organization.account.handle}/#{repository.handle}/sessions/#{session.id}"
+                        ~p"/#{organization.account.handle}/#{repository.handle}/sessions/#{session.id}"
                       ),
                     open_graph: %{
                       image_template: "agent_session",
@@ -68,21 +64,21 @@ defmodule MicelioWeb.SessionLive.Show do
                 {:ok,
                  socket
                  |> put_flash(:error, "Session not found.")
-                 |> push_navigate(to: ~p"/projects/#{org_handle}/#{repository_handle}/sessions")}
+                 |> push_navigate(to: ~p"/#{org_handle}/#{repository_handle}/sessions")}
               end
           end
         else
           {:ok,
            socket
            |> put_flash(:error, "You do not have access to this repository.")
-           |> push_navigate(to: ~p"/projects")}
+           |> push_navigate(to: ~p"/repositories")}
         end
 
       {:error, _reason} ->
         {:ok,
          socket
          |> put_flash(:error, "Project not found.")
-         |> push_navigate(to: ~p"/projects")}
+         |> push_navigate(to: ~p"/repositories")}
     end
   end
 
@@ -729,7 +725,7 @@ defmodule MicelioWeb.SessionLive.Show do
                 <span class="session-sidebar-label">{gettext("Prompt Request")}</span>
                 <.link
                   navigate={
-                    ~p"/projects/#{@organization.account.handle}/#{@repository.handle}/prompt-requests/#{@session.prompt_request.id}"
+                    ~p"/#{@organization.account.handle}/#{@repository.handle}/prompt-requests/#{@session.prompt_request.id}"
                   }
                   class="session-prompt-request-link"
                   id="session-prompt-request-link"

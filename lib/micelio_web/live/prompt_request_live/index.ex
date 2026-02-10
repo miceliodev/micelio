@@ -9,11 +9,7 @@ defmodule MicelioWeb.PromptRequestLive.Index do
   alias MicelioWeb.PageMeta
 
   @impl true
-  def mount(
-        %{"organization_handle" => org_handle, "repository_handle" => repository_handle},
-        _session,
-        socket
-      ) do
+  def mount(%{"account" => org_handle, "repository" => repository_handle}, _session, socket) do
     with {:ok, repository, organization} <-
            Repositories.get_repository_for_user_by_handle(
              socket.assigns.current_user,
@@ -30,7 +26,7 @@ defmodule MicelioWeb.PromptRequestLive.Index do
         |> PageMeta.assign(
           description: "Prompt requests for #{repository.name}.",
           canonical_url:
-            url(~p"/projects/#{organization.account.handle}/#{repository.handle}/prompt-requests")
+            url(~p"/#{organization.account.handle}/#{repository.handle}/prompt-requests")
         )
         |> assign(:repository, repository)
         |> assign(:organization, organization)
@@ -43,7 +39,7 @@ defmodule MicelioWeb.PromptRequestLive.Index do
         {:ok,
          socket
          |> put_flash(:error, "Project not found or access denied.")
-         |> push_navigate(to: ~p"/projects")}
+         |> push_navigate(to: ~p"/repositories")}
     end
   end
 
@@ -71,7 +67,7 @@ defmodule MicelioWeb.PromptRequestLive.Index do
             <:actions>
               <.link
                 navigate={
-                  ~p"/projects/#{@organization.account.handle}/#{@repository.handle}/prompt-requests/new"
+                  ~p"/#{@organization.account.handle}/#{@repository.handle}/prompt-requests/new"
                 }
                 class="prompt-request-button"
                 id="new-prompt-request"
@@ -91,7 +87,7 @@ defmodule MicelioWeb.PromptRequestLive.Index do
               <%= for prompt_request <- @prompt_requests do %>
                 <.link
                   navigate={
-                    ~p"/projects/#{@organization.account.handle}/#{@repository.handle}/prompt-requests/#{prompt_request.id}"
+                    ~p"/#{@organization.account.handle}/#{@repository.handle}/prompt-requests/#{prompt_request.id}"
                   }
                   class="prompt-request-card"
                   id={"prompt-request-#{prompt_request.id}"}

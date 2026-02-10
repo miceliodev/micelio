@@ -17,7 +17,7 @@ msgid "Account (@%{handle})"
 msgstr "アカウント (@%{handle})"
 
 #: lib/micelio_web/components/core_components.ex:572
-#: lib/micelio_web/live/session_live/show.ex:744
+#: lib/micelio_web/live/session_live/show.ex:740
 #, elixir-autogen, elixir-format
 msgid "Actions"
 msgstr "アクション"
@@ -395,11 +395,6 @@ msgstr "パルス数"
 msgid "Unpulse"
 msgstr "パルス解除"
 
-#: lib/micelio_web/controllers/browser/page_html.ex:34
-#, elixir-autogen, elixir-format
-msgid "Projects you've worked on recently."
-msgstr "最近作業したプロジェクトです。"
-
 #: lib/micelio_web/controllers/browser/auth_controller.ex:241
 #, elixir-autogen, elixir-format
 msgid "GitHub App installed successfully."
@@ -730,7 +725,7 @@ msgstr ""
 msgid "Binary file (%{size} bytes) cannot be displayed."
 msgstr ""
 
-#: lib/micelio_web/live/repository_live/index.ex:67
+#: lib/micelio_web/live/repository_live/index.ex:71
 #, elixir-autogen, elixir-format, fuzzy
 msgid "Create your first repository"
 msgstr "最初のプロジェクトを作成"
@@ -745,7 +740,7 @@ msgstr "Micelioプロジェクトに貢献する人向けのドキュメント�
 msgid "Manage your repositories."
 msgstr "プロジェクトを管理します。"
 
-#: lib/micelio_web/live/repository_live/index.ex:51
+#: lib/micelio_web/live/repository_live/index.ex:55
 #, elixir-autogen, elixir-format
 msgid "New repository"
 msgstr ""
@@ -760,7 +755,7 @@ msgstr "公開プロジェクトはまだありません。"
 msgid "No recent repositories yet."
 msgstr "最近のプロジェクトはまだありません。"
 
-#: lib/micelio_web/live/repository_live/index.ex:59
+#: lib/micelio_web/live/repository_live/index.ex:63
 #, elixir-autogen, elixir-format
 msgid "No repositories yet"
 msgstr ""
@@ -791,7 +786,7 @@ msgstr ""
 msgid "Repositories"
 msgstr ""
 
-#: lib/micelio_web/live/repository_live/index.ex:60
+#: lib/micelio_web/live/repository_live/index.ex:64
 #, elixir-autogen, elixir-format
 msgid "Repositories help you organize your code and collaborate with others."
 msgstr ""
@@ -831,154 +826,154 @@ msgstr "パルス数"
 msgid "repositories"
 msgstr ""
 
-#: lib/micelio_web/live/session_live/index.ex:178
+#: lib/micelio_web/live/session_live/index.ex:174
 #, elixir-autogen, elixir-format
 msgid "Abandoned"
 msgstr ""
 
-#: lib/micelio_web/live/session_live/index.ex:138
+#: lib/micelio_web/live/session_live/index.ex:134
 #, elixir-autogen, elixir-format
 msgid "Active"
 msgstr ""
 
-#: lib/micelio_web/live/session_live/index.ex:121
+#: lib/micelio_web/live/session_live/index.ex:117
 #, elixir-autogen, elixir-format
 msgid "All"
 msgstr ""
 
-#: lib/micelio_web/live/session_live/index.ex:158
+#: lib/micelio_web/live/session_live/index.ex:154
 #, elixir-autogen, elixir-format, fuzzy
 msgid "Landed"
 msgstr "と"
 
-#: lib/micelio_web/live/session_live/index.ex:188
+#: lib/micelio_web/live/session_live/index.ex:184
 #, elixir-autogen, elixir-format, fuzzy
 msgid "Newest"
 msgstr ""
 
-#: lib/micelio_web/live/session_live/index.ex:211
+#: lib/micelio_web/live/session_live/index.ex:207
 #, elixir-autogen, elixir-format
 msgid "No sessions yet"
 msgstr ""
 
-#: lib/micelio_web/live/session_live/index.ex:189
+#: lib/micelio_web/live/session_live/index.ex:185
 #, elixir-autogen, elixir-format
 msgid "Oldest"
 msgstr ""
 
-#: lib/micelio_web/live/session_live/index.ex:213
+#: lib/micelio_web/live/session_live/index.ex:209
 #, elixir-autogen, elixir-format
 msgid "Sessions are created when you use the mic CLI to make changes to this repository."
 msgstr ""
 
-#: lib/micelio_web/live/session_live/index.ex:186
+#: lib/micelio_web/live/session_live/index.ex:182
 #, elixir-autogen, elixir-format
 msgid "Sort order"
 msgstr ""
 
-#: lib/micelio_web/live/session_live/index.ex:190
-#: lib/micelio_web/live/session_live/show.ex:629
+#: lib/micelio_web/live/session_live/index.ex:186
+#: lib/micelio_web/live/session_live/show.ex:625
 #, elixir-autogen, elixir-format
 msgid "Status"
 msgstr ""
 
-#: lib/micelio_web/live/session_live/index.ex:288
+#: lib/micelio_web/live/session_live/index.ex:284
 #, elixir-autogen, elixir-format, fuzzy
 msgid "landed"
 msgstr "と"
 
-#: lib/micelio_web/live/session_live/index.ex:285
+#: lib/micelio_web/live/session_live/index.ex:281
 #, elixir-autogen, elixir-format
 msgid "started"
 msgstr ""
 
-#: lib/micelio_web/live/session_live/show.ex:394
+#: lib/micelio_web/live/session_live/show.ex:390
 #, elixir-autogen, elixir-format
 msgid "AI"
 msgstr ""
 
-#: lib/micelio_web/live/session_live/show.ex:396
+#: lib/micelio_web/live/session_live/show.ex:392
 #, elixir-autogen, elixir-format
 msgid "AI + Human"
 msgstr ""
 
-#: lib/micelio_web/live/session_live/show.ex:752
+#: lib/micelio_web/live/session_live/show.ex:748
 #, elixir-autogen, elixir-format, fuzzy
 msgid "Abandon"
 msgstr ""
 
-#: lib/micelio_web/live/session_live/show.ex:750
+#: lib/micelio_web/live/session_live/show.ex:746
 #, elixir-autogen, elixir-format
 msgid "Abandon this session?"
 msgstr ""
 
-#: lib/micelio_web/live/session_live/show.ex:572
-#: lib/micelio_web/live/session_live/show.ex:706
+#: lib/micelio_web/live/session_live/show.ex:568
+#: lib/micelio_web/live/session_live/show.ex:702
 #, elixir-autogen, elixir-format
 msgid "Changes"
 msgstr ""
 
-#: lib/micelio_web/live/session_live/show.ex:545
+#: lib/micelio_web/live/session_live/show.ex:541
 #, elixir-autogen, elixir-format
 msgid "Connecting..."
 msgstr ""
 
-#: lib/micelio_web/live/session_live/show.ex:550
+#: lib/micelio_web/live/session_live/show.ex:546
 #, elixir-autogen, elixir-format
 msgid "Filter session events"
 msgstr ""
 
-#: lib/micelio_web/live/session_live/show.ex:395
+#: lib/micelio_web/live/session_live/show.ex:391
 #, elixir-autogen, elixir-format
 msgid "Human"
 msgstr ""
 
-#: lib/micelio_web/live/session_live/show.ex:565
+#: lib/micelio_web/live/session_live/show.ex:561
 #, elixir-autogen, elixir-format, fuzzy
 msgid "No events yet."
 msgstr "説明はまだありません。"
 
-#: lib/micelio_web/live/session_live/show.ex:612
+#: lib/micelio_web/live/session_live/show.ex:608
 #, elixir-autogen, elixir-format
 msgid "No file changes in this session"
 msgstr ""
 
-#: lib/micelio_web/live/session_live/show.ex:786
+#: lib/micelio_web/live/session_live/show.ex:782
 #, elixir-autogen, elixir-format, fuzzy
 msgid "Output"
 msgstr ""
 
-#: lib/micelio_web/live/session_live/show.ex:620
+#: lib/micelio_web/live/session_live/show.ex:616
 #, elixir-autogen, elixir-format
 msgid "Raw metadata"
 msgstr ""
 
-#: lib/micelio_web/live/session_live/show.ex:644
+#: lib/micelio_web/live/session_live/show.ex:640
 #, elixir-autogen, elixir-format, fuzzy
 msgid "Attribution"
 msgstr "コントリビューション"
 
-#: lib/micelio_web/live/session_live/show.ex:637
+#: lib/micelio_web/live/session_live/show.ex:633
 #, elixir-autogen, elixir-format
 msgid "Author"
 msgstr ""
 
-#: lib/micelio_web/live/session_live/show.ex:729
+#: lib/micelio_web/live/session_live/show.ex:725
 #, elixir-autogen, elixir-format
 msgid "Prompt Request"
 msgstr ""
 
-#: lib/micelio_web/live/session_live/show.ex:710
+#: lib/micelio_web/live/session_live/show.ex:706
 #, elixir-autogen, elixir-format, fuzzy
 msgid "added"
 msgstr "と"
 
-#: lib/micelio_web/live/session_live/show.ex:720
+#: lib/micelio_web/live/session_live/show.ex:716
 #, elixir-autogen, elixir-format, fuzzy
 msgid "deleted"
 msgstr "削除"
 
-#: lib/micelio_web/live/session_live/show.ex:715
+#: lib/micelio_web/live/session_live/show.ex:711
 #, elixir-autogen, elixir-format
 msgid "modified"
 msgstr ""
@@ -986,4 +981,9 @@ msgstr ""
 #: lib/micelio_web/controllers/browser/repository_html/show.html.heex:402
 #, elixir-autogen, elixir-format
 msgid "View license"
+msgstr ""
+
+#: lib/micelio_web/controllers/browser/page_html.ex:34
+#, elixir-autogen, elixir-format
+msgid "Repositories you've worked on recently."
 msgstr ""

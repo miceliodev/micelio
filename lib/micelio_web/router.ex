@@ -179,8 +179,8 @@ defmodule MicelioWeb.Router do
   scope "/api/mobile", MicelioWeb.Api.Mobile do
     pipe_through(:api)
 
-    get("/projects", RepositoryController, :index)
-    get("/projects/:organization_handle/:repository_handle", RepositoryController, :show)
+    get("/repositories", RepositoryController, :index)
+    get("/repositories/:organization_handle/:repository_handle", RepositoryController, :show)
   end
 
   scope "/api/remote-executions", MicelioWeb.Api do
@@ -190,7 +190,7 @@ defmodule MicelioWeb.Router do
     get("/:id", RemoteExecutionController, :show)
   end
 
-  scope "/api/projects", MicelioWeb.Api do
+  scope "/api/repositories", MicelioWeb.Api do
     pipe_through(:api)
 
     get("/:organization_handle/:repository_handle/token-pool", TokenPoolController, :show)
@@ -226,7 +226,7 @@ defmodule MicelioWeb.Router do
 
     get("/actors/:handle", ActivityPubController, :actor)
     get("/profiles/:handle", ActivityPubController, :profile)
-    get("/projects/:account/:repository", ActivityPubController, :repository)
+    get("/repositories/:account/:repository", ActivityPubController, :repository)
     get("/actors/:handle/outbox", ActivityPubController, :outbox)
     post("/actors/:handle/inbox", ActivityPubController, :inbox)
     get("/actors/:handle/followers", ActivityPubController, :followers)
@@ -247,37 +247,29 @@ defmodule MicelioWeb.Router do
     post("/auth/verify", DeviceAuthController, :verify)
   end
 
-  # Project routes (require authentication)
-  scope "/projects", MicelioWeb do
+  # Repository list routes (require authentication)
+  scope "/repositories", MicelioWeb do
     pipe_through([:browser, :require_auth])
 
     live_session :repositories,
       on_mount: [{MicelioWeb.LiveAuth, :require_auth}, MicelioWeb.LiveOpenGraphCacheBuster] do
       live("/", RepositoryLive.Index, :index)
       live("/new", RepositoryLive.New, :new)
-      live("/:organization_handle/:repository_handle/edit", RepositoryLive.Edit, :edit)
-      live("/:organization_handle/:repository_handle", RepositoryLive.Show, :show)
+    end
+  end
 
-      live(
-        "/:organization_handle/:repository_handle/prompt-requests",
-        PromptRequestLive.Index,
-        :index
-      )
+  # Per-repository routes (require authentication)
+  scope "/", MicelioWeb do
+    pipe_through([:browser, :require_auth, :load_resources])
 
-      live(
-        "/:organization_handle/:repository_handle/prompt-requests/new",
-        PromptRequestLive.New,
-        :new
-      )
-
-      live(
-        "/:organization_handle/:repository_handle/prompt-requests/:id",
-        PromptRequestLive.Show,
-        :show
-      )
-
-      live("/:organization_handle/:repository_handle/sessions", SessionLive.Index, :index)
-      live("/:organization_handle/:repository_handle/sessions/:id", SessionLive.Show, :show)
+    live_session :repository_management,
+      on_mount: [{MicelioWeb.LiveAuth, :require_auth}, MicelioWeb.LiveOpenGraphCacheBuster] do
+      live("/:account/:repository/edit", RepositoryLive.Edit, :edit)
+      live("/:account/:repository/sessions", SessionLive.Index, :index)
+      live("/:account/:repository/sessions/:id", SessionLive.Show, :show)
+      live("/:account/:repository/prompt-requests", PromptRequestLive.Index, :index)
+      live("/:account/:repository/prompt-requests/new", PromptRequestLive.New, :new)
+      live("/:account/:repository/prompt-requests/:id", PromptRequestLive.Show, :show)
     end
   end
 

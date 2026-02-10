@@ -18,7 +18,7 @@ defmodule MicelioWeb.RepositoryLive.Index do
       |> assign(:page_title, gettext("Repositories"))
       |> PageMeta.assign(
         description: gettext("Manage your repositories."),
-        canonical_url: url(~p"/projects")
+        canonical_url: url(~p"/repositories")
       )
       |> assign(:repositories_count, length(repositories))
       |> assign(:can_create_repository, admin_organizations != [])
@@ -47,7 +47,11 @@ defmodule MicelioWeb.RepositoryLive.Index do
               {gettext("New organization")}
             </.link>
             <%= if @can_create_repository do %>
-              <.link navigate={~p"/projects/new"} class="repository-button" id="new-repository-link">
+              <.link
+                navigate={~p"/repositories/new"}
+                class="repository-button"
+                id="new-repository-link"
+              >
                 {gettext("New repository")}
               </.link>
             <% end %>
@@ -60,7 +64,7 @@ defmodule MicelioWeb.RepositoryLive.Index do
             <p>{gettext("Repositories help you organize your code and collaborate with others.")}</p>
             <%= if @can_create_repository do %>
               <.link
-                navigate={~p"/projects/new"}
+                navigate={~p"/repositories/new"}
                 class="repository-button"
                 id="repositories-empty-create"
               >

@@ -6,11 +6,7 @@ defmodule MicelioWeb.RepositoryLive.Edit do
   alias MicelioWeb.PageMeta
 
   @impl true
-  def mount(
-        %{"organization_handle" => org_handle, "repository_handle" => repository_handle},
-        _session,
-        socket
-      ) do
+  def mount(%{"account" => org_handle, "repository" => repository_handle}, _session, socket) do
     case Micelio.Repositories.get_repository_for_user_by_handle(
            socket.assigns.current_user,
            org_handle,
@@ -29,8 +25,7 @@ defmodule MicelioWeb.RepositoryLive.Edit do
             |> assign(:page_title, "Edit Project")
             |> PageMeta.assign(
               description: "Edit project settings.",
-              canonical_url:
-                url(~p"/projects/#{organization.account.handle}/#{repository.handle}/edit")
+              canonical_url: url(~p"/#{organization.account.handle}/#{repository.handle}/edit")
             )
             |> assign(:repository, repository)
             |> assign(:organization, organization)
@@ -41,14 +36,14 @@ defmodule MicelioWeb.RepositoryLive.Edit do
           {:ok,
            socket
            |> put_flash(:error, "You do not have access to this repository.")
-           |> push_navigate(to: ~p"/projects")}
+           |> push_navigate(to: ~p"/repositories")}
         end
 
       {:error, _reason} ->
         {:ok,
          socket
          |> put_flash(:error, "Project not found.")
-         |> push_navigate(to: ~p"/projects")}
+         |> push_navigate(to: ~p"/repositories")}
     end
   end
 
@@ -78,7 +73,7 @@ defmodule MicelioWeb.RepositoryLive.Edit do
            socket
            |> put_flash(:info, "Project updated successfully!")
            |> push_navigate(
-             to: ~p"/projects/#{socket.assigns.organization.account.handle}/#{repository.handle}"
+             to: ~p"/#{socket.assigns.organization.account.handle}/#{repository.handle}"
            )}
 
         {:error, changeset} ->
@@ -177,7 +172,7 @@ defmodule MicelioWeb.RepositoryLive.Edit do
               Save changes
             </button>
             <.link
-              navigate={~p"/projects/#{@organization.account.handle}/#{@repository.handle}"}
+              navigate={~p"/#{@organization.account.handle}/#{@repository.handle}"}
               class="repository-button repository-button-secondary"
               id="project-cancel"
             >

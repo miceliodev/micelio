@@ -34,7 +34,7 @@ defmodule MicelioWeb.SessionLiveTest do
         })
 
       {:ok, _index_live, html} =
-        live(conn, "/projects/#{organization.account.handle}/#{repository.handle}/sessions")
+        live(conn, "/#{organization.account.handle}/#{repository.handle}/sessions")
 
       assert html =~ "Sessions"
       assert html =~ "Build authentication"
@@ -63,7 +63,7 @@ defmodule MicelioWeb.SessionLiveTest do
         })
 
       {:ok, _live, html} =
-        live(conn, "/projects/#{organization.account.handle}/#{repository.handle}/sessions")
+        live(conn, "/#{organization.account.handle}/#{repository.handle}/sessions")
 
       assert html =~ "Test goal"
       assert html =~ "Active"
@@ -94,7 +94,7 @@ defmodule MicelioWeb.SessionLiveTest do
       {:ok, _} = Sessions.land_session(landed_session)
 
       {:ok, index_live, html} =
-        live(conn, "/projects/#{organization.account.handle}/#{repository.handle}/sessions")
+        live(conn, "/#{organization.account.handle}/#{repository.handle}/sessions")
 
       assert html =~ "Active session"
       assert html =~ "Landed session"
@@ -121,7 +121,7 @@ defmodule MicelioWeb.SessionLiveTest do
       organization: organization
     } do
       {:ok, _live, html} =
-        live(conn, "/projects/#{organization.account.handle}/#{repository.handle}/sessions")
+        live(conn, "/#{organization.account.handle}/#{repository.handle}/sessions")
 
       assert html =~ "No sessions yet"
     end
@@ -136,7 +136,7 @@ defmodule MicelioWeb.SessionLiveTest do
       assert {:error, {:redirect, %{to: "/auth/login"}}} =
                live(
                  conn,
-                 "/projects/#{organization.account.handle}/#{repository.handle}/sessions"
+                 "/#{organization.account.handle}/#{repository.handle}/sessions"
                )
     end
   end
@@ -172,7 +172,7 @@ defmodule MicelioWeb.SessionLiveTest do
       {:ok, _live, html} =
         live(
           conn,
-          "/projects/#{organization.account.handle}/#{repository.handle}/sessions/#{session.id}"
+          "/#{organization.account.handle}/#{repository.handle}/sessions/#{session.id}"
         )
 
       assert html =~ "Build something great"
@@ -215,13 +215,13 @@ defmodule MicelioWeb.SessionLiveTest do
       {:ok, _live, html} =
         live(
           conn,
-          "/projects/#{organization.account.handle}/#{repository.handle}/sessions/#{session.id}"
+          "/#{organization.account.handle}/#{repository.handle}/sessions/#{session.id}"
         )
 
       assert html =~ "Prompt to PR"
 
       assert html =~
-               "/projects/#{organization.account.handle}/#{repository.handle}/prompt-requests/#{prompt_request.id}"
+               "/#{organization.account.handle}/#{repository.handle}/prompt-requests/#{prompt_request.id}"
     end
 
     test "renders session event viewer controls", %{
@@ -241,7 +241,7 @@ defmodule MicelioWeb.SessionLiveTest do
       {:ok, _live, html} =
         live(
           conn,
-          "/projects/#{organization.account.handle}/#{repository.handle}/sessions/#{session.id}"
+          "/#{organization.account.handle}/#{repository.handle}/sessions/#{session.id}"
         )
 
       assert html =~ "data-events-url=\"/api/sessions/#{session.session_id}/events/stream\""
@@ -278,7 +278,7 @@ defmodule MicelioWeb.SessionLiveTest do
       {:ok, _live, html} =
         live(
           conn,
-          "/projects/#{organization.account.handle}/#{repository.handle}/sessions/#{session.id}"
+          "/#{organization.account.handle}/#{repository.handle}/sessions/#{session.id}"
         )
 
       assert html =~ "data-type=\"status\""
@@ -323,7 +323,7 @@ defmodule MicelioWeb.SessionLiveTest do
       {:ok, _live, html} =
         live(
           conn,
-          "/projects/#{organization.account.handle}/#{repository.handle}/sessions/#{session.id}"
+          "/#{organization.account.handle}/#{repository.handle}/sessions/#{session.id}"
         )
 
       assert html =~ "data-type=\"status\""
@@ -353,7 +353,7 @@ defmodule MicelioWeb.SessionLiveTest do
       {:ok, _live, html} =
         live(
           conn,
-          "/projects/#{organization.account.handle}/#{repository.handle}/sessions/#{session.id}"
+          "/#{organization.account.handle}/#{repository.handle}/sessions/#{session.id}"
         )
 
       assert html =~ "42% - Downloading"
@@ -382,7 +382,7 @@ defmodule MicelioWeb.SessionLiveTest do
       {:ok, _live, html} =
         live(
           conn,
-          "/projects/#{organization.account.handle}/#{repository.handle}/sessions/#{session.id}"
+          "/#{organization.account.handle}/#{repository.handle}/sessions/#{session.id}"
         )
 
       assert html =~ "session-tl-progress"
@@ -417,7 +417,7 @@ defmodule MicelioWeb.SessionLiveTest do
       {:ok, _live, html} =
         live(
           conn,
-          "/projects/#{organization.account.handle}/#{repository.handle}/sessions/#{session.id}"
+          "/#{organization.account.handle}/#{repository.handle}/sessions/#{session.id}"
         )
 
       assert html =~ "session-tl-artifact-image"
@@ -447,7 +447,7 @@ defmodule MicelioWeb.SessionLiveTest do
       {:ok, _live, html} =
         live(
           conn,
-          "/projects/#{organization.account.handle}/#{repository.handle}/sessions/#{session.id}"
+          "/#{organization.account.handle}/#{repository.handle}/sessions/#{session.id}"
         )
 
       assert html =~ "session-tl-tool-call"
@@ -478,7 +478,7 @@ defmodule MicelioWeb.SessionLiveTest do
       {:ok, _live, html} =
         live(
           conn,
-          "/projects/#{organization.account.handle}/#{repository.handle}/sessions/#{session.id}"
+          "/#{organization.account.handle}/#{repository.handle}/sessions/#{session.id}"
         )
 
       document = Floki.parse_document!(html)
@@ -514,7 +514,7 @@ defmodule MicelioWeb.SessionLiveTest do
       {:ok, _live, html} =
         live(
           conn,
-          "/projects/#{organization.account.handle}/#{repository.handle}/sessions/#{session.id}"
+          "/#{organization.account.handle}/#{repository.handle}/sessions/#{session.id}"
         )
 
       document = Floki.parse_document!(html)
@@ -542,7 +542,7 @@ defmodule MicelioWeb.SessionLiveTest do
       {:ok, _live, html} =
         live(
           conn,
-          "/projects/#{organization.account.handle}/#{repository.handle}/sessions/#{session.id}"
+          "/#{organization.account.handle}/#{repository.handle}/sessions/#{session.id}"
         )
 
       assert html =~ "data-role=\"event-empty\""
@@ -571,7 +571,7 @@ defmodule MicelioWeb.SessionLiveTest do
       {:ok, _live, html} =
         live(
           conn,
-          "/projects/#{organization.account.handle}/#{repository.handle}/sessions/#{session.id}"
+          "/#{organization.account.handle}/#{repository.handle}/sessions/#{session.id}"
         )
 
       assert html =~ "User"
@@ -599,7 +599,7 @@ defmodule MicelioWeb.SessionLiveTest do
       {:ok, _live, html} =
         live(
           conn,
-          "/projects/#{organization.account.handle}/#{repository.handle}/sessions/#{session.id}"
+          "/#{organization.account.handle}/#{repository.handle}/sessions/#{session.id}"
         )
 
       assert html =~ "Abandon"
@@ -624,7 +624,7 @@ defmodule MicelioWeb.SessionLiveTest do
       {:ok, _live, html} =
         live(
           conn,
-          "/projects/#{organization.account.handle}/#{repository.handle}/sessions/#{landed_session.id}"
+          "/#{organization.account.handle}/#{repository.handle}/sessions/#{landed_session.id}"
         )
 
       refute html =~ "Abandon"
@@ -647,7 +647,7 @@ defmodule MicelioWeb.SessionLiveTest do
       {:ok, show_live, _html} =
         live(
           conn,
-          "/projects/#{organization.account.handle}/#{repository.handle}/sessions/#{session.id}"
+          "/#{organization.account.handle}/#{repository.handle}/sessions/#{session.id}"
         )
 
       html = show_live |> element("button", "Abandon") |> render_click()
@@ -678,7 +678,7 @@ defmodule MicelioWeb.SessionLiveTest do
       {:ok, _live, html} =
         live(
           conn,
-          "/projects/#{organization.account.handle}/#{repository.handle}/sessions/#{session.id}"
+          "/#{organization.account.handle}/#{repository.handle}/sessions/#{session.id}"
         )
 
       assert html =~ "Changes"
@@ -719,7 +719,7 @@ defmodule MicelioWeb.SessionLiveTest do
       {:ok, _view, html} =
         live(
           conn,
-          "/projects/#{organization.account.handle}/#{repository.handle}/sessions/#{session.id}"
+          "/#{organization.account.handle}/#{repository.handle}/sessions/#{session.id}"
         )
 
       # Verify the session page renders successfully with cached summary
@@ -761,9 +761,7 @@ defmodule MicelioWeb.SessionLiveTest do
 
       html =
         conn
-        |> get(
-          "/projects/#{organization.account.handle}/#{repository.handle}/sessions/#{session.id}"
-        )
+        |> get("/#{organization.account.handle}/#{repository.handle}/sessions/#{session.id}")
         |> html_response(200)
 
       doc = LazyHTML.from_document(html)
@@ -817,9 +815,7 @@ defmodule MicelioWeb.SessionLiveTest do
 
       html =
         conn
-        |> get(
-          "/projects/#{organization.account.handle}/#{repository.handle}/sessions/#{session.id}"
-        )
+        |> get("/#{organization.account.handle}/#{repository.handle}/sessions/#{session.id}")
         |> html_response(200)
 
       doc = LazyHTML.from_document(html)
@@ -849,11 +845,11 @@ defmodule MicelioWeb.SessionLiveTest do
               {:live_redirect, %{to: redirect_to, flash: %{"error" => "Session not found."}}}} =
                live(
                  conn,
-                 "/projects/#{organization.account.handle}/#{repository.handle}/sessions/00000000-0000-0000-0000-000000000000"
+                 "/#{organization.account.handle}/#{repository.handle}/sessions/00000000-0000-0000-0000-000000000000"
                )
 
       assert redirect_to ==
-               "/projects/#{organization.account.handle}/#{repository.handle}/sessions"
+               "/#{organization.account.handle}/#{repository.handle}/sessions"
     end
 
     test "requires authentication", %{
@@ -866,7 +862,7 @@ defmodule MicelioWeb.SessionLiveTest do
       assert {:error, {:redirect, %{to: "/auth/login"}}} =
                live(
                  conn,
-                 "/projects/#{organization.account.handle}/#{repository.handle}/sessions/123"
+                 "/#{organization.account.handle}/#{repository.handle}/sessions/123"
                )
     end
   end

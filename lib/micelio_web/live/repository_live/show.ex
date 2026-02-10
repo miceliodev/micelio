@@ -9,11 +9,7 @@ defmodule MicelioWeb.RepositoryLive.Show do
   alias MicelioWeb.PageMeta
 
   @impl true
-  def mount(
-        %{"organization_handle" => org_handle, "repository_handle" => repository_handle},
-        _session,
-        socket
-      ) do
+  def mount(%{"account" => org_handle, "repository" => repository_handle}, _session, socket) do
     case Micelio.Repositories.get_repository_for_user_by_handle(
            socket.assigns.current_user,
            org_handle,
@@ -34,8 +30,7 @@ defmodule MicelioWeb.RepositoryLive.Show do
             |> assign(:page_title, repository.name)
             |> PageMeta.assign(
               description: repository.description || "Project overview.",
-              canonical_url:
-                url(~p"/projects/#{organization.account.handle}/#{repository.handle}")
+              canonical_url: url(~p"/#{organization.account.handle}/#{repository.handle}")
             )
             |> assign(:repository, repository)
             |> assign(:organization, organization)
@@ -56,14 +51,14 @@ defmodule MicelioWeb.RepositoryLive.Show do
           {:ok,
            socket
            |> put_flash(:error, "You do not have access to this repository.")
-           |> push_navigate(to: ~p"/projects")}
+           |> push_navigate(to: ~p"/repositories")}
         end
 
       {:error, _reason} ->
         {:ok,
          socket
          |> put_flash(:error, "Project not found.")
-         |> push_navigate(to: ~p"/projects")}
+         |> push_navigate(to: ~p"/repositories")}
     end
   end
 
@@ -78,7 +73,7 @@ defmodule MicelioWeb.RepositoryLive.Show do
       {:noreply,
        socket
        |> put_flash(:info, "Project deleted successfully.")
-       |> push_navigate(to: ~p"/projects")}
+       |> push_navigate(to: ~p"/repositories")}
     else
       {:noreply, put_flash(socket, :error, "You do not have access to this repository.")}
     end
@@ -153,7 +148,7 @@ defmodule MicelioWeb.RepositoryLive.Show do
             </div>
             <%= if Authorization.authorize(:repository_update, @current_user, @repository) == :ok do %>
               <.link
-                navigate={~p"/projects/#{@organization.account.handle}/#{@repository.handle}/edit"}
+                navigate={~p"/#{@organization.account.handle}/#{@repository.handle}/edit"}
                 class="project-show-action project-show-action-edit"
                 id="project-edit"
               >
@@ -174,15 +169,13 @@ defmodule MicelioWeb.RepositoryLive.Show do
 
         <div class="project-show-navigation">
           <.link
-            navigate={~p"/projects/#{@organization.account.handle}/#{@repository.handle}/sessions"}
+            navigate={~p"/#{@organization.account.handle}/#{@repository.handle}/sessions"}
             class="project-show-nav-link"
           >
             Sessions ({@session_count})
           </.link>
           <.link
-            navigate={
-              ~p"/projects/#{@organization.account.handle}/#{@repository.handle}/prompt-requests"
-            }
+            navigate={~p"/#{@organization.account.handle}/#{@repository.handle}/prompt-requests"}
             class="project-show-nav-link"
           >
             Prompt Requests ({@prompt_request_count})
@@ -196,7 +189,7 @@ defmodule MicelioWeb.RepositoryLive.Show do
               <%= for session <- @recent_sessions do %>
                 <.link
                   navigate={
-                    ~p"/projects/#{@organization.account.handle}/#{@repository.handle}/sessions/#{session.id}"
+                    ~p"/#{@organization.account.handle}/#{@repository.handle}/sessions/#{session.id}"
                   }
                   class="session-card-compact"
                 >
@@ -210,7 +203,7 @@ defmodule MicelioWeb.RepositoryLive.Show do
               <% end %>
             </div>
             <.link
-              navigate={~p"/projects/#{@organization.account.handle}/#{@repository.handle}/sessions"}
+              navigate={~p"/#{@organization.account.handle}/#{@repository.handle}/sessions"}
               class="project-show-action"
             >
               View all sessions

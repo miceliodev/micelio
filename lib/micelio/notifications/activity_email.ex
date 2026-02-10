@@ -18,7 +18,7 @@ defmodule Micelio.Notifications.ActivityEmail do
     session_goal = session.goal || "Session landed"
     actor_email = session.user.email
     repo_url = build_url("/#{org_handle}/#{repo_handle}")
-    session_url = build_url("/projects/#{org_handle}/#{repo_handle}/sessions/#{session.id}")
+    session_url = build_url("/#{org_handle}/#{repo_handle}/sessions/#{session.id}")
 
     new()
     |> to(recipient.email)

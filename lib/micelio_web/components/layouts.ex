@@ -70,7 +70,7 @@ defmodule MicelioWeb.Layouts do
           </span>
 
           <%= if assigns[:current_user] do %>
-            <a href={~p"/projects"}>{gettext("repositories")}</a>
+            <a href={~p"/repositories"}>{gettext("repositories")}</a>
           <% end %>
           <a href={~p"/blog"}>{gettext("blog")}</a>
           <a href={~p"/docs"}>{gettext("docs")}</a>

@@ -542,18 +542,43 @@ defmodule MicelioWeb.Browser.RepositoryController do
 
   defp identify_license(content) when is_binary(content) do
     cond do
-      String.contains?(content, "Permission is hereby granted, free of charge") -> "MIT License"
-      String.contains?(content, "Apache License") and String.contains?(content, "Version 2.0") -> "Apache License 2.0"
-      String.contains?(content, "GNU GENERAL PUBLIC LICENSE") and String.contains?(content, "Version 3") -> "GPL-3.0"
-      String.contains?(content, "GNU GENERAL PUBLIC LICENSE") and String.contains?(content, "Version 2") -> "GPL-2.0"
-      String.contains?(content, "GNU LESSER GENERAL PUBLIC LICENSE") -> "LGPL"
-      String.contains?(content, "GNU AFFERO GENERAL PUBLIC LICENSE") -> "AGPL-3.0"
-      String.contains?(content, "BSD 2-Clause") -> "BSD-2-Clause"
-      String.contains?(content, "BSD 3-Clause") -> "BSD-3-Clause"
-      String.contains?(content, "Mozilla Public License") and String.contains?(content, "2.0") -> "MPL-2.0"
-      String.contains?(content, "ISC License") -> "ISC License"
-      String.contains?(content, "The Unlicense") -> "Unlicense"
-      true -> nil
+      String.contains?(content, "Permission is hereby granted, free of charge") ->
+        "MIT License"
+
+      String.contains?(content, "Apache License") and String.contains?(content, "Version 2.0") ->
+        "Apache License 2.0"
+
+      String.contains?(content, "GNU GENERAL PUBLIC LICENSE") and
+          String.contains?(content, "Version 3") ->
+        "GPL-3.0"
+
+      String.contains?(content, "GNU GENERAL PUBLIC LICENSE") and
+          String.contains?(content, "Version 2") ->
+        "GPL-2.0"
+
+      String.contains?(content, "GNU LESSER GENERAL PUBLIC LICENSE") ->
+        "LGPL"
+
+      String.contains?(content, "GNU AFFERO GENERAL PUBLIC LICENSE") ->
+        "AGPL-3.0"
+
+      String.contains?(content, "BSD 2-Clause") ->
+        "BSD-2-Clause"
+
+      String.contains?(content, "BSD 3-Clause") ->
+        "BSD-3-Clause"
+
+      String.contains?(content, "Mozilla Public License") and String.contains?(content, "2.0") ->
+        "MPL-2.0"
+
+      String.contains?(content, "ISC License") ->
+        "ISC License"
+
+      String.contains?(content, "The Unlicense") ->
+        "Unlicense"
+
+      true ->
+        nil
     end
   end
 

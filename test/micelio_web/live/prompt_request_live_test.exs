@@ -53,7 +53,7 @@ defmodule MicelioWeb.PromptRequestLiveTest do
     {:ok, view, _html} =
       live(
         conn,
-        ~p"/projects/#{organization.account.handle}/#{repository.handle}/prompt-requests"
+        ~p"/#{organization.account.handle}/#{repository.handle}/prompt-requests"
       )
 
     assert has_element?(view, "#new-prompt-request")
@@ -61,7 +61,7 @@ defmodule MicelioWeb.PromptRequestLiveTest do
     {:ok, form_view, _html} =
       live(
         conn,
-        ~p"/projects/#{organization.account.handle}/#{repository.handle}/prompt-requests/new"
+        ~p"/#{organization.account.handle}/#{repository.handle}/prompt-requests/new"
       )
 
     conversation_json = ~s({"messages":[{"role":"user","content":"Ship it"}]})
@@ -89,7 +89,7 @@ defmodule MicelioWeb.PromptRequestLiveTest do
 
     assert_redirect(
       form_view,
-      ~p"/projects/#{organization.account.handle}/#{repository.handle}/prompt-requests/#{prompt_request.id}"
+      ~p"/#{organization.account.handle}/#{repository.handle}/prompt-requests/#{prompt_request.id}"
     )
   end
 
@@ -119,7 +119,7 @@ defmodule MicelioWeb.PromptRequestLiveTest do
     {:ok, view, _html} =
       live(
         conn,
-        ~p"/projects/#{organization.account.handle}/#{repository.handle}/prompt-requests/#{prompt_request.id}"
+        ~p"/#{organization.account.handle}/#{repository.handle}/prompt-requests/#{prompt_request.id}"
       )
 
     assert has_element?(view, "#prompt-request-diff")
@@ -171,7 +171,7 @@ defmodule MicelioWeb.PromptRequestLiveTest do
     {:ok, view, _html} =
       live(
         conn,
-        ~p"/projects/#{organization.account.handle}/#{repository.handle}/prompt-requests/#{prompt_request.id}"
+        ~p"/#{organization.account.handle}/#{repository.handle}/prompt-requests/#{prompt_request.id}"
       )
 
     assert has_element?(view, "#prompt-request-run-validation")

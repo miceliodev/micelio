@@ -131,7 +131,7 @@ defmodule MicelioWeb.AdminPromptRegistryLive.Index do
                   <div class="admin-prompts-card-actions">
                     <.link
                       navigate={
-                        ~p"/projects/#{prompt_request.repository.organization.account.handle}/#{prompt_request.repository.handle}/prompt-requests/#{prompt_request.id}"
+                        ~p"/#{prompt_request.repository.organization.account.handle}/#{prompt_request.repository.handle}/prompt-requests/#{prompt_request.id}"
                       }
                       class="button button--secondary"
                     >

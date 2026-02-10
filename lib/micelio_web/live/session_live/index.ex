@@ -5,11 +5,7 @@ defmodule MicelioWeb.SessionLive.Index do
   alias MicelioWeb.PageMeta
 
   @impl true
-  def mount(
-        %{"organization_handle" => org_handle, "repository_handle" => repository_handle},
-        _session,
-        socket
-      ) do
+  def mount(%{"account" => org_handle, "repository" => repository_handle}, _session, socket) do
     case Micelio.Repositories.get_repository_for_user_by_handle(
            socket.assigns.current_user,
            org_handle,
@@ -24,7 +20,7 @@ defmodule MicelioWeb.SessionLive.Index do
             |> PageMeta.assign(
               description: "Browse sessions for #{repository.name}.",
               canonical_url:
-                url(~p"/projects/#{organization.account.handle}/#{repository.handle}/sessions")
+                url(~p"/#{organization.account.handle}/#{repository.handle}/sessions")
             )
             |> assign(:repository, repository)
             |> assign(:organization, organization)
@@ -37,14 +33,14 @@ defmodule MicelioWeb.SessionLive.Index do
           {:ok,
            socket
            |> put_flash(:error, "You do not have access to this repository.")
-           |> push_navigate(to: ~p"/projects")}
+           |> push_navigate(to: ~p"/repositories")}
         end
 
       {:error, _reason} ->
         {:ok,
          socket
          |> put_flash(:error, "Project not found.")
-         |> push_navigate(to: ~p"/projects")}
+         |> push_navigate(to: ~p"/repositories")}
     end
   end
 
@@ -220,7 +216,7 @@ defmodule MicelioWeb.SessionLive.Index do
             <%= for session <- @sessions do %>
               <.link
                 navigate={
-                  ~p"/projects/#{@organization.account.handle}/#{@repository.handle}/sessions/#{session.id}"
+                  ~p"/#{@organization.account.handle}/#{@repository.handle}/sessions/#{session.id}"
                 }
                 class="sessions-item"
                 id={"session-#{session.id}"}

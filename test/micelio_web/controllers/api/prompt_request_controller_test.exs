@@ -78,7 +78,7 @@ defmodule MicelioWeb.Api.PromptRequestControllerTest do
       |> put_req_header("accept", "application/json")
       |> put_req_header("authorization", "Bearer #{token}")
       |> post(
-        ~p"/api/projects/#{organization.account.handle}/#{repository.handle}/prompt-requests",
+        ~p"/api/repositories/#{organization.account.handle}/#{repository.handle}/prompt-requests",
         params
       )
 
@@ -142,7 +142,7 @@ defmodule MicelioWeb.Api.PromptRequestControllerTest do
       |> put_req_header("accept", "application/json")
       |> put_req_header("authorization", "Bearer #{token}")
       |> post(
-        ~p"/api/projects/#{organization.account.handle}/#{repository.handle}/prompt-requests",
+        ~p"/api/repositories/#{organization.account.handle}/#{repository.handle}/prompt-requests",
         params
       )
 
@@ -200,7 +200,7 @@ defmodule MicelioWeb.Api.PromptRequestControllerTest do
       |> put_req_header("accept", "application/json")
       |> put_req_header("authorization", "Bearer #{token}")
       |> post(
-        ~p"/api/projects/#{organization.account.handle}/#{repository.handle}/prompt-requests",
+        ~p"/api/repositories/#{organization.account.handle}/#{repository.handle}/prompt-requests",
         params
       )
 

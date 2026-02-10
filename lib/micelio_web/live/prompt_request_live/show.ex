@@ -10,11 +10,7 @@ defmodule MicelioWeb.PromptRequestLive.Show do
 
   @impl true
   def mount(
-        %{
-          "organization_handle" => org_handle,
-          "repository_handle" => repository_handle,
-          "id" => id
-        },
+        %{"account" => org_handle, "repository" => repository_handle, "id" => id},
         _session,
         socket
       ) do
@@ -36,7 +32,7 @@ defmodule MicelioWeb.PromptRequestLive.Show do
           description: "Prompt request for #{repository.name}.",
           canonical_url:
             url(
-              ~p"/projects/#{organization.account.handle}/#{repository.handle}/prompt-requests/#{prompt_request.id}"
+              ~p"/#{organization.account.handle}/#{repository.handle}/prompt-requests/#{prompt_request.id}"
             )
         )
         |> assign(:repository, repository)
@@ -54,7 +50,7 @@ defmodule MicelioWeb.PromptRequestLive.Show do
         {:ok,
          socket
          |> put_flash(:error, "Prompt request not found or access denied.")
-         |> push_navigate(to: ~p"/projects")}
+         |> push_navigate(to: ~p"/repositories")}
     end
   end
 
@@ -137,14 +133,14 @@ defmodule MicelioWeb.PromptRequestLive.Show do
         <div class="prompt-request-show">
           <header class="prompt-request-show-header">
             <div class="prompt-request-breadcrumb">
-              <.link navigate={~p"/projects"}>Projects</.link>
+              <.link navigate={~p"/repositories"}>Projects</.link>
               <span>/</span>
-              <.link navigate={~p"/projects/#{@organization.account.handle}/#{@repository.handle}"}>
+              <.link navigate={~p"/#{@organization.account.handle}/#{@repository.handle}"}>
                 {@repository.name}
               </.link>
               <span>/</span>
               <.link navigate={
-                ~p"/projects/#{@organization.account.handle}/#{@repository.handle}/prompt-requests"
+                ~p"/#{@organization.account.handle}/#{@repository.handle}/prompt-requests"
               }>
                 Prompt Requests
               </.link>

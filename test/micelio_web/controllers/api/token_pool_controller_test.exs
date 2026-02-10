@@ -39,7 +39,7 @@ defmodule MicelioWeb.Api.TokenPoolControllerTest do
       conn
       |> put_req_header("accept", "application/json")
       |> put_req_header("authorization", "Bearer #{token}")
-      |> get(~p"/api/projects/#{organization.account.handle}/#{repository.handle}/token-pool")
+      |> get(~p"/api/repositories/#{organization.account.handle}/#{repository.handle}/token-pool")
 
     body = json_response(conn, 200)
     assert body["data"]["id"] == pool.id
@@ -58,7 +58,7 @@ defmodule MicelioWeb.Api.TokenPoolControllerTest do
       |> put_req_header("accept", "application/json")
       |> put_req_header("authorization", "Bearer #{token}")
       |> patch(
-        ~p"/api/projects/#{organization.account.handle}/#{repository.handle}/token-pool",
+        ~p"/api/repositories/#{organization.account.handle}/#{repository.handle}/token-pool",
         %{
           token_pool: %{balance: 800, reserved: 100}
         }
@@ -80,7 +80,7 @@ defmodule MicelioWeb.Api.TokenPoolControllerTest do
       |> put_req_header("accept", "application/json")
       |> put_req_header("authorization", "Bearer #{token}")
       |> patch(
-        ~p"/api/projects/#{organization.account.handle}/#{repository.handle}/token-pool",
+        ~p"/api/repositories/#{organization.account.handle}/#{repository.handle}/token-pool",
         %{
           token_pool: %{balance: 100, reserved: 200}
         }
@@ -101,7 +101,7 @@ defmodule MicelioWeb.Api.TokenPoolControllerTest do
       |> put_req_header("accept", "application/json")
       |> put_req_header("authorization", "Bearer #{token}")
       |> patch(
-        ~p"/api/projects/#{organization.account.handle}/#{repository.handle}/token-pool",
+        ~p"/api/repositories/#{organization.account.handle}/#{repository.handle}/token-pool",
         %{}
       )
 
@@ -117,7 +117,7 @@ defmodule MicelioWeb.Api.TokenPoolControllerTest do
     conn =
       conn
       |> put_req_header("accept", "application/json")
-      |> get(~p"/api/projects/#{organization.account.handle}/#{repository.handle}/token-pool")
+      |> get(~p"/api/repositories/#{organization.account.handle}/#{repository.handle}/token-pool")
 
     body = json_response(conn, 401)
     assert body["error"] == "Authentication required"
@@ -135,7 +135,7 @@ defmodule MicelioWeb.Api.TokenPoolControllerTest do
       conn
       |> put_req_header("accept", "application/json")
       |> put_req_header("authorization", "Bearer #{other_token}")
-      |> get(~p"/api/projects/#{organization.account.handle}/#{repository.handle}/token-pool")
+      |> get(~p"/api/repositories/#{organization.account.handle}/#{repository.handle}/token-pool")
 
     body = json_response(conn, 403)
     assert body["error"] == "Not authorized to view token pool"

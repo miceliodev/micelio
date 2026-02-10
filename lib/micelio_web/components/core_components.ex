@@ -450,7 +450,7 @@ defmodule MicelioWeb.CoreComponents do
           Code
         </.link>
         <.link
-          navigate={"/projects/#{@account_handle}/#{@repository_handle}/sessions"}
+          navigate={"/#{@account_handle}/#{@repository_handle}/sessions"}
           class={["repository-tab", @active_tab == :sessions && "is-active"]}
         >
           <svg

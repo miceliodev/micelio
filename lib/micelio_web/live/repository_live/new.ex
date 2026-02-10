@@ -27,7 +27,7 @@ defmodule MicelioWeb.RepositoryLive.New do
       |> assign(:page_title, "New Project")
       |> PageMeta.assign(
         description: "Create a new project.",
-        canonical_url: url(~p"/projects/new")
+        canonical_url: url(~p"/repositories/new")
       )
       |> assign(:organizations, organizations)
       |> assign(:organization_options, organization_options(organizations))
@@ -73,9 +73,7 @@ defmodule MicelioWeb.RepositoryLive.New do
               {:noreply,
                socket
                |> put_flash(:info, "Project created successfully!")
-               |> push_navigate(
-                 to: ~p"/projects/#{organization.account.handle}/#{repository.handle}"
-               )}
+               |> push_navigate(to: ~p"/#{organization.account.handle}/#{repository.handle}")}
 
             {:error, changeset} ->
               {:noreply, assign(socket, form: to_form(Map.put(changeset, :action, :validate)))}
@@ -196,7 +194,7 @@ defmodule MicelioWeb.RepositoryLive.New do
                 Create project
               </button>
               <.link
-                navigate={~p"/projects"}
+                navigate={~p"/repositories"}
                 class="repository-button repository-button-secondary"
                 id="project-cancel"
               >

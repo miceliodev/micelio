@@ -39,7 +39,7 @@ defmodule MicelioWeb.RepositoryLiveTest do
       })
 
     conn = login_user(conn, user)
-    {:ok, view, _html} = live(conn, ~p"/projects")
+    {:ok, view, _html} = live(conn, ~p"/repositories")
 
     assert has_element?(view, "#new-project-link")
     assert has_element?(view, "#project-view-#{repository.id}")
@@ -64,7 +64,7 @@ defmodule MicelioWeb.RepositoryLiveTest do
       })
 
     conn = login_user(conn, user)
-    {:ok, view, _html} = live(conn, ~p"/projects/new")
+    {:ok, view, _html} = live(conn, ~p"/repositories/new")
 
     form =
       form(view, "#repository-form",
@@ -82,7 +82,7 @@ defmodule MicelioWeb.RepositoryLiveTest do
     repository = Repositories.get_repository_by_handle(organization.id, repository_handle)
     assert repository.visibility == "public"
 
-    assert_redirect(view, ~p"/projects/#{organization.account.handle}/#{repository_handle}")
+    assert_redirect(view, ~p"/#{organization.account.handle}/#{repository_handle}")
   end
 
   test "updates a repository from the edit form", %{conn: conn} do
@@ -106,7 +106,7 @@ defmodule MicelioWeb.RepositoryLiveTest do
     conn = login_user(conn, user)
 
     {:ok, view, _html} =
-      live(conn, ~p"/projects/#{organization.account.handle}/#{repository_handle}/edit")
+      live(conn, ~p"/#{organization.account.handle}/#{repository_handle}/edit")
 
     form =
       form(view, "#repository-form",
@@ -123,7 +123,7 @@ defmodule MicelioWeb.RepositoryLiveTest do
     updated = Repositories.get_repository(repository.id)
     assert updated.visibility == "public"
 
-    assert_redirect(view, ~p"/projects/#{organization.account.handle}/#{repository_handle}")
+    assert_redirect(view, ~p"/#{organization.account.handle}/#{repository_handle}")
   end
 
   test "toggles repository stars from the show view", %{conn: conn} do
@@ -147,7 +147,7 @@ defmodule MicelioWeb.RepositoryLiveTest do
     conn = login_user(conn, user)
 
     {:ok, view, _html} =
-      live(conn, ~p"/projects/#{organization.account.handle}/#{repository.handle}")
+      live(conn, ~p"/#{organization.account.handle}/#{repository.handle}")
 
     assert has_element?(view, "#repository-star-toggle")
     assert element(view, "#repository-stars-count") |> render() =~ "Stars: 0"

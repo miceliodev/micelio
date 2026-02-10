@@ -8,11 +8,7 @@ defmodule MicelioWeb.PromptRequestLive.New do
   alias MicelioWeb.PageMeta
 
   @impl true
-  def mount(
-        %{"organization_handle" => org_handle, "repository_handle" => repository_handle},
-        _session,
-        socket
-      ) do
+  def mount(%{"account" => org_handle, "repository" => repository_handle}, _session, socket) do
     with {:ok, repository, organization} <-
            Repositories.get_repository_for_user_by_handle(
              socket.assigns.current_user,
@@ -33,9 +29,7 @@ defmodule MicelioWeb.PromptRequestLive.New do
         |> PageMeta.assign(
           description: "Submit a prompt request for #{repository.name}.",
           canonical_url:
-            url(
-              ~p"/projects/#{organization.account.handle}/#{repository.handle}/prompt-requests/new"
-            )
+            url(~p"/#{organization.account.handle}/#{repository.handle}/prompt-requests/new")
         )
         |> assign(:repository, repository)
         |> assign(:organization, organization)
@@ -50,7 +44,7 @@ defmodule MicelioWeb.PromptRequestLive.New do
         {:ok,
          socket
          |> put_flash(:error, "Project not found or access denied.")
-         |> push_navigate(to: ~p"/projects")}
+         |> push_navigate(to: ~p"/repositories")}
     end
   end
 
@@ -79,7 +73,7 @@ defmodule MicelioWeb.PromptRequestLive.New do
          |> put_flash(:info, "Prompt request submitted.")
          |> push_navigate(
            to:
-             ~p"/projects/#{socket.assigns.organization.account.handle}/#{socket.assigns.repository.handle}/prompt-requests/#{prompt_request.id}"
+             ~p"/#{socket.assigns.organization.account.handle}/#{socket.assigns.repository.handle}/prompt-requests/#{prompt_request.id}"
          )}
 
       {:error, %Ecto.Changeset{} = changeset} ->
@@ -93,7 +87,7 @@ defmodule MicelioWeb.PromptRequestLive.New do
          |> put_flash(:error, feedback_message)
          |> push_navigate(
            to:
-             ~p"/projects/#{socket.assigns.organization.account.handle}/#{socket.assigns.repository.handle}/prompt-requests/#{prompt_request.id}"
+             ~p"/#{socket.assigns.organization.account.handle}/#{socket.assigns.repository.handle}/prompt-requests/#{prompt_request.id}"
          )}
 
       {:error, _reason} ->
@@ -338,9 +332,7 @@ defmodule MicelioWeb.PromptRequestLive.New do
                 Submit prompt request
               </button>
               <.link
-                navigate={
-                  ~p"/projects/#{@organization.account.handle}/#{@repository.handle}/prompt-requests"
-                }
+                navigate={~p"/#{@organization.account.handle}/#{@repository.handle}/prompt-requests"}
                 class="prompt-request-button prompt-request-button-secondary"
                 id="prompt-request-cancel"
               >

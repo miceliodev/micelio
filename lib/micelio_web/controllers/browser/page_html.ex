@@ -31,7 +31,7 @@ defmodule MicelioWeb.Browser.PageHTML do
         assigns,
         :subtitle,
         if(assigns.current_user,
-          do: gettext("Projects you've worked on recently."),
+          do: gettext("Repositories you've worked on recently."),
           else: gettext("Explore what the community is building.")
         )
       )

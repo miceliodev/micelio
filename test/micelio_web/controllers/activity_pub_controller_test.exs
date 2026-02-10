@@ -75,7 +75,7 @@ defmodule MicelioWeb.ActivityPubControllerTest do
     {organization, repository} = create_repository()
     account_handle = organization.account.handle
 
-    conn = get(conn, ~p"/ap/projects/#{account_handle}/#{repository.handle}")
+    conn = get(conn, ~p"/ap/repositories/#{account_handle}/#{repository.handle}")
     response = json_response(conn, 200)
 
     assert response["id"] == Fediverse.project_activity_url(account_handle, repository.handle)
@@ -178,7 +178,7 @@ defmodule MicelioWeb.ActivityPubControllerTest do
   test "private project returns 404", %{conn: conn} do
     {organization, repository} = create_repository(%{visibility: "private"})
 
-    conn = get(conn, ~p"/ap/projects/#{organization.account.handle}/#{repository.handle}")
+    conn = get(conn, ~p"/ap/repositories/#{organization.account.handle}/#{repository.handle}")
     assert conn.status == 404
   end
 end

@@ -164,7 +164,7 @@ defmodule Micelio.Fediverse do
 
   def repository_activity_url(account_handle, repository_handle)
       when is_binary(account_handle) and is_binary(repository_handle) do
-    absolute_url("/ap/projects/#{account_handle}/#{repository_handle}")
+    absolute_url("/ap/repositories/#{account_handle}/#{repository_handle}")
   end
 
   def repository_url(account_handle, repository_handle)

@@ -55,7 +55,7 @@ defmodule MicelioWeb.Api.Mobile.RepositoryControllerTest do
     conn =
       conn
       |> put_req_header("accept", "application/json")
-      |> get(~p"/api/mobile/projects")
+      |> get(~p"/api/mobile/repositories")
 
     body = json_response(conn, 200)
 
@@ -74,7 +74,7 @@ defmodule MicelioWeb.Api.Mobile.RepositoryControllerTest do
       conn
       |> put_req_header("accept", "application/json")
       |> put_req_header("authorization", "Bearer #{access_token}")
-      |> get(~p"/api/mobile/projects")
+      |> get(~p"/api/mobile/repositories")
 
     body = json_response(conn, 200)
 
@@ -85,7 +85,7 @@ defmodule MicelioWeb.Api.Mobile.RepositoryControllerTest do
     conn =
       conn
       |> put_req_header("accept", "application/json")
-      |> get(~p"/api/mobile/projects?limit=1")
+      |> get(~p"/api/mobile/repositories?limit=1")
 
     body = json_response(conn, 200)
 
@@ -101,7 +101,7 @@ defmodule MicelioWeb.Api.Mobile.RepositoryControllerTest do
     conn =
       conn
       |> put_req_header("accept", "application/json")
-      |> get(~p"/api/mobile/projects/#{organization.account.handle}/#{repository.handle}")
+      |> get(~p"/api/mobile/repositories/#{organization.account.handle}/#{repository.handle}")
 
     body = json_response(conn, 200)
 
@@ -117,7 +117,7 @@ defmodule MicelioWeb.Api.Mobile.RepositoryControllerTest do
     conn =
       conn
       |> put_req_header("accept", "application/json")
-      |> get(~p"/api/mobile/projects/#{organization.account.handle}/#{repository.handle}")
+      |> get(~p"/api/mobile/repositories/#{organization.account.handle}/#{repository.handle}")
 
     body = json_response(conn, 403)
 

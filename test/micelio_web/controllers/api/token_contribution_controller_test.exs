@@ -38,7 +38,7 @@ defmodule MicelioWeb.Api.TokenContributionControllerTest do
       |> put_req_header("accept", "application/json")
       |> put_req_header("authorization", "Bearer #{token}")
       |> post(
-        ~p"/api/projects/#{organization.account.handle}/#{repository.handle}/token-contributions",
+        ~p"/api/repositories/#{organization.account.handle}/#{repository.handle}/token-contributions",
         %{
           token_contribution: %{amount: 50}
         }
@@ -63,7 +63,7 @@ defmodule MicelioWeb.Api.TokenContributionControllerTest do
       |> put_req_header("accept", "application/json")
       |> put_req_header("authorization", "Bearer #{token}")
       |> post(
-        ~p"/api/projects/#{organization.account.handle}/#{repository.handle}/token-contributions",
+        ~p"/api/repositories/#{organization.account.handle}/#{repository.handle}/token-contributions",
         %{
           token_contribution: %{amount: 0}
         }
@@ -84,7 +84,7 @@ defmodule MicelioWeb.Api.TokenContributionControllerTest do
       |> put_req_header("accept", "application/json")
       |> put_req_header("authorization", "Bearer #{token}")
       |> post(
-        ~p"/api/projects/#{organization.account.handle}/#{repository.handle}/token-contributions",
+        ~p"/api/repositories/#{organization.account.handle}/#{repository.handle}/token-contributions",
         %{}
       )
 
@@ -101,7 +101,7 @@ defmodule MicelioWeb.Api.TokenContributionControllerTest do
       conn
       |> put_req_header("accept", "application/json")
       |> post(
-        ~p"/api/projects/#{organization.account.handle}/#{repository.handle}/token-contributions",
+        ~p"/api/repositories/#{organization.account.handle}/#{repository.handle}/token-contributions",
         %{
           token_contribution: %{amount: 10}
         }
@@ -131,7 +131,7 @@ defmodule MicelioWeb.Api.TokenContributionControllerTest do
       |> put_req_header("accept", "application/json")
       |> put_req_header("authorization", "Bearer #{other_token}")
       |> post(
-        ~p"/api/projects/#{organization.account.handle}/#{private_repository.handle}/token-contributions",
+        ~p"/api/repositories/#{organization.account.handle}/#{private_repository.handle}/token-contributions",
         %{
           token_contribution: %{amount: 25}
         }

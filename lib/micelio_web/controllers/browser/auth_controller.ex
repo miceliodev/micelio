@@ -234,7 +234,7 @@ defmodule MicelioWeb.Browser.AuthController do
                profile.email,
                access_token: profile.access_token
              ) do
-        redirect_to = get_session(conn, :redirect_after_oauth) || ~p"/projects"
+        redirect_to = get_session(conn, :redirect_after_oauth) || ~p"/repositories"
 
         conn
         |> delete_session(:redirect_after_oauth)
@@ -246,7 +246,7 @@ defmodule MicelioWeb.Browser.AuthController do
 
           conn
           |> oauth_failure_flash("GitHub", reason)
-          |> redirect(to: ~p"/projects")
+          |> redirect(to: ~p"/repositories")
       end
     else
       # User not logged in, treat as regular OAuth
