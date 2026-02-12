@@ -36,7 +36,9 @@
   display: flex;
   align-items: center;
   gap: var(--theme-ui-space-2);
-  flex-wrap: wrap;
+  overflow-x: auto;
+  white-space: nowrap;
+  min-width: 0;
 }
 
 .sessions-filter-btn {
@@ -51,6 +53,8 @@
   border-radius: var(--theme-ui-radii-default);
   cursor: pointer;
   transition: color 0.15s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .sessions-filter-btn:hover {
@@ -80,20 +84,6 @@
 
 .sessions-sort-form {
   margin: 0;
-}
-
-.sessions-sort-select {
-  padding: 4px 28px 4px 8px;
-  font-size: var(--theme-ui-font-size-sm);
-  border: 1px solid var(--theme-ui-colors-border);
-  border-radius: var(--theme-ui-radii-default);
-  background-color: var(--theme-ui-colors-background);
-  color: var(--theme-ui-colors-text);
-  cursor: pointer;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2359636e' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 8px center;
-  background-size: 12px;
 }
 
 /* ============ Sessions list ============ */
@@ -264,7 +254,7 @@
 }
 
 .session-main-title h1 {
-  font-size: var(--theme-ui-font-size-xl);
+  font-size: var(--theme-ui-font-size-lg);
   font-weight: var(--theme-ui-font-weights-bold);
   margin: 0;
 }

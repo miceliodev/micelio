@@ -74,26 +74,6 @@
   display: inline-block;
 }
 
-.language-selector-select {
-  padding: var(--theme-ui-space-1) var(--theme-ui-space-2);
-  background: var(--theme-ui-colors-background);
-  border: var(--theme-ui-borders-thin);
-  border-radius: var(--theme-ui-radii-small);
-  color: var(--theme-ui-colors-text);
-  font-size: var(--theme-ui-font-sizes-0);
-  cursor: pointer;
-}
-
-.language-selector-select:hover {
-  border-color: var(--theme-ui-colors-primary);
-}
-
-.language-selector-select:focus {
-  outline: none;
-  border-color: var(--theme-ui-colors-primary);
-  box-shadow: 0 0 0 2px var(--theme-ui-colors-primary-alpha);
-}
-
 /* Screen reader only */
 .sr-only {
   position: absolute;

@@ -26,11 +26,11 @@ defmodule MicelioWeb.Browser.RedirectController do
   end
 
   def projects_prompt_requests(conn, %{"account" => account, "repository" => repository}) do
-    conn |> redirect(to: ~p"/#{account}/#{repository}/prompt-requests") |> halt()
+    conn |> redirect(to: ~p"/#{account}/#{repository}/prs") |> halt()
   end
 
   def projects_prompt_request_new(conn, %{"account" => account, "repository" => repository}) do
-    conn |> redirect(to: ~p"/#{account}/#{repository}/prompt-requests/new") |> halt()
+    conn |> redirect(to: ~p"/#{account}/#{repository}/prs/new") |> halt()
   end
 
   def projects_prompt_request(conn, %{
@@ -38,6 +38,6 @@ defmodule MicelioWeb.Browser.RedirectController do
         "repository" => repository,
         "id" => id
       }) do
-    conn |> redirect(to: ~p"/#{account}/#{repository}/prompt-requests/#{id}") |> halt()
+    conn |> redirect(to: ~p"/#{account}/#{repository}/prs/#{id}") |> halt()
   end
 end

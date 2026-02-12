@@ -13,7 +13,7 @@ defmodule Micelio.Docs.Page do
   @enforce_keys [:id, :title, :description, :body, :category]
   defstruct [:id, :title, :description, :body, :category]
 
-  @supported_categories ~w(users hosters contributors shapers)
+  @supported_categories ~w(users hosters contributors shapers grpc rest-api auth)
 
   def build(filename, attrs, body) do
     parts = filename |> Path.rootname() |> Path.split()

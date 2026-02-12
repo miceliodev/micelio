@@ -26,7 +26,7 @@ defmodule Micelio.PromptRequests do
   def list_prompt_requests_for_repository(repository) do
     PromptRequest
     |> where([prompt_request], prompt_request.repository_id == ^repository.id)
-    |> order_by([prompt_request], desc: prompt_request.inserted_at)
+    |> order_by([prompt_request], desc: prompt_request.number, desc: prompt_request.inserted_at)
     |> preload(:user)
     |> Repo.all()
   end
@@ -64,8 +64,77 @@ defmodule Micelio.PromptRequests do
     |> Repo.one()
   end
 
+  def get_prompt_request_by_number(repository, number) do
+    PromptRequest
+    |> where(
+      [prompt_request],
+      prompt_request.repository_id == ^repository.id and prompt_request.number == ^number
+    )
+    |> preload(:user)
+    |> Repo.one()
+  end
+
+  def create_simple_prompt_request(attrs, opts) do
+    repository = Keyword.fetch!(opts, :repository)
+    user = Keyword.fetch!(opts, :user)
+
+    Repo.transaction(fn ->
+      number = next_number_for_repository(repository)
+
+      result =
+        %PromptRequest{}
+        |> PromptRequest.simple_changeset(attrs)
+        |> Ecto.Changeset.put_change(:repository_id, repository.id)
+        |> Ecto.Changeset.put_change(:user_id, user.id)
+        |> Ecto.Changeset.put_change(:number, number)
+        |> Ecto.Changeset.put_change(:origin, :human)
+        |> Repo.insert()
+
+      case result do
+        {:ok, prompt_request} -> prompt_request
+        {:error, changeset} -> Repo.rollback(changeset)
+      end
+    end)
+  end
+
+  defp next_number_for_repository(repository) do
+    # Use advisory lock to prevent race conditions on number assignment
+    lock_key = :erlang.phash2({"prompt_request_number", repository.id})
+    Repo.query!("SELECT pg_advisory_xact_lock($1)", [lock_key])
+
+    current_max =
+      PromptRequest
+      |> where([pr], pr.repository_id == ^repository.id)
+      |> select([pr], max(pr.number))
+      |> Repo.one()
+
+    (current_max || 0) + 1
+  end
+
   def change_prompt_request(%PromptRequest{} = prompt_request, attrs \\ %{}) do
     PromptRequest.changeset(prompt_request, attrs)
+  end
+
+  def change_simple_prompt_request(%PromptRequest{} = prompt_request, attrs \\ %{}) do
+    PromptRequest.simple_changeset(prompt_request, attrs)
+  end
+
+  def update_prompt_request(%PromptRequest{} = prompt_request, attrs) do
+    prompt_request
+    |> PromptRequest.simple_changeset(attrs)
+    |> Repo.update()
+  end
+
+  def close_prompt_request(%PromptRequest{} = prompt_request) do
+    prompt_request
+    |> PromptRequest.status_changeset("closed")
+    |> Repo.update()
+  end
+
+  def reopen_prompt_request(%PromptRequest{} = prompt_request) do
+    prompt_request
+    |> PromptRequest.status_changeset("open")
+    |> Repo.update()
   end
 
   def curate_prompt_request(%PromptRequest{} = prompt_request, curator) do
@@ -148,7 +217,8 @@ defmodule Micelio.PromptRequests do
     task_budget_amount =
       Keyword.get(opts, :task_budget_amount, Keyword.get(flow_opts, :task_budget_amount))
 
-    with {:ok, prompt_request} <- create_prompt_request(attrs, repository: repository, user: user),
+    with {:ok, prompt_request} <-
+           create_prompt_request(attrs, repository: repository, user: user),
          :ok <- maybe_allocate_task_budget(prompt_request, task_budget_amount) do
       cond do
         validation_enabled and validation_async ->

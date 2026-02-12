@@ -7,6 +7,7 @@ defmodule MicelioWeb.Plugs.ApiAuthenticationPlug do
   alias Boruta.Oauth.Token
   alias Micelio.Accounts
   alias Micelio.OAuth.AccessTokens
+  alias Micelio.OAuth.Scopes
 
   def init(opts), do: opts
 
@@ -15,7 +16,11 @@ defmodule MicelioWeb.Plugs.ApiAuthenticationPlug do
       {:ok, token} ->
         with %Token{} = access_token <- AccessTokens.get_by(value: token),
              user when not is_nil(user) <- Accounts.get_user(access_token.sub) do
-          assign(conn, :current_user, user)
+          token_scopes = Scopes.from_string(access_token.scope)
+
+          conn
+          |> assign(:current_user, user)
+          |> assign(:token_scopes, token_scopes)
         else
           _ -> conn
         end

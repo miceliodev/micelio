@@ -12,6 +12,11 @@ defmodule MicelioWeb.DocsLive.Index do
       |> assign(:query, "")
       |> assign(:results, [])
       |> assign(:categories, DocsI18n.translate_categories(Docs.categories()))
+      |> assign(:guide_categories, DocsI18n.translate_categories(Docs.categories_by_kind(:guide)))
+      |> assign(
+        :reference_categories,
+        DocsI18n.translate_categories(Docs.categories_by_kind(:reference))
+      )
       |> assign(:searching, false)
 
     {:ok, socket}
@@ -53,6 +58,47 @@ defmodule MicelioWeb.DocsLive.Index do
       %{title: title} -> title
       _ -> category_id
     end
+  end
+
+  # Tabler icons for reference categories
+  defp reference_icon("rest-api") do
+    assigns = %{}
+
+    ~H"""
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M14 3v4a1 1 0 0 0 1 1h4" /><path d="M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2z" /><path d="M10 13l-1 2l1 2" /><path d="M14 13l1 2l-1 2" />
+    </svg>
+    """
+  end
+
+  defp reference_icon("auth") do
+    assigns = %{}
+
+    ~H"""
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect width="18" height="11" x="3" y="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" />
+    </svg>
+    """
+  end
+
+  defp reference_icon("grpc") do
+    assigns = %{}
+
+    ~H"""
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="m16 3 4 4-4 4" /><path d="M20 7H4" /><path d="m8 21-4-4 4-4" /><path d="M4 17h16" />
+    </svg>
+    """
+  end
+
+  defp reference_icon(_) do
+    assigns = %{}
+
+    ~H"""
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 20h9" /><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
+    </svg>
+    """
   end
 
   @impl true
@@ -157,14 +203,14 @@ defmodule MicelioWeb.DocsLive.Index do
           <section class="docs-section">
             <h2 class="docs-section-title">{gettext("Guides")}</h2>
             <div class="docs-categories">
-              <%= for {category_id, category_info} <- @categories do %>
+              <%= for {category_id, category_info} <- @guide_categories do %>
                 <.link navigate={~p"/docs/#{category_id}"} class="docs-category-card">
                   <div class="docs-category-icon">
                     <%= if category_id == "users" do %>
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
-                        width="24"
-                        height="24"
+                        width="20"
+                        height="20"
                         viewBox="0 0 24 24"
                         fill="none"
                         stroke="currentColor"
@@ -181,8 +227,8 @@ defmodule MicelioWeb.DocsLive.Index do
                       <%= if category_id == "hosters" do %>
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
-                          width="24"
-                          height="24"
+                          width="20"
+                          height="20"
                           viewBox="0 0 24 24"
                           fill="none"
                           stroke="currentColor"
@@ -199,8 +245,8 @@ defmodule MicelioWeb.DocsLive.Index do
                         <%= if category_id == "contributors" do %>
                           <svg
                             xmlns="http://www.w3.org/2000/svg"
-                            width="24"
-                            height="24"
+                            width="20"
+                            height="20"
                             viewBox="0 0 24 24"
                             fill="none"
                             stroke="currentColor"
@@ -216,8 +262,8 @@ defmodule MicelioWeb.DocsLive.Index do
                         <% else %>
                           <svg
                             xmlns="http://www.w3.org/2000/svg"
-                            width="24"
-                            height="24"
+                            width="20"
+                            height="20"
                             viewBox="0 0 24 24"
                             fill="none"
                             stroke="currentColor"
@@ -247,8 +293,8 @@ defmodule MicelioWeb.DocsLive.Index do
                 <div class="docs-category-icon">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
-                    width="24"
-                    height="24"
+                    width="20"
+                    height="20"
                     viewBox="0 0 24 24"
                     fill="none"
                     stroke="currentColor"
@@ -265,6 +311,15 @@ defmodule MicelioWeb.DocsLive.Index do
                   {gettext("Complete reference for the mic command-line interface.")}
                 </p>
               </.link>
+              <%= for {category_id, category_info} <- @reference_categories do %>
+                <.link navigate={~p"/docs/#{category_id}"} class="docs-category-card">
+                  <div class="docs-category-icon">
+                    {reference_icon(category_id)}
+                  </div>
+                  <h3 class="docs-category-title">{category_info.title}</h3>
+                  <p class="docs-category-description">{category_info.description}</p>
+                </.link>
+              <% end %>
             </div>
           </section>
         <% end %>

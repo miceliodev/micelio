@@ -14,17 +14,55 @@
   margin: 0 auto;
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: var(--theme-ui-space-2);
 }
 
-.navbar-left,
-.navbar-right {
+/* Always-visible start section: hamburger + brand */
+.navbar-start {
+  display: flex;
+  align-items: center;
+  gap: var(--theme-ui-space-1);
+}
+
+/* Hamburger button - hidden on desktop */
+.navbar-hamburger {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border: none;
+  border-radius: var(--theme-ui-radii-default);
+  background: transparent;
+  color: var(--theme-ui-colors-surface-text);
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.navbar-hamburger:hover {
+  background: var(--theme-ui-colors-hover);
+}
+
+.navbar-hamburger:focus-visible {
+  outline: 2px solid var(--theme-ui-colors-primary);
+  outline-offset: 2px;
+}
+
+/* Collapsible menu - inline on desktop, dropdown on mobile */
+.navbar-menu {
   display: flex;
   align-items: center;
   gap: var(--theme-ui-space-2);
+  flex: 1;
 }
 
+/* Pushes right-side items (admin, logout, CTA) to the right on desktop */
+.navbar-spacer {
+  flex: 1;
+}
+
+/* Link styles */
 .navbar a:not(.navbar-cta) {
   color: var(--theme-ui-colors-surface-text);
   text-decoration: none;
@@ -34,22 +72,7 @@
   text-decoration: underline;
 }
 
-.navbar-user-avatar {
-  width: 1.5rem;
-  height: 1.5rem;
-  border-radius: 9999px;
-  border: 1px solid var(--theme-ui-colors-border);
-  display: inline-block;
-  overflow: hidden;
-}
-
-.navbar-user-avatar img {
-  width: 100%;
-  height: 100%;
-  display: block;
-  object-fit: cover;
-}
-
+/* Brand */
 .navbar .brand {
   display: inline-flex;
   align-items: center;
@@ -66,6 +89,24 @@
   font-weight: var(--theme-ui-font-weights-bold);
 }
 
+/* Avatar - always visible */
+.navbar-user-avatar {
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 9999px;
+  border: 1px solid var(--theme-ui-colors-border);
+  display: inline-block;
+  overflow: hidden;
+}
+
+.navbar-user-avatar img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+
+/* CTA button */
 .navbar-cta {
   display: inline-flex;
   align-items: center;
@@ -92,6 +133,7 @@
   outline-offset: 2px;
 }
 
+/* Logout form */
 .navbar-logout-form {
   display: inline-flex;
   margin: 0;
@@ -111,6 +153,7 @@
   text-decoration: underline;
 }
 
+/* Theme toggle */
 .navbar-theme-toggle {
   border: none;
   background: transparent;
@@ -124,8 +167,6 @@
 .navbar-theme-toggle:hover {
   text-decoration: underline;
 }
-
-/* Icon styles are defined in tokens.css */
 
 /* Add dropdown */
 .navbar-add-dropdown {
@@ -201,25 +242,66 @@
   outline-offset: -2px;
 }
 
-@media (max-width: 60rem) {
+/* Mobile: hamburger menu */
+@media (max-width: 48rem) {
   .navbar {
     flex-wrap: wrap;
-    justify-content: flex-start;
-    row-gap: var(--theme-ui-space-1);
   }
 
-  .navbar-left,
-  .navbar-right {
-    flex-wrap: wrap;
-    gap: var(--theme-ui-space-1) var(--theme-ui-space-2);
+  .navbar-start {
+    order: 1;
   }
 
-  .navbar-right {
+  .navbar-hamburger {
+    display: inline-flex;
+  }
+
+  .navbar-user-avatar {
+    order: 2;
     margin-left: auto;
-    justify-content: flex-end;
   }
 
-  .navbar .hidden-small {
+  .navbar-menu {
+    order: 3;
+    display: none;
+    flex-basis: 100%;
+    flex-direction: column;
+    align-items: stretch;
+    padding-top: var(--theme-ui-space-1);
+    margin-top: var(--theme-ui-space-1);
+    border-top: var(--theme-ui-borders-thin);
+    gap: 0;
+  }
+
+  .navbar-menu.is-open {
+    display: flex;
+  }
+
+  .navbar-menu a:not(.navbar-cta),
+  .navbar-menu .navbar-link-button {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: var(--theme-ui-space-1) var(--theme-ui-space-2);
+    border-radius: var(--theme-ui-radii-default);
+  }
+
+  .navbar-menu a:not(.navbar-cta):hover,
+  .navbar-menu .navbar-link-button:hover {
+    background: var(--theme-ui-colors-hover);
+    text-decoration: none;
+  }
+
+  .navbar-menu .navbar-logout-form {
+    display: block;
+  }
+
+  .navbar-menu .navbar-cta {
+    margin-top: var(--theme-ui-space-1);
+    justify-content: center;
+  }
+
+  .navbar-spacer {
     display: none;
   }
 }

@@ -29,7 +29,9 @@
   gap: var(--theme-ui-space-1);
   flex-wrap: wrap;
   font-size: var(--theme-ui-font-size-xl);
+  font-weight: var(--theme-ui-font-weights-regular);
   line-height: 1.3;
+  margin: 0;
 }
 
 .repository-header-icon {
@@ -376,94 +378,7 @@
   margin: 0;
 }
 
-.repository-readme-markdown {
-  color: var(--theme-ui-colors-text);
-  line-height: 1.6;
-}
-
-.repository-readme-markdown h1,
-.repository-readme-markdown h2,
-.repository-readme-markdown h3,
-.repository-readme-markdown h4 {
-  margin: var(--theme-ui-space-3) 0 var(--theme-ui-space-1);
-  font-weight: var(--theme-ui-font-weights-semibold);
-}
-
-.repository-readme-markdown h1 {
-  font-size: var(--theme-ui-font-size-lg);
-  font-weight: var(--theme-ui-font-weights-bold);
-}
-
-.repository-readme-markdown h2 {
-  font-size: var(--theme-ui-font-size-md);
-}
-
-.repository-readme-markdown h3 {
-  font-size: var(--theme-ui-font-size-base);
-}
-
-.repository-readme-markdown h4 {
-  font-size: var(--theme-ui-font-size-sm);
-}
-
-.repository-readme-markdown h1:first-child,
-.repository-readme-markdown h2:first-child {
-  margin-top: 0;
-}
-
-.repository-readme-markdown h2 {
-  padding-bottom: var(--theme-ui-space-1);
-  border-bottom: 1px solid var(--theme-ui-colors-border);
-}
-
-.repository-readme-markdown p {
-  margin: 0 0 var(--theme-ui-space-2);
-}
-
-.repository-readme-markdown code {
-  font-family: var(--theme-ui-fonts-mono);
-  background-color: var(--theme-ui-colors-surface);
-  color: var(--theme-ui-colors-text);
-  padding: 2px 6px;
-  border-radius: var(--theme-ui-radii-small);
-  font-size: 0.9em;
-}
-
-.repository-readme-markdown pre {
-  margin: 0 0 var(--theme-ui-space-2);
-  padding: var(--theme-ui-space-2);
-  background-color: var(--theme-ui-colors-surface);
-  border: 1px solid var(--theme-ui-colors-border);
-  border-radius: var(--theme-ui-radii-default);
-  overflow-x: auto;
-}
-
-.repository-readme-markdown pre code {
-  background-color: transparent;
-  padding: 0;
-  border-radius: 0;
-}
-
-.repository-readme-markdown a {
-  color: var(--theme-ui-colors-primary);
-  text-decoration: underline;
-  text-decoration-thickness: 0.08em;
-  text-underline-offset: 0.15em;
-}
-
-.repository-readme-markdown a:hover {
-  color: var(--theme-ui-colors-muted);
-}
-
-.repository-readme-markdown ul,
-.repository-readme-markdown ol {
-  margin: 0 0 var(--theme-ui-space-2);
-  padding-left: var(--theme-ui-space-3);
-}
-
-.repository-readme-markdown li {
-  margin-bottom: 4px;
-}
+/* README markdown uses .prose from tokens.css */
 
 .repository-readme-binary {
   color: var(--theme-ui-colors-muted);
@@ -537,6 +452,21 @@
 
 /* ============ File view (blob) ============ */
 
+.repository-file-browser-path--blob {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--theme-ui-space-1);
+}
+
+.repository-file-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--theme-ui-space-1);
+  flex-shrink: 0;
+}
+
 .repository-file-path {
   font-family: var(--theme-ui-fonts-mono);
   color: var(--theme-ui-colors-muted);
@@ -556,6 +486,10 @@
 
 .repository-file-back:hover {
   background-color: var(--theme-ui-colors-surface);
+}
+
+.repository-file {
+  margin-top: var(--theme-ui-space-2);
 }
 
 .repository-file-content {

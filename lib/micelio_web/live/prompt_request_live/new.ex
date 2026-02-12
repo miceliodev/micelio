@@ -2,6 +2,7 @@ defmodule MicelioWeb.PromptRequestLive.New do
   use MicelioWeb, :live_view
 
   alias Micelio.Authorization
+  alias Micelio.Mic.Project, as: MicProject
   alias Micelio.PromptRequests
   alias Micelio.PromptRequests.PromptRequest
   alias Micelio.Repositories
@@ -16,34 +17,31 @@ defmodule MicelioWeb.PromptRequestLive.New do
              repository_handle
            ),
          :ok <- Authorization.authorize(:repository_read, socket.assigns.current_user, repository) do
-      templates = PromptRequests.list_prompt_templates(only_approved: true)
-
       form =
-        %PromptRequest{conversation: nil}
-        |> PromptRequests.change_prompt_request()
+        %PromptRequest{}
+        |> PromptRequests.change_simple_prompt_request()
         |> to_form(as: :prompt_request)
+
+      file_paths = load_file_paths(repository)
 
       socket =
         socket
-        |> assign(:page_title, "New Prompt Request")
+        |> assign(:page_title, gettext("New Prompt Request"))
         |> PageMeta.assign(
-          description: "Submit a prompt request for #{repository.name}.",
-          canonical_url:
-            url(~p"/#{organization.account.handle}/#{repository.handle}/prompt-requests/new")
+          description: gettext("Create a prompt request for %{name}.", name: repository.name),
+          canonical_url: url(~p"/#{organization.account.handle}/#{repository.handle}/prs/new")
         )
         |> assign(:repository, repository)
         |> assign(:organization, organization)
         |> assign(:form, form)
-        |> assign(:prompt_templates, templates)
-        |> assign(:template_options, template_options(templates))
-        |> assign(:selected_template, nil)
+        |> assign(:file_paths_json, Jason.encode!(file_paths))
 
       {:ok, socket}
     else
       _ ->
         {:ok,
          socket
-         |> put_flash(:error, "Project not found or access denied.")
+         |> put_flash(:error, gettext("Repository not found or access denied."))
          |> push_navigate(to: ~p"/repositories")}
     end
   end
@@ -52,77 +50,35 @@ defmodule MicelioWeb.PromptRequestLive.New do
   def handle_event("validate", %{"prompt_request" => params}, socket) do
     changeset =
       %PromptRequest{}
-      |> PromptRequests.change_prompt_request(params)
+      |> PromptRequests.change_simple_prompt_request(params)
       |> Map.put(:action, :validate)
 
-    {:noreply,
-     socket
-     |> assign(:form, to_form(changeset, as: :prompt_request))
-     |> assign(:selected_template, template_from_params(params))}
+    {:noreply, assign(socket, :form, to_form(changeset, as: :prompt_request))}
   end
 
   @impl true
   def handle_event("save", %{"prompt_request" => params}, socket) do
-    case PromptRequests.submit_prompt_request(params,
-           project: socket.assigns.repository,
+    case PromptRequests.create_simple_prompt_request(params,
+           repository: socket.assigns.repository,
            user: socket.assigns.current_user
          ) do
       {:ok, prompt_request} ->
         {:noreply,
          socket
-         |> put_flash(:info, "Prompt request submitted.")
+         |> put_flash(:info, gettext("Prompt request created."))
          |> push_navigate(
            to:
-             ~p"/#{socket.assigns.organization.account.handle}/#{socket.assigns.repository.handle}/prompt-requests/#{prompt_request.id}"
+             ~p"/#{socket.assigns.organization.account.handle}/#{socket.assigns.repository.handle}/prs/#{prompt_request.number}"
          )}
 
       {:error, %Ecto.Changeset{} = changeset} ->
-        {:noreply, assign(socket, form: to_form(Map.put(changeset, :action, :validate)))}
-
-      {:error, {:validation_failed, feedback, prompt_request}} ->
-        feedback_message = PromptRequests.validation_feedback_summary(feedback)
-
         {:noreply,
-         socket
-         |> put_flash(:error, feedback_message)
-         |> push_navigate(
-           to:
-             ~p"/#{socket.assigns.organization.account.handle}/#{socket.assigns.repository.handle}/prompt-requests/#{prompt_request.id}"
+         assign(socket,
+           form: to_form(Map.put(changeset, :action, :validate), as: :prompt_request)
          )}
 
       {:error, _reason} ->
-        {:noreply, put_flash(socket, :error, "Unable to submit prompt request.")}
-    end
-  end
-
-  @impl true
-  def handle_event("load_template", %{"template_id" => template_id}, socket) do
-    template =
-      case template_id do
-        nil -> nil
-        "" -> nil
-        id -> PromptRequests.get_prompt_template(id)
-      end
-
-    if template do
-      params =
-        (socket.assigns.form.params || %{})
-        |> Map.merge(%{
-          "prompt_template_id" => template.id,
-          "system_prompt" => template.system_prompt,
-          "prompt" => template.prompt
-        })
-
-      changeset =
-        %PromptRequest{}
-        |> PromptRequests.change_prompt_request(params)
-
-      {:noreply,
-       socket
-       |> assign(:form, to_form(changeset, as: :prompt_request))
-       |> assign(:selected_template, template)}
-    else
-      {:noreply, put_flash(socket, :error, "Select a template to load.")}
+        {:noreply, put_flash(socket, :error, gettext("Unable to create prompt request."))}
     end
   end
 
@@ -131,212 +87,68 @@ defmodule MicelioWeb.PromptRequestLive.New do
     ~H"""
     <Layouts.app
       flash={@flash}
-      current_scope={@current_scope}
-      current_user={@current_user}
+      current_scope={assigns[:current_scope]}
+      current_user={assigns[:current_user]}
+      locale={assigns[:locale] || "en"}
+      current_path={assigns[:current_path] || "/"}
     >
       <.repository_header
         account_handle={@organization.account.handle}
         repository_handle={@repository.handle}
-        active_tab={:sessions}
+        active_tab={:prompt_requests}
       >
-        <div class="prompt-request-form-container">
-          <.header>
-            New prompt request
-            <:subtitle>
-              <p>Share the prompt, generated result, and full agent context.</p>
-            </:subtitle>
-          </.header>
-
+        <div class="pr-form-container">
           <.form
             for={@form}
             id="prompt-request-form"
             phx-change="validate"
             phx-submit="save"
-            class="prompt-request-form"
+            class="pr-form"
           >
-            <div class="prompt-request-form-group">
-              <.input
-                field={@form[:title]}
+            <div class="pr-form-title-group">
+              <input
                 type="text"
-                label="Title"
-                placeholder="Summarize the request"
-                class="prompt-request-input"
-                error_class="prompt-request-input prompt-request-input-error"
+                id="prompt-request-title"
+                name={@form[:title].name}
+                value={Phoenix.HTML.Form.normalize_value("text", @form[:title].value)}
+                placeholder={gettext("Title")}
+                class="pr-form-title-input"
+                phx-debounce="300"
               />
-            </div>
-
-            <div class="prompt-request-form-group">
-              <.input
-                field={@form[:prompt_template_id]}
-                type="select"
-                label="Prompt template"
-                options={@template_options}
-                prompt="Select a template (optional)"
-                class="prompt-request-input"
-                error_class="prompt-request-input prompt-request-input-error"
-              />
-              <div class="prompt-request-template-actions">
-                <button
-                  type="button"
-                  class="prompt-request-button prompt-request-button-secondary"
-                  id="prompt-request-load-template"
-                  phx-click="load_template"
-                  phx-value-template-id={@form[:prompt_template_id].value}
-                >
-                  Load template
-                </button>
-                <%= if @selected_template do %>
-                  <span class="prompt-request-template-meta">
-                    {template_meta(@selected_template)}
-                  </span>
+              <%= if Phoenix.Component.used_input?(@form[:title]) do %>
+                <%= for err <- @form[:title].errors do %>
+                  <p class="form-error">{translate_error(err)}</p>
                 <% end %>
-              </div>
+              <% end %>
             </div>
 
-            <div class="prompt-request-form-group">
-              <.input
-                field={@form[:model]}
-                type="text"
-                label="Model"
-                placeholder="e.g., gpt-4.1"
-                class="prompt-request-input"
-                error_class="prompt-request-input prompt-request-input-error"
-              />
+            <div
+              id="description-mention-wrapper"
+              phx-hook="FileMention"
+              phx-update="ignore"
+              data-file-paths={@file_paths_json}
+              class="pr-form-description-group"
+            >
+              <textarea
+                id="prompt-request-description"
+                name={@form[:description].name}
+                placeholder={gettext("Describe the change you want. Use @ to reference files.")}
+                class="pr-form-description-textarea"
+                phx-debounce="300"
+                rows="12"
+              >{Phoenix.HTML.Form.normalize_value("textarea", @form[:description].value)}</textarea>
             </div>
 
-            <div class="prompt-request-form-group">
-              <.input
-                field={@form[:origin]}
-                type="select"
-                label="Contribution origin"
-                options={origin_options()}
-                prompt="Select origin"
-                class="prompt-request-input"
-                error_class="prompt-request-input prompt-request-input-error"
-              />
-            </div>
-
-            <div class="prompt-request-form-group">
-              <.input
-                field={@form[:model_version]}
-                type="text"
-                label="Model version"
-                placeholder="e.g., 2025-02-01"
-                class="prompt-request-input"
-                error_class="prompt-request-input prompt-request-input-error"
-              />
-            </div>
-
-            <div class="prompt-request-form-group">
-              <.input
-                field={@form[:token_count]}
-                type="number"
-                label="Token count"
-                placeholder="Tokens consumed during generation"
-                min="0"
-                class="prompt-request-input"
-                error_class="prompt-request-input prompt-request-input-error"
-              />
-            </div>
-
-            <div class="prompt-request-form-group">
-              <.input
-                field={@form[:generated_at]}
-                type="datetime-local"
-                label="Generation timestamp (UTC)"
-                class="prompt-request-input"
-                error_class="prompt-request-input prompt-request-input-error"
-              />
-            </div>
-
-            <div class="prompt-request-form-group">
-              <.input
-                field={@form[:execution_duration_ms]}
-                type="number"
-                label="Execution duration (ms)"
-                placeholder="e.g., 15420"
-                min="0"
-                class="prompt-request-input"
-                error_class="prompt-request-input prompt-request-input-error"
-              />
-            </div>
-
-            <div class="prompt-request-form-group">
-              <.input
-                field={@form[:execution_environment]}
-                type="textarea"
-                label="Execution environment (JSON)"
-                placeholder={~s({"runtime":"phoenix","os":"linux"})}
-                class="prompt-request-input prompt-request-textarea"
-                error_class="prompt-request-input prompt-request-input-error"
-              />
-            </div>
-
-            <div class="prompt-request-form-group">
-              <.input
-                field={@form[:parent_prompt_request_id]}
-                type="text"
-                label="Parent prompt request ID (optional)"
-                placeholder="Link to the prompt this builds on"
-                class="prompt-request-input"
-                error_class="prompt-request-input prompt-request-input-error"
-              />
-            </div>
-
-            <div class="prompt-request-form-group">
-              <.input
-                field={@form[:system_prompt]}
-                type="textarea"
-                label="System prompt"
-                placeholder="System prompt used for the agent"
-                class="prompt-request-input prompt-request-textarea"
-                error_class="prompt-request-input prompt-request-input-error"
-              />
-            </div>
-
-            <div class="prompt-request-form-group">
-              <.input
-                field={@form[:prompt]}
-                type="textarea"
-                label="User prompt"
-                placeholder="Prompt submitted to the agent"
-                class="prompt-request-input prompt-request-textarea"
-                error_class="prompt-request-input prompt-request-input-error"
-              />
-            </div>
-
-            <div class="prompt-request-form-group">
-              <.input
-                field={@form[:result]}
-                type="textarea"
-                label="Generated result"
-                placeholder="Paste the generated result or diff"
-                class="prompt-request-input prompt-request-textarea"
-                error_class="prompt-request-input prompt-request-input-error"
-              />
-            </div>
-
-            <div class="prompt-request-form-group">
-              <.input
-                field={@form[:conversation]}
-                type="textarea"
-                label="Conversation history (JSON)"
-                placeholder={~s({"messages": [{"role": "user", "content": "..."}]})}
-                class="prompt-request-input prompt-request-textarea"
-                error_class="prompt-request-input prompt-request-input-error"
-              />
-            </div>
-
-            <div class="prompt-request-form-actions">
-              <button type="submit" class="prompt-request-button" id="prompt-request-submit">
-                Submit prompt request
+            <div class="pr-form-actions">
+              <button type="submit" class="repository-button" id="prompt-request-submit">
+                {gettext("Create prompt request")}
               </button>
               <.link
-                navigate={~p"/#{@organization.account.handle}/#{@repository.handle}/prompt-requests"}
-                class="prompt-request-button prompt-request-button-secondary"
+                navigate={~p"/#{@organization.account.handle}/#{@repository.handle}/prs"}
+                class="repository-button repository-button-secondary"
                 id="prompt-request-cancel"
               >
-                Cancel
+                {gettext("Cancel")}
               </.link>
             </div>
           </.form>
@@ -346,35 +158,16 @@ defmodule MicelioWeb.PromptRequestLive.New do
     """
   end
 
-  defp origin_options do
-    [
-      {"AI-generated", "ai_generated"},
-      {"AI-assisted", "ai_assisted"},
-      {"Human", "human"}
-    ]
-  end
+  defp load_file_paths(repository) do
+    case MicProject.get_head(repository.id) do
+      {:ok, %{tree_hash: tree_hash}} when not is_nil(tree_hash) ->
+        case MicProject.get_tree(repository.id, tree_hash) do
+          {:ok, tree} -> tree |> Map.keys() |> Enum.sort()
+          _ -> []
+        end
 
-  defp template_options(templates) do
-    Enum.map(templates, fn template -> {template.name, template.id} end)
-  end
-
-  defp template_from_params(%{"prompt_template_id" => ""}), do: nil
-  defp template_from_params(%{"prompt_template_id" => nil}), do: nil
-
-  defp template_from_params(%{"prompt_template_id" => template_id}) do
-    PromptRequests.get_prompt_template(template_id)
-  end
-
-  defp template_from_params(_params), do: nil
-
-  defp template_meta(template) do
-    description =
-      case template.description do
-        nil -> ""
-        "" -> ""
-        value -> " · #{value}"
-      end
-
-    "#{template.name}#{description}"
+      _ ->
+        []
+    end
   end
 end

@@ -345,7 +345,8 @@ defmodule Micelio.Accounts do
   Returns true if a user has TOTP enabled.
   """
   def totp_enabled?(%User{totp_secret: secret, totp_enabled_at: enabled_at})
-      when is_binary(secret) and byte_size(secret) > 0 and not is_nil(enabled_at), do: true
+      when is_binary(secret) and byte_size(secret) > 0 and not is_nil(enabled_at),
+      do: true
 
   def totp_enabled?(_), do: false
 

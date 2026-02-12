@@ -6,6 +6,7 @@ defmodule Micelio.OAuth.ResourceOwners do
   alias Boruta.Oauth.ResourceOwners
   alias Micelio.Accounts
   alias Micelio.Accounts.User
+  alias Micelio.OAuth.Scopes
 
   @impl ResourceOwners
   def get_by(username: username) do
@@ -36,7 +37,7 @@ defmodule Micelio.OAuth.ResourceOwners do
   end
 
   @impl ResourceOwners
-  def authorized_scopes(%ResourceOwner{}), do: []
+  def authorized_scopes(%ResourceOwner{}), do: Scopes.all()
 
   @impl ResourceOwners
   def claims(_resource_owner, _scope), do: %{}

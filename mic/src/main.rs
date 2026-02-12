@@ -42,10 +42,13 @@ mod grpc;
 mod http_client;
 mod workspace;
 
-use clap::Parser;
+use clap::{CommandFactory, ColorChoice, FromArgMatches};
+use clap::builder::styling::{AnsiColor, Color, Style, Styles};
 use cli::{Cli, Commands};
 use colored::Colorize;
+use config::Config;
 use error::Result;
+use std::io::IsTerminal;
 
 fn main() {
     // Build async runtime
@@ -65,6 +68,9 @@ async fn async_main() -> i32 {
     let has_help = args.iter().any(|a| a == "--help" || a == "-h");
     let has_json = args.iter().any(|a| a == "--json");
     let has_docs = args.iter().any(|a| a == "--docs");
+    let use_json = has_json || cli::should_use_json();
+    let color_enabled = resolve_color_enabled(&args, use_json);
+    configure_color(color_enabled);
     
     // --docs outputs full documentation for website generation
     if has_docs {
@@ -80,10 +86,17 @@ async fn async_main() -> i32 {
         return 0;
     }
 
-    let cli = Cli::parse();
+    let mut command = Cli::command()
+        .color(color_choice(color_enabled))
+        .styles(help_styles(color_enabled));
+    let matches = command.get_matches_from(&args);
+    let cli = Cli::from_arg_matches(&matches).unwrap_or_else(|err| err.exit());
 
-    let use_json = cli.json || cli::should_use_json();
     let verbose = cli.verbose;
+    let use_json = cli.json || cli::should_use_json();
+    if use_json && color_enabled {
+        configure_color(false);
+    }
 
     // Apply --cwd if specified
     if let Err(e) = cli.apply_cwd() {
@@ -123,6 +136,59 @@ fn print_error(message: &str, code: &str, use_json: bool) {
     } else {
         eprintln!("{}: {}", "Error".red().bold(), message);
     }
+}
+
+fn configure_color(enabled: bool) {
+    colored::control::set_override(enabled);
+}
+
+fn resolve_color_enabled(args: &[String], use_json: bool) -> bool {
+    if use_json {
+        return false;
+    }
+
+    if args.iter().any(|arg| arg == "--no-color") {
+        return false;
+    }
+
+    if std::env::var_os("NO_COLOR").is_some() {
+        return false;
+    }
+
+    if let Ok(config) = Config::load() {
+        if !config.preferences.color {
+            return false;
+        }
+    }
+
+    let term_is_dumb = std::env::var("TERM")
+        .map(|term| term == "dumb")
+        .unwrap_or(false);
+    let stdout_is_terminal = std::io::stdout().is_terminal();
+
+    stdout_is_terminal && !term_is_dumb
+}
+
+fn color_choice(enabled: bool) -> ColorChoice {
+    if enabled {
+        ColorChoice::Always
+    } else {
+        ColorChoice::Never
+    }
+}
+
+fn help_styles(enabled: bool) -> Styles {
+    if !enabled {
+        return Styles::plain();
+    }
+
+    Styles::styled()
+        .header(Style::new().bold().fg_color(Some(Color::Ansi(AnsiColor::Blue))))
+        .usage(Style::new().bold().fg_color(Some(Color::Ansi(AnsiColor::Green))))
+        .literal(Style::new().bold().fg_color(Some(Color::Ansi(AnsiColor::Cyan))))
+        .placeholder(Style::new().fg_color(Some(Color::Ansi(AnsiColor::Yellow))))
+        .valid(Style::new().bold().fg_color(Some(Color::Ansi(AnsiColor::Green))))
+        .invalid(Style::new().bold().fg_color(Some(Color::Ansi(AnsiColor::Red))))
 }
 
 /// Dispatch to the appropriate command handler.

@@ -178,7 +178,7 @@ defmodule MicelioWeb.SessionLive.Index do
             <select
               id="sort-order"
               name="sort"
-              class="sessions-sort-select"
+              class="compact-select"
               aria-label={gettext("Sort order")}
             >
               <option value="newest" selected={@sort_order == :newest}>{gettext("Newest")}</option>

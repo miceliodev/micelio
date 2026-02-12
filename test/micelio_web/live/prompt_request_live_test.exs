@@ -5,10 +5,6 @@ defmodule MicelioWeb.PromptRequestLiveTest do
 
   alias Micelio.Accounts
   alias Micelio.PromptRequests
-  alias Micelio.Repo
-  alias Micelio.Repositories
-  alias Micelio.ValidationEnvironments
-  alias Micelio.ValidationEnvironments.ValidationRun
 
   defp login_user(conn, user) do
     Plug.Test.init_test_session(conn, %{"user_id" => user.id})
@@ -27,7 +23,7 @@ defmodule MicelioWeb.PromptRequestLiveTest do
   defp setup_repository do
     {:ok, user} = Accounts.get_or_create_user_by_email(unique_email("prompt-live"))
     org_handle = unique_handle("prompt-live-org")
-    repository_handle = unique_handle("prompt-live-project")
+    repository_handle = unique_handle("prompt-live-repo")
 
     {:ok, organization} =
       Accounts.create_organization_for_user(user, %{
@@ -38,7 +34,7 @@ defmodule MicelioWeb.PromptRequestLiveTest do
     {:ok, repository} =
       Micelio.Repositories.create_repository(%{
         handle: repository_handle,
-        name: "Prompt Live Project",
+        name: "Prompt Live Repo",
         organization_id: organization.id
       })
 
@@ -53,130 +49,102 @@ defmodule MicelioWeb.PromptRequestLiveTest do
     {:ok, view, _html} =
       live(
         conn,
-        ~p"/#{organization.account.handle}/#{repository.handle}/prompt-requests"
+        ~p"/#{organization.account.handle}/#{repository.handle}/prs"
       )
 
     assert has_element?(view, "#new-prompt-request")
+    assert has_element?(view, "#prompt-requests-empty")
 
     {:ok, form_view, _html} =
       live(
         conn,
-        ~p"/#{organization.account.handle}/#{repository.handle}/prompt-requests/new"
+        ~p"/#{organization.account.handle}/#{repository.handle}/prs/new"
       )
-
-    conversation_json = ~s({"messages":[{"role":"user","content":"Ship it"}]})
-    generated_at = DateTime.utc_now() |> DateTime.to_iso8601()
 
     form =
       form(form_view, "#prompt-request-form",
         prompt_request: %{
           title: "Ship prompt request",
-          model: "gpt-4.1",
-          model_version: "2025-02-01",
-          origin: "ai_generated",
-          token_count: "1200",
-          generated_at: generated_at,
-          system_prompt: "System",
-          prompt: "Do the thing",
-          result: "Diff output",
-          conversation: conversation_json
+          description: "Describe the change to make"
         }
       )
 
     render_submit(form)
 
     [prompt_request] = PromptRequests.list_prompt_requests_for_repository(repository)
+    assert prompt_request.number == 1
+    assert prompt_request.title == "Ship prompt request"
 
     assert_redirect(
       form_view,
-      ~p"/#{organization.account.handle}/#{repository.handle}/prompt-requests/#{prompt_request.id}"
+      ~p"/#{organization.account.handle}/#{repository.handle}/prs/#{prompt_request.number}"
     )
   end
 
-  test "shows prompt request diff and accepts suggestions", %{conn: conn} do
+  test "shows a prompt request", %{conn: conn} do
     {user, organization, repository} = setup_repository()
 
     {:ok, prompt_request} =
-      PromptRequests.create_prompt_request(
-        %{
-          title: "Review diff",
-          prompt: "Prompt",
-          result: "Result",
-          model: "gpt-4.1",
-          model_version: "2025-02-01",
-          origin: :ai_generated,
-          token_count: 820,
-          generated_at: DateTime.utc_now() |> DateTime.truncate(:second),
-          system_prompt: "System",
-          conversation: %{"messages" => [%{"role" => "user", "content" => "Prompt"}]}
-        },
-        project: repository,
+      PromptRequests.create_simple_prompt_request(
+        %{"title" => "Review this", "description" => "Some description"},
+        repository: repository,
         user: user
       )
 
     conn = login_user(conn, user)
 
-    {:ok, view, _html} =
+    {:ok, view, html} =
       live(
         conn,
-        ~p"/#{organization.account.handle}/#{repository.handle}/prompt-requests/#{prompt_request.id}"
+        ~p"/#{organization.account.handle}/#{repository.handle}/prs/#{prompt_request.number}"
       )
 
-    assert has_element?(view, "#prompt-request-diff")
-
-    suggestion_form =
-      form(view, "#prompt-suggestion-form",
-        prompt_suggestion: %{suggestion: "Make the prompt more specific"}
-      )
-
-    render_submit(suggestion_form)
-
-    assert render(view) =~ "Make the prompt more specific"
+    assert html =~ "Review this"
+    assert html =~ "##{prompt_request.number}"
+    assert has_element?(view, "#prompt-request-description")
   end
 
-  test "shows validation runs for a prompt request", %{conn: conn} do
-    {user, organization, repository} = setup_repository()
+  test "assigns sequential numbers to prompt requests", %{conn: _conn} do
+    {user, _organization, repository} = setup_repository()
 
-    {:ok, prompt_request} =
-      PromptRequests.create_prompt_request(
-        %{
-          title: "Review validation",
-          prompt: "Prompt",
-          result: "Result",
-          model: "gpt-4.1",
-          model_version: "2025-02-01",
-          origin: :ai_generated,
-          token_count: 820,
-          generated_at: DateTime.utc_now() |> DateTime.truncate(:second),
-          system_prompt: "System",
-          conversation: %{"messages" => [%{"role" => "user", "content" => "Prompt"}]}
-        },
-        project: repository,
+    {:ok, pr1} =
+      PromptRequests.create_simple_prompt_request(
+        %{"title" => "First"},
+        repository: repository,
         user: user
       )
 
-    {:ok, run} = ValidationEnvironments.create_run(prompt_request, %{status: :passed})
+    {:ok, pr2} =
+      PromptRequests.create_simple_prompt_request(
+        %{"title" => "Second"},
+        repository: repository,
+        user: user
+      )
 
-    run
-    |> ValidationRun.changeset(%{
-      metrics: %{"duration_ms" => 1200},
-      resource_usage: %{"cpu_seconds" => 3.2, "memory_mb" => 256},
-      coverage_delta: 0.01,
-      check_results: %{"checks" => [%{"id" => "test"}]}
-    })
-    |> Repo.update!()
+    assert pr1.number == 1
+    assert pr2.number == 2
+  end
+
+  test "index shows prompt request list when not empty", %{conn: conn} do
+    {user, organization, repository} = setup_repository()
+
+    {:ok, _pr} =
+      PromptRequests.create_simple_prompt_request(
+        %{"title" => "A prompt request"},
+        repository: repository,
+        user: user
+      )
 
     conn = login_user(conn, user)
 
-    {:ok, view, _html} =
+    {:ok, view, html} =
       live(
         conn,
-        ~p"/#{organization.account.handle}/#{repository.handle}/prompt-requests/#{prompt_request.id}"
+        ~p"/#{organization.account.handle}/#{repository.handle}/prs"
       )
 
-    assert has_element?(view, "#prompt-request-run-validation")
-    assert render(view) =~ "Validation Runs"
-    assert render(view) =~ "Passed"
-    assert render(view) =~ "Coverage delta"
+    assert html =~ "A prompt request"
+    assert has_element?(view, "#prompt-requests-list")
+    refute has_element?(view, "#prompt-requests-empty")
   end
 end

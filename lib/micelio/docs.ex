@@ -22,6 +22,7 @@ defmodule Micelio.Docs do
     build: Micelio.Docs.Page,
     from: Application.app_dir(:micelio, "priv/docs/**/*.md"),
     as: :pages,
+    html_converter: Micelio.Docs.HtmlConverter,
     highlighters: [:makeup_elixir, :makeup_erlang, :makeup_syntect]
 
   require Micelio.SyntaxHighlighting
@@ -29,20 +30,40 @@ defmodule Micelio.Docs do
   @categories %{
     "users" => %{
       title: gettext_noop("Users"),
-      description: gettext_noop("Documentation for people using mic and Micelio day-to-day.")
+      description: gettext_noop("Documentation for people using mic and Micelio day-to-day."),
+      kind: :guide
     },
     "hosters" => %{
       title: gettext_noop("Hosters"),
-      description: gettext_noop("Documentation for people running their own Micelio instance.")
+      description: gettext_noop("Documentation for people running their own Micelio instance."),
+      kind: :guide
     },
     "contributors" => %{
       title: gettext_noop("Contributors"),
       description:
-        gettext_noop("Documentation for people contributing to the Micelio repository.")
+        gettext_noop("Documentation for people contributing to the Micelio repository."),
+      kind: :guide
     },
     "shapers" => %{
       title: gettext_noop("Shapers"),
-      description: gettext_noop("Documentation for people shaping Micelio.")
+      description: gettext_noop("Documentation for people shaping Micelio."),
+      kind: :guide
+    },
+    "grpc" => %{
+      title: gettext_noop("gRPC API"),
+      description: gettext_noop("gRPC API reference generated from protocol buffer definitions."),
+      kind: :reference
+    },
+    "rest-api" => %{
+      title: gettext_noop("REST API"),
+      description: gettext_noop("REST API reference with endpoints, error format, and examples."),
+      kind: :reference
+    },
+    "auth" => %{
+      title: gettext_noop("Authentication & Authorization"),
+      description:
+        gettext_noop("OAuth2 authentication, token scopes, and authorization for both APIs."),
+      kind: :reference
     }
   }
 
@@ -66,9 +87,12 @@ defmodule Micelio.Docs do
                       {category, page_ids}
                     end)
 
+  # Merge NimblePublisher pages with gRPC-generated pages
+  @all_pages @pages ++ Micelio.Docs.GrpcDocs.pages()
+
   # Group pages by category and sort by index order
   # Pages not in the index are placed at the end, sorted alphabetically by id
-  @pages_by_category @pages
+  @pages_by_category @all_pages
                      |> Enum.group_by(& &1.category)
                      |> Map.new(fn {category, pages} ->
                        index = Map.get(@category_indexes, category, [])
@@ -113,6 +137,15 @@ defmodule Micelio.Docs do
   end
 
   @doc """
+  Returns categories filtered by kind (:guide or :reference).
+  """
+  def categories_by_kind(kind) when kind in [:guide, :reference] do
+    @categories
+    |> Enum.filter(fn {_id, info} -> info[:kind] == kind end)
+    |> Map.new()
+  end
+
+  @doc """
   Returns metadata for a specific category.
   """
   def get_category(category) when is_binary(category) do
@@ -142,7 +175,7 @@ defmodule Micelio.Docs do
     if String.length(query) < 2 do
       []
     else
-      @pages
+      @all_pages
       |> Enum.map(fn page ->
         score = calculate_search_score(page, query)
         {page, score}

@@ -7,39 +7,3 @@
   color: var(--theme-ui-colors-muted);
   margin-bottom: var(--theme-ui-space-3);
 }
-
-.legal-content h2,
-.legal-content h3 {
-  margin-top: var(--theme-ui-space-3);
-  margin-bottom: var(--theme-ui-space-2);
-  font-weight: var(--theme-ui-font-weights-bold);
-  border-bottom: var(--theme-ui-borders-thin);
-  padding-bottom: var(--theme-ui-space-1);
-}
-
-.legal-content p {
-  margin: var(--theme-ui-space-2) 0;
-}
-
-.legal-content ul,
-.legal-content ol {
-  margin: var(--theme-ui-space-2) 0;
-  padding-left: var(--theme-ui-space-2);
-}
-
-.legal-content li {
-  margin: var(--theme-ui-space-1) 0;
-}
-
-.legal-content a {
-  color: var(--theme-ui-colors-primary);
-  text-decoration: underline;
-  text-decoration-thickness: 0.08em;
-  text-underline-offset: 0.15em;
-}
-
-.legal-content a:hover {
-  color: var(--theme-ui-colors-muted);
-  text-decoration-color: var(--theme-ui-colors-muted);
-}
-

@@ -8,7 +8,16 @@ defmodule Micelio.OAuth do
   alias Boruta.Oauth.ResourceOwner
   alias Ecto.Multi
   alias Micelio.Accounts.User
-  alias Micelio.OAuth.{AccessTokens, BorutaClient, DeviceClient, DeviceGrant, DeviceSession}
+
+  alias Micelio.OAuth.{
+    AccessTokens,
+    BorutaClient,
+    DeviceClient,
+    DeviceGrant,
+    DeviceSession,
+    Scopes
+  }
+
   alias Micelio.Repo
 
   @device_code_ttl_minutes 15
@@ -61,8 +70,8 @@ defmodule Micelio.OAuth do
       refresh_token_ttl: @refresh_token_ttl,
       id_token_ttl: @id_token_ttl,
       redirect_uris: [],
-      scopes: [],
-      authorize_scope: false,
+      scopes: Scopes.names(),
+      authorize_scope: true,
       supported_grant_types: defaults["grant_types"],
       pkce: defaults["pkce"],
       public: false,
@@ -111,8 +120,8 @@ defmodule Micelio.OAuth do
       refresh_token_ttl: @refresh_token_ttl,
       id_token_ttl: @id_token_ttl,
       redirect_uris: redirect_uris,
-      scopes: [],
-      authorize_scope: false,
+      scopes: Scopes.names(),
+      authorize_scope: true,
       supported_grant_types: grant_types,
       pkce: false,
       public: false,

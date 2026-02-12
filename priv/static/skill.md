@@ -217,6 +217,13 @@ mic session abandon                    # Discard session
 mic sync                               # Pull latest from forge
 ```
 
+### mic CLI Global Options
+
+- `--json` - Output in JSON format (for scripts/agents)
+- `--verbose` / `-v` - Show additional details
+- `--no-color` - Disable colored output (also respects `NO_COLOR`)
+- `--cwd` / `-C` - Run as if started in a different directory
+
 ### Importing from Git
 
 Micelio can import from Git forges (GitHub, GitLab, etc.) via the web UI import feature. This:

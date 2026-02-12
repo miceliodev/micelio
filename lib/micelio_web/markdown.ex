@@ -21,7 +21,8 @@ defmodule MicelioWeb.Markdown do
     end
   end
 
-  defp transform_admonitions(html) do
+  @doc "Transforms GitHub-style admonitions in HTML into styled divs."
+  def transform_admonitions(html) do
     html
     |> transform_blockquote_admonitions()
     |> transform_paragraph_admonitions()

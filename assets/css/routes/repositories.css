@@ -220,6 +220,7 @@
 
 .repository-button:hover {
   background-color: var(--theme-ui-colors-button-primary-bg-hover);
+  text-decoration: none;
 }
 
 .repository-button:focus {

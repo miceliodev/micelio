@@ -174,8 +174,6 @@
 
 .home-popular {
   margin-top: var(--theme-ui-space-4);
-  padding-top: var(--theme-ui-space-3);
-  border-top: var(--theme-ui-borders-thin);
 }
 
 .home-popular-header {

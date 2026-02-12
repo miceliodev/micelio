@@ -103,6 +103,9 @@ Thumbs.db
 .nix-mix
 .nix-hex
 .direnv
+.devenv
+.devenv.flake.nix
+mic/.devenv.flake.nix
 .postgres
 
 # Android client artifacts

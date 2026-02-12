@@ -45,6 +45,10 @@ zig-out/
 /priv/lib/
 
 .env
+.direnv/
+.devenv/
+.devenv.flake.nix
+mic/.devenv.flake.nix
 
 # Rust build artifacts
 /mic/target/

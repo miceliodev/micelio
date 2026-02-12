@@ -176,6 +176,32 @@ defmodule MicelioWeb.Router do
     get("/docs", OpenApiSpex.Plug.SwaggerUI, path: "/api/openapi")
   end
 
+  scope "/api/v1", MicelioWeb.Api.V1 do
+    pipe_through(:api)
+
+    # Organizations
+    get("/orgs", OrganizationController, :index)
+    get("/orgs/:handle", OrganizationController, :show)
+
+    # Repositories
+    get("/orgs/:org/repositories", RepositoryController, :index)
+    post("/orgs/:org/repositories", RepositoryController, :create)
+    get("/orgs/:org/repositories/:handle", RepositoryController, :show)
+    patch("/orgs/:org/repositories/:handle", RepositoryController, :update)
+    delete("/orgs/:org/repositories/:handle", RepositoryController, :delete)
+
+    # Sessions
+    get("/orgs/:org/repositories/:repo/sessions", SessionController, :index)
+    post("/orgs/:org/repositories/:repo/sessions", SessionController, :create)
+    get("/sessions/:session_id", SessionController, :show)
+    post("/sessions/:session_id/land", SessionController, :land)
+
+    # Content
+    get("/orgs/:org/repositories/:repo/tree", ContentController, :tree)
+    get("/orgs/:org/repositories/:repo/blob/*path", ContentController, :blob)
+    get("/orgs/:org/repositories/:repo/blame/*path", ContentController, :blame)
+  end
+
   scope "/api/mobile", MicelioWeb.Api.Mobile do
     pipe_through(:api)
 
@@ -258,7 +284,13 @@ defmodule MicelioWeb.Router do
     get("/:account/:repository/sessions", RedirectController, :projects_sessions)
     get("/:account/:repository/sessions/:id", RedirectController, :projects_session)
     get("/:account/:repository/prompt-requests", RedirectController, :projects_prompt_requests)
-    get("/:account/:repository/prompt-requests/new", RedirectController, :projects_prompt_request_new)
+
+    get(
+      "/:account/:repository/prompt-requests/new",
+      RedirectController,
+      :projects_prompt_request_new
+    )
+
     get("/:account/:repository/prompt-requests/:id", RedirectController, :projects_prompt_request)
   end
 
@@ -282,9 +314,8 @@ defmodule MicelioWeb.Router do
       live("/:account/:repository/edit", RepositoryLive.Edit, :edit)
       live("/:account/:repository/sessions", SessionLive.Index, :index)
       live("/:account/:repository/sessions/:id", SessionLive.Show, :show)
-      live("/:account/:repository/prompt-requests", PromptRequestLive.Index, :index)
-      live("/:account/:repository/prompt-requests/new", PromptRequestLive.New, :new)
-      live("/:account/:repository/prompt-requests/:id", PromptRequestLive.Show, :show)
+      live("/:account/:repository/prs/new", PromptRequestLive.New, :new)
+      live("/:account/:repository/prs/:number/edit", PromptRequestLive.Edit, :edit)
     end
   end
 
@@ -381,7 +412,24 @@ defmodule MicelioWeb.Router do
     live_session :public,
       on_mount: [{MicelioWeb.LiveAuth, :current_user}, MicelioWeb.LiveOpenGraphCacheBuster] do
       live("/:account/:repository/agents", AgentLive.Index, :index)
+      live("/:account/:repository/prs", PromptRequestLive.Index, :index)
+      live("/:account/:repository/prs/:number", PromptRequestLive.Show, :show)
     end
+  end
+
+  # Redirect old /prompt-requests URLs to /prs
+  scope "/", MicelioWeb.Browser do
+    pipe_through([:browser, :load_resources])
+
+    get("/:account/:repository/prompt-requests", RedirectController, :projects_prompt_requests)
+
+    get(
+      "/:account/:repository/prompt-requests/new",
+      RedirectController,
+      :projects_prompt_request_new
+    )
+
+    get("/:account/:repository/prompt-requests/:id", RedirectController, :projects_prompt_request)
   end
 
   # Locale-prefixed marketing routes (for SEO and explicit locale selection)

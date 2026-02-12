@@ -7,6 +7,7 @@ defmodule Micelio.OAuth.Clients do
   @behaviour Boruta.Openid.Clients
 
   alias Micelio.OAuth.DeviceClient
+  alias Micelio.OAuth.Scopes
   alias Micelio.Repo
 
   @impl Boruta.Oauth.Clients
@@ -23,7 +24,7 @@ defmodule Micelio.OAuth.Clients do
   end
 
   @impl Boruta.Oauth.Clients
-  def authorized_scopes(_client), do: []
+  def authorized_scopes(_client), do: Scopes.all()
 
   @impl Boruta.Oauth.Clients
   def get_client_by_did(_did) do
@@ -57,7 +58,7 @@ defmodule Micelio.OAuth.Clients do
       id_token_signature_alg: client.token_endpoint_jwt_auth_alg,
       userinfo_signed_response_alg: client.token_endpoint_jwt_auth_alg,
       redirect_uris: client.redirect_uris,
-      authorize_scope: false,
+      authorize_scope: true,
       supported_grant_types: client.grant_types,
       pkce: client.pkce,
       public_refresh_token: client.public_refresh_token,

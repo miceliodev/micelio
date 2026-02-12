@@ -9,7 +9,9 @@ defmodule Micelio.PromptRequests.PromptRequest do
   @review_status_values [:pending, :accepted, :rejected]
 
   schema "prompt_requests" do
+    field :number, :integer
     field :title, :string
+    field :description, :string
     field :prompt, :string
     field :result, :string
     field :model, :string
@@ -27,6 +29,7 @@ defmodule Micelio.PromptRequests.PromptRequest do
     field :execution_duration_ms, :integer
     field :validation_feedback, :string
     field :validation_iterations, :integer, default: 0
+    field :status, :string, default: "open"
 
     belongs_to :repository, Micelio.Repositories.Repository
     belongs_to :user, Micelio.Accounts.User
@@ -69,6 +72,14 @@ defmodule Micelio.PromptRequests.PromptRequest do
     |> validate_number(:token_count, greater_than_or_equal_to: 0)
     |> validate_ai_requirements()
     |> validate_conversation()
+  end
+
+  @doc "Changeset for creating a simple prompt request (title + description only)."
+  def simple_changeset(prompt_request, attrs) do
+    prompt_request
+    |> cast(attrs, [:title, :description])
+    |> validate_required([:title])
+    |> validate_length(:title, max: 200)
   end
 
   defp cast_conversation(changeset, attrs) do
@@ -197,6 +208,13 @@ defmodule Micelio.PromptRequests.PromptRequest do
       _ ->
         add_error(changeset, :generated_at, "must be valid datetime")
     end
+  end
+
+  @doc "Changeset for changing prompt request status (open/closed)."
+  def status_changeset(prompt_request, status) do
+    prompt_request
+    |> change(%{status: status})
+    |> validate_inclusion(:status, ["open", "closed"])
   end
 
   @doc "Changeset for reviewing a prompt request."

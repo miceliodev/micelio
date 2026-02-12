@@ -16,33 +16,10 @@ use clap::{Parser, Subcommand};
 #[command(propagate_version = true)]
 #[command(after_help = "\
 QUICK START:
-    $ mic auth login                    # 1. Authenticate
-    $ mic checkout acme/myapp           # 2. Create local workspace
-    $ cd myapp
-    $ mic session start \"Add feature\"   # 3. Start session (project inferred)
-    $ # ... make your changes ...
-    $ mic session land                  # 4. Push to forge
-
-QUICK LAND (for small changes):
-    $ mic checkout acme/myapp && cd myapp
-    $ # ... make changes ...
-    $ mic land \"Fix typo\"               # Start session + land in one step
-
-KEY CONCEPTS:
-    • Session: A unit of work with a goal (replaces Git commits)
-    • Workspace: A local directory linked to a project
-    • Forge: The server that stores all project data
-    • Landing: Pushing your session changes to the forge
-
-GETTING HELP:
-    $ mic --help                  # This help
-    $ mic <command> --help        # Help for a specific command
-    $ mic --help --json           # Machine-readable help (for agents)
-
-ENVIRONMENT:
-    MIC_HOME    Override config directory (default: ~/.mic)
-
-MORE INFO: https://micelio.dev/docs/cli
+    mic auth login
+    mic checkout <org/project>
+    mic session start \"<goal>\"
+    mic session land
 ")]
 pub struct Cli {
     /// Output in JSON format (for scripting and agents)
@@ -52,6 +29,10 @@ pub struct Cli {
     /// Verbose output (show additional details)
     #[arg(short, long, global = true)]
     pub verbose: bool,
+
+    /// Disable colored output
+    #[arg(long, global = true)]
+    pub no_color: bool,
 
     /// Run as if started in <PATH> instead of current directory
     #[arg(short = 'C', long, global = true, value_name = "PATH")]
@@ -714,6 +695,7 @@ pub fn generate_help_json() -> serde_json::Value {
         "global_options": {
             "--json": "Output in JSON format",
             "--verbose": "Show additional details",
+            "--no-color": "Disable colored output",
             "-C, --cwd": "Run from different directory",
             "--help": "Show help (add --json for machine-readable)"
         },
@@ -1218,13 +1200,15 @@ pub fn generate_docs() -> serde_json::Value {
         "global_options": [
             {"name": "--json", "description": "Output in JSON format (for scripting and agents)"},
             {"name": "--verbose, -v", "description": "Show additional details"},
+            {"name": "--no-color", "description": "Disable colored output"},
             {"name": "--cwd, -C", "description": "Run as if started in <PATH> instead of current directory"},
             {"name": "--help, -h", "description": "Show help information"},
             {"name": "--version, -V", "description": "Show version information"}
         ],
         
         "environment_variables": [
-            {"name": "MIC_HOME", "description": "Override config directory", "default": "~/.mic"}
+            {"name": "MIC_HOME", "description": "Override config directory", "default": "~/.mic"},
+            {"name": "NO_COLOR", "description": "Disable colored output", "default": ""}
         ],
         
         "error_codes": [

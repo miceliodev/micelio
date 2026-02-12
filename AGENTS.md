@@ -394,7 +394,7 @@ The app is deployed using [Kamal](https://kamal-deploy.org/) via **Continuous In
 
 **Manual deployment (if needed):**
 ```bash
-source .env && kamal deploy
+fnox exec kamal deploy
 ```
 
 ### Code Quality Standards
@@ -443,10 +443,10 @@ When encountering 500 errors or unexpected behavior in production:
 
 ```bash
 # View live logs
-kamal logs
+fnox exec kamal logs
 
 # Follow logs in real-time
-kamal logs -f
+fnox exec fnox exec kamal logs -f
 ```
 
 ### 2. Identify the Error Pattern
@@ -496,29 +496,29 @@ mix compile --warnings-as-errors
 git add . && git commit -m "fix: description" && git push
 # 6. Verify CI passes
 # 7. Check logs
-kamal logs
+fnox exec kamal logs
 ```
 
 ### 7. Useful Commands
 
 ```bash
 # Check production logs
-kamal logs
+fnox exec kamal logs
 
 # SSH into production container
-kamal ssh
+fnox exec kamal ssh
 
 # Check deployment status
-kamal status
+fnox exec kamal status
 
 # Check app health
-kamal healthcheck
+fnox exec kamal healthcheck
 
 # Deploy to production
-kamal deploy
+fnox exec kamal deploy
 
 # Rollback to previous version
-kamal rollback
+fnox exec kamal rollback
 ```
 
 ### Remember

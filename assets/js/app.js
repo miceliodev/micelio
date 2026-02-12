@@ -31,7 +31,9 @@ import { setupPasskeys } from "./auth/passkeys";
 import { initTheme, setupThemeToggle } from "./ui/theme";
 import { setupFlashDismiss } from "./ui/flash";
 import { setupDropdown } from "./ui/dropdown";
+import { setupHamburger } from "./ui/hamburger";
 import { setupProjectHandleGeneration } from "./forms/project-handle";
+import { FileMention } from "./forms/file-mention";
 
 const csrfToken = document
   .querySelector("meta[name='csrf-token']")
@@ -176,6 +178,7 @@ function createElement(tag, className, text) {
 }
 const hooks = {
   ...colocatedHooks,
+  FileMention,
   CopyToClipboard: {
     mounted() {
       this.onClick = async () => {
@@ -619,6 +622,7 @@ initTheme();
 setupThemeToggle();
 setupFlashDismiss();
 setupDropdown();
+setupHamburger();
 setupPasskeys();
 document.addEventListener("DOMContentLoaded", setupProjectHandleGeneration);
 window.addEventListener("phx:page-loading-stop", setupPasskeys);
