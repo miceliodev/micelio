@@ -18,6 +18,19 @@
           </a>
         <% end %>
       </nav>
+      <%= if @toc != [] do %>
+        <nav class="docs-sidebar-toc">
+          <h4 class="docs-sidebar-toc-title">{gettext("On this page")}</h4>
+          <%= for entry <- @toc do %>
+            <a
+              href={"##{entry.id}"}
+              class={["docs-sidebar-toc-link", entry.level == 3 && "docs-sidebar-toc-link-nested"]}
+            >
+              {entry.text}
+            </a>
+          <% end %>
+        </nav>
+      <% end %>
       <div class="docs-sidebar-back">
         <a href={~p"/docs"}>{gettext("All documentation")}</a>
       </div>
@@ -39,8 +52,32 @@
         </:subtitle>
       </.header>
 
-      <div class="docs-page-content prose">
+      <%= if @toc != [] do %>
+        <details class="docs-mobile-toc">
+          <summary class="docs-mobile-toc-summary">{gettext("On this page")}</summary>
+          <nav class="docs-mobile-toc-nav">
+            <%= for entry <- @toc do %>
+              <a
+                href={"##{entry.id}"}
+                class={["docs-mobile-toc-link", entry.level == 3 && "docs-mobile-toc-link-nested"]}
+              >
+                {entry.text}
+              </a>
+            <% end %>
+          </nav>
+        </details>
+      <% end %>
+
+      <div class="docs-page-content prose" data-api-try-auth={to_string(@api_try_authenticated)}>
         {raw(@page.body)}
+      </div>
+      <div
+        id="api-try-i18n"
+        hidden
+        data-sign-in-label={gettext("Sign in to try this")}
+        data-send-label={gettext("Send request")}
+        data-sending-label={gettext("Sending...")}
+      >
       </div>
     </article>
   </div>

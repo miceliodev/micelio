@@ -395,7 +395,7 @@ msgid "GitHub App installed successfully."
 msgstr ""
 
 #: lib/micelio_web/controllers/browser/docs_html/cli_reference.html.heex:22
-#: lib/micelio_web/controllers/browser/docs_html/show.html.heex:22
+#: lib/micelio_web/controllers/browser/docs_html/show.html.heex:35
 #, elixir-autogen, elixir-format
 msgid "All documentation"
 msgstr "All documentation"
@@ -404,7 +404,7 @@ msgstr "All documentation"
 #: lib/micelio_web/controllers/browser/docs_html/cli_reference.html.heex:28
 #: lib/micelio_web/controllers/browser/docs_html/index.html.heex:10
 #: lib/micelio_web/controllers/browser/docs_html/search.html.heex:10
-#: lib/micelio_web/controllers/browser/docs_html/show.html.heex:28
+#: lib/micelio_web/controllers/browser/docs_html/show.html.heex:41
 #: lib/micelio_web/live/docs_live/index.ex:116
 #, elixir-autogen, elixir-format
 msgid "Documentation"
@@ -423,7 +423,7 @@ msgstr "Learn how to use mic and Micelio, or how to host your own instance."
 
 #: lib/micelio_web/components/layouts.ex:102
 #: lib/micelio_web/controllers/browser/docs_controller.ex:35
-#: lib/micelio_web/controllers/browser/docs_controller.ex:62
+#: lib/micelio_web/controllers/browser/docs_controller.ex:63
 #: lib/micelio_web/live/docs_live/index.ex:29
 #, elixir-autogen, elixir-format
 msgid "docs"
@@ -432,7 +432,7 @@ msgstr "docs"
 #: lib/micelio_web/controllers/browser/docs_html/category.html.heex:9
 #: lib/micelio_web/controllers/browser/docs_html/cli_reference.html.heex:27
 #: lib/micelio_web/controllers/browser/docs_html/search.html.heex:9
-#: lib/micelio_web/controllers/browser/docs_html/show.html.heex:27
+#: lib/micelio_web/controllers/browser/docs_html/show.html.heex:40
 #, elixir-autogen, elixir-format
 msgid "Breadcrumb"
 msgstr "Breadcrumb"
@@ -499,37 +499,37 @@ msgstr "Logged in as seed user."
 msgid "Seed user not available."
 msgstr "Seed user not available."
 
-#: lib/micelio/docs.ex:47
+#: lib/micelio/docs.ex:48
 #, elixir-autogen, elixir-format
 msgid "Shapers"
 msgstr ""
 
-#: lib/micelio/docs.ex:41
+#: lib/micelio/docs.ex:42
 #, elixir-autogen, elixir-format
 msgid "Contributors"
 msgstr ""
 
-#: lib/micelio/docs.ex:37
+#: lib/micelio/docs.ex:38
 #, elixir-autogen, elixir-format
 msgid "Documentation for people running their own Micelio instance."
 msgstr ""
 
-#: lib/micelio/docs.ex:48
+#: lib/micelio/docs.ex:49
 #, elixir-autogen, elixir-format
 msgid "Documentation for people shaping Micelio."
 msgstr ""
 
-#: lib/micelio/docs.ex:32
+#: lib/micelio/docs.ex:33
 #, elixir-autogen, elixir-format
 msgid "Documentation for people using mic and Micelio day-to-day."
 msgstr ""
 
-#: lib/micelio/docs.ex:36
+#: lib/micelio/docs.ex:37
 #, elixir-autogen, elixir-format
 msgid "Hosters"
 msgstr ""
 
-#: lib/micelio/docs.ex:31
+#: lib/micelio/docs.ex:32
 #, elixir-autogen, elixir-format
 msgid "Users"
 msgstr ""
@@ -728,7 +728,7 @@ msgstr ""
 msgid "Create your first repository"
 msgstr ""
 
-#: lib/micelio/docs.ex:43
+#: lib/micelio/docs.ex:44
 #, elixir-autogen, elixir-format, fuzzy
 msgid "Documentation for people contributing to the Micelio repository."
 msgstr ""
@@ -1174,32 +1174,53 @@ msgstr ""
 msgid "Update prompt request"
 msgstr ""
 
-#: lib/micelio/docs.ex:53
+#: lib/micelio/docs.ex:54
 #, elixir-autogen, elixir-format
 msgid "gRPC API reference generated from protocol buffer definitions."
 msgstr ""
 
-#: lib/micelio/docs.ex:52
+#: lib/micelio/docs.ex:53
 #, elixir-autogen, elixir-format
 msgid "gRPC API"
 msgstr ""
 
-#: lib/micelio/docs.ex:64
+#: lib/micelio/docs.ex:65
 #, elixir-autogen, elixir-format
 msgid "OAuth2 authentication, token scopes, and authorization for both APIs."
 msgstr ""
 
-#: lib/micelio/docs.ex:57
+#: lib/micelio/docs.ex:58
 #, elixir-autogen, elixir-format
 msgid "REST API"
 msgstr ""
 
-#: lib/micelio/docs.ex:58
+#: lib/micelio/docs.ex:59
 #, elixir-autogen, elixir-format
 msgid "REST API reference with endpoints, error format, and examples."
 msgstr ""
 
-#: lib/micelio/docs.ex:62
+#: lib/micelio/docs.ex:63
 #, elixir-autogen, elixir-format, fuzzy
 msgid "Authentication & Authorization"
+msgstr ""
+
+#: lib/micelio_web/controllers/browser/docs_html/show.html.heex:23
+#: lib/micelio_web/controllers/browser/docs_html/show.html.heex:57
+#, elixir-autogen, elixir-format
+msgid "On this page"
+msgstr ""
+
+#: lib/micelio_web/controllers/browser/docs_html/show.html.heex:78
+#, elixir-autogen, elixir-format
+msgid "Send request"
+msgstr ""
+
+#: lib/micelio_web/controllers/browser/docs_html/show.html.heex:79
+#, elixir-autogen, elixir-format
+msgid "Sending..."
+msgstr ""
+
+#: lib/micelio_web/controllers/browser/docs_html/show.html.heex:77
+#, elixir-autogen, elixir-format
+msgid "Sign in to try this"
 msgstr ""

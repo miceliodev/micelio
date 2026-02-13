@@ -34,6 +34,7 @@ import { setupDropdown } from "./ui/dropdown";
 import { setupHamburger } from "./ui/hamburger";
 import { setupProjectHandleGeneration } from "./forms/project-handle";
 import { FileMention } from "./forms/file-mention";
+import { setupApiTryIt } from "./docs/api-try-it";
 
 const csrfToken = document
   .querySelector("meta[name='csrf-token']")
@@ -625,6 +626,7 @@ setupDropdown();
 setupHamburger();
 setupPasskeys();
 document.addEventListener("DOMContentLoaded", setupProjectHandleGeneration);
+document.addEventListener("DOMContentLoaded", setupApiTryIt);
 window.addEventListener("phx:page-loading-stop", setupPasskeys);
 
 // The lines below enable quality of life phoenix_live_reload

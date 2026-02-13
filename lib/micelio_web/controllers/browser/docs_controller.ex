@@ -56,6 +56,7 @@ defmodule MicelioWeb.Browser.DocsController do
     if translated_category_info do
       page = Docs.get_page!(category, id)
       pages = Docs.pages_by_category(category)
+      toc = Micelio.Docs.HtmlConverter.extract_toc(page.body)
 
       conn
       |> PageMeta.put(
@@ -67,7 +68,9 @@ defmodule MicelioWeb.Browser.DocsController do
         page: page,
         category: category,
         category_info: translated_category_info,
-        pages: pages
+        pages: pages,
+        toc: toc,
+        api_try_authenticated: conn.assigns[:current_user] != nil
       )
     else
       conn

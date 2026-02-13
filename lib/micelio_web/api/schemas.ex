@@ -235,4 +235,71 @@ defmodule MicelioWeb.Api.Schemas do
       required: [:data]
     })
   end
+
+  defmodule PromptRequest do
+    require OpenApiSpex
+
+    OpenApiSpex.schema(%{
+      title: "PromptRequest",
+      type: :object,
+      properties: %{
+        id: %Schema{type: :string, format: :uuid},
+        number: %Schema{type: :integer},
+        title: %Schema{type: :string},
+        description: %Schema{type: :string, nullable: true},
+        status: %Schema{type: :string, enum: ["open", "closed"]},
+        user: %Schema{
+          type: :object,
+          nullable: true,
+          properties: %{
+            id: %Schema{type: :string, format: :uuid},
+            email: %Schema{type: :string}
+          }
+        },
+        inserted_at: %Schema{type: :string, format: :"date-time"},
+        updated_at: %Schema{type: :string, format: :"date-time"}
+      },
+      required: [:id, :number, :title, :status]
+    })
+  end
+
+  defmodule PromptRequestList do
+    require OpenApiSpex
+
+    OpenApiSpex.schema(%{
+      title: "PromptRequestList",
+      type: :object,
+      properties: %{
+        data: %Schema{type: :array, items: PromptRequest}
+      },
+      required: [:data]
+    })
+  end
+
+  defmodule CreatePromptRequestRequest do
+    require OpenApiSpex
+
+    OpenApiSpex.schema(%{
+      title: "CreatePromptRequestRequest",
+      type: :object,
+      properties: %{
+        title: %Schema{type: :string, description: "Title of the prompt request"},
+        description: %Schema{type: :string, description: "Detailed description", nullable: true}
+      },
+      required: [:title]
+    })
+  end
+
+  defmodule UpdatePromptRequestRequest do
+    require OpenApiSpex
+
+    OpenApiSpex.schema(%{
+      title: "UpdatePromptRequestRequest",
+      type: :object,
+      properties: %{
+        title: %Schema{type: :string},
+        description: %Schema{type: :string, nullable: true}
+      }
+    })
+  end
 end

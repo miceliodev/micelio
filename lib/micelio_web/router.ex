@@ -131,6 +131,13 @@ defmodule MicelioWeb.Router do
     get("/:category/:id", DocsController, :show)
   end
 
+  # API try-it proxy (session-authenticated, for interactive docs)
+  scope "/api-try", MicelioWeb.Browser do
+    pipe_through([:browser, :require_auth])
+
+    post("/", ApiTryController, :proxy)
+  end
+
   # Changelog routes (public)
   scope "/changelog", MicelioWeb.Browser do
     pipe_through(:browser)
@@ -195,6 +202,30 @@ defmodule MicelioWeb.Router do
     post("/orgs/:org/repositories/:repo/sessions", SessionController, :create)
     get("/sessions/:session_id", SessionController, :show)
     post("/sessions/:session_id/land", SessionController, :land)
+
+    # Prompt Requests
+    get("/orgs/:org/repositories/:repo/prompt-requests", PromptRequestController, :index)
+    post("/orgs/:org/repositories/:repo/prompt-requests", PromptRequestController, :create)
+
+    get("/orgs/:org/repositories/:repo/prompt-requests/:number", PromptRequestController, :show)
+
+    patch(
+      "/orgs/:org/repositories/:repo/prompt-requests/:number",
+      PromptRequestController,
+      :update
+    )
+
+    post(
+      "/orgs/:org/repositories/:repo/prompt-requests/:number/close",
+      PromptRequestController,
+      :close
+    )
+
+    post(
+      "/orgs/:org/repositories/:repo/prompt-requests/:number/reopen",
+      PromptRequestController,
+      :reopen
+    )
 
     # Content
     get("/orgs/:org/repositories/:repo/tree", ContentController, :tree)
