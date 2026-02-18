@@ -2,7 +2,6 @@ defmodule MicelioWeb.RepositoryLive.Show do
   use MicelioWeb, :live_view
 
   alias Micelio.Authorization
-  alias Micelio.Notifications
   alias Micelio.Plans
   alias Micelio.Repositories
   alias Micelio.Sessions
@@ -37,7 +36,6 @@ defmodule MicelioWeb.RepositoryLive.Show do
             |> assign(:recent_sessions, recent_sessions)
             |> assign(:session_count, session_count)
             |> assign(:plan_count, plan_count)
-            |> assign_star_data()
 
           _ =
             Repositories.record_repository_interaction(
@@ -80,29 +78,6 @@ defmodule MicelioWeb.RepositoryLive.Show do
   end
 
   @impl true
-  def handle_event("toggle_star", _params, socket) do
-    repository = socket.assigns.repository
-    user = socket.assigns.current_user
-
-    if socket.assigns.starred? do
-      _ = Repositories.unstar_repository(user, repository)
-    else
-      case Micelio.Repositories.star_repository(user, repository) do
-        {:ok, _star} ->
-          _ = Notifications.dispatch_repository_starred(repository, user)
-          :ok
-
-        {:error, _changeset} ->
-          :error
-      end
-    end
-
-    _ = Repositories.record_repository_interaction(user, repository, "pulse")
-
-    {:noreply, assign_star_data(socket)}
-  end
-
-  @impl true
   def render(assigns) do
     ~H"""
     <Layouts.app
@@ -129,23 +104,6 @@ defmodule MicelioWeb.RepositoryLive.Show do
             <% end %>
           </:subtitle>
           <:actions>
-            <div class="project-show-stars">
-              <button
-                type="button"
-                class="project-show-action project-show-action-star"
-                id="repository-star-toggle"
-                phx-click="toggle_star"
-              >
-                <%= if @starred? do %>
-                  Unstar
-                <% else %>
-                  Star
-                <% end %>
-              </button>
-              <span class="project-show-stars-count" id="repository-stars-count">
-                Stars: {@stars_count}
-              </span>
-            </div>
             <%= if Authorization.authorize(:repository_update, @current_user, @repository) == :ok do %>
               <.link
                 navigate={~p"/#{@organization.account.handle}/#{@repository.handle}/edit"}
@@ -213,14 +171,5 @@ defmodule MicelioWeb.RepositoryLive.Show do
       </div>
     </Layouts.app>
     """
-  end
-
-  defp assign_star_data(socket) do
-    repository = socket.assigns.repository
-    user = socket.assigns.current_user
-
-    socket
-    |> assign(:starred?, Repositories.repository_starred?(user, repository))
-    |> assign(:stars_count, Repositories.count_repository_stars(repository))
   end
 end

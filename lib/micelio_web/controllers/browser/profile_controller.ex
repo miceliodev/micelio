@@ -82,7 +82,6 @@ defmodule MicelioWeb.Browser.ProfileController do
 
   defp profile_assigns(conn, user, opts \\ []) do
     activity_counts = Sessions.activity_counts_for_user(user)
-    starred_repositories = Repositories.list_starred_repositories_for_user(user)
     passkeys = Accounts.list_passkeys_for_user(user)
     organizations = Accounts.list_organizations_for_user_with_member_counts(user)
     totp_setup = totp_setup_from_session(conn, user)
@@ -97,7 +96,6 @@ defmodule MicelioWeb.Browser.ProfileController do
     %{
       activity_counts: activity_counts,
       passkeys: passkeys,
-      starred_repositories: starred_repositories,
       owned_repositories: owned_repositories,
       organizations: organizations,
       s3_config: s3_config,

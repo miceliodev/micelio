@@ -17,8 +17,7 @@ defmodule Micelio.Repositories do
     AccessTokens,
     Repository,
     RepositoryAccessToken,
-    RepositoryInteraction,
-    RepositoryStar
+    RepositoryInteraction
   }
 
   alias Micelio.Storage
@@ -145,42 +144,18 @@ defmodule Micelio.Repositories do
   end
 
   @doc """
-  Lists popular public repositories ordered by star count and recency.
+  Lists popular public repositories ordered by recency.
   """
   def list_popular_repositories(opts \\ []) do
     limit = Keyword.get(opts, :limit, 6)
     offset = Keyword.get(opts, :offset, 0)
-    user = Keyword.get(opts, :user)
 
-    base_query =
-      Repository
-      |> where([p], p.visibility == "public")
-      |> join(:left, [p], ps in RepositoryStar, on: ps.repository_id == p.id)
-      |> join(:left, [p, _ps], o in assoc(p, :organization))
-      |> join(:left, [p, _ps, o], a in assoc(o, :account))
-      |> preload([_p, _ps, o, a], organization: {o, account: a})
-      |> group_by([p, _ps, o, a], [p.id, o.id, a.id])
-      |> select_merge([p, ps, _o, _a], %{star_count: count(ps.id)})
-
-    base_query =
-      if user do
-        base_query
-        |> join(:left, [p, _ps, _o, _a], psu in RepositoryStar,
-          on: psu.repository_id == p.id and psu.user_id == ^user.id
-        )
-        |> group_by([_p, _ps, _o, _a, psu], psu.id)
-        |> select_merge([_p, _ps, _o, _a, psu], %{starred: not is_nil(psu.id)})
-      else
-        base_query
-      end
-
-    base_query
-    |> order_by([p, ps, _o, a],
-      desc: count(ps.id),
-      desc: p.inserted_at,
-      asc: a.handle,
-      asc: p.name
-    )
+    Repository
+    |> where([p], p.visibility == "public")
+    |> join(:left, [p], o in assoc(p, :organization))
+    |> join(:left, [p, o], a in assoc(o, :account))
+    |> preload([_p, o, a], organization: {o, account: a})
+    |> order_by([p, _o, a], desc: p.inserted_at, asc: a.handle, asc: p.name)
     |> limit(^limit)
     |> offset(^offset)
     |> Repo.all()
@@ -197,19 +172,11 @@ defmodule Micelio.Repositories do
     |> join(:inner, [p], pi in RepositoryInteraction,
       on: pi.repository_id == p.id and pi.user_id == ^user.id
     )
-    |> join(:left, [p, _pi], ps in RepositoryStar, on: ps.repository_id == p.id)
-    |> join(:left, [p, _pi, _ps], o in assoc(p, :organization))
-    |> join(:left, [p, _pi, _ps, o], a in assoc(o, :account))
-    |> preload([_p, _pi, _ps, o, a], organization: {o, account: a})
-    |> join(:left, [p, _pi, _ps, _o, _a], psu in RepositoryStar,
-      on: psu.repository_id == p.id and psu.user_id == ^user.id
-    )
-    |> group_by([p, _pi, _ps, o, a, psu], [p.id, o.id, a.id, psu.id])
-    |> select_merge([_p, _pi, ps, _o, _a, psu], %{
-      star_count: count(ps.id),
-      starred: not is_nil(psu.id)
-    })
-    |> order_by([_p, pi, _ps, _o, _a, _psu], desc: max(pi.last_interacted_at))
+    |> join(:left, [p, _pi], o in assoc(p, :organization))
+    |> join(:left, [p, _pi, o], a in assoc(o, :account))
+    |> preload([_p, _pi, o, a], organization: {o, account: a})
+    |> group_by([p, _pi, o, a], [p.id, o.id, a.id])
+    |> order_by([_p, pi, _o, _a], desc: max(pi.last_interacted_at))
     |> limit(^limit)
     |> offset(^offset)
     |> Repo.all()
@@ -256,13 +223,10 @@ defmodule Micelio.Repositories do
     Repository
     |> mobile_visibility_filter(user)
     |> maybe_filter_updated_since(updated_since)
-    |> join(:left, [p], ps in RepositoryStar, on: ps.repository_id == p.id)
-    |> join(:left, [p, _ps], o in assoc(p, :organization))
-    |> join(:left, [p, _ps, o], a in assoc(o, :account))
-    |> preload([_p, _ps, o, a], organization: {o, account: a})
-    |> group_by([p, _ps, o, a], [p.id, o.id, a.id])
-    |> select_merge([_p, ps, _o, _a], %{star_count: count(ps.id)})
-    |> order_by([p, _ps, _o, a], desc: p.updated_at, asc: a.handle, asc: p.name)
+    |> join(:left, [p], o in assoc(p, :organization))
+    |> join(:left, [p, o], a in assoc(o, :account))
+    |> preload([_p, o, a], organization: {o, account: a})
+    |> order_by([p, _o, a], desc: p.updated_at, asc: a.handle, asc: p.name)
     |> limit(^limit)
     |> offset(^offset)
     |> Repo.all()
@@ -533,128 +497,6 @@ defmodule Micelio.Repositories do
   end
 
   @doc """
-  Returns the count of stars for a repository.
-  """
-  def count_repository_stars(%Repository{} = repository) do
-    RepositoryStar
-    |> where([ps], ps.repository_id == ^repository.id)
-    |> Repo.aggregate(:count)
-  end
-
-  @doc """
-  Returns true if the user has starred the repository.
-  """
-  def repository_starred?(%Accounts.User{} = user, %Repository{} = repository) do
-    not is_nil(get_repository_star(user, repository))
-  end
-
-  def repository_starred?(_, _), do: false
-
-  @doc """
-  Returns star count and whether the user has starred the repository in a single query.
-
-  Returns `{star_count, starred?}`.
-  """
-  def repository_star_summary(%Repository{} = repository, %Accounts.User{} = user) do
-    {count, starred} =
-      RepositoryStar
-      |> where([ps], ps.repository_id == ^repository.id)
-      |> select([ps], {
-        count(ps.id),
-        fragment("bool_or(? = ?)", ps.user_id, type(^user.id, :binary_id))
-      })
-      |> Repo.one()
-
-    {count, starred == true}
-  end
-
-  def repository_star_summary(%Repository{} = repository, _user) do
-    count =
-      RepositoryStar
-      |> where([ps], ps.repository_id == ^repository.id)
-      |> Repo.aggregate(:count)
-
-    {count, false}
-  end
-
-  @doc """
-  Stars a repository for a user.
-  """
-  def star_repository(%Accounts.User{} = user, %Repository{} = repository, _opts \\ []) do
-    case get_repository_star(user, repository) do
-      %RepositoryStar{} = star ->
-        {:ok, star}
-
-      nil ->
-        Repo.transaction(fn ->
-          case %RepositoryStar{}
-               |> RepositoryStar.changeset(%{user_id: user.id, repository_id: repository.id})
-               |> Repo.insert() do
-            {:ok, star} ->
-              case Audit.log_repository_action(repository, "repository.starred",
-                     user: user,
-                     metadata: %{star_id: star.id}
-                   ) do
-                {:ok, _log} -> star
-                {:error, changeset} -> Repo.rollback(changeset)
-              end
-
-            {:error, changeset} ->
-              Repo.rollback(changeset)
-          end
-        end)
-        |> normalize_transaction_result()
-    end
-  end
-
-  @doc """
-  Removes a star from a repository for a user.
-  """
-  def unstar_repository(%Accounts.User{} = user, %Repository{} = repository, _opts \\ []) do
-    case get_repository_star(user, repository) do
-      nil ->
-        {:ok, :not_found}
-
-      %RepositoryStar{} = star ->
-        Repo.transaction(fn ->
-          case Repo.delete(star) do
-            {:ok, deleted} ->
-              case Audit.log_repository_action(repository, "repository.unstarred",
-                     user: user,
-                     metadata: %{star_id: deleted.id}
-                   ) do
-                {:ok, _log} -> deleted
-                {:error, changeset} -> Repo.rollback(changeset)
-              end
-
-            {:error, changeset} ->
-              Repo.rollback(changeset)
-          end
-        end)
-        |> normalize_transaction_result()
-    end
-  end
-
-  defp get_repository_star(%Accounts.User{} = user, %Repository{} = repository) do
-    Repo.get_by(RepositoryStar, user_id: user.id, repository_id: repository.id)
-  end
-
-  @doc """
-  Lists starred projects for a user with organization and account preloaded.
-  """
-  def list_starred_repositories_for_user(%Accounts.User{} = user) do
-    Repository
-    |> join(:inner, [p], ps in RepositoryStar, on: ps.repository_id == p.id)
-    |> where([_p, ps], ps.user_id == ^user.id)
-    |> join(:left, [p, _ps], o in assoc(p, :organization))
-    |> join(:left, [p, _ps, o], a in assoc(o, :account))
-    |> preload([_p, _ps, o, a], organization: {o, account: a})
-    |> order_by([_p, ps], desc: ps.inserted_at)
-    |> order_by([p], asc: p.name)
-    |> Repo.all()
-  end
-
-  @doc """
   Checks if a handle is available for a given organization.
   """
   def handle_available?(organization_id, handle) do
@@ -681,25 +523,6 @@ defmodule Micelio.Repositories do
     else
       nil -> {:error, :not_found}
       {:error, :not_found} -> {:error, :not_found}
-    end
-  end
-
-  @doc """
-  Gets a repository by organization handle and project handle with star count for a user.
-  """
-  def get_repository_for_user_by_handle_with_star_count(
-        user,
-        organization_handle,
-        repository_handle
-      ) do
-    with {:ok, repository, organization} <-
-           get_repository_for_user_by_handle(user, organization_handle, repository_handle) do
-      star_count =
-        RepositoryStar
-        |> where([ps], ps.repository_id == ^repository.id)
-        |> Repo.aggregate(:count, :id)
-
-      {:ok, %{repository | star_count: star_count}, organization}
     end
   end
 

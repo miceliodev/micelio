@@ -47,7 +47,6 @@ defmodule MicelioWeb.Browser.AccountControllerTest do
       })
 
     {:ok, _} = Sessions.land_session(private_session)
-    {:ok, _} = Repositories.star_repository(user, public_repository)
 
     {:ok, _plan} =
       Plans.create_plan(

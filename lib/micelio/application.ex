@@ -29,6 +29,7 @@ defmodule Micelio.Application do
         Micelio.Mic.RollupScheduler,
         {Registry, keys: :unique, name: Micelio.Plans.AgentRegistry},
         {DynamicSupervisor, name: Micelio.Plans.AgentSupervisor, strategy: :one_for_one},
+        Micelio.Forges.ForgeAboutCache,
         Micelio.Sandboxes.Watchdog,
         {DNSCluster, query: Application.get_env(:micelio, :dns_cluster_query) || :ignore},
         {Phoenix.PubSub, name: Micelio.PubSub},

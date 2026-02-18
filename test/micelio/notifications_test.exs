@@ -53,41 +53,4 @@ defmodule Micelio.NotificationsTest do
       %{to: "owner-#{handle}@example.com", subject: ~r/\[org-#{handle}\/docs-#{handle}\]/}
     ])
   end
-
-  test "dispatch_repository_starred/3 sends star emails to organization members" do
-    handle = unique_handle("star")
-    {:ok, owner} = Accounts.get_or_create_user_by_email("owner-#{handle}@example.com")
-    {:ok, member} = Accounts.get_or_create_user_by_email("member-#{handle}@example.com")
-
-    {:ok, organization} =
-      Accounts.create_organization_for_user(owner, %{handle: "org-#{handle}", name: "Acme Star"})
-
-    {:ok, _membership} =
-      Accounts.create_organization_membership(%{
-        user_id: member.id,
-        organization_id: organization.id,
-        role: "member"
-      })
-
-    {:ok, repository} =
-      Micelio.Repositories.create_repository(%{
-        name: "Star Docs",
-        handle: "docs-#{handle}",
-        organization_id: organization.id,
-        visibility: "private"
-      })
-
-    :ok = Notifications.dispatch_repository_starred(repository, member, async: false)
-
-    assert_emails_sent([
-      %{
-        to: "member-#{handle}@example.com",
-        subject: ~r/\[org-#{handle}\/docs-#{handle}\].*starred/i
-      },
-      %{
-        to: "owner-#{handle}@example.com",
-        subject: ~r/\[org-#{handle}\/docs-#{handle}\].*starred/i
-      }
-    ])
-  end
 end

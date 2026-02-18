@@ -5,7 +5,6 @@ defmodule MicelioWeb.Browser.AccountHTML do
 
   def activity_action_label(:session_landed), do: "Landed a session in"
   def activity_action_label(:plan_submitted), do: "Submitted plan in"
-  def activity_action_label(:repository_starred), do: "Starred"
   def activity_action_label(:repository_created), do: "Created repository"
   def activity_action_label(_), do: "Updated"
 

@@ -519,6 +519,69 @@ with {:ok, user} <- Accounts.get_or_create_user_by_email(user_email),
 
   IO.puts("  Created session: #{session4.goal} (abandoned, AI)")
 
+  # ============ Seed forge-imported repository ============
+
+  IO.puts("\nSeeding forge-imported repository...")
+
+  forge_org_handle = "github-miceliodev"
+  forge_org_name = "miceliodev (GitHub)"
+
+  {:ok, forge_organization} =
+    case Accounts.get_organization_by_handle(forge_org_handle) do
+      {:ok, org} ->
+        {:ok, org}
+
+      {:error, :not_found} ->
+        Accounts.create_organization(
+          %{handle: forge_org_handle, name: forge_org_name},
+          allow_reserved: true
+        )
+    end
+
+  case Accounts.get_organization_membership(user.id, forge_organization.id) do
+    nil ->
+      {:ok, _membership} =
+        Accounts.create_organization_membership(%{
+          user_id: user.id,
+          organization_id: forge_organization.id,
+          role: :admin
+        })
+
+    _ ->
+      :ok
+  end
+
+  forge_repo_attrs = %{
+    handle: "micelio",
+    name: "Micelio",
+    description: "Forge platform for AI-native development",
+    url: "https://github.com/miceliodev/micelio",
+    visibility: "public",
+    organization_id: forge_organization.id,
+    forge_provider: "github",
+    forge_host: "github.com",
+    forge_owner: "miceliodev",
+    forge_repo: "micelio",
+    forge_external_id: "seed-github-miceliodev-micelio",
+    forge_default_branch: "main"
+  }
+
+  forge_repository =
+    case Repositories.get_repository_by_forge_reference("github.com", "miceliodev", "micelio") do
+      nil ->
+        case Repositories.create_repository(forge_repo_attrs) do
+          {:ok, repo} -> repo
+          {:error, reason} -> raise "Failed to create forge repository: #{inspect(reason)}"
+        end
+
+      %Repository{} = repo ->
+        repo
+    end
+
+  IO.puts(
+    "Ensured forge repository: github.com/miceliodev/micelio (internal: #{forge_org_handle}/#{forge_repository.handle})"
+  )
+
   IO.puts("\nLocal development setup complete!")
   IO.puts("Login with: #{user.email}")
 else

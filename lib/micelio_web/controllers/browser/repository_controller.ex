@@ -8,7 +8,6 @@ defmodule MicelioWeb.Browser.RepositoryController do
   alias Micelio.Authorization
   alias Micelio.Mic.Binary
   alias Micelio.Mic.Project, as: MicProject
-  alias Micelio.Notifications
   alias Micelio.Repositories
   alias Micelio.Sessions
   alias Micelio.Sessions.Blame
@@ -23,9 +22,8 @@ defmodule MicelioWeb.Browser.RepositoryController do
     with account when not is_nil(account) <- conn.assigns.selected_account,
          repository when not is_nil(repository) <- conn.assigns.selected_repository,
          :ok <- Authorization.authorize(:repository_read, conn.assigns.current_user, repository) do
-      stars = Repositories.count_repository_stars(repository)
       label = "#{account.handle}/#{repository.handle}"
-      message = "#{stars} stars"
+      message = "micelio"
 
       conn
       |> put_resp_content_type("image/svg+xml")
@@ -58,35 +56,6 @@ defmodule MicelioWeb.Browser.RepositoryController do
         "path" => path
       }) do
     render_blame(conn, account_handle, repository_handle, Enum.join(path, "/"))
-  end
-
-  def toggle_star(
-        conn,
-        %{"account" => account_handle, "repository" => repository_handle} = params
-      ) do
-    return_to = get_in(params, ["star", "return_to"])
-
-    with account when not is_nil(account) <- conn.assigns.selected_account,
-         repository when not is_nil(repository) <- conn.assigns.selected_repository,
-         user when not is_nil(user) <- conn.assigns.current_user,
-         :ok <- Authorization.authorize(:repository_read, user, repository) do
-      if Repositories.repository_starred?(user, repository) do
-        _ = Repositories.unstar_repository(user, repository)
-      else
-        case Micelio.Repositories.star_repository(user, repository) do
-          {:ok, _star} -> _ = Notifications.dispatch_repository_starred(repository, user)
-          {:error, _changeset} -> :error
-        end
-      end
-
-      _ = Repositories.record_repository_interaction(user, repository, "pulse")
-
-      redirect(conn,
-        to: safe_return_path(return_to, account_handle, repository_handle)
-      )
-    else
-      _ -> send_resp(conn, 404, "Not found")
-    end
   end
 
   def contribute_tokens(
@@ -217,7 +186,6 @@ defmodule MicelioWeb.Browser.RepositoryController do
     |> assign(:entries, entries)
     |> assign(:readme, readme)
     |> assign(:license, license)
-    |> assign_star_data(repository)
     |> assign_token_pool_data(repository)
     |> assign_user_accounts()
     |> maybe_assign_schema_json_ld(dir_path, account, repository)
@@ -259,7 +227,6 @@ defmodule MicelioWeb.Browser.RepositoryController do
           |> assign(:file_path, file_path)
           |> assign(:blob_download_url, blob_download_url)
           |> assign(:file_content, format_blob_content(file_path, content))
-          |> assign_star_data(repository)
           |> assign_user_accounts()
           |> track_repository_interaction(repository, "view")
           |> render(:blob)
@@ -318,7 +285,6 @@ defmodule MicelioWeb.Browser.RepositoryController do
           |> assign(:file_path, file_path)
           |> assign(:blame_content, blame_content)
           |> assign(:blame_lines, blame_lines)
-          |> assign_star_data(repository)
           |> assign_user_accounts()
           |> track_repository_interaction(repository, "view")
           |> render(:blame)
@@ -355,18 +321,6 @@ defmodule MicelioWeb.Browser.RepositoryController do
       author_url: author_url
     )
     |> SchemaOrg.encode()
-  end
-
-  defp assign_star_data(conn, repository) do
-    return_to = current_path(conn)
-
-    {stars_count, starred?} =
-      Repositories.repository_star_summary(repository, conn.assigns.current_user)
-
-    conn
-    |> assign(:star_form, Phoenix.Component.to_form(%{"return_to" => return_to}, as: :star))
-    |> assign(:starred?, starred?)
-    |> assign(:stars_count, stars_count)
   end
 
   defp assign_user_accounts(conn) do

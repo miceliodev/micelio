@@ -165,7 +165,7 @@ defmodule MicelioWeb.Browser.RepositoryControllerTest do
 
     assert body =~ "<svg"
     assert body =~ "#{organization.account.handle}/#{repository.handle}"
-    assert body =~ "0 stars"
+    assert body =~ "micelio"
     assert List.first(get_resp_header(conn, "content-type")) =~ "image/svg+xml"
   end
 
@@ -543,68 +543,6 @@ defmodule MicelioWeb.Browser.RepositoryControllerTest do
 
     assert html =~ "id=\"project-blob-download\""
     assert html =~ "https://cdn.example.test/micelio/#{key}"
-  end
-
-  test "shows star action and count for authenticated users", %{
-    conn: conn,
-    organization: organization,
-    repository: repository
-  } do
-    %{conn: conn} = register_and_log_in_user(%{conn: conn})
-
-    conn = get(conn, ~p"/#{organization.account.handle}/#{repository.handle}")
-    html = html_response(conn, 200)
-
-    assert html =~ "id=\"repository-star-toggle\""
-    document = Floki.parse_document!(html)
-    [count_node | _] = Floki.find(document, ".repository-star-count")
-    assert String.trim(Floki.text(count_node)) == "0"
-  end
-
-  test "hides star action for unauthenticated users", %{
-    conn: conn,
-    organization: organization,
-    repository: repository
-  } do
-    conn = get(conn, ~p"/#{organization.account.handle}/#{repository.handle}")
-    html = html_response(conn, 200)
-
-    refute html =~ "id=\"repository-star-toggle\""
-    document = Floki.parse_document!(html)
-    [count_node | _] = Floki.find(document, ".repository-stars-count")
-    assert Regex.match?(~r/\b0\b/, Floki.text(count_node))
-  end
-
-  test "toggles stars on a repository", %{
-    conn: conn,
-    organization: organization,
-    repository: repository
-  } do
-    %{conn: conn, user: user} = register_and_log_in_user(%{conn: conn})
-    path = ~p"/#{organization.account.handle}/#{repository.handle}"
-
-    conn =
-      conn
-      |> with_csrf()
-      |> post(~p"/#{organization.account.handle}/#{repository.handle}/star", %{
-        "star" => %{"return_to" => path}
-      })
-
-    assert redirected_to(conn) == path
-    assert Projects.repository_starred?(user, repository)
-    assert Projects.count_repository_stars(repository) == 1
-
-    conn =
-      conn
-      |> recycle()
-      |> with_csrf()
-      |> post(~p"/#{organization.account.handle}/#{repository.handle}/star", %{
-        "star" => %{"return_to" => path}
-      })
-
-    assert redirected_to(conn) == path
-    refute Projects.repository_starred?(user, repository)
-    assert Projects.count_repository_stars(repository) == 0
   end
 
   test "shows fork action for organization admins", %{

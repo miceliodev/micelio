@@ -448,28 +448,6 @@
             </ul>
           <% end %>
         </div>
-
-        <div class="account-profile-sidebar-section">
-          <h3 class="account-profile-sidebar-section-title">{gettext("Favorites")}</h3>
-          <%= if @starred_repositories == [] do %>
-            <p class="account-profile-sidebar-empty">{gettext("No favorites yet.")}</p>
-          <% else %>
-            <ul class="account-profile-sidebar-list">
-              <li :for={repository <- @starred_repositories}>
-                <a
-                  href={~p"/#{repository.organization.account.handle}/#{repository.handle}"}
-                  class="account-profile-sidebar-repo"
-                  id={"favorite-#{repository.id}"}
-                >
-                  <span class="account-profile-sidebar-repo-name">{repository.name}</span>
-                  <span class="account-profile-sidebar-repo-handle">
-                    {repository.organization.account.handle}/{repository.handle}
-                  </span>
-                </a>
-              </li>
-            </ul>
-          <% end %>
-        </div>
       </aside>
     </div>
   </div>

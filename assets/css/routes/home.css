@@ -313,51 +313,6 @@
   margin-bottom: var(--theme-ui-space-1);
 }
 
-.home-popular-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--theme-ui-space-2);
-  color: var(--theme-ui-colors-muted);
-  font-size: var(--theme-ui-font-sizes-body);
-}
-
-.home-popular-pulse-form,
-.home-popular-pulse-static {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--theme-ui-space-1);
-}
-
-.home-popular-pulse-form {
-  position: relative;
-  z-index: 1;
-}
-
-.home-popular-pulse-toggle {
-  flex-shrink: 0;
-}
-
-.home-popular-pulse-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 2.25rem;
-  height: 2.25rem;
-  border: var(--theme-ui-borders-thin);
-  border-radius: 999px;
-  color: var(--theme-ui-colors-text);
-}
-
-.home-popular-pulse-icon .repository-pulse-toggle-icon {
-  width: 1.1rem;
-  height: 1.1rem;
-}
-
-.home-popular-pulse-count {
-  color: var(--theme-ui-colors-muted);
-  font-size: var(--theme-ui-font-sizes-body);
-}
-
 .home-popular-pagination {
   margin-top: var(--theme-ui-space-2);
   display: flex;

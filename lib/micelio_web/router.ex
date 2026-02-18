@@ -165,6 +165,13 @@ defmodule MicelioWeb.Router do
     get("/:id", ChangelogController, :show)
   end
 
+  # Forge about proxy (internal, consumed by page JS)
+  scope "/forge-about", MicelioWeb.Browser do
+    pipe_through(:browser)
+
+    get("/:host/:owner/:repo", ForgeAboutController, :show)
+  end
+
   # Auth routes (before catch-all)
   scope "/auth", MicelioWeb.Browser do
     pipe_through(:browser)
@@ -439,8 +446,6 @@ defmodule MicelioWeb.Router do
     scope "/", MicelioWeb.Browser do
       pipe_through([:browser, :require_auth, :forge_resources])
 
-      post("/#{forge}/:owner/:repo/star", RepositoryController, :toggle_star)
-
       post(
         "/#{forge}/:owner/:repo/token-contributions",
         RepositoryController,
@@ -540,7 +545,6 @@ defmodule MicelioWeb.Router do
   scope "/", MicelioWeb.Browser do
     pipe_through([:browser, :require_auth, :load_resources])
 
-    post("/:account/:repository/star", RepositoryController, :toggle_star)
     post("/:account/:repository/token-contributions", RepositoryController, :contribute_tokens)
   end
 

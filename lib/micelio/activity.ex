@@ -14,7 +14,7 @@ defmodule Micelio.Activity do
   @doc """
   Returns recent public activity for a user.
 
-  Includes landed sessions, repository stars, and public projects created in admin orgs.
+  Includes landed sessions, plans, and public repositories created in admin orgs.
   """
   @spec list_user_activity_public(User.t(), [binary()] | nil, Keyword.t()) :: %{
           items: list(map()),
@@ -44,7 +44,6 @@ defmodule Micelio.Activity do
     items =
       list_session_activity(user, before, per_type_limit) ++
         list_plan_activity(user, before, per_type_limit) ++
-        list_star_activity(user, before, per_type_limit) ++
         list_repository_activity(organization_ids, before, per_type_limit)
 
     sorted_items = Enum.sort_by(items, &DateTime.to_unix(&1.occurred_at), :desc)
@@ -75,28 +74,6 @@ defmodule Micelio.Activity do
         type: :session_landed,
         project: session.repository,
         occurred_at: session.landed_at
-      }
-    end)
-  end
-
-  defp list_star_activity(%User{} = user, before, limit) do
-    ProjectStar
-    |> join(:inner, [ps], p in assoc(ps, :repository))
-    |> join(:left, [ps, p], o in assoc(p, :organization))
-    |> join(:left, [ps, p, o], a in assoc(o, :account))
-    |> where([ps, _p], ps.user_id == ^user.id)
-    |> where([ps, _p], ps.inserted_at < ^before)
-    |> where([_ps, p], p.visibility == "public")
-    |> preload([_ps, p, o, a], repository: {p, organization: {o, account: a}})
-    |> order_by([ps], desc: ps.inserted_at)
-    |> limit(^limit)
-    |> Repo.all()
-    |> Enum.map(fn star ->
-      %{
-        id: star.id,
-        type: :repository_starred,
-        project: star.repository,
-        occurred_at: star.inserted_at
       }
     end)
   end
