@@ -745,7 +745,10 @@ defmodule Micelio.Storage.Tiered do
   end
 
   defp decode_metadata(binary) do
-    {:ok, :erlang.binary_to_term(binary)}
+    case :erlang.binary_to_term(binary, [:safe]) do
+      %{} = metadata -> {:ok, metadata}
+      _ -> {:error, :invalid_metadata}
+    end
   rescue
     ArgumentError -> {:error, :invalid_metadata}
   end

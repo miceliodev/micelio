@@ -8,7 +8,7 @@ defmodule Micelio.ValidationEnvironments.LocalExecutor do
   @impl true
   def run(_instance_ref, command, args, env) do
     {stdout, exit_code} =
-      System.cmd(command, args, env: env_list(env), stderr_to_stdout: true)
+      MuonTrap.cmd(command, args, env: env_list(env), stderr_to_stdout: true)
 
     {:ok, %{exit_code: exit_code, stdout: stdout, resource_usage: %{}, coverage_delta: nil}}
   rescue

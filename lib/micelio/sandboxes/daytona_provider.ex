@@ -176,7 +176,7 @@ defmodule Micelio.Sandboxes.DaytonaProvider do
       _ = File.rm_rf(checkout_path)
       :ok = File.mkdir_p(root)
 
-      case System.cmd("git", ["clone", "--depth", "1", clone_url, checkout_path],
+      case MuonTrap.cmd("git", ["clone", "--depth", "1", "--", clone_url, checkout_path],
              stderr_to_stdout: true
            ) do
         {_output, 0} ->

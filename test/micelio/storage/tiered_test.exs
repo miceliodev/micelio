@@ -151,6 +151,32 @@ defmodule Micelio.Storage.TieredTest do
     assert {:ok, %{content: ^content, etag: ^etag}} = Tiered.get_with_metadata(key, disk_config)
   end
 
+  test "get_with_metadata falls back when disk metadata is corrupted", %{
+    config: config,
+    origin_dir: origin_dir,
+    cache_dir: cache_dir
+  } do
+    key = "sessions/abc/files/corrupt-meta.ex"
+    content = "corrupt metadata"
+
+    disk_config =
+      config
+      |> Keyword.put(:cache_memory_max_bytes, 0)
+      |> Keyword.put(:cache_namespace, "#{config[:cache_namespace]}-corrupt-meta")
+
+    {:ok, ^key} = Local.put(key, content, base_path: origin_dir)
+    {:ok, %{etag: etag}} = Local.get_with_metadata(key, base_path: origin_dir)
+
+    assert {:ok, %{content: ^content, etag: ^etag}} =
+             Tiered.get_with_metadata(key, disk_config)
+
+    meta_path = Path.join(cache_dir, "#{key}.meta")
+    :ok = File.write(meta_path, <<0, 1, 2, 3, 4>>)
+
+    assert {:ok, %{content: ^content, etag: ^etag}} =
+             Tiered.get_with_metadata(key, disk_config)
+  end
+
   test "reads from CDN when caches miss and seeds disk cache", %{
     config: config,
     cache_dir: cache_dir

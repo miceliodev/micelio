@@ -72,7 +72,7 @@ defmodule Micelio.Sapling.AgentCommitWorkflow do
     tools = Keyword.get(opts, :tools, @default_tools)
     sessions = Keyword.get(opts, :sessions, @default_sessions)
     session_ids = Keyword.get(opts, :session_ids, build_session_ids(sessions))
-    runner = Keyword.get(opts, :runner, &System.cmd/3)
+    runner = Keyword.get(opts, :runner, &MuonTrap.cmd/3)
     fs = Keyword.get(opts, :fs, File)
     tmp_root = Keyword.get(opts, :tmp_root, System.tmp_dir!())
     cleanup = Keyword.get(opts, :cleanup, true)
