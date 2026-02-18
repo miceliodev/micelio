@@ -27,54 +27,43 @@
     current_path={assigns[:current_path] || "/"}
   >
     <div class="home-container">
+      <div class="home-overview">
+        <h1>{gettext("Micelio")}</h1>
+        <p class="home-tagline">
+          {gettext(
+            "An extension for your Git forges that makes software collaboration between humans and AI agents seamless."
+          )}
+        </p>
+        <p class="home-forges">
+          {gettext("Works with")}
+          <span class="home-forge-badge">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12" /></svg>
+            <strong>GitHub</strong>
+          </span>
+          {gettext("and")}
+          <span class="home-forge-badge">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 13.29-3.33-10a.42.42 0 0 0-.14-.18.38.38 0 0 0-.22-.11.39.39 0 0 0-.23.07.42.42 0 0 0-.14.18l-2.26 6.67H8.32L6.1 3.26a.42.42 0 0 0-.1-.18.38.38 0 0 0-.26-.08.39.39 0 0 0-.23.07.42.42 0 0 0-.14.18L2 13.29a.74.74 0 0 0 .27.83L12 21l9.69-6.88a.71.71 0 0 0 .31-.83Z" /></svg>
+            <strong>GitLab</strong>
+          </span>
+        </p>
+      </div>
+
       <div class="home-content">
         <div class="home-main">
-          <div class="home-overview">
-            <p>
-              {gettext("Micelio is both a CLI")} (<code>mic</code>) {gettext(
-                "and a forge, fully open source under"
-              )}
-              <a href="https://github.com/micelio/micelio/blob/main/LICENSE">MPL-2.0</a>. {gettext(
-                "Micelio is to"
-              )} <code>mic</code> {gettext("what GitHub is to")} <code>git</code>.
-            </p>
-            <ul>
-              <li>
-                {gettext(
-                  "Built for hundreds of AI agents working concurrently on massive codebases"
-                )}
-              </li>
-              <li>{gettext("Sessions capture goal, reasoning, and changes together")}</li>
-              <li>{gettext("Forge-first architecture with object storage at the core")}</li>
-              <li>
-                {gettext(
-                  "Scales to billions of files and hundreds of thousands of landings per day"
-                )}
-              </li>
-              <li>
-                {gettext("Inspired by")}
-                <a href="https://ai.google/research/pubs/pub45424">Google Piper</a>, <a href="https://engineering.fb.com/2019/05/06/developer-tools/making-monorepo-development-faster/">Meta Sapling</a>, <a href="https://www.turbopuffer.com/">Turbopuffer</a>, {gettext(
-                  "and"
-                )}
-                <a href="https://www.warpstream.com/">WarpStream</a>
-              </li>
-            </ul>
-          </div>
-
           <div class="home-feature">
-            <h3 class="home-feature-title">{gettext("Agent-Native by Design")}</h3>
+            <h3 class="home-feature-title">{gettext("Sessions")}</h3>
             <p class="home-feature-description">
               {gettext(
-                "Sessions capture goal, reasoning, and changes together. Built for hundreds of AI agents working concurrently, with stateless compute that auto-scales based on demand."
+                "Sessions extend code changes with the decisions and conversations held by humans and agents along the way. Every piece of context is captured, not just the diff."
               )}
             </p>
           </div>
 
           <div class="home-feature">
-            <h3 class="home-feature-title">{gettext("Human + AI Collaboration")}</h3>
+            <h3 class="home-feature-title">{gettext("Work from Anywhere")}</h3>
             <p class="home-feature-description">
               {gettext(
-                "Designed for a future where humans review, not write most code. Conversation, decisions, and changes are unified in one workflow."
+                "Start a session from your phone, laptop, or any device. When it completes, preview the changes and land them with a single tap. No local setup required."
               )}
             </p>
           </div>
@@ -82,19 +71,19 @@
 
         <div class="home-sidebar">
           <div class="home-feature">
-            <h3 class="home-feature-title">{gettext("Massive Scale")}</h3>
+            <h3 class="home-feature-title">{gettext("Prompt Requests")}</h3>
             <p class="home-feature-description">
               {gettext(
-                "Targets Google/Meta scale: 1B+ files, 500k+ landings per day, 100k+ concurrent sessions. Object storage-first architecture with O(log n) operations."
+                "Suggest improvements to any repository through prompt requests. Describe what you want changed, and let agents turn your idea into a concrete contribution."
               )}
             </p>
           </div>
 
           <div class="home-feature">
-            <h3 class="home-feature-title">{gettext("Forge-First")}</h3>
+            <h3 class="home-feature-title">{gettext("Bring Your Own Stack")}</h3>
             <p class="home-feature-description">
               {gettext(
-                "The forge is the source of truth. Coordinator-free landing with content-addressed conditional writes. No single bottleneck."
+                "Your coding agents, your LLM tokens, your sandboxes. Micelio matches them with the repository you are contributing to and handles the rest."
               )}
             </p>
           </div>
@@ -103,7 +92,7 @@
 
       <.popular_repositories_section
         repositories={@popular_repositories}
-        current_user={assigns[:current_user]}
+        current_user={nil}
         current_path={assigns[:current_path] || "/"}
         page={@popular_page}
         has_more={@popular_has_more}

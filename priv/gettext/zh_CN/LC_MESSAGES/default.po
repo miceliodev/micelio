@@ -11,72 +11,38 @@ msgstr ""
 "Language: zh_CN\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 
-#: lib/micelio_web/components/layouts.ex:134
+#: lib/micelio_web/components/layouts.ex:120
 #, elixir-autogen, elixir-format
 msgid "Account (@%{handle})"
 msgstr "账户 (@%{handle})"
 
-#: lib/micelio_web/components/core_components.ex:592
-#: lib/micelio_web/live/session_live/show.ex:740
+#: lib/micelio_web/components/core_components.ex:514
+#: lib/micelio_web/live/session_live/show.ex:748
 #, elixir-autogen, elixir-format
 msgid "Actions"
 msgstr "操作"
 
-#: lib/micelio_web/controllers/browser/page_html/home.html.heex:65
-#, elixir-autogen, elixir-format
-msgid "Agent-Native by Design"
-msgstr "原生代理设计"
-
-#: lib/micelio_web/components/layouts.ex:216
-#: lib/micelio_web/components/layouts.ex:224
+#: lib/micelio_web/components/layouts.ex:599
+#: lib/micelio_web/components/layouts.ex:607
 #, elixir-autogen, elixir-format
 msgid "Attempting to reconnect"
 msgstr "正在尝试重新连接"
-
-#: lib/micelio_web/controllers/browser/page_html/home.html.heex:43
-#, elixir-autogen, elixir-format
-msgid "Built for hundreds of AI agents working concurrently on massive codebases"
-msgstr "专为数百个AI代理在大规模代码库上并发工作而构建"
-
-#: lib/micelio_web/controllers/browser/page_html/home.html.heex:76
-#, elixir-autogen, elixir-format
-msgid "Designed for a future where humans review, not write most code. Conversation, decisions, and changes are unified in one workflow."
-msgstr "为人类审查而非编写大部分代码的未来而设计。对话、决策和变更统一在一个工作流程中。"
 
 #: lib/micelio_web/controllers/browser/page_html.ex:35
 #, elixir-autogen, elixir-format
 msgid "Explore what the community is building."
 msgstr "探索社区正在构建的内容。"
 
-#: lib/micelio_web/controllers/browser/page_html/home.html.heex:94
-#, elixir-autogen, elixir-format
-msgid "Forge-First"
-msgstr "锻造优先"
-
-#: lib/micelio_web/controllers/browser/page_html/home.html.heex:48
-#, elixir-autogen, elixir-format
-msgid "Forge-first architecture with object storage at the core"
-msgstr "以对象存储为核心的锻造优先架构"
-
-#: lib/micelio_web/components/layouts.ex:119
+#: lib/micelio_web/components/layouts.ex:136
+#: lib/micelio_web/components/layouts.ex:510
 #, elixir-autogen, elixir-format
 msgid "Get started"
 msgstr "开始使用"
 
-#: lib/micelio_web/controllers/browser/page_html/home.html.heex:74
-#, elixir-autogen, elixir-format
-msgid "Human + AI Collaboration"
-msgstr "人机协作"
-
-#: lib/micelio_web/components/layouts.ex:160
+#: lib/micelio_web/components/layouts.ex:550
 #, elixir-autogen, elixir-format
 msgid "Legal"
 msgstr "法律信息"
-
-#: lib/micelio_web/controllers/browser/page_html/home.html.heex:85
-#, elixir-autogen, elixir-format
-msgid "Massive Scale"
-msgstr "大规模扩展"
 
 #: lib/micelio_web/live/repository_live/index.ex:47
 #, elixir-autogen, elixir-format
@@ -98,147 +64,62 @@ msgstr "暂无描述。"
 msgid "Previous"
 msgstr "上一页"
 
-#: lib/micelio_web/controllers/browser/page_html/home.html.heex:50
-#, elixir-autogen, elixir-format
-msgid "Scales to billions of files and hundreds of thousands of landings per day"
-msgstr "可扩展到数十亿文件和每天数十万次着陆"
-
-#: lib/micelio_web/components/core_components.ex:873
-#: lib/micelio_web/components/core_components.ex:878
+#: lib/micelio_web/components/core_components.ex:795
+#: lib/micelio_web/components/core_components.ex:800
 #, elixir-autogen, elixir-format
 msgid "Select language"
 msgstr "选择语言"
 
-#: lib/micelio_web/controllers/browser/page_html/home.html.heex:47
-#, elixir-autogen, elixir-format
-msgid "Sessions capture goal, reasoning, and changes together"
-msgstr "会话同时捕获目标、推理和变更"
-
-#: lib/micelio_web/controllers/browser/page_html/home.html.heex:67
-#, elixir-autogen, elixir-format
-msgid "Sessions capture goal, reasoning, and changes together. Built for hundreds of AI agents working concurrently, with stateless compute that auto-scales based on demand."
-msgstr "会话同时捕获目标、推理和变更。专为数百个AI代理并发工作而构建，具有根据需求自动扩展的无状态计算。"
-
-#: lib/micelio_web/components/layouts.ex:222
+#: lib/micelio_web/components/layouts.ex:605
 #, elixir-autogen, elixir-format
 msgid "Something went wrong!"
 msgstr "出错了！"
 
-#: lib/micelio_web/controllers/browser/page_html/home.html.heex:87
-#, elixir-autogen, elixir-format
-msgid "Targets Google/Meta scale: 1B+ files, 500k+ landings per day, 100k+ concurrent sessions. Object storage-first architecture with O(log n) operations."
-msgstr "目标达到Google/Meta规模: 10亿+文件，每天50万+着陆，10万+并发会话。O(log n)操作的对象存储优先架构。"
-
-#: lib/micelio_web/components/layouts.ex:179
+#: lib/micelio_web/components/layouts.ex:518
 #, elixir-autogen, elixir-format
 msgid "Toggle theme"
 msgstr "切换主题"
 
-#: lib/micelio_web/components/layouts.ex:214
+#: lib/micelio_web/components/layouts.ex:597
 #, elixir-autogen, elixir-format
 msgid "We can't find the internet"
 msgstr "无法连接互联网"
-
-#: lib/micelio_web/components/layouts.ex:110
-#, elixir-autogen, elixir-format
-msgid "admin"
-msgstr "管理"
-
-#: lib/micelio_web/components/layouts.ex:101
-#, elixir-autogen, elixir-format
-msgid "blog"
-msgstr "博客"
-
-#: lib/micelio_web/components/layouts.ex:103
-#, elixir-autogen, elixir-format
-msgid "changelog"
-msgstr "更新日志"
 
 #: lib/micelio_web/components/core_components.ex:80
 #, elixir-autogen, elixir-format
 msgid "close"
 msgstr "关闭"
 
-#: lib/micelio_web/components/core_components.ex:993
+#: lib/micelio_web/components/core_components.ex:915
 #, elixir-autogen, elixir-format
 msgid "contribution"
 msgid_plural "contributions"
 msgstr[0] "贡献"
 
-#: lib/micelio_web/components/layouts.ex:163
+#: lib/micelio_web/components/layouts.ex:553
 #, elixir-autogen, elixir-format
 msgid "cookies"
 msgstr "Cookie"
 
-#: lib/micelio_web/components/layouts.ex:164
+#: lib/micelio_web/components/layouts.ex:554
 #, elixir-autogen, elixir-format
 msgid "impressum"
 msgstr "公司信息"
 
-#: lib/micelio_web/components/layouts.ex:115
-#, elixir-autogen, elixir-format
-msgid "logout"
-msgstr "登出"
-
-#: lib/micelio_web/components/layouts.ex:162
+#: lib/micelio_web/components/layouts.ex:552
 #, elixir-autogen, elixir-format
 msgid "privacy"
 msgstr "隐私"
 
-#: lib/micelio_web/components/layouts.ex:104
-#, elixir-autogen, elixir-format
-msgid "search"
-msgstr "搜索"
-
-#: lib/micelio_web/components/layouts.ex:161
+#: lib/micelio_web/components/layouts.ex:551
 #, elixir-autogen, elixir-format
 msgid "terms"
 msgstr "条款"
 
-#: lib/micelio_web/components/layouts.ex:181
-#, elixir-autogen, elixir-format
-msgid "theme"
-msgstr "主题"
-
-#: lib/micelio_web/controllers/browser/page_html/home.html.heex:55
-#, elixir-autogen, elixir-format
-msgid "Inspired by"
-msgstr "灵感来源"
-
-#: lib/micelio_web/controllers/browser/page_html/home.html.heex:34
-#, elixir-autogen, elixir-format
-msgid "Micelio is both a CLI"
-msgstr "Micelio既是CLI"
-
-#: lib/micelio_web/controllers/browser/page_html/home.html.heex:37
-#, elixir-autogen, elixir-format
-msgid "Micelio is to"
-msgstr "Micelio之于"
-
-#: lib/micelio_web/controllers/browser/page_html/home.html.heex:56
-#, elixir-autogen, elixir-format
-msgid "and"
-msgstr "和"
-
-#: lib/micelio_web/controllers/browser/page_html/home.html.heex:34
-#, elixir-autogen, elixir-format
-msgid "and a forge, fully open source under"
-msgstr "也是锻造平台，完全开源于"
-
-#: lib/micelio_web/controllers/browser/page_html/home.html.heex:39
-#, elixir-autogen, elixir-format
-msgid "what GitHub is to"
-msgstr "正如GitHub之于"
-
-#: lib/micelio_web/components/core_components.ex:871
+#: lib/micelio_web/components/core_components.ex:793
 #, elixir-autogen, elixir-format
 msgid "Language selection"
 msgstr "语言选择"
-
-#: lib/micelio_web/controllers/browser/page_html/home.html.heex:96
-#, elixir-autogen, elixir-format
-msgid "The forge is the source of truth. Coordinator-free landing with content-addressed conditional writes. No single bottleneck."
-msgstr "锻造平台是真相的来源。通过内容寻址条件写入实现无协调器着陆。没有单一瓶颈。"
 
 #: lib/micelio_web/controllers/browser/auth_html/new.html.heex:52
 #, elixir-autogen, elixir-format
@@ -359,18 +240,15 @@ msgstr "获取用户失败"
 #: lib/micelio_web/controllers/browser/page_html.ex:108
 #: lib/micelio_web/controllers/browser/page_html.ex:110
 #: lib/micelio_web/controllers/browser/page_html.ex:116
-#: lib/micelio_web/controllers/browser/repository_html/blame.html.heex:36
-#: lib/micelio_web/controllers/browser/repository_html/blame.html.heex:37
-#: lib/micelio_web/controllers/browser/repository_html/blame.html.heex:43
-#: lib/micelio_web/controllers/browser/repository_html/show.html.heex:53
-#: lib/micelio_web/controllers/browser/repository_html/show.html.heex:54
-#: lib/micelio_web/controllers/browser/repository_html/show.html.heex:68
+#: lib/micelio_web/controllers/browser/repository_html/blame.html.heex:45
+#: lib/micelio_web/controllers/browser/repository_html/blame.html.heex:46
+#: lib/micelio_web/controllers/browser/repository_html/blame.html.heex:52
 #, elixir-autogen, elixir-format
 msgid "Pulse"
 msgstr "脉冲"
 
 #: lib/micelio_web/controllers/browser/page_html.ex:166
-#: lib/micelio_web/controllers/browser/repository_html/blame.html.heex:79
+#: lib/micelio_web/controllers/browser/repository_html/blame.html.heex:88
 #, elixir-autogen, elixir-format
 msgid "Pulses"
 msgstr "脉冲数"
@@ -378,12 +256,9 @@ msgstr "脉冲数"
 #: lib/micelio_web/controllers/browser/page_html.ex:108
 #: lib/micelio_web/controllers/browser/page_html.ex:110
 #: lib/micelio_web/controllers/browser/page_html.ex:114
-#: lib/micelio_web/controllers/browser/repository_html/blame.html.heex:36
-#: lib/micelio_web/controllers/browser/repository_html/blame.html.heex:37
-#: lib/micelio_web/controllers/browser/repository_html/blame.html.heex:41
-#: lib/micelio_web/controllers/browser/repository_html/show.html.heex:53
-#: lib/micelio_web/controllers/browser/repository_html/show.html.heex:54
-#: lib/micelio_web/controllers/browser/repository_html/show.html.heex:68
+#: lib/micelio_web/controllers/browser/repository_html/blame.html.heex:45
+#: lib/micelio_web/controllers/browser/repository_html/blame.html.heex:46
+#: lib/micelio_web/controllers/browser/repository_html/blame.html.heex:50
 #, elixir-autogen, elixir-format
 msgid "Unpulse"
 msgstr "取消脉冲"
@@ -404,7 +279,7 @@ msgstr "所有文档"
 #: lib/micelio_web/controllers/browser/docs_html/index.html.heex:10
 #: lib/micelio_web/controllers/browser/docs_html/search.html.heex:10
 #: lib/micelio_web/controllers/browser/docs_html/show.html.heex:41
-#: lib/micelio_web/live/docs_live/index.ex:116
+#: lib/micelio_web/live/docs_live/index.ex:156
 #, elixir-autogen, elixir-format
 msgid "Documentation"
 msgstr "文档"
@@ -415,12 +290,11 @@ msgid "Documentation for Micelio users and hosters."
 msgstr "Micelio用户和托管者文档。"
 
 #: lib/micelio_web/controllers/browser/docs_html/index.html.heex:12
-#: lib/micelio_web/live/docs_live/index.ex:118
+#: lib/micelio_web/live/docs_live/index.ex:158
 #, elixir-autogen, elixir-format
 msgid "Learn how to use mic and Micelio, or how to host your own instance."
 msgstr "了解如何使用mic和Micelio，或如何托管您自己的实例。"
 
-#: lib/micelio_web/components/layouts.ex:102
 #: lib/micelio_web/controllers/browser/docs_controller.ex:35
 #: lib/micelio_web/controllers/browser/docs_controller.ex:63
 #: lib/micelio_web/live/docs_live/index.ex:29
@@ -436,7 +310,7 @@ msgstr "文档"
 msgid "Breadcrumb"
 msgstr "面包屑导航"
 
-#: lib/micelio_web/live/docs_live/index.ex:176
+#: lib/micelio_web/live/docs_live/index.ex:216
 #, elixir-autogen, elixir-format
 msgid "%{count} result"
 msgid_plural "%{count} results"
@@ -453,17 +327,18 @@ msgstr[0] ""
 msgid "Browse all documentation"
 msgstr ""
 
-#: lib/micelio_web/live/docs_live/index.ex:138
+#: lib/micelio_web/live/docs_live/index.ex:178
 #, elixir-autogen, elixir-format
 msgid "Clear search"
 msgstr ""
 
 #: lib/micelio_web/controllers/browser/docs_html/search.html.heex:70
-#: lib/micelio_web/live/docs_live/index.ex:198
+#: lib/micelio_web/live/docs_live/index.ex:238
 #, elixir-autogen, elixir-format
 msgid "No results found. Try a different search term."
 msgstr ""
 
+#: lib/micelio_web/components/layouts.ex:408
 #: lib/micelio_web/controllers/browser/docs_html/search.html.heex:12
 #, elixir-autogen, elixir-format, fuzzy
 msgid "Search"
@@ -476,7 +351,7 @@ msgstr ""
 
 #: lib/micelio_web/controllers/browser/docs_html/index.html.heex:21
 #: lib/micelio_web/controllers/browser/docs_html/search.html.heex:34
-#: lib/micelio_web/live/docs_live/index.ex:128
+#: lib/micelio_web/live/docs_live/index.ex:168
 #, elixir-autogen, elixir-format, fuzzy
 msgid "Search docs..."
 msgstr ""
@@ -496,41 +371,6 @@ msgstr "已以种子用户登录。"
 msgid "Seed user not available."
 msgstr "种子用户不可用。"
 
-#: lib/micelio/docs.ex:48
-#, elixir-autogen, elixir-format
-msgid "Shapers"
-msgstr "塑造者"
-
-#: lib/micelio/docs.ex:42
-#, elixir-autogen, elixir-format
-msgid "Contributors"
-msgstr "贡献者"
-
-#: lib/micelio/docs.ex:38
-#, elixir-autogen, elixir-format
-msgid "Documentation for people running their own Micelio instance."
-msgstr "面向运行自己 Micelio 实例的人们的文档。"
-
-#: lib/micelio/docs.ex:49
-#, elixir-autogen, elixir-format
-msgid "Documentation for people shaping Micelio."
-msgstr "面向塑造 Micelio 的人们的文档。"
-
-#: lib/micelio/docs.ex:33
-#, elixir-autogen, elixir-format
-msgid "Documentation for people using mic and Micelio day-to-day."
-msgstr "面向日常使用 mic 和 Micelio 的用户的文档。"
-
-#: lib/micelio/docs.ex:37
-#, elixir-autogen, elixir-format
-msgid "Hosters"
-msgstr "自托管者"
-
-#: lib/micelio/docs.ex:32
-#, elixir-autogen, elixir-format
-msgid "Users"
-msgstr "用户"
-
 #: lib/micelio_web/controllers/browser/docs_html/cli_reference.html.heex:336
 #, elixir-autogen, elixir-format
 msgid "API Reference"
@@ -545,14 +385,12 @@ msgstr ""
 #: lib/micelio_web/controllers/browser/docs_controller.ex:15
 #: lib/micelio_web/controllers/browser/docs_html/cli_reference.html.heex:10
 #: lib/micelio_web/controllers/browser/docs_html/cli_reference.html.heex:30
-#: lib/micelio_web/live/docs_live/index.ex:309
+#: lib/micelio_web/live/docs_live/index.ex:294
 #, elixir-autogen, elixir-format
 msgid "CLI Reference"
 msgstr ""
 
-#: lib/micelio_web/components/core_components.ex:450
 #: lib/micelio_web/controllers/browser/docs_html/cli_reference.html.heex:304
-#: lib/micelio_web/controllers/browser/repository_html/show.html.heex:116
 #, elixir-autogen, elixir-format
 msgid "Code"
 msgstr ""
@@ -562,7 +400,7 @@ msgstr ""
 msgid "Complete reference documentation for the mic command-line interface."
 msgstr ""
 
-#: lib/micelio_web/live/docs_live/index.ex:311
+#: lib/micelio_web/live/docs_live/index.ex:296
 #, elixir-autogen, elixir-format
 msgid "Complete reference for the mic command-line interface."
 msgstr ""
@@ -580,6 +418,7 @@ msgstr ""
 msgid "Default:"
 msgstr ""
 
+#: lib/micelio_web/components/layouts.ex:360
 #: lib/micelio_web/controllers/browser/docs_controller.ex:15
 #, elixir-autogen, elixir-format, fuzzy
 msgid "Docs"
@@ -699,23 +538,23 @@ msgstr ""
 msgid "required"
 msgstr ""
 
-#: lib/micelio_web/live/docs_live/index.ex:204
+#: lib/micelio_web/live/docs_live/index.ex:244
 #, elixir-autogen, elixir-format
 msgid "Guides"
 msgstr ""
 
-#: lib/micelio_web/live/docs_live/index.ex:290
+#: lib/micelio_web/live/docs_live/index.ex:275
 #, elixir-autogen, elixir-format, fuzzy
 msgid "References"
 msgstr ""
 
-#: lib/micelio_web/controllers/browser/repository_html/show.html.heex:344
+#: lib/micelio_web/controllers/browser/repository_html/show.html.heex:390
 #, elixir-autogen, elixir-format
 msgid "About"
 msgstr ""
 
-#: lib/micelio_web/controllers/browser/repository_html/blob.html.heex:66
-#: lib/micelio_web/controllers/browser/repository_html/show.html.heex:333
+#: lib/micelio_web/controllers/browser/repository_html/blob.html.heex:75
+#: lib/micelio_web/controllers/browser/repository_html/show.html.heex:340
 #, elixir-autogen, elixir-format
 msgid "Binary file (%{size} bytes) cannot be displayed."
 msgstr ""
@@ -724,11 +563,6 @@ msgstr ""
 #, elixir-autogen, elixir-format, fuzzy
 msgid "Create your first repository"
 msgstr "创建您的第一个项目"
-
-#: lib/micelio/docs.ex:44
-#, elixir-autogen, elixir-format, fuzzy
-msgid "Documentation for people contributing to the Micelio repository."
-msgstr "面向参与 Micelio 项目贡献的人们的文档。"
 
 #: lib/micelio_web/live/repository_live/index.ex:20
 #, elixir-autogen, elixir-format, fuzzy
@@ -755,8 +589,8 @@ msgstr "暂无最近项目。"
 msgid "No repositories yet"
 msgstr ""
 
-#: lib/micelio_web/controllers/browser/repository_html/blob.html.heex:21
-#: lib/micelio_web/controllers/browser/repository_html/show.html.heex:190
+#: lib/micelio_web/controllers/browser/repository_html/blob.html.heex:30
+#: lib/micelio_web/controllers/browser/repository_html/show.html.heex:197
 #, elixir-autogen, elixir-format
 msgid "Path"
 msgstr ""
@@ -776,6 +610,9 @@ msgstr "热门项目分页"
 msgid "Recent repositories"
 msgstr ""
 
+#: lib/micelio_web/components/layouts.ex:306
+#: lib/micelio_web/controllers/browser/profile_html/show.html.heex:383
+#: lib/micelio_web/controllers/browser/profile_html/show.html.heex:404
 #: lib/micelio_web/live/repository_live/index.ex:18
 #: lib/micelio_web/live/repository_live/index.ex:40
 #, elixir-autogen, elixir-format
@@ -787,100 +624,79 @@ msgstr ""
 msgid "Repositories help you organize your code and collaborate with others."
 msgstr ""
 
-#: lib/micelio_web/controllers/browser/repository_html/show.html.heex:96
-#, elixir-autogen, elixir-format
-msgid "Repository navigation"
-msgstr ""
-
-#: lib/micelio_web/components/core_components.ex:469
-#: lib/micelio_web/controllers/browser/repository_html/show.html.heex:135
+#: lib/micelio_web/components/layouts.ex:254
+#: lib/micelio_web/controllers/browser/page_html/home.html.heex:54
 #, elixir-autogen, elixir-format
 msgid "Sessions"
 msgstr ""
 
-#: lib/micelio_web/components/core_components.ex:508
-#: lib/micelio_web/controllers/browser/repository_html/show.html.heex:172
+#: lib/micelio_web/components/layouts.ex:280
 #, elixir-autogen, elixir-format
 msgid "Settings"
 msgstr ""
 
-#: lib/micelio_web/controllers/browser/repository_html/show.html.heex:211
+#: lib/micelio_web/controllers/browser/repository_html/show.html.heex:218
 #, elixir-autogen, elixir-format
 msgid "This repository is empty"
 msgstr ""
 
-#: lib/micelio_web/controllers/browser/repository_html/show.html.heex:403
-#, elixir-autogen, elixir-format, fuzzy
-msgid "items"
-msgstr "条款"
-
-#: lib/micelio_web/controllers/browser/repository_html/show.html.heex:386
-#, elixir-autogen, elixir-format, fuzzy
-msgid "pulses"
-msgstr "脉冲数"
-
-#: lib/micelio_web/components/layouts.ex:99
-#, elixir-autogen, elixir-format
-msgid "repositories"
-msgstr ""
-
-#: lib/micelio_web/live/session_live/index.ex:174
+#: lib/micelio_web/live/session_live/index.ex:182
 #, elixir-autogen, elixir-format
 msgid "Abandoned"
 msgstr ""
 
-#: lib/micelio_web/live/session_live/index.ex:134
+#: lib/micelio_web/live/session_live/index.ex:142
 #, elixir-autogen, elixir-format
 msgid "Active"
 msgstr ""
 
-#: lib/micelio_web/live/session_live/index.ex:117
+#: lib/micelio_web/live/session_live/index.ex:125
 #, elixir-autogen, elixir-format
 msgid "All"
 msgstr ""
 
-#: lib/micelio_web/live/session_live/index.ex:154
+#: lib/micelio_web/live/session_live/index.ex:162
 #, elixir-autogen, elixir-format, fuzzy
 msgid "Landed"
 msgstr "和"
 
-#: lib/micelio_web/live/session_live/index.ex:184
+#: lib/micelio_web/live/session_live/index.ex:192
 #, elixir-autogen, elixir-format, fuzzy
 msgid "Newest"
 msgstr ""
 
-#: lib/micelio_web/live/session_live/index.ex:207
+#: lib/micelio_web/live/session_live/index.ex:215
 #, elixir-autogen, elixir-format
 msgid "No sessions yet"
 msgstr ""
 
-#: lib/micelio_web/live/session_live/index.ex:185
+#: lib/micelio_web/live/session_live/index.ex:193
 #, elixir-autogen, elixir-format
 msgid "Oldest"
 msgstr ""
 
-#: lib/micelio_web/live/session_live/index.ex:209
+#: lib/micelio_web/live/session_live/index.ex:217
 #, elixir-autogen, elixir-format
 msgid "Sessions are created when you use the mic CLI to make changes to this repository."
 msgstr ""
 
-#: lib/micelio_web/live/session_live/index.ex:182
+#: lib/micelio_web/live/session_live/index.ex:190
 #, elixir-autogen, elixir-format
 msgid "Sort order"
 msgstr ""
 
-#: lib/micelio_web/live/session_live/index.ex:186
-#: lib/micelio_web/live/session_live/show.ex:625
+#: lib/micelio_web/live/session_live/index.ex:194
+#: lib/micelio_web/live/session_live/show.ex:633
 #, elixir-autogen, elixir-format
 msgid "Status"
 msgstr ""
 
-#: lib/micelio_web/live/session_live/index.ex:284
+#: lib/micelio_web/live/session_live/index.ex:292
 #, elixir-autogen, elixir-format, fuzzy
 msgid "landed"
 msgstr "和"
 
-#: lib/micelio_web/live/session_live/index.ex:281
+#: lib/micelio_web/live/session_live/index.ex:289
 #, elixir-autogen, elixir-format
 msgid "started"
 msgstr ""
@@ -895,28 +711,30 @@ msgstr ""
 msgid "AI + Human"
 msgstr ""
 
-#: lib/micelio_web/live/session_live/show.ex:748
+#: lib/micelio_web/live/session_live/show.ex:756
 #, elixir-autogen, elixir-format, fuzzy
 msgid "Abandon"
 msgstr ""
 
-#: lib/micelio_web/live/session_live/show.ex:746
+#: lib/micelio_web/live/session_live/show.ex:754
 #, elixir-autogen, elixir-format
 msgid "Abandon this session?"
 msgstr ""
 
-#: lib/micelio_web/live/session_live/show.ex:568
-#: lib/micelio_web/live/session_live/show.ex:702
+#: lib/micelio_web/live/session_live/show.ex:576
+#: lib/micelio_web/live/session_live/show.ex:710
 #, elixir-autogen, elixir-format
 msgid "Changes"
 msgstr ""
 
-#: lib/micelio_web/live/session_live/show.ex:541
+#: lib/micelio_web/live/plan_live/new.ex:299
+#: lib/micelio_web/live/plan_live/show.ex:553
+#: lib/micelio_web/live/session_live/show.ex:549
 #, elixir-autogen, elixir-format
 msgid "Connecting..."
 msgstr ""
 
-#: lib/micelio_web/live/session_live/show.ex:546
+#: lib/micelio_web/live/session_live/show.ex:554
 #, elixir-autogen, elixir-format
 msgid "Filter session events"
 msgstr ""
@@ -926,59 +744,49 @@ msgstr ""
 msgid "Human"
 msgstr ""
 
-#: lib/micelio_web/live/session_live/show.ex:561
+#: lib/micelio_web/live/session_live/show.ex:569
 #, elixir-autogen, elixir-format, fuzzy
 msgid "No events yet."
 msgstr "暂无描述。"
 
-#: lib/micelio_web/live/session_live/show.ex:608
+#: lib/micelio_web/live/session_live/show.ex:616
 #, elixir-autogen, elixir-format
 msgid "No file changes in this session"
 msgstr ""
 
-#: lib/micelio_web/live/session_live/show.ex:782
+#: lib/micelio_web/live/session_live/show.ex:790
 #, elixir-autogen, elixir-format, fuzzy
 msgid "Output"
 msgstr ""
 
-#: lib/micelio_web/live/session_live/show.ex:616
+#: lib/micelio_web/live/session_live/show.ex:624
 #, elixir-autogen, elixir-format
 msgid "Raw metadata"
 msgstr ""
 
-#: lib/micelio_web/live/session_live/show.ex:640
+#: lib/micelio_web/live/session_live/show.ex:648
 #, elixir-autogen, elixir-format, fuzzy
 msgid "Attribution"
 msgstr "贡献"
 
-#: lib/micelio_web/live/session_live/show.ex:633
+#: lib/micelio_web/live/session_live/show.ex:641
 #, elixir-autogen, elixir-format
 msgid "Author"
 msgstr ""
 
-#: lib/micelio_web/live/session_live/show.ex:725
-#, elixir-autogen, elixir-format
-msgid "Prompt Request"
-msgstr ""
-
-#: lib/micelio_web/live/session_live/show.ex:706
+#: lib/micelio_web/live/session_live/show.ex:714
 #, elixir-autogen, elixir-format, fuzzy
 msgid "added"
 msgstr "和"
 
-#: lib/micelio_web/live/session_live/show.ex:716
+#: lib/micelio_web/live/session_live/show.ex:724
 #, elixir-autogen, elixir-format, fuzzy
 msgid "deleted"
 msgstr "删除"
 
-#: lib/micelio_web/live/session_live/show.ex:711
+#: lib/micelio_web/live/session_live/show.ex:719
 #, elixir-autogen, elixir-format
 msgid "modified"
-msgstr ""
-
-#: lib/micelio_web/controllers/browser/repository_html/show.html.heex:422
-#, elixir-autogen, elixir-format
-msgid "View license"
 msgstr ""
 
 #: lib/micelio_web/controllers/browser/page_html.ex:34
@@ -986,238 +794,863 @@ msgstr ""
 msgid "Repositories you've worked on recently."
 msgstr ""
 
-#: lib/micelio_web/controllers/browser/repository_html/blob.html.heex:40
+#: lib/micelio_web/controllers/browser/repository_html/blob.html.heex:49
 #, elixir-autogen, elixir-format
 msgid "Blame"
 msgstr ""
 
-#: lib/micelio_web/controllers/browser/repository_html/blob.html.heex:50
+#: lib/micelio_web/controllers/browser/repository_html/blob.html.heex:59
 #, elixir-autogen, elixir-format
 msgid "Download"
 msgstr ""
 
-#: lib/micelio_web/components/layouts.ex:69
+#: lib/micelio_web/components/layouts.ex:79
 #, elixir-autogen, elixir-format
 msgid "Toggle navigation"
 msgstr ""
 
-#: lib/micelio_web/live/prompt_request_live/index.ex:166
-#: lib/micelio_web/live/prompt_request_live/show.ex:182
+#: lib/micelio_web/live/plan_live/index.ex:174
+#: lib/micelio_web/live/plan_live/show.ex:652
 #, elixir-autogen, elixir-format
 msgid "%{count} days ago"
 msgstr ""
 
-#: lib/micelio_web/live/prompt_request_live/index.ex:165
-#: lib/micelio_web/live/prompt_request_live/show.ex:181
+#: lib/micelio_web/live/plan_live/index.ex:173
+#: lib/micelio_web/live/plan_live/show.ex:651
 #, elixir-autogen, elixir-format
 msgid "%{count} hours ago"
 msgstr ""
 
-#: lib/micelio_web/live/prompt_request_live/index.ex:164
-#: lib/micelio_web/live/prompt_request_live/show.ex:180
+#: lib/micelio_web/live/plan_live/index.ex:172
+#: lib/micelio_web/live/plan_live/show.ex:650
 #, elixir-autogen, elixir-format
 msgid "%{count} minutes ago"
 msgstr ""
 
-#: lib/micelio_web/live/prompt_request_live/edit.ex:160
-#: lib/micelio_web/live/prompt_request_live/new.ex:151
+#: lib/micelio_web/controllers/browser/profile_html/show.html.heex:301
+#: lib/micelio_web/live/organization_live/settings.ex:235
+#: lib/micelio_web/live/plan_live/edit.ex:166
 #, elixir-autogen, elixir-format
 msgid "Cancel"
 msgstr ""
 
-#: lib/micelio_web/live/prompt_request_live/new.ex:31
-#, elixir-autogen, elixir-format
-msgid "Create a prompt request for %{name}."
-msgstr ""
-
-#: lib/micelio_web/live/prompt_request_live/new.ex:144
-#, elixir-autogen, elixir-format
-msgid "Create prompt request"
-msgstr ""
-
-#: lib/micelio_web/live/prompt_request_live/new.ex:29
-#, elixir-autogen, elixir-format
-msgid "New Prompt Request"
-msgstr ""
-
-#: lib/micelio_web/live/prompt_request_live/index.ex:83
-#, elixir-autogen, elixir-format
-msgid "New prompt request"
-msgstr ""
-
-#: lib/micelio_web/live/prompt_request_live/show.ex:112
+#: lib/micelio_web/live/plan_live/show.ex:335
 #, elixir-autogen, elixir-format
 msgid "Opened %{time_ago} by %{author}"
 msgstr ""
 
-#: lib/micelio_web/components/core_components.ex:489
-#: lib/micelio_web/controllers/browser/repository_html/show.html.heex:155
-#: lib/micelio_web/live/prompt_request_live/index.ex:22
-#, elixir-autogen, elixir-format, fuzzy
-msgid "Prompt Requests"
-msgstr ""
-
-#: lib/micelio_web/live/prompt_request_live/new.ex:68
-#, elixir-autogen, elixir-format, fuzzy
-msgid "Prompt request created."
-msgstr ""
-
-#: lib/micelio_web/live/prompt_request_live/show.ex:53
-#, elixir-autogen, elixir-format, fuzzy
-msgid "Prompt request not found."
-msgstr ""
-
-#: lib/micelio_web/live/prompt_request_live/index.ex:24
-#, elixir-autogen, elixir-format
-msgid "Prompt requests for %{name}."
-msgstr ""
-
-#: lib/micelio_web/live/prompt_request_live/index.ex:36
-#: lib/micelio_web/live/prompt_request_live/new.ex:44
+#: lib/micelio_web/live/plan_live/index.ex:36
+#: lib/micelio_web/live/plan_live/new.ex:68
 #, elixir-autogen, elixir-format
 msgid "Repository not found or access denied."
 msgstr ""
 
-#: lib/micelio_web/live/prompt_request_live/edit.ex:121
-#: lib/micelio_web/live/prompt_request_live/new.ex:114
+#: lib/micelio_web/live/plan_live/edit.ex:127
 #, elixir-autogen, elixir-format
 msgid "Title"
 msgstr ""
 
-#: lib/micelio_web/live/prompt_request_live/new.ex:81
-#, elixir-autogen, elixir-format
-msgid "Unable to create prompt request."
-msgstr ""
-
-#: lib/micelio_web/live/prompt_request_live/index.ex:163
-#: lib/micelio_web/live/prompt_request_live/show.ex:179
+#: lib/micelio_web/live/plan_live/index.ex:171
+#: lib/micelio_web/live/plan_live/show.ex:649
 #, elixir-autogen, elixir-format
 msgid "just now"
 msgstr ""
 
-#: lib/micelio_web/live/prompt_request_live/index.ex:74
+#: lib/micelio_web/live/plan_live/index.ex:82
 #, elixir-autogen, elixir-format, fuzzy
 msgid "%{count} Open"
 msgstr ""
 
-#: lib/micelio_web/live/prompt_request_live/index.ex:106
-#, elixir-autogen, elixir-format
-msgid "Prompt requests let you tell collaborators about changes you'd like an agent to make."
-msgstr ""
-
-#: lib/micelio_web/live/prompt_request_live/index.ex:104
-#, elixir-autogen, elixir-format
-msgid "There aren't any open prompt requests."
-msgstr ""
-
-#: lib/micelio_web/live/prompt_request_live/index.ex:143
+#: lib/micelio_web/live/plan_live/index.ex:151
 #, elixir-autogen, elixir-format, fuzzy
 msgid "opened %{time_ago} by"
 msgstr ""
 
-#: lib/micelio_web/live/prompt_request_live/edit.ex:142
-#: lib/micelio_web/live/prompt_request_live/new.ex:135
+#: lib/micelio_web/live/plan_live/edit.ex:148
 #, elixir-autogen, elixir-format
 msgid "Describe the change you want. Use @ to reference files."
 msgstr ""
 
-#: lib/micelio_web/live/prompt_request_live/show.ex:134
+#: lib/micelio_web/live/plan_live/show.ex:386
 #, elixir-autogen, elixir-format, fuzzy
 msgid "Close"
 msgstr "关闭"
 
-#: lib/micelio_web/live/prompt_request_live/show.ex:126
+#: lib/micelio_web/live/plan_live/show.ex:378
 #, elixir-autogen, elixir-format
 msgid "Edit"
 msgstr ""
 
-#: lib/micelio_web/live/prompt_request_live/edit.ex:38
-#, elixir-autogen, elixir-format
-msgid "Edit Prompt Request"
-msgstr ""
-
-#: lib/micelio_web/live/prompt_request_live/edit.ex:40
-#, elixir-autogen, elixir-format
-msgid "Edit prompt request #%{number}."
-msgstr ""
-
-#: lib/micelio_web/live/prompt_request_live/edit.ex:57
-#, elixir-autogen, elixir-format, fuzzy
-msgid "Prompt request not found or access denied."
-msgstr ""
-
-#: lib/micelio_web/live/prompt_request_live/edit.ex:78
-#, elixir-autogen, elixir-format, fuzzy
-msgid "Prompt request updated."
-msgstr ""
-
-#: lib/micelio_web/live/prompt_request_live/show.ex:142
+#: lib/micelio_web/live/plan_live/show.ex:394
 #, elixir-autogen, elixir-format
 msgid "Reopen"
 msgstr ""
 
-#: lib/micelio_web/live/prompt_request_live/show.ex:67
-#, elixir-autogen, elixir-format, fuzzy
-msgid "Unable to close prompt request."
-msgstr ""
-
-#: lib/micelio_web/live/prompt_request_live/show.ex:80
-#, elixir-autogen, elixir-format, fuzzy
-msgid "Unable to reopen prompt request."
-msgstr ""
-
-#: lib/micelio_web/live/prompt_request_live/edit.ex:151
-#, elixir-autogen, elixir-format, fuzzy
-msgid "Update prompt request"
-msgstr ""
-
-#: lib/micelio/docs.ex:54
+#: lib/micelio/docs.ex:26
 #, elixir-autogen, elixir-format
 msgid "gRPC API reference generated from protocol buffer definitions."
 msgstr ""
 
-#: lib/micelio/docs.ex:53
+#: lib/micelio/docs.ex:25
 #, elixir-autogen, elixir-format
 msgid "gRPC API"
 msgstr ""
 
-#: lib/micelio/docs.ex:65
+#: lib/micelio/docs.ex:37
 #, elixir-autogen, elixir-format
 msgid "OAuth2 authentication, token scopes, and authorization for both APIs."
 msgstr ""
 
-#: lib/micelio/docs.ex:58
+#: lib/micelio/docs.ex:30
 #, elixir-autogen, elixir-format
 msgid "REST API"
 msgstr ""
 
-#: lib/micelio/docs.ex:59
+#: lib/micelio/docs.ex:31
 #, elixir-autogen, elixir-format
 msgid "REST API reference with endpoints, error format, and examples."
 msgstr ""
 
-#: lib/micelio/docs.ex:63
+#: lib/micelio/docs.ex:35
 #, elixir-autogen, elixir-format, fuzzy
 msgid "Authentication & Authorization"
 msgstr ""
 
+#: lib/micelio_web/components/core_components.ex:969
 #: lib/micelio_web/controllers/browser/docs_html/show.html.heex:23
-#: lib/micelio_web/controllers/browser/docs_html/show.html.heex:57
 #, elixir-autogen, elixir-format
 msgid "On this page"
 msgstr ""
 
-#: lib/micelio_web/controllers/browser/docs_html/show.html.heex:78
+#: lib/micelio_web/controllers/browser/docs_html/show.html.heex:64
 #, elixir-autogen, elixir-format
 msgid "Send request"
 msgstr ""
 
-#: lib/micelio_web/controllers/browser/docs_html/show.html.heex:79
+#: lib/micelio_web/controllers/browser/docs_html/show.html.heex:65
 #, elixir-autogen, elixir-format
 msgid "Sending..."
 msgstr ""
 
-#: lib/micelio_web/controllers/browser/docs_html/show.html.heex:77
+#: lib/micelio_web/controllers/browser/docs_html/show.html.heex:63
 #, elixir-autogen, elixir-format
 msgid "Sign in to try this"
+msgstr ""
+
+#: lib/micelio_web/live/plan_live/new.ex:342
+#: lib/micelio_web/live/plan_live/show.ex:530
+#, elixir-autogen, elixir-format, fuzzy
+msgid "Agent"
+msgstr ""
+
+#: lib/micelio_web/live/plan_live/new.ex:241
+#: lib/micelio_web/live/plan_live/show.ex:289
+#, elixir-autogen, elixir-format
+msgid "Agent error: %{reason}"
+msgstr ""
+
+#: lib/micelio_web/live/plan_live/new.ex:27
+#, elixir-autogen, elixir-format
+msgid "Create a plan for %{name}."
+msgstr ""
+
+#: lib/micelio_web/live/plan_live/new.ex:358
+#, elixir-autogen, elixir-format
+msgid "Describe what you want to build..."
+msgstr ""
+
+#: lib/micelio_web/live/plan_live/edit.ex:38
+#, elixir-autogen, elixir-format, fuzzy
+msgid "Edit Plan"
+msgstr ""
+
+#: lib/micelio_web/live/plan_live/edit.ex:40
+#, elixir-autogen, elixir-format
+msgid "Edit plan #%{number}."
+msgstr ""
+
+#: lib/micelio_web/live/plan_live/new.ex:169
+#: lib/micelio_web/live/plan_live/show.ex:230
+#, elixir-autogen, elixir-format
+msgid "Failed to send message."
+msgstr ""
+
+#: lib/micelio_web/live/plan_live/new.ex:25
+#, elixir-autogen, elixir-format
+msgid "New Plan"
+msgstr ""
+
+#: lib/micelio_web/live/plan_live/index.ex:91
+#, elixir-autogen, elixir-format
+msgid "New plan"
+msgstr ""
+
+#: lib/micelio_web/live/session_live/show.ex:733
+#, elixir-autogen, elixir-format
+msgid "Plan"
+msgstr ""
+
+#: lib/micelio_web/live/plan_live/edit.ex:55
+#, elixir-autogen, elixir-format
+msgid "Plan not found or access denied."
+msgstr ""
+
+#: lib/micelio_web/live/plan_live/show.ex:88
+#, elixir-autogen, elixir-format
+msgid "Plan not found."
+msgstr ""
+
+#: lib/micelio_web/live/plan_live/edit.ex:76
+#, elixir-autogen, elixir-format
+msgid "Plan updated."
+msgstr ""
+
+#: lib/micelio_web/live/plan_live/index.ex:22
+#, elixir-autogen, elixir-format
+msgid "Plans"
+msgstr ""
+
+#: lib/micelio_web/live/plan_live/index.ex:24
+#, elixir-autogen, elixir-format
+msgid "Plans for %{name}."
+msgstr ""
+
+#: lib/micelio_web/live/plan_live/index.ex:114
+#, elixir-autogen, elixir-format
+msgid "Plans let you tell collaborators about changes you'd like an agent to make."
+msgstr ""
+
+#: lib/micelio_web/live/plan_live/new.ex:421
+#: lib/micelio_web/live/plan_live/show.ex:581
+#, elixir-autogen, elixir-format
+msgid "Send"
+msgstr ""
+
+#: lib/micelio_web/live/plan_live/index.ex:112
+#, elixir-autogen, elixir-format, fuzzy
+msgid "There aren't any open plans."
+msgstr ""
+
+#: lib/micelio_web/live/plan_live/show.ex:104
+#, elixir-autogen, elixir-format, fuzzy
+msgid "Unable to close plan."
+msgstr ""
+
+#: lib/micelio_web/live/plan_live/new.ex:58
+#, elixir-autogen, elixir-format, fuzzy
+msgid "Unable to create plan."
+msgstr ""
+
+#: lib/micelio_web/live/plan_live/show.ex:117
+#, elixir-autogen, elixir-format, fuzzy
+msgid "Unable to reopen plan."
+msgstr ""
+
+#: lib/micelio_web/live/plan_live/edit.ex:157
+#, elixir-autogen, elixir-format
+msgid "Update plan"
+msgstr ""
+
+#: lib/micelio_web/live/plan_live/new.ex:325
+#, elixir-autogen, elixir-format
+msgid "View plan"
+msgstr ""
+
+#: lib/micelio_web/live/plan_live/new.ex:301
+#, elixir-autogen, elixir-format
+msgid "Connected"
+msgstr ""
+
+#: lib/micelio_web/live/plan_live/new.ex:305
+#: lib/micelio_web/live/plan_live/show.ex:559
+#, elixir-autogen, elixir-format, fuzzy
+msgid "Error"
+msgstr ""
+
+#: lib/micelio_web/live/plan_live/new.ex:307
+#: lib/micelio_web/live/plan_live/show.ex:561
+#, elixir-autogen, elixir-format
+msgid "Idle"
+msgstr ""
+
+#: lib/micelio_web/live/plan_live/new.ex:317
+#, elixir-autogen, elixir-format
+msgid "Stop"
+msgstr ""
+
+#: lib/micelio_web/live/plan_live/new.ex:303
+#, elixir-autogen, elixir-format
+msgid "Thinking..."
+msgstr ""
+
+#: lib/micelio_web/live/plan_live/new.ex:281
+#, elixir-autogen, elixir-format
+msgid "Back to plans"
+msgstr ""
+
+#: lib/micelio_web/live/plan_live/new.ex:44
+#, elixir-autogen, elixir-format
+msgid "Untitled plan"
+msgstr ""
+
+#: lib/micelio_web/live/plan_live/new.ex:119
+#: lib/micelio_web/live/plan_live/show.ex:151
+#, elixir-autogen, elixir-format
+msgid "Daily session limit reached. Try again tomorrow."
+msgstr ""
+
+#: lib/micelio_web/live/plan_live/new.ex:139
+#: lib/micelio_web/live/plan_live/show.ex:174
+#, elixir-autogen, elixir-format, fuzzy
+msgid "Failed to start session: %{reason}"
+msgstr ""
+
+#: lib/micelio_web/live/plan_live/new.ex:190
+#: lib/micelio_web/live/plan_live/show.ex:193
+#, elixir-autogen, elixir-format
+msgid "Failed to stop session."
+msgstr ""
+
+#: lib/micelio_web/live/plan_live/show.ex:432
+#, elixir-autogen, elixir-format
+msgid "Start agentic session"
+msgstr ""
+
+#: lib/micelio_web/live/plan_live/show.ex:604
+#, elixir-autogen, elixir-format
+msgid "Stop session"
+msgstr ""
+
+#: lib/micelio_web/live/plan_live/new.ex:114
+#: lib/micelio_web/live/plan_live/show.ex:145
+#, elixir-autogen, elixir-format
+msgid "You already have an active session. Stop it first."
+msgstr ""
+
+#: lib/micelio_web/live/plan_live/show.ex:555
+#, elixir-autogen, elixir-format
+msgid "Ready"
+msgstr ""
+
+#: lib/micelio_web/live/plan_live/show.ex:478
+#, elixir-autogen, elixir-format, fuzzy
+msgid "Session history"
+msgstr ""
+
+#: lib/micelio_web/live/plan_live/show.ex:571
+#, elixir-autogen, elixir-format
+msgid "Type a message..."
+msgstr ""
+
+#: lib/micelio_web/live/plan_live/show.ex:449
+#: lib/micelio_web/live/plan_live/show.ex:525
+#, elixir-autogen, elixir-format, fuzzy
+msgid "User"
+msgstr "用户"
+
+#: lib/micelio_web/live/plan_live/show.ex:557
+#, elixir-autogen, elixir-format
+msgid "Working..."
+msgstr ""
+
+#: lib/micelio_web/live/organization_live/settings.ex:150
+#, elixir-autogen, elixir-format
+msgid "(saved)"
+msgstr ""
+
+#: lib/micelio_web/live/organization_live/settings.ex:148
+#, elixir-autogen, elixir-format
+msgid "API key"
+msgstr ""
+
+#: lib/micelio_web/live/organization_live/settings.ex:26
+#, elixir-autogen, elixir-format
+msgid "Edit organization settings."
+msgstr ""
+
+#: lib/micelio_web/live/organization_live/settings.ex:45
+#, elixir-autogen, elixir-format
+msgid "Organization not found."
+msgstr ""
+
+#: lib/micelio_web/live/organization_live/settings.ex:24
+#: lib/micelio_web/live/organization_live/settings.ex:111
+#, elixir-autogen, elixir-format
+msgid "Organization settings"
+msgstr ""
+
+#: lib/micelio_web/live/organization_live/settings.ex:81
+#, elixir-autogen, elixir-format
+msgid "Organization updated successfully!"
+msgstr ""
+
+#: lib/micelio_web/live/organization_live/settings.ex:228
+#, elixir-autogen, elixir-format
+msgid "Save changes"
+msgstr ""
+
+#: lib/micelio_web/live/organization_live/settings.ex:138
+#, elixir-autogen, elixir-format
+msgid "Select a provider"
+msgstr ""
+
+#: lib/micelio_web/live/organization_live/settings.ex:186
+#, elixir-autogen, elixir-format
+msgid "Use platform default"
+msgstr ""
+
+#: lib/micelio_web/live/organization_live/settings.ex:38
+#: lib/micelio_web/live/organization_live/settings.ex:97
+#, elixir-autogen, elixir-format
+msgid "You do not have access to this organization."
+msgstr ""
+
+#: lib/micelio_web/live/organization_live/settings.ex:127
+#, elixir-autogen, elixir-format, fuzzy
+msgid "AI provider"
+msgstr ""
+
+#: lib/micelio_web/live/organization_live/settings.ex:172
+#, elixir-autogen, elixir-format, fuzzy
+msgid "Allowed models"
+msgstr ""
+
+#: lib/micelio_web/live/organization_live/settings.ex:129
+#, elixir-autogen, elixir-format
+msgid "Configure the AI provider and credentials for agentic sessions."
+msgstr ""
+
+#: lib/micelio_web/live/organization_live/settings.ex:165
+#, elixir-autogen, elixir-format
+msgid "Control which models are available and which one is used by default."
+msgstr ""
+
+#: lib/micelio_web/live/organization_live/settings.ex:184
+#, elixir-autogen, elixir-format, fuzzy
+msgid "Default model"
+msgstr ""
+
+#: lib/micelio_web/live/organization_live/settings.ex:163
+#, elixir-autogen, elixir-format
+msgid "Models"
+msgstr ""
+
+#: lib/micelio_web/live/organization_live/settings.ex:136
+#, elixir-autogen, elixir-format, fuzzy
+msgid "Provider"
+msgstr ""
+
+#: lib/micelio_web/live/organization_live/settings.ex:157
+#, elixir-autogen, elixir-format
+msgid "Stored encrypted. Leave blank to keep the current key."
+msgstr ""
+
+#: lib/micelio_web/controllers/browser/profile_html/show.html.heex:37
+#, elixir-autogen, elixir-format
+msgid "A short description about you."
+msgstr ""
+
+#: lib/micelio_web/controllers/browser/profile_html/show.html.heex:344
+#, elixir-autogen, elixir-format
+msgid "Account navigation"
+msgstr ""
+
+#: lib/micelio_web/controllers/browser/profile_html/show.html.heex:13
+#, elixir-autogen, elixir-format, fuzzy
+msgid "Activity"
+msgstr ""
+
+#: lib/micelio_web/controllers/browser/profile_html/show.html.heex:319
+#, elixir-autogen, elixir-format
+msgid "Add an authenticator app to verify your sign-ins."
+msgstr ""
+
+#: lib/micelio_web/controllers/browser/profile_html/show.html.heex:140
+#, elixir-autogen, elixir-format
+msgid "Add credentials to route storage to your S3-compatible provider."
+msgstr ""
+
+#: lib/micelio_web/controllers/browser/profile_html/show.html.heex:158
+#, elixir-autogen, elixir-format, fuzzy
+msgid "Add passkey"
+msgstr "使用通行密钥"
+
+#: lib/micelio_web/controllers/browser/profile_html/show.html.heex:177
+#, elixir-autogen, elixir-format
+msgid "Added %{date}"
+msgstr ""
+
+#: lib/micelio_web/controllers/browser/profile_html/show.html.heex:215
+#: lib/micelio_web/controllers/browser/profile_html/show.html.heex:278
+#, elixir-autogen, elixir-format
+msgid "Authentication code"
+msgstr ""
+
+#: lib/micelio_web/controllers/browser/profile_html/show.html.heex:35
+#, elixir-autogen, elixir-format
+msgid "Bio"
+msgstr ""
+
+#: lib/micelio_web/controllers/browser/profile_html/show.html.heex:363
+#, elixir-autogen, elixir-format
+msgid "Devices"
+msgstr ""
+
+#: lib/micelio_web/controllers/browser/profile_html/show.html.heex:230
+#, elixir-autogen, elixir-format
+msgid "Disable 2FA"
+msgstr ""
+
+#: lib/micelio_web/controllers/browser/profile_html/show.html.heex:293
+#: lib/micelio_web/controllers/browser/profile_html/show.html.heex:328
+#, elixir-autogen, elixir-format
+msgid "Enable 2FA"
+msgstr ""
+
+#: lib/micelio_web/controllers/browser/profile_html/show.html.heex:198
+#, elixir-autogen, elixir-format
+msgid "Extra protection for your account."
+msgstr ""
+
+#: lib/micelio_web/controllers/browser/profile_html/show.html.heex:453
+#, elixir-autogen, elixir-format
+msgid "Favorites"
+msgstr ""
+
+#: lib/micelio_web/controllers/browser/profile_html/show.html.heex:41
+#, elixir-autogen, elixir-format
+msgid "Keep it under 160 characters."
+msgstr ""
+
+#: lib/micelio_web/controllers/browser/profile_html/show.html.heex:149
+#, elixir-autogen, elixir-format
+msgid "Manage storage settings"
+msgstr ""
+
+#: lib/micelio_web/controllers/browser/profile_html/show.html.heex:455
+#, elixir-autogen, elixir-format, fuzzy
+msgid "No favorites yet."
+msgstr "暂无描述。"
+
+#: lib/micelio_web/controllers/browser/profile_html/show.html.heex:428
+#, elixir-autogen, elixir-format, fuzzy
+msgid "No organizations yet."
+msgstr "新建组织"
+
+#: lib/micelio_web/controllers/browser/profile_html/show.html.heex:164
+#, elixir-autogen, elixir-format
+msgid "No passkeys yet."
+msgstr ""
+
+#: lib/micelio_web/controllers/browser/profile_html/show.html.heex:406
+#, elixir-autogen, elixir-format, fuzzy
+msgid "No repositories yet."
+msgstr ""
+
+#: lib/micelio_web/controllers/browser/profile_html/show.html.heex:426
+#, elixir-autogen, elixir-format, fuzzy
+msgid "Organizations"
+msgstr ""
+
+#: lib/micelio_web/controllers/browser/profile_html/show.html.heex:156
+#, elixir-autogen, elixir-format
+msgid "Passkeys"
+msgstr ""
+
+#: lib/micelio_web/controllers/browser/profile_html/show.html.heex:19
+#, elixir-autogen, elixir-format
+msgid "Profile"
+msgstr ""
+
+#: lib/micelio_web/controllers/browser/profile_html/show.html.heex:186
+#, elixir-autogen, elixir-format
+msgid "Remove"
+msgstr ""
+
+#: lib/micelio_web/controllers/browser/profile_html/show.html.heex:109
+#, elixir-autogen, elixir-format
+msgid "Save profile"
+msgstr ""
+
+#: lib/micelio_web/controllers/browser/profile_html/show.html.heex:237
+#, elixir-autogen, elixir-format
+msgid "Scan the QR code with your authenticator app or enter the secret manually."
+msgstr ""
+
+#: lib/micelio_web/controllers/browser/profile_html/show.html.heex:244
+#, elixir-autogen, elixir-format
+msgid "Secret"
+msgstr ""
+
+#: lib/micelio_web/controllers/browser/profile_html/show.html.heex:254
+#, elixir-autogen, elixir-format
+msgid "Setup URI"
+msgstr ""
+
+#: lib/micelio_web/controllers/browser/profile_html/show.html.heex:21
+#, elixir-autogen, elixir-format
+msgid "Shown publicly on your profile."
+msgstr ""
+
+#: lib/micelio_web/controllers/browser/profile_html/show.html.heex:117
+#: lib/micelio_web/controllers/browser/profile_html/show.html.heex:399
+#, elixir-autogen, elixir-format
+msgid "Storage"
+msgstr ""
+
+#: lib/micelio_web/controllers/browser/profile_html/show.html.heex:119
+#, elixir-autogen, elixir-format
+msgid "Store session artifacts in your own bucket."
+msgstr ""
+
+#: lib/micelio_web/controllers/browser/profile_html/show.html.heex:196
+#, elixir-autogen, elixir-format
+msgid "Two-factor authentication"
+msgstr ""
+
+#: lib/micelio_web/controllers/browser/profile_html/show.html.heex:204
+#, elixir-autogen, elixir-format
+msgid "Two-factor authentication is enabled."
+msgstr ""
+
+#: lib/micelio_web/controllers/browser/profile_html/show.html.heex:126
+#, elixir-autogen, elixir-format
+msgid "Validated on %{date}."
+msgstr ""
+
+#: lib/micelio_web/controllers/browser/profile_html/show.html.heex:128
+#, elixir-autogen, elixir-format
+msgid "Validation failed."
+msgstr ""
+
+#: lib/micelio_web/controllers/browser/profile_html/show.html.heex:130
+#, elixir-autogen, elixir-format
+msgid "Validation pending."
+msgstr ""
+
+#: lib/micelio_web/controllers/browser/profile_html/show.html.heex:49
+#, elixir-autogen, elixir-format
+msgid "Website"
+msgstr ""
+
+#: lib/micelio_web/components/layouts.ex:437
+#, elixir-autogen, elixir-format
+msgid "Account"
+msgstr ""
+
+#: lib/micelio_web/components/layouts.ex:462
+#, elixir-autogen, elixir-format, fuzzy
+msgid "Admin"
+msgstr "管理"
+
+#: lib/micelio_web/components/layouts.ex:331
+#, elixir-autogen, elixir-format, fuzzy
+msgid "Blog"
+msgstr "博客"
+
+#: lib/micelio_web/components/layouts.ex:384
+#, elixir-autogen, elixir-format, fuzzy
+msgid "Changelog"
+msgstr "更新日志"
+
+#: lib/micelio_web/components/layouts.ex:490
+#, elixir-autogen, elixir-format, fuzzy
+msgid "Logout"
+msgstr "登出"
+
+#: lib/micelio_web/components/layouts.ex:145
+#, elixir-autogen, elixir-format
+msgid "Main navigation"
+msgstr ""
+
+#: lib/micelio_web/components/layouts.ex:535
+#, elixir-autogen, elixir-format, fuzzy
+msgid "Theme"
+msgstr "主题"
+
+#: lib/micelio_web/controllers/browser/blog_controller.ex:43
+#, elixir-autogen, elixir-format
+msgid "Blog post not found."
+msgstr ""
+
+#: lib/micelio_web/controllers/browser/changelog_controller.ex:43
+#, elixir-autogen, elixir-format
+msgid "Changelog entry not found."
+msgstr ""
+
+#: lib/micelio_web/controllers/browser/blog_html/index.html.heex:34
+#, elixir-autogen, elixir-format
+msgid "Check back soon for updates!"
+msgstr ""
+
+#: lib/micelio_web/controllers/browser/blog_html/index.html.heex:33
+#, elixir-autogen, elixir-format
+msgid "No blog posts yet"
+msgstr ""
+
+#: lib/micelio_web/live/plan_live/show.ex:463
+#, elixir-autogen, elixir-format
+msgid "Add a comment"
+msgstr ""
+
+#: lib/micelio_web/live/plan_live/show.ex:468
+#, elixir-autogen, elixir-format
+msgid "Comment"
+msgstr ""
+
+#: lib/micelio_web/live/plan_live/show.ex:248
+#, elixir-autogen, elixir-format
+msgid "Comment cannot be empty."
+msgstr ""
+
+#: lib/micelio_web/live/plan_live/show.ex:438
+#, elixir-autogen, elixir-format
+msgid "Comments"
+msgstr ""
+
+#: lib/micelio_web/live/plan_live/new.ex:131
+#: lib/micelio_web/live/plan_live/show.ex:165
+#, elixir-autogen, elixir-format
+msgid "Install and authorize the forge app to open a draft PR first."
+msgstr ""
+
+#: lib/micelio_web/live/plan_live/show.ex:440
+#, elixir-autogen, elixir-format, fuzzy
+msgid "No comments yet."
+msgstr "暂无描述。"
+
+#: lib/micelio_web/live/plan_live/show.ex:357
+#, elixir-autogen, elixir-format
+msgid "Open preview"
+msgstr ""
+
+#: lib/micelio_web/live/plan_live/show.ex:366
+#, elixir-autogen, elixir-format
+msgid "Open sandbox"
+msgstr ""
+
+#: lib/micelio_web/live/plan_live/new.ex:270
+#, elixir-autogen, elixir-format
+msgid "Preparing plan..."
+msgstr ""
+
+#: lib/micelio_web/controllers/browser/forge_controller.ex:26
+#, elixir-autogen, elixir-format
+msgid "This repository requires installation access before sessions can start. Install the forge app first."
+msgstr ""
+
+#: lib/micelio_web/controllers/browser/forge_controller.ex:34
+#, elixir-autogen, elixir-format
+msgid "Unable to load repository from forge right now."
+msgstr ""
+
+#: lib/micelio_web/live/plan_live/show.ex:251
+#, elixir-autogen, elixir-format, fuzzy
+msgid "Unable to post comment."
+msgstr ""
+
+#: lib/micelio_web/live/plan_live/show.ex:348
+#, elixir-autogen, elixir-format
+msgid "View draft PR"
+msgstr ""
+
+#: lib/micelio_web/live/plan_live/new.ex:124
+#: lib/micelio_web/live/plan_live/show.ex:157
+#, elixir-autogen, elixir-format
+msgid "You need write access to start a coding session."
+msgstr ""
+
+#: lib/micelio_web/components/layouts.ex:229
+#, elixir-autogen, elixir-format
+msgid "Prompt requests"
+msgstr ""
+
+#: lib/micelio_web/components/layouts.ex:203
+#, elixir-autogen, elixir-format
+msgid "Home"
+msgstr ""
+
+#: lib/micelio_web/controllers/browser/page_html/home.html.heex:83
+#, elixir-autogen, elixir-format, fuzzy
+msgid "Bring Your Own Stack"
+msgstr ""
+
+#: lib/micelio_web/controllers/browser/page_html/home.html.heex:85
+#, elixir-autogen, elixir-format, fuzzy
+msgid "Your coding agents, your LLM tokens, your sandboxes. Micelio matches them with the repository you are contributing to and handles the rest."
+msgstr ""
+
+#: lib/micelio_web/controllers/browser/page_html/home.html.heex:31
+#, elixir-autogen, elixir-format, fuzzy
+msgid "Micelio"
+msgstr "Micelio之于"
+
+#: lib/micelio_web/controllers/browser/page_html/home.html.heex:33
+#, elixir-autogen, elixir-format
+msgid "An extension for your Git forges that makes software collaboration between humans and AI agents seamless."
+msgstr ""
+
+#: lib/micelio_web/controllers/browser/page_html/home.html.heex:74
+#, elixir-autogen, elixir-format, fuzzy
+msgid "Prompt Requests"
+msgstr ""
+
+#: lib/micelio_web/controllers/browser/page_html/home.html.heex:56
+#, elixir-autogen, elixir-format
+msgid "Sessions extend code changes with the decisions and conversations held by humans and agents along the way. Every piece of context is captured, not just the diff."
+msgstr ""
+
+#: lib/micelio_web/controllers/browser/page_html/home.html.heex:65
+#, elixir-autogen, elixir-format
+msgid "Start a session from your phone, laptop, or any device. When it completes, preview the changes and land them with a single tap. No local setup required."
+msgstr ""
+
+#: lib/micelio_web/controllers/browser/page_html/home.html.heex:76
+#, elixir-autogen, elixir-format
+msgid "Suggest improvements to any repository through prompt requests. Describe what you want changed, and let agents turn your idea into a concrete contribution."
+msgstr ""
+
+#: lib/micelio_web/controllers/browser/page_html/home.html.heex:63
+#, elixir-autogen, elixir-format
+msgid "Work from Anywhere"
+msgstr ""
+
+#: lib/micelio_web/controllers/browser/page_html/home.html.heex:38
+#, elixir-autogen, elixir-format
+msgid "Works with"
+msgstr ""
+
+#: lib/micelio_web/controllers/browser/page_html/home.html.heex:43
+#, elixir-autogen, elixir-format, fuzzy
+msgid "and"
+msgstr "和"
+
+#: lib/micelio_web/live/organization_live/settings.ex:194
+#, elixir-autogen, elixir-format
+msgid "Forge"
+msgstr ""
+
+#: lib/micelio_web/live/organization_live/settings.ex:215
+#, elixir-autogen, elixir-format
+msgid "Forge host"
+msgstr ""
+
+#: lib/micelio_web/live/organization_live/settings.ex:203
+#, elixir-autogen, elixir-format
+msgid "Forge provider"
+msgstr ""
+
+#: lib/micelio_web/live/organization_live/settings.ex:196
+#, elixir-autogen, elixir-format
+msgid "Link this organization to an external forge like GitHub or GitLab."
+msgstr ""
+
+#: lib/micelio_web/live/organization_live/settings.ex:205
+#, elixir-autogen, elixir-format
+msgid "None"
+msgstr ""
+
+#: lib/micelio_web/live/organization_live/settings.ex:221
+#, elixir-autogen, elixir-format
+msgid "The hostname of the forge (e.g., github.com or gitlab.com)."
 msgstr ""

@@ -9,10 +9,13 @@ defmodule Micelio.Application do
 
   @impl true
   def start(_type, _args) do
+    Micelio.OTel.setup()
     maybe_add_logger_backend()
+    ensure_ets_tables()
 
     children =
       [
+        Micelio.PromEx,
         MicelioWeb.Telemetry,
         Micelio.Mic.Telemetry,
         Micelio.Cloak,
@@ -24,6 +27,9 @@ defmodule Micelio.Application do
         {Task.Supervisor, name: Micelio.ValidationEnvironments.Supervisor},
         {Task.Supervisor, name: Micelio.Mic.RollupSupervisor},
         Micelio.Mic.RollupScheduler,
+        {Registry, keys: :unique, name: Micelio.Plans.AgentRegistry},
+        {DynamicSupervisor, name: Micelio.Plans.AgentSupervisor, strategy: :one_for_one},
+        Micelio.Sandboxes.Watchdog,
         {DNSCluster, query: Application.get_env(:micelio, :dns_cluster_query) || :ignore},
         {Phoenix.PubSub, name: Micelio.PubSub},
         # Start a worker by calling: Micelio.Worker.start_link(arg)
@@ -112,6 +118,12 @@ defmodule Micelio.Application do
       {:error, _reason} ->
         false
     end
+  end
+
+  defp ensure_ets_tables do
+    :ets.new(Micelio.Plans.AgenticACPClient.Sessions, [:named_table, :public, :set])
+  rescue
+    ArgumentError -> :ok
   end
 
   defp maybe_add_logger_backend do

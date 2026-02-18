@@ -52,21 +52,7 @@
         </:subtitle>
       </.header>
 
-      <%= if @toc != [] do %>
-        <details class="docs-mobile-toc">
-          <summary class="docs-mobile-toc-summary">{gettext("On this page")}</summary>
-          <nav class="docs-mobile-toc-nav">
-            <%= for entry <- @toc do %>
-              <a
-                href={"##{entry.id}"}
-                class={["docs-mobile-toc-link", entry.level == 3 && "docs-mobile-toc-link-nested"]}
-              >
-                {entry.text}
-              </a>
-            <% end %>
-          </nav>
-        </details>
-      <% end %>
+      <.collapsible_toc toc={@toc} />
 
       <div class="docs-page-content prose" data-api-try-auth={to_string(@api_try_authenticated)}>
         {raw(@page.body)}

@@ -75,10 +75,10 @@ async fn start(organization: &str, project: &str, goal: &str) -> Result<()> {
         return Err(MicError::SessionAlreadyActive);
     }
 
-    let config = Config::load()?;
+    let mut config = Config::load()?;
     let tokens = config::require_tokens()?;
-    let server = config.get_default_server().ok_or(MicError::NoDefaultServer)?;
-    let endpoint = Endpoint::parse(server)?;
+    let server = config.resolve_default_grpc_url().await?;
+    let endpoint = Endpoint::parse(&server)?;
     let client = GrpcClient::new(endpoint);
 
     // Generate session ID
@@ -166,10 +166,10 @@ fn note(role: &str, message: &str) -> Result<()> {
 /// Land the current session.
 async fn land() -> Result<()> {
     let state = Session::load()?.ok_or(MicError::NoActiveSession)?;
-    let config = Config::load()?;
+    let mut config = Config::load()?;
     let tokens = config::require_tokens()?;
-    let server = config.get_default_server().ok_or(MicError::NoDefaultServer)?;
-    let endpoint = Endpoint::parse(server)?;
+    let server = config.resolve_default_grpc_url().await?;
+    let endpoint = Endpoint::parse(&server)?;
     let client = GrpcClient::new(endpoint);
 
     // Get files from overlay

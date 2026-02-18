@@ -16,10 +16,10 @@ pub async fn run(cmd: BlameCommand) -> Result<()> {
         ))
     })?;
 
-    let config = Config::load()?;
-    let server = config.get_default_server().ok_or(MicError::NoDefaultServer)?;
+    let mut config = Config::load()?;
+    let server = config.resolve_default_grpc_url().await?;
     let tokens = config::require_tokens()?;
-    let endpoint = Endpoint::parse(server)?;
+    let endpoint = Endpoint::parse(&server)?;
     let client = GrpcClient::new(endpoint);
 
     // Build request

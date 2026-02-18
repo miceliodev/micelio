@@ -4,10 +4,10 @@ defmodule Micelio.AgentInfraTest do
   alias Micelio.Accounts
   alias Micelio.AgentInfra
   alias Micelio.AITokens
-  alias Micelio.PromptRequests
+  alias Micelio.Plans
   alias Micelio.Repositories
 
-  defp setup_prompt_request do
+  defp setup_plan do
     {:ok, user} = Accounts.get_or_create_user_by_email("agent-runner@example.com")
 
     {:ok, organization} =
@@ -23,8 +23,8 @@ defmodule Micelio.AgentInfraTest do
         organization_id: organization.id
       })
 
-    {:ok, prompt_request} =
-      PromptRequests.create_prompt_request(
+    {:ok, plan} =
+      Plans.create_plan(
         %{
           title: "Agent runner budget check",
           prompt: "Do the thing",
@@ -41,7 +41,7 @@ defmodule Micelio.AgentInfraTest do
         user: user
       )
 
-    {user, repository, prompt_request}
+    {user, repository, plan}
   end
 
   defp plan_attrs do
@@ -57,25 +57,23 @@ defmodule Micelio.AgentInfraTest do
   end
 
   test "build_request_with_quota requires a task budget for agent runs" do
-    {user, _project, prompt_request} = setup_prompt_request()
+    {user, _project, plan} = setup_plan()
 
     assert {:error, :missing_budget} =
-             AgentInfra.build_request_with_quota(user.account, plan_attrs(),
-               prompt_request: prompt_request
-             )
+             AgentInfra.build_request_with_quota(user.account, plan_attrs(), plan: plan)
   end
 
-  test "build_request_with_quota succeeds when budget covers the prompt request" do
-    {user, repository, prompt_request} = setup_prompt_request()
+  test "build_request_with_quota succeeds when budget covers the plan" do
+    {user, repository, plan} = setup_plan()
 
     {:ok, _pool} = AITokens.create_token_pool(repository, %{balance: 2000, reserved: 0})
 
     assert {:ok, _budget, _pool} =
-             AITokens.upsert_task_budget(prompt_request, %{"amount" => "1500"})
+             AITokens.upsert_task_budget(plan, %{"amount" => "1500"})
 
     assert {:ok, request} =
              AgentInfra.build_request_with_quota(user.account, plan_attrs(),
-               prompt_request: prompt_request,
+               plan: plan,
                limits: %{billable_units: 2_000_000}
              )
 

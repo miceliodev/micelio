@@ -3,6 +3,7 @@ defmodule MicelioWeb.Browser.BlogController do
 
   alias Micelio.Blog
   alias Micelio.Blog.People
+  alias Micelio.Docs.HtmlConverter
   alias MicelioWeb.PageMeta
 
   def index(conn, _params) do
@@ -35,7 +36,12 @@ defmodule MicelioWeb.Browser.BlogController do
         "article:author" => author.name
       }
     )
-    |> render(:show, post: post)
+    |> render(:show, post: post, toc: HtmlConverter.extract_toc(post.body))
+  rescue
+    RuntimeError ->
+      conn
+      |> put_flash(:error, gettext("Blog post not found."))
+      |> redirect(to: ~p"/blog")
   end
 
   def rss(conn, _params) do

@@ -33,9 +33,9 @@
   --theme-ui-colors-button-default-fg: #1f2d23;
   --theme-ui-colors-button-default-border: #d0d7ce;
 
-  /* Control/input colors */
+  /* Control/input colors -- darker borders like Pajamas */
   --theme-ui-colors-control-bg: #ffffff;
-  --theme-ui-colors-control-border: #d0d7ce;
+  --theme-ui-colors-control-border: #89908a;
 
   /* Typography - System sans-serif for all text */
   --theme-ui-fonts-body: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
@@ -45,7 +45,7 @@
   /* Typographic scale - clear hierarchy */
   --theme-ui-font-size-xs: 0.75rem;    /* 12px - captions, hints */
   --theme-ui-font-size-sm: 0.875rem;   /* 14px - secondary text, labels */
-  --theme-ui-font-size-base: 0.9375rem; /* 15px - body text */
+  --theme-ui-font-size-base: 0.875rem; /* 14px - body text (Pajamas default) */
   --theme-ui-font-size-md: 1rem;       /* 16px - emphasized body, h4 */
   --theme-ui-font-size-lg: 1.25rem;    /* 20px - h3 */
   --theme-ui-font-size-xl: 1.5rem;     /* 24px - h2 */
@@ -58,11 +58,11 @@
   --theme-ui-font-sizes-label: var(--theme-ui-font-size-sm);
   --theme-ui-font-sizes-caption: var(--theme-ui-font-size-xs);
 
-  /* Font weights */
+  /* Font weights -- Pajamas uses 400/600 as primary pair */
   --theme-ui-font-weights-body: 400;
-  --theme-ui-font-weights-medium: 500;
+  --theme-ui-font-weights-medium: 600;
   --theme-ui-font-weights-semibold: 600;
-  --theme-ui-font-weights-bold: 700;
+  --theme-ui-font-weights-bold: 600;
 
   /* Line heights */
   --theme-ui-line-heights-body: 1.5;
@@ -77,10 +77,10 @@
   --theme-ui-space-3: 24px;
   --theme-ui-space-4: 32px;
 
-  /* GitHub Primer border radii */
-  --theme-ui-radii-small: 3px;
-  --theme-ui-radii-default: 6px;
-  --theme-ui-radii-large: 12px;
+  /* Pajamas-inspired border radii (tighter) */
+  --theme-ui-radii-small: 2px;
+  --theme-ui-radii-default: 4px;
+  --theme-ui-radii-large: 8px;
 
   /* Borders */
   --theme-ui-borders-thin: 1px solid var(--theme-ui-colors-border);
@@ -128,9 +128,9 @@
     --theme-ui-colors-button-default-fg: #e4efe6;
     --theme-ui-colors-button-default-border: #2a3630;
 
-    /* Control/input colors - dark mode */
+    /* Control/input colors - dark mode -- darker border */
     --theme-ui-colors-control-bg: #121917;
-    --theme-ui-colors-control-border: #2a3630;
+    --theme-ui-colors-control-border: #4a5548;
   }
 }
 
@@ -168,9 +168,9 @@
   --theme-ui-colors-button-default-fg: #1f2d23;
   --theme-ui-colors-button-default-border: #d0d7ce;
 
-  /* Control/input colors - light mode */
+  /* Control/input colors - light mode -- darker border */
   --theme-ui-colors-control-bg: #ffffff;
-  --theme-ui-colors-control-border: #d0d7ce;
+  --theme-ui-colors-control-border: #89908a;
 
   color-scheme: light;
 }
@@ -209,9 +209,9 @@
   --theme-ui-colors-button-default-fg: #e4efe6;
   --theme-ui-colors-button-default-border: #2a3630;
 
-  /* Control/input colors - dark mode */
+  /* Control/input colors - dark mode -- darker border */
   --theme-ui-colors-control-bg: #121917;
-  --theme-ui-colors-control-border: #2a3630;
+  --theme-ui-colors-control-border: #4a5548;
 
   color-scheme: dark;
 }
@@ -256,7 +256,7 @@ main {
   font-size: var(--theme-ui-font-size-sm);
   font-weight: var(--theme-ui-font-weights-medium);
   border: var(--theme-ui-borders-thin);
-  border-radius: 2em;
+  border-radius: var(--theme-ui-radii-default);
   background: var(--theme-ui-colors-surface);
   color: var(--theme-ui-colors-text);
   text-decoration: none;
@@ -419,7 +419,7 @@ main {
   border-radius: var(--theme-ui-radii-default);
   text-decoration: none;
   color: inherit;
-  transition: border-color 0.15s ease;
+  transition: border-color 0.1s ease;
 }
 
 .content-card:hover {
@@ -625,14 +625,13 @@ input[type="radio"] {
   background-color: var(--theme-ui-colors-control-bg);
   border: 1px solid var(--theme-ui-colors-control-border);
   border-radius: var(--theme-ui-radii-default);
-  box-shadow: inset 0 1px 0 rgba(208, 215, 222, 0.2);
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  transition: border-color 0.1s ease;
 }
 
 .input:focus {
-  border-color: var(--theme-ui-colors-primary);
+  border-color: var(--theme-ui-colors-text);
   outline: none;
-  box-shadow: 0 0 0 3px rgba(9, 105, 218, 0.3);
+  box-shadow: none;
 }
 
 .input::placeholder {
@@ -645,7 +644,8 @@ input[type="radio"] {
 }
 
 .input--error:focus {
-  box-shadow: 0 0 0 3px rgba(209, 36, 47, 0.3);
+  border-color: var(--theme-ui-colors-danger);
+  box-shadow: none;
 }
 
 .input--textarea {
@@ -675,8 +675,7 @@ input[type="radio"] {
 
 .compact-select:focus {
   outline: none;
-  border-color: var(--theme-ui-colors-primary);
-  box-shadow: 0 0 0 3px rgba(9, 105, 218, 0.3);
+  border-color: var(--theme-ui-colors-text);
 }
 
 /* Button - Primary action button (green) */
@@ -696,7 +695,7 @@ input[type="radio"] {
   border-radius: var(--theme-ui-radii-default);
   text-decoration: none;
   cursor: pointer;
-  transition: background-color 0.15s ease;
+  transition: background-color 0.1s ease;
 }
 
 .btn:hover {
@@ -705,8 +704,8 @@ input[type="radio"] {
 }
 
 .btn:focus-visible {
-  outline: 2px solid var(--theme-ui-colors-primary);
-  outline-offset: 2px;
+  outline: 2px solid var(--theme-ui-colors-text);
+  outline-offset: 1px;
 }
 
 .btn:disabled,
@@ -783,7 +782,7 @@ input[type="radio"] {
   display: block;
   text-decoration: none;
   color: inherit;
-  transition: border-color 0.15s ease;
+  transition: border-color 0.1s ease;
 }
 
 .card--interactive:hover {
@@ -973,7 +972,7 @@ input[type="radio"] {
   color: var(--theme-ui-colors-muted);
   font-weight: var(--theme-ui-font-weights-normal);
   opacity: 0;
-  transition: opacity 0.15s ease;
+  transition: opacity 0.1s ease;
 }
 
 .prose h1:hover .heading-anchor::before,

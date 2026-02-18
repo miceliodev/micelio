@@ -1,4 +1,4 @@
-/* Navbar - GitHub Primer-inspired header */
+/* Navbar -- Slim top bar (navigation moved to sidebar) */
 
 .navbar-wrapper {
   background: var(--theme-ui-colors-surface);
@@ -9,35 +9,41 @@
 }
 
 .navbar {
-  padding: var(--theme-ui-space-1) var(--theme-ui-space-2);
-  max-width: var(--theme-ui-sizes-container);
-  margin: 0 auto;
+  padding: 8px var(--theme-ui-space-2);
   display: flex;
   align-items: center;
   gap: var(--theme-ui-space-2);
 }
 
-/* Always-visible start section: hamburger + brand */
+/* Start section: hamburger + brand */
 .navbar-start {
   display: flex;
   align-items: center;
   gap: var(--theme-ui-space-1);
 }
 
-/* Hamburger button - hidden on desktop */
+/* End section: avatar or CTA */
+.navbar-end {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: var(--theme-ui-space-1);
+}
+
+/* Hamburger button -- hidden on desktop, shown on mobile */
 .navbar-hamburger {
   display: none;
   align-items: center;
   justify-content: center;
-  width: 2rem;
-  height: 2rem;
+  width: 32px;
+  height: 32px;
   padding: 0;
   border: none;
   border-radius: var(--theme-ui-radii-default);
   background: transparent;
   color: var(--theme-ui-colors-surface-text);
   cursor: pointer;
-  transition: background-color 0.15s ease;
+  transition: background-color 0.1s ease;
 }
 
 .navbar-hamburger:hover {
@@ -45,58 +51,42 @@
 }
 
 .navbar-hamburger:focus-visible {
-  outline: 2px solid var(--theme-ui-colors-primary);
-  outline-offset: 2px;
-}
-
-/* Collapsible menu - inline on desktop, dropdown on mobile */
-.navbar-menu {
-  display: flex;
-  align-items: center;
-  gap: var(--theme-ui-space-2);
-  flex: 1;
-}
-
-/* Pushes right-side items (admin, logout, CTA) to the right on desktop */
-.navbar-spacer {
-  flex: 1;
-}
-
-/* Link styles */
-.navbar a:not(.navbar-cta) {
-  color: var(--theme-ui-colors-surface-text);
-  text-decoration: none;
-}
-
-.navbar a:not(.navbar-cta):hover {
-  text-decoration: underline;
+  outline: 2px solid var(--theme-ui-colors-text);
+  outline-offset: 1px;
 }
 
 /* Brand */
 .navbar .brand {
   display: inline-flex;
   align-items: center;
-  gap: var(--theme-ui-space-1);
+  gap: 6px;
 }
 
 .navbar .brand .icon {
-  color: var(--theme-ui-colors-surface-text);
+  color: var(--theme-ui-colors-primary);
 }
 
 .navbar .brand a {
   text-decoration: none;
   color: var(--theme-ui-colors-surface-text);
-  font-weight: var(--theme-ui-font-weights-bold);
+  font-weight: 600;
+  font-size: 15px;
+  letter-spacing: -0.01em;
 }
 
-/* Avatar - always visible */
+/* Avatar */
 .navbar-user-avatar {
-  width: 1.5rem;
-  height: 1.5rem;
+  width: 28px;
+  height: 28px;
   border-radius: 9999px;
   border: 1px solid var(--theme-ui-colors-border);
   display: inline-block;
   overflow: hidden;
+  transition: border-color 0.1s ease;
+}
+
+.navbar-user-avatar:hover {
+  border-color: var(--theme-ui-colors-primary);
 }
 
 .navbar-user-avatar img {
@@ -110,17 +100,17 @@
 .navbar-cta {
   display: inline-flex;
   align-items: center;
-  gap: var(--theme-ui-space-1);
-  padding: 5px 16px;
-  font-size: var(--theme-ui-font-sizes-body);
-  font-weight: var(--theme-ui-font-weights-medium);
+  gap: 4px;
+  padding: 4px 12px;
+  font-size: 14px;
+  font-weight: 600;
   line-height: 20px;
   border: 1px solid transparent;
   border-radius: var(--theme-ui-radii-default);
   background-color: var(--theme-ui-colors-button-primary-bg);
   color: var(--theme-ui-colors-button-primary-fg);
   text-decoration: none;
-  transition: background-color 0.15s ease;
+  transition: background-color 0.1s ease;
 }
 
 .navbar-cta:hover {
@@ -129,179 +119,160 @@
 }
 
 .navbar-cta:focus-visible {
-  outline: 2px solid var(--theme-ui-colors-primary);
-  outline-offset: 2px;
+  outline: 2px solid var(--theme-ui-colors-text);
+  outline-offset: 1px;
 }
 
-/* Logout form */
-.navbar-logout-form {
-  display: inline-flex;
-  margin: 0;
-}
-
-.navbar-link-button {
-  border: none;
-  background: transparent;
-  cursor: pointer;
-  color: var(--theme-ui-colors-surface-text);
-  font: inherit;
-  text-decoration: none;
-  padding: 0;
-}
-
-.navbar-link-button:hover {
-  text-decoration: underline;
-}
-
-/* Theme toggle */
-.navbar-theme-toggle {
-  border: none;
-  background: transparent;
-  cursor: pointer;
-  color: var(--theme-ui-colors-surface-text);
-  font: inherit;
-  text-decoration: none;
-  padding: 0;
-}
-
-.navbar-theme-toggle:hover {
-  text-decoration: underline;
-}
-
-/* Add dropdown */
-.navbar-add-dropdown {
-  position: relative;
-  display: inline-flex;
-}
-
-.navbar-add-button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 2rem;
-  height: 2rem;
-  padding: 0;
-  border: none;
-  border-radius: var(--theme-ui-radii-default);
-  background: transparent;
-  color: var(--theme-ui-colors-surface-text);
-  cursor: pointer;
-  transition: background-color 0.15s ease;
-}
-
-.navbar-add-button:hover {
-  background: var(--theme-ui-colors-hover);
-}
-
-.navbar-add-button:focus-visible {
-  outline: 2px solid var(--theme-ui-colors-primary);
-  outline-offset: 2px;
-}
-
-.navbar-add-button[aria-expanded="true"] {
-  background: var(--theme-ui-colors-hover);
-}
-
-.navbar-add-menu {
-  position: absolute;
-  top: calc(100% + 0.5rem);
-  right: 0;
-  min-width: 12rem;
-  padding: var(--theme-ui-space-1) 0;
-  background: var(--theme-ui-colors-surface);
-  border: 1px solid var(--theme-ui-colors-border);
-  border-radius: var(--theme-ui-radii-default);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  z-index: 100;
-}
-
-.navbar-add-menu[hidden] {
-  display: none;
-}
-
-.navbar-add-menu-item {
+/* Breadcrumb -- contextual path shown in navbar */
+.navbar-breadcrumb {
   display: flex;
   align-items: center;
-  gap: var(--theme-ui-space-1);
-  width: 100%;
-  padding: var(--theme-ui-space-1) var(--theme-ui-space-2);
-  color: var(--theme-ui-colors-surface-text);
-  text-decoration: none;
-  cursor: pointer;
-  transition: background-color 0.15s ease;
-  white-space: nowrap;
+  gap: 4px;
+  font-size: var(--theme-ui-font-size-sm);
+  min-width: 0;
 }
 
-.navbar-add-menu-item:hover {
+.navbar-breadcrumb-link {
+  display: inline-flex;
+  align-items: center;
+  color: var(--theme-ui-colors-muted);
+  text-decoration: none;
+  white-space: nowrap;
+  line-height: 1;
+}
+
+.navbar-breadcrumb-forge-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  line-height: 1;
+}
+
+.navbar-breadcrumb-forge-icon {
+  flex-shrink: 0;
+  color: var(--theme-ui-colors-muted);
+}
+
+.navbar-breadcrumb-link:hover {
+  color: var(--theme-ui-colors-text);
+  text-decoration: underline;
+}
+
+.navbar-breadcrumb-current {
+  color: var(--theme-ui-colors-surface-text);
+  font-weight: var(--theme-ui-font-weights-semibold);
+}
+
+.navbar-breadcrumb-sep {
+  color: var(--theme-ui-colors-muted);
+  user-select: none;
+}
+
+.navbar-breadcrumb .repository-visibility-badge {
+  font-size: var(--theme-ui-font-size-xs);
+}
+
+/* Breadcrumb account switcher dropdown */
+.navbar-breadcrumb-switcher {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.navbar-breadcrumb-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  padding: 2px 4px;
+  margin: -2px -4px;
+  border-radius: var(--theme-ui-radii-small);
+  font: inherit;
+  font-size: var(--theme-ui-font-size-sm);
+  transition: background-color 0.1s ease;
+}
+
+.navbar-breadcrumb-toggle:hover {
   background: var(--theme-ui-colors-hover);
   text-decoration: none;
 }
 
-.navbar-add-menu-item:focus-visible {
+.navbar-breadcrumb-toggle:focus-visible {
+  outline: 2px solid var(--theme-ui-colors-primary);
+  outline-offset: 1px;
+}
+
+.navbar-breadcrumb-chevron {
+  flex-shrink: 0;
+  opacity: 0.6;
+}
+
+.navbar-breadcrumb-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: 100;
+  min-width: 180px;
+  max-height: 280px;
+  overflow-y: auto;
+  margin: 0;
+  padding: 4px 0;
+  list-style: none;
+  background: var(--theme-ui-colors-background);
+  border: 1px solid var(--theme-ui-colors-border);
+  border-radius: var(--theme-ui-radii-default);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.navbar-breadcrumb-menu-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--theme-ui-space-1);
+  padding: 6px 12px;
+  font-size: var(--theme-ui-font-size-sm);
+  color: var(--theme-ui-colors-text);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background-color 0.1s ease;
+}
+
+.navbar-breadcrumb-menu-item:hover {
+  background: var(--theme-ui-colors-hover);
+  text-decoration: none;
+}
+
+.navbar-breadcrumb-menu-item:focus-visible {
   outline: 2px solid var(--theme-ui-colors-primary);
   outline-offset: -2px;
 }
 
-/* Mobile: hamburger menu */
+.navbar-breadcrumb-menu-item.is-current {
+  font-weight: var(--theme-ui-font-weights-semibold);
+}
+
+.navbar-breadcrumb-menu-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.navbar-breadcrumb-menu-icon {
+  flex-shrink: 0;
+  color: var(--theme-ui-colors-muted);
+}
+
+.navbar-breadcrumb-menu-check {
+  flex-shrink: 0;
+  color: var(--theme-ui-colors-primary);
+}
+
+/* Mobile: show hamburger */
 @media (max-width: 48rem) {
-  .navbar {
-    flex-wrap: wrap;
-  }
-
-  .navbar-start {
-    order: 1;
-  }
-
   .navbar-hamburger {
     display: inline-flex;
-  }
-
-  .navbar-user-avatar {
-    order: 2;
-    margin-left: auto;
-  }
-
-  .navbar-menu {
-    order: 3;
-    display: none;
-    flex-basis: 100%;
-    flex-direction: column;
-    align-items: stretch;
-    padding-top: var(--theme-ui-space-1);
-    margin-top: var(--theme-ui-space-1);
-    border-top: var(--theme-ui-borders-thin);
-    gap: 0;
-  }
-
-  .navbar-menu.is-open {
-    display: flex;
-  }
-
-  .navbar-menu a:not(.navbar-cta),
-  .navbar-menu .navbar-link-button {
-    display: block;
-    width: 100%;
-    text-align: left;
-    padding: var(--theme-ui-space-1) var(--theme-ui-space-2);
-    border-radius: var(--theme-ui-radii-default);
-  }
-
-  .navbar-menu a:not(.navbar-cta):hover,
-  .navbar-menu .navbar-link-button:hover {
-    background: var(--theme-ui-colors-hover);
-    text-decoration: none;
-  }
-
-  .navbar-menu .navbar-logout-form {
-    display: block;
-  }
-
-  .navbar-menu .navbar-cta {
-    margin-top: var(--theme-ui-space-1);
-    justify-content: center;
-  }
-
-  .navbar-spacer {
-    display: none;
   }
 }

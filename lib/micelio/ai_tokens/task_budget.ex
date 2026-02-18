@@ -10,7 +10,7 @@ defmodule Micelio.AITokens.TaskBudget do
     field :amount, :integer, default: 0
 
     belongs_to :token_pool, Micelio.AITokens.TokenPool
-    belongs_to :prompt_request, Micelio.PromptRequests.PromptRequest
+    belongs_to :plan, Micelio.Plans.Plan
 
     timestamps(type: :utc_datetime)
   end
@@ -21,7 +21,7 @@ defmodule Micelio.AITokens.TaskBudget do
     |> validate_required([:amount])
     |> validate_number(:amount, greater_than_or_equal_to: 0)
     |> assoc_constraint(:token_pool)
-    |> assoc_constraint(:prompt_request)
-    |> unique_constraint(:prompt_request_id)
+    |> assoc_constraint(:plan)
+    |> unique_constraint(:plan_id)
   end
 end

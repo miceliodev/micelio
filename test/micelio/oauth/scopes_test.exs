@@ -26,8 +26,8 @@ defmodule Micelio.OAuth.ScopesTest do
       assert "sessions:write" in names
       assert "content:read" in names
       assert "organizations:read" in names
-      assert "prompt_requests:read" in names
-      assert "prompt_requests:write" in names
+      assert "plans:read" in names
+      assert "plans:write" in names
       assert "tokens:read" in names
       assert "tokens:write" in names
     end

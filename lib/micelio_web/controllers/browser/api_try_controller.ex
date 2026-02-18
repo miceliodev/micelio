@@ -13,7 +13,7 @@ defmodule MicelioWeb.Browser.ApiTryController do
   alias Micelio.Mic.Binary
   alias Micelio.Mic.DeltaCompression
   alias Micelio.Mic.Tree, as: MicTree
-  alias Micelio.PromptRequests
+  alias Micelio.Plans
   alias Micelio.Repositories
   alias Micelio.Sessions
   alias Micelio.Storage
@@ -32,8 +32,8 @@ defmodule MicelioWeb.Browser.ApiTryController do
     end
   end
 
-  # GET /api/v1/orgs
-  defp dispatch(conn, user, "GET", "/api/v1/orgs", _body) do
+  # GET /api/orgs
+  defp dispatch(conn, user, "GET", "/api/orgs", _body) do
     organizations = Accounts.list_organizations_for_user(user)
 
     json(conn, %{
@@ -52,10 +52,10 @@ defmodule MicelioWeb.Browser.ApiTryController do
     })
   end
 
-  # GET /api/v1/orgs/:handle and sub-resources
-  defp dispatch(conn, user, "GET", "/api/v1/orgs/" <> rest, _body) do
+  # GET /api/orgs/:handle and sub-resources
+  defp dispatch(conn, user, "GET", "/api/orgs/" <> rest, _body) do
     case String.split(rest, "/") do
-      # GET /api/v1/orgs/:handle
+      # GET /api/orgs/:handle
       [handle] ->
         with {:ok, org} <- Helpers.fetch_organization(handle),
              member? = Accounts.user_in_organization?(user, org),
@@ -89,7 +89,7 @@ defmodule MicelioWeb.Browser.ApiTryController do
             json_error(conn, 404, "not_found", "Organization not found")
         end
 
-      # GET /api/v1/orgs/:org/repositories/:repo
+      # GET /api/orgs/:org/repositories/:repo
       [org_handle, "repositories", repo_handle] ->
         with {:ok, _org, repository} <- Helpers.fetch_repository(org_handle, repo_handle),
              :ok <- Authorization.authorize(:repository_read, user, repository) do
@@ -98,7 +98,7 @@ defmodule MicelioWeb.Browser.ApiTryController do
           _ -> json_error(conn, 404, "not_found", "Repository not found")
         end
 
-      # GET /api/v1/orgs/:org/repositories/:repo/sessions
+      # GET /api/orgs/:org/repositories/:repo/sessions
       [org_handle, "repositories", repo_handle, "sessions"] ->
         with {:ok, _org, repository} <- Helpers.fetch_repository(org_handle, repo_handle),
              :ok <- Authorization.authorize(:repository_read, user, repository) do
@@ -108,28 +108,28 @@ defmodule MicelioWeb.Browser.ApiTryController do
           _ -> json_error(conn, 404, "not_found", "Repository not found")
         end
 
-      # GET /api/v1/orgs/:org/repositories/:repo/prompt-requests
-      [org_handle, "repositories", repo_handle, "prompt-requests"] ->
+      # GET /api/orgs/:org/repositories/:repo/plans
+      [org_handle, "repositories", repo_handle, "plans"] ->
         with {:ok, _org, repository} <- Helpers.fetch_repository(org_handle, repo_handle),
              :ok <- Authorization.authorize(:repository_read, user, repository) do
-          prs = PromptRequests.list_prompt_requests_for_repository(repository)
-          json(conn, %{data: Enum.map(prs, &serialize_prompt_request/1)})
+          plans = Plans.list_plans_for_repository(repository)
+          json(conn, %{data: Enum.map(plans, &serialize_plan/1)})
         else
           _ -> json_error(conn, 404, "not_found", "Repository not found")
         end
 
-      # GET /api/v1/orgs/:org/repositories/:repo/prompt-requests/:number
-      [org_handle, "repositories", repo_handle, "prompt-requests", number] ->
+      # GET /api/orgs/:org/repositories/:repo/plans/:number
+      [org_handle, "repositories", repo_handle, "plans", number] ->
         with {:ok, _org, repository} <- Helpers.fetch_repository(org_handle, repo_handle),
              :ok <- Authorization.authorize(:repository_read, user, repository),
-             %PromptRequests.PromptRequest{} = pr <-
-               PromptRequests.get_prompt_request_by_number(repository, number) do
-          json(conn, %{data: serialize_prompt_request(pr)})
+             %Plans.Plan{} = plan <-
+               Plans.get_plan_by_number(repository, number) do
+          json(conn, %{data: serialize_plan(plan)})
         else
-          _ -> json_error(conn, 404, "not_found", "Prompt request not found")
+          _ -> json_error(conn, 404, "not_found", "Plan not found")
         end
 
-      # GET /api/v1/orgs/:org/repositories/:repo/tree
+      # GET /api/orgs/:org/repositories/:repo/tree
       [org_handle, "repositories", repo_handle, "tree"] ->
         with {:ok, _org, repository} <- Helpers.fetch_repository(org_handle, repo_handle),
              :ok <- Authorization.authorize(:repository_read, user, repository),
@@ -145,7 +145,7 @@ defmodule MicelioWeb.Browser.ApiTryController do
           _ -> json_error(conn, 404, "not_found", "Repository or tree not found")
         end
 
-      # GET /api/v1/orgs/:org/repositories/:repo/blob/...
+      # GET /api/orgs/:org/repositories/:repo/blob/...
       [org_handle, "repositories", repo_handle, "blob" | path_parts]
       when path_parts != [] ->
         file_path = Enum.join(path_parts, "/")
@@ -178,20 +178,20 @@ defmodule MicelioWeb.Browser.ApiTryController do
   end
 
   # POST endpoints
-  defp dispatch(conn, user, "POST", "/api/v1/orgs/" <> rest, body) do
+  defp dispatch(conn, user, "POST", "/api/orgs/" <> rest, body) do
     case String.split(rest, "/") do
-      # POST /api/v1/orgs/:org/repositories/:repo/prompt-requests
-      [org_handle, "repositories", repo_handle, "prompt-requests"] ->
+      # POST /api/orgs/:org/repositories/:repo/plans
+      [org_handle, "repositories", repo_handle, "plans"] ->
         with {:ok, _org, repository} <- Helpers.fetch_repository(org_handle, repo_handle),
              :ok <- Authorization.authorize(:repository_write, user, repository) do
           attrs = Map.take(body, ["title", "description"])
 
-          case PromptRequests.create_simple_prompt_request(attrs,
+          case Plans.create_simple_plan(attrs,
                  repository: repository,
                  user: user
                ) do
-            {:ok, pr} ->
-              conn |> put_status(201) |> json(%{data: serialize_prompt_request(pr)})
+            {:ok, plan} ->
+              conn |> put_status(201) |> json(%{data: serialize_plan(plan)})
 
             {:error, %Ecto.Changeset{} = changeset} ->
               json_error(conn, 422, "validation_error", changeset_message(changeset))
@@ -200,31 +200,31 @@ defmodule MicelioWeb.Browser.ApiTryController do
           _ -> json_error(conn, 404, "not_found", "Repository not found")
         end
 
-      # POST /api/v1/orgs/:org/repositories/:repo/prompt-requests/:number/close
-      [org_handle, "repositories", repo_handle, "prompt-requests", number, "close"] ->
+      # POST /api/orgs/:org/repositories/:repo/plans/:number/close
+      [org_handle, "repositories", repo_handle, "plans", number, "close"] ->
         with {:ok, _org, repository} <- Helpers.fetch_repository(org_handle, repo_handle),
              :ok <- Authorization.authorize(:repository_write, user, repository),
-             %PromptRequests.PromptRequest{} = pr <-
-               PromptRequests.get_prompt_request_by_number(repository, number),
-             {:ok, closed} <- PromptRequests.close_prompt_request(pr) do
-          json(conn, %{data: serialize_prompt_request(closed)})
+             %Plans.Plan{} = plan <-
+               Plans.get_plan_by_number(repository, number),
+             {:ok, closed} <- Plans.close_plan(plan) do
+          json(conn, %{data: serialize_plan(closed)})
         else
-          _ -> json_error(conn, 404, "not_found", "Prompt request not found")
+          _ -> json_error(conn, 404, "not_found", "Plan not found")
         end
 
-      # POST /api/v1/orgs/:org/repositories/:repo/prompt-requests/:number/reopen
-      [org_handle, "repositories", repo_handle, "prompt-requests", number, "reopen"] ->
+      # POST /api/orgs/:org/repositories/:repo/plans/:number/reopen
+      [org_handle, "repositories", repo_handle, "plans", number, "reopen"] ->
         with {:ok, _org, repository} <- Helpers.fetch_repository(org_handle, repo_handle),
              :ok <- Authorization.authorize(:repository_write, user, repository),
-             %PromptRequests.PromptRequest{} = pr <-
-               PromptRequests.get_prompt_request_by_number(repository, number),
-             {:ok, reopened} <- PromptRequests.reopen_prompt_request(pr) do
-          json(conn, %{data: serialize_prompt_request(reopened)})
+             %Plans.Plan{} = plan <-
+               Plans.get_plan_by_number(repository, number),
+             {:ok, reopened} <- Plans.reopen_plan(plan) do
+          json(conn, %{data: serialize_plan(reopened)})
         else
-          _ -> json_error(conn, 404, "not_found", "Prompt request not found")
+          _ -> json_error(conn, 404, "not_found", "Plan not found")
         end
 
-      # POST /api/v1/orgs/:org/repositories/:repo/sessions
+      # POST /api/orgs/:org/repositories/:repo/sessions
       [org_handle, "repositories", repo_handle, "sessions"] ->
         with {:ok, _org, repository} <- Helpers.fetch_repository(org_handle, repo_handle),
              :ok <- Authorization.authorize(:repository_write, user, repository) do
@@ -258,25 +258,25 @@ defmodule MicelioWeb.Browser.ApiTryController do
     end
   end
 
-  # PATCH /api/v1/orgs/:org/repositories/:repo/prompt-requests/:number
-  defp dispatch(conn, user, "PATCH", "/api/v1/orgs/" <> rest, body) do
+  # PATCH /api/orgs/:org/repositories/:repo/plans/:number
+  defp dispatch(conn, user, "PATCH", "/api/orgs/" <> rest, body) do
     case String.split(rest, "/") do
-      [org_handle, "repositories", repo_handle, "prompt-requests", number] ->
+      [org_handle, "repositories", repo_handle, "plans", number] ->
         with {:ok, _org, repository} <- Helpers.fetch_repository(org_handle, repo_handle),
              :ok <- Authorization.authorize(:repository_write, user, repository),
-             %PromptRequests.PromptRequest{} = pr <-
-               PromptRequests.get_prompt_request_by_number(repository, number) do
+             %Plans.Plan{} = plan <-
+               Plans.get_plan_by_number(repository, number) do
           attrs = Map.take(body, ["title", "description"])
 
-          case PromptRequests.update_prompt_request(pr, attrs) do
+          case Plans.update_plan(plan, attrs) do
             {:ok, updated} ->
-              json(conn, %{data: serialize_prompt_request(updated)})
+              json(conn, %{data: serialize_plan(updated)})
 
             {:error, %Ecto.Changeset{} = changeset} ->
               json_error(conn, 422, "validation_error", changeset_message(changeset))
           end
         else
-          _ -> json_error(conn, 404, "not_found", "Prompt request not found")
+          _ -> json_error(conn, 404, "not_found", "Plan not found")
         end
 
       _ ->
@@ -334,22 +334,22 @@ defmodule MicelioWeb.Browser.ApiTryController do
     }
   end
 
-  defp serialize_prompt_request(pr) do
+  defp serialize_plan(plan) do
     %{
-      id: pr.id,
-      number: pr.number,
-      title: pr.title,
-      description: pr.description,
-      status: pr.status,
-      user: serialize_prompt_request_user(pr.user),
-      inserted_at: Helpers.format_datetime(pr.inserted_at),
-      updated_at: Helpers.format_datetime(pr.updated_at)
+      id: plan.id,
+      number: plan.number,
+      title: plan.title,
+      description: plan.description,
+      status: plan.status,
+      user: serialize_plan_user(plan.user),
+      inserted_at: Helpers.format_datetime(plan.inserted_at),
+      updated_at: Helpers.format_datetime(plan.updated_at)
     }
   end
 
-  defp serialize_prompt_request_user(nil), do: nil
-  defp serialize_prompt_request_user(%Ecto.Association.NotLoaded{}), do: nil
-  defp serialize_prompt_request_user(user), do: %{id: user.id, email: user.email}
+  defp serialize_plan_user(nil), do: nil
+  defp serialize_plan_user(%Ecto.Association.NotLoaded{}), do: nil
+  defp serialize_plan_user(user), do: %{id: user.id, email: user.email}
 
   defp changeset_message(%Ecto.Changeset{} = changeset) do
     Ecto.Changeset.traverse_errors(changeset, fn {msg, _opts} -> msg end)

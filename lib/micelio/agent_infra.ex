@@ -11,7 +11,7 @@ defmodule Micelio.AgentInfra do
   alias Micelio.AgentInfra.ProvisioningRequest
   alias Micelio.AgentInfra.SessionRequest
   alias Micelio.AITokens
-  alias Micelio.PromptRequests.PromptRequest
+  alias Micelio.Plans.Plan
 
   @doc """
   Builds a provisioning plan from attributes.
@@ -35,7 +35,7 @@ defmodule Micelio.AgentInfra do
   Builds a provider-ready request after reserving agent quota for the account.
   """
   def build_request_with_quota(%Account{} = account, attrs, opts \\ []) do
-    with :ok <- ensure_budget_for_prompt_request(Keyword.get(opts, :prompt_request)),
+    with :ok <- ensure_budget_for_plan(Keyword.get(opts, :plan)),
          {:ok, plan} <- build_plan(attrs),
          {:ok, _event} <- Billing.reserve_for_plan(account, plan, opts) do
       {:ok, ProvisioningRequest.from_plan(plan)}
@@ -86,9 +86,9 @@ defmodule Micelio.AgentInfra do
     ProviderRegistry.resolve(provider_id, providers)
   end
 
-  defp ensure_budget_for_prompt_request(nil), do: :ok
+  defp ensure_budget_for_plan(nil), do: :ok
 
-  defp ensure_budget_for_prompt_request(%PromptRequest{} = prompt_request) do
-    AITokens.ensure_budget_for_prompt_request(prompt_request)
+  defp ensure_budget_for_plan(%Plan{} = plan) do
+    AITokens.ensure_budget_for_plan(plan)
   end
 end

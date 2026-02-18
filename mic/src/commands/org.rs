@@ -2,7 +2,7 @@
 
 use crate::cli::{OrgCommand, OrgSubcommand};
 use crate::config::{self, Config};
-use crate::error::{MicError, Result};
+use crate::error::Result;
 use crate::grpc::{Endpoint, GrpcClient};
 use crate::grpc::client::{read_field, read_string, write_length_delimited};
 
@@ -16,10 +16,10 @@ pub async fn run(cmd: OrgCommand) -> Result<()> {
 
 /// List organizations.
 async fn list() -> Result<()> {
-    let config = Config::load()?;
-    let server = config.get_default_server().ok_or(MicError::NoDefaultServer)?;
+    let mut config = Config::load()?;
+    let server = config.resolve_default_grpc_url().await?;
     let tokens = config::require_tokens()?;
-    let endpoint = Endpoint::parse(server)?;
+    let endpoint = Endpoint::parse(&server)?;
     let client = GrpcClient::new(endpoint);
 
     // Empty request for list
@@ -50,10 +50,10 @@ async fn list() -> Result<()> {
 
 /// Get organization details.
 async fn info(handle: &str) -> Result<()> {
-    let config = Config::load()?;
-    let server = config.get_default_server().ok_or(MicError::NoDefaultServer)?;
+    let mut config = Config::load()?;
+    let server = config.resolve_default_grpc_url().await?;
     let tokens = config::require_tokens()?;
-    let endpoint = Endpoint::parse(server)?;
+    let endpoint = Endpoint::parse(&server)?;
     let client = GrpcClient::new(endpoint);
 
     // Encode request

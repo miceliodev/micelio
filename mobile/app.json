@@ -1,0 +1,24 @@
+{
+  "expo": {
+    "name": "Micelio",
+    "slug": "micelio-mobile",
+    "scheme": "micelio",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "dev.micelio.mobile"
+    },
+    "android": {
+      "package": "dev.micelio.mobile"
+    },
+    "plugins": [
+      "expo-secure-store"
+    ],
+    "extra": {
+      "apiBaseUrl": "https://micelio.dev",
+      "oauthClientId": ""
+    }
+  }
+}

@@ -6,26 +6,26 @@ defmodule Micelio.AITokens.EarningPolicy do
   intended mechanics for future contribution types so UI and docs stay aligned.
   """
 
-  @prompt_request_reward_rate 0.1
-  @prompt_request_reward_min 25
-  @prompt_request_reward_max 500
+  @plan_reward_rate 0.1
+  @plan_reward_min 25
+  @plan_reward_max 500
 
-  @prompt_suggestion_reward_min_length 120
-  @prompt_suggestion_reward_divisor 6
-  @prompt_suggestion_reward_min 15
-  @prompt_suggestion_reward_max 75
+  @plan_suggestion_reward_min_length 120
+  @plan_suggestion_reward_divisor 6
+  @plan_suggestion_reward_min 15
+  @plan_suggestion_reward_max 75
 
   @active_rules [
     %{
-      key: :prompt_request_accepted,
-      title: "Landed prompt request",
-      description: "Rewards accepted prompt requests based on token usage.",
+      key: :plan_accepted,
+      title: "Landed plan",
+      description: "Rewards accepted plans based on token usage.",
       formula: "round(tokens_used * 0.1), clamped to 25..500"
     },
     %{
-      key: :prompt_suggestion_submitted,
-      title: "Prompt review",
-      description: "Rewards thorough prompt suggestions based on length.",
+      key: :plan_suggestion_submitted,
+      title: "Plan review",
+      description: "Rewards thorough plan suggestions based on length.",
       formula: "length / 6, clamped to 15..75 (min length 120 chars)"
     }
   ]
@@ -55,31 +55,33 @@ defmodule Micelio.AITokens.EarningPolicy do
     %{active: @active_rules, planned: @planned_rules}
   end
 
-  def prompt_request_reward(token_count) when is_integer(token_count) do
+  def plan_reward(token_count) when is_integer(token_count) do
     token_count
-    |> Kernel.*(@prompt_request_reward_rate)
+    |> Kernel.*(@plan_reward_rate)
     |> Float.round(0)
     |> trunc()
-    |> clamp(@prompt_request_reward_min, @prompt_request_reward_max)
+    |> clamp(@plan_reward_min, @plan_reward_max)
   end
 
-  def prompt_request_reward(nil), do: prompt_request_reward(0)
+  def plan_reward(nil), do: plan_reward(0)
 
-  def prompt_suggestion_reward(suggestion) do
+  def plan_suggestion_reward(suggestion) do
     suggestion_length =
       suggestion
       |> to_string()
       |> String.trim()
       |> String.length()
 
-    if suggestion_length < @prompt_suggestion_reward_min_length do
+    if suggestion_length < @plan_suggestion_reward_min_length do
       0
     else
       suggestion_length
-      |> div(@prompt_suggestion_reward_divisor)
-      |> clamp(@prompt_suggestion_reward_min, @prompt_suggestion_reward_max)
+      |> div(@plan_suggestion_reward_divisor)
+      |> clamp(@plan_suggestion_reward_min, @plan_suggestion_reward_max)
     end
   end
+
+  def prompt_suggestion_reward(suggestion), do: plan_suggestion_reward(suggestion)
 
   defp clamp(value, min_value, max_value) do
     value

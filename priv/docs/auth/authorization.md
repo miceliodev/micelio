@@ -36,12 +36,12 @@ Tokens are scoped to control what they can access. Request only the scopes you n
 |---|---|
 | `organizations:read` | List and get organizations |
 
-### Prompt requests
+### Plans
 
 | Scope | Description |
 |---|---|
-| `prompt_requests:read` | List and get prompt requests |
-| `prompt_requests:write` | Create prompt requests |
+| `plans:read` | List and get plans |
+| `plans:write` | Create plans |
 
 ### Tokens
 

@@ -1,5 +1,5 @@
 /**
- * Hamburger menu toggle for mobile navigation.
+ * Hamburger menu toggle for mobile sidebar navigation.
  */
 
 export function setupHamburger() {
@@ -10,47 +10,53 @@ export function setupHamburger() {
     const toggle = target.closest("#navbar-hamburger");
     if (toggle) {
       event.preventDefault();
-      const menu = document.getElementById("navbar-menu");
-      if (!menu) return;
+      const sidebar = document.getElementById("sidebar");
+      const backdrop = document.getElementById("sidebar-backdrop");
+      if (!sidebar) return;
 
       const isExpanded = toggle.getAttribute("aria-expanded") === "true";
       toggle.setAttribute("aria-expanded", String(!isExpanded));
-      menu.classList.toggle("is-open", !isExpanded);
+      sidebar.classList.toggle("is-open", !isExpanded);
+      if (backdrop) backdrop.classList.toggle("is-visible", !isExpanded);
       return;
     }
 
-    // Close menu when clicking a link inside it
-    const menuLink = target.closest("#navbar-menu a");
-    if (menuLink) {
-      closeHamburgerIfOpen();
+    // Close sidebar when clicking backdrop
+    const backdrop = target.closest("#sidebar-backdrop");
+    if (backdrop) {
+      closeSidebarIfOpen();
       return;
     }
 
-    // Close if clicking outside navbar
-    if (!target.closest(".navbar")) {
-      closeHamburgerIfOpen();
+    // Close sidebar when clicking a link inside it (mobile)
+    const sidebarLink = target.closest("#sidebar a, #sidebar button[type='submit']");
+    if (sidebarLink) {
+      closeSidebarIfOpen();
+      return;
     }
   });
 
   document.addEventListener("keydown", (event) => {
     if (event.key === "Escape") {
+      closeSidebarIfOpen();
       const toggle = document.getElementById("navbar-hamburger");
-      closeHamburgerIfOpen();
       if (toggle) toggle.focus();
     }
   });
 
   // Close on LiveView navigation
   window.addEventListener("phx:page-loading-stop", () => {
-    closeHamburgerIfOpen();
+    closeSidebarIfOpen();
   });
 }
 
-function closeHamburgerIfOpen() {
+function closeSidebarIfOpen() {
   const toggle = document.getElementById("navbar-hamburger");
-  const menu = document.getElementById("navbar-menu");
-  if (toggle && menu && menu.classList.contains("is-open")) {
+  const sidebar = document.getElementById("sidebar");
+  const backdrop = document.getElementById("sidebar-backdrop");
+  if (toggle && sidebar && sidebar.classList.contains("is-open")) {
     toggle.setAttribute("aria-expanded", "false");
-    menu.classList.remove("is-open");
+    sidebar.classList.remove("is-open");
+    if (backdrop) backdrop.classList.remove("is-visible");
   }
 }

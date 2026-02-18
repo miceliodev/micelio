@@ -1,26 +1,26 @@
-defmodule MicelioWeb.AdminPromptTemplatesLive.Index do
+defmodule MicelioWeb.AdminPlanTemplatesLive.Index do
   use MicelioWeb, :live_view
 
-  alias Micelio.PromptRequests
-  alias Micelio.PromptRequests.PromptTemplate
+  alias Micelio.Plans
+  alias Micelio.Plans.PlanTemplate
   alias MicelioWeb.PageMeta
 
   @impl true
   def mount(_params, _session, socket) do
     form =
-      %PromptTemplate{}
-      |> PromptRequests.change_prompt_template()
-      |> to_form(as: :prompt_template)
+      %PlanTemplate{}
+      |> Plans.change_plan_template()
+      |> to_form(as: :plan_template)
 
     socket =
       socket
-      |> assign(:page_title, "Prompt Templates")
+      |> assign(:page_title, "Plan Templates")
       |> PageMeta.assign(
-        description: "Admin prompt templates for common tasks.",
+        description: "Admin plan templates for common tasks.",
         canonical_url: url(~p"/admin/prompt-templates")
       )
       |> assign(:filters, default_filters())
-      |> assign(:prompt_templates, [])
+      |> assign(:plan_templates, [])
       |> assign(:form, form)
 
     {:ok, socket}
@@ -30,15 +30,13 @@ defmodule MicelioWeb.AdminPromptTemplatesLive.Index do
   def handle_params(params, _uri, socket) do
     filters = build_filters(params)
 
-    prompt_templates =
-      PromptRequests.list_prompt_templates(
-        only_approved: filters["approved_only"] in ["true", "on", "1"]
-      )
+    plan_templates =
+      Plans.list_plan_templates(only_approved: filters["approved_only"] in ["true", "on", "1"])
 
     {:noreply,
      socket
      |> assign(:filters, filters)
-     |> assign(:prompt_templates, prompt_templates)}
+     |> assign(:plan_templates, plan_templates)}
   end
 
   @impl true
@@ -51,27 +49,27 @@ defmodule MicelioWeb.AdminPromptTemplatesLive.Index do
   end
 
   @impl true
-  def handle_event("validate", %{"prompt_template" => params}, socket) do
+  def handle_event("validate", %{"plan_template" => params}, socket) do
     changeset =
-      %PromptTemplate{}
-      |> PromptRequests.change_prompt_template(params)
+      %PlanTemplate{}
+      |> Plans.change_plan_template(params)
       |> Map.put(:action, :validate)
 
-    {:noreply, assign(socket, form: to_form(changeset, as: :prompt_template))}
+    {:noreply, assign(socket, form: to_form(changeset, as: :plan_template))}
   end
 
   @impl true
-  def handle_event("save", %{"prompt_template" => params}, socket) do
-    case PromptRequests.create_prompt_template(params, created_by: socket.assigns.current_user) do
+  def handle_event("save", %{"plan_template" => params}, socket) do
+    case Plans.create_plan_template(params, created_by: socket.assigns.current_user) do
       {:ok, _template} ->
         form =
-          %PromptTemplate{}
-          |> PromptRequests.change_prompt_template()
-          |> to_form(as: :prompt_template)
+          %PlanTemplate{}
+          |> Plans.change_plan_template()
+          |> to_form(as: :plan_template)
 
         {:noreply,
          socket
-         |> put_flash(:info, "Prompt template created.")
+         |> put_flash(:info, "Plan template created.")
          |> assign(:form, form)
          |> refresh_templates()}
 
@@ -82,9 +80,9 @@ defmodule MicelioWeb.AdminPromptTemplatesLive.Index do
 
   @impl true
   def handle_event("approve", %{"id" => id}, socket) do
-    case PromptRequests.get_prompt_template(id) do
-      %PromptTemplate{} = template ->
-        case PromptRequests.approve_prompt_template(template, socket.assigns.current_user) do
+    case Plans.get_plan_template(id) do
+      %PlanTemplate{} = template ->
+        case Plans.approve_plan_template(template, socket.assigns.current_user) do
           {:ok, _updated} ->
             {:noreply,
              socket
@@ -107,7 +105,7 @@ defmodule MicelioWeb.AdminPromptTemplatesLive.Index do
       <div class="admin-prompts" id="admin-prompt-templates">
         <.header>
           Prompt templates
-          <:subtitle>Curated starting points for common prompt requests.</:subtitle>
+          <:subtitle>Curated starting points for common plans.</:subtitle>
         </.header>
 
         <section class="admin-prompts-section" id="admin-prompt-templates-form">
@@ -171,11 +169,11 @@ defmodule MicelioWeb.AdminPromptTemplatesLive.Index do
             </form>
           </div>
 
-          <%= if Enum.empty?(@prompt_templates) do %>
-            <p class="admin-empty">No prompt templates yet.</p>
+          <%= if Enum.empty?(@plan_templates) do %>
+            <p class="admin-empty">No plan templates yet.</p>
           <% else %>
             <div class="admin-prompts-list">
-              <%= for template <- @prompt_templates do %>
+              <%= for template <- @plan_templates do %>
                 <article class="admin-prompts-card" id={"admin-template-#{template.id}"}>
                   <div class="admin-prompts-card-main">
                     <div class="admin-prompts-card-header">
@@ -224,19 +222,19 @@ defmodule MicelioWeb.AdminPromptTemplatesLive.Index do
   end
 
   defp refresh_templates(socket) do
-    prompt_templates =
-      PromptRequests.list_prompt_templates(
+    plan_templates =
+      Plans.list_plan_templates(
         only_approved: socket.assigns.filters["approved_only"] in ["true", "on", "1"]
       )
 
-    assign(socket, :prompt_templates, prompt_templates)
+    assign(socket, :plan_templates, plan_templates)
   end
 
-  defp template_label(%PromptTemplate{approved_at: nil}), do: "Pending"
-  defp template_label(%PromptTemplate{}), do: "Approved"
+  defp template_label(%PlanTemplate{approved_at: nil}), do: "Pending"
+  defp template_label(%PlanTemplate{}), do: "Approved"
 
-  defp template_status(%PromptTemplate{approved_at: nil}), do: "pending"
-  defp template_status(%PromptTemplate{}), do: "approved"
+  defp template_status(%PlanTemplate{approved_at: nil}), do: "pending"
+  defp template_status(%PlanTemplate{}), do: "approved"
 
   defp prune_params(params) do
     {filters, rest} = Map.pop(params, "filters", %{})

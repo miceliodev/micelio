@@ -2,8 +2,8 @@ defmodule MicelioWeb.AdminPromptRegistryLive.Index do
   use MicelioWeb, :live_view
 
   alias Micelio.ContributionConfidence
-  alias Micelio.PromptRequests
-  alias Micelio.PromptRequests.PromptRequest
+  alias Micelio.Plans
+  alias Micelio.Plans.Plan
   alias MicelioWeb.PageMeta
 
   @impl true
@@ -16,7 +16,7 @@ defmodule MicelioWeb.AdminPromptRegistryLive.Index do
         canonical_url: url(~p"/admin/prompts")
       )
       |> assign(:filters, default_filters())
-      |> assign(:prompt_requests, [])
+      |> assign(:plans, [])
       |> assign(:confidence_scores, %{})
       |> assign(:review_statuses, [:pending, :accepted, :rejected])
 
@@ -27,8 +27,8 @@ defmodule MicelioWeb.AdminPromptRegistryLive.Index do
   def handle_params(params, _uri, socket) do
     filters = build_filters(params)
 
-    prompt_requests =
-      PromptRequests.list_prompt_registry(
+    plans =
+      Plans.list_plan_registry(
         search: filters["search"],
         review_status: parse_review_status(filters["review_status"]),
         curated_only: filters["curated_only"] in ["true", "on", "1"]
@@ -37,8 +37,8 @@ defmodule MicelioWeb.AdminPromptRegistryLive.Index do
     {:noreply,
      socket
      |> assign(:filters, filters)
-     |> assign(:prompt_requests, prompt_requests)
-     |> assign(:confidence_scores, PromptRequests.confidence_scores(prompt_requests))}
+     |> assign(:plans, plans)
+     |> assign(:confidence_scores, Plans.confidence_scores(plans))}
   end
 
   @impl true
@@ -88,41 +88,41 @@ defmodule MicelioWeb.AdminPromptRegistryLive.Index do
         </section>
 
         <section class="admin-prompts-section" id="admin-prompt-registry-list">
-          <%= if Enum.empty?(@prompt_requests) do %>
-            <p class="admin-empty">No prompts match the current filters.</p>
+          <%= if Enum.empty?(@plans) do %>
+            <p class="admin-empty">No plans match the current filters.</p>
           <% else %>
             <div class="admin-prompts-list">
-              <%= for prompt_request <- @prompt_requests do %>
-                <article class="admin-prompts-card" id={"admin-prompt-#{prompt_request.id}"}>
+              <%= for plan <- @plans do %>
+                <article class="admin-prompts-card" id={"admin-prompt-#{plan.id}"}>
                   <div class="admin-prompts-card-main">
                     <div class="admin-prompts-card-header">
-                      <h3 class="admin-prompts-card-title">{prompt_request.title}</h3>
-                      <span class={"admin-prompts-status admin-prompts-status-#{review_value(prompt_request.review_status)}"}>
-                        {review_label(prompt_request.review_status)}
+                      <h3 class="admin-prompts-card-title">{plan.title}</h3>
+                      <span class={"admin-prompts-status admin-prompts-status-#{review_value(plan.review_status)}"}>
+                        {review_label(plan.review_status)}
                       </span>
                     </div>
                     <div class="admin-prompts-card-meta">
                       <span>
-                        {prompt_request.repository.organization.account.handle}/{prompt_request.repository.handle}
+                        {plan.repository.organization.account.handle}/{plan.repository.handle}
                       </span>
                       <span>·</span>
-                      <span>{prompt_request.user.email}</span>
+                      <span>{plan.user.email}</span>
                       <span>·</span>
-                      <span>{origin_label(prompt_request.origin)}</span>
+                      <span>{origin_label(plan.origin)}</span>
                       <span>·</span>
-                      <span>Tokens: {prompt_request.token_count || 0}</span>
+                      <span>Tokens: {plan.token_count || 0}</span>
                       <span>·</span>
                       <span>
-                        Confidence: {format_confidence(Map.get(@confidence_scores, prompt_request.id))}
+                        Confidence: {format_confidence(Map.get(@confidence_scores, plan.id))}
                       </span>
                     </div>
                     <div class="admin-prompts-card-meta">
-                      <span>Model: {prompt_request.model || "n/a"}</span>
-                      <%= if prompt_request.prompt_template do %>
+                      <span>Model: {plan.model || "n/a"}</span>
+                      <%= if plan.prompt_template do %>
                         <span>·</span>
-                        <span>Template: {prompt_request.prompt_template.name}</span>
+                        <span>Template: {plan.prompt_template.name}</span>
                       <% end %>
-                      <%= if prompt_request.curated_at do %>
+                      <%= if plan.curated_at do %>
                         <span>·</span>
                         <span>Curated</span>
                       <% end %>
@@ -131,7 +131,7 @@ defmodule MicelioWeb.AdminPromptRegistryLive.Index do
                   <div class="admin-prompts-card-actions">
                     <.link
                       navigate={
-                        ~p"/#{prompt_request.repository.organization.account.handle}/#{prompt_request.repository.handle}/prompt-requests/#{prompt_request.id}"
+                        ~p"/#{plan.repository.organization.account.handle}/#{plan.repository.handle}/prs/#{plan.id}"
                       }
                       class="button button--secondary"
                     >
@@ -177,7 +177,7 @@ defmodule MicelioWeb.AdminPromptRegistryLive.Index do
   defp review_value(:rejected), do: "rejected"
   defp review_value(_), do: "unknown"
 
-  defp origin_label(origin), do: PromptRequest.origin_label(origin)
+  defp origin_label(origin), do: Plan.origin_label(origin)
 
   defp format_confidence(%ContributionConfidence.Score{overall: overall, label: label}) do
     "#{overall} (#{label})"

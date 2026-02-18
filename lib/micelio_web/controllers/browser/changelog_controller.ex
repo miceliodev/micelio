@@ -2,6 +2,7 @@ defmodule MicelioWeb.Browser.ChangelogController do
   use MicelioWeb, :controller
 
   alias Micelio.Changelog
+  alias Micelio.Docs.HtmlConverter
   alias MicelioWeb.PageMeta
 
   def index(conn, _params) do
@@ -34,7 +35,13 @@ defmodule MicelioWeb.Browser.ChangelogController do
       open_graph: %{"article:published_time" => Date.to_iso8601(entry.date)}
     )
     |> assign(:entry, entry)
+    |> assign(:toc, HtmlConverter.extract_toc(entry.body))
     |> render(:show)
+  rescue
+    RuntimeError ->
+      conn
+      |> put_flash(:error, gettext("Changelog entry not found."))
+      |> redirect(to: ~p"/changelog")
   end
 
   def version(conn, %{"version" => version}) do
@@ -49,6 +56,10 @@ defmodule MicelioWeb.Browser.ChangelogController do
     |> assign(:entries, entries)
     |> assign(:version, version)
     |> render(:version)
+  rescue
+    RuntimeError ->
+      conn
+      |> redirect(to: ~p"/changelog")
   end
 
   def category(conn, %{"category" => category}) do
@@ -66,6 +77,10 @@ defmodule MicelioWeb.Browser.ChangelogController do
     |> assign(:category, category)
     |> assign(:categories, categories)
     |> render(:category)
+  rescue
+    RuntimeError ->
+      conn
+      |> redirect(to: ~p"/changelog")
   end
 
   def rss(conn, _params) do

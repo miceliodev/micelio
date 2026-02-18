@@ -40,7 +40,10 @@ function applyThemePreference(preference) {
   const toggle = document.getElementById("theme-toggle");
   if (toggle) {
     const effective = getEffectiveTheme();
-    toggle.textContent = effective === "dark" ? "light" : "dark";
+    const textEl = document.getElementById("theme-toggle-text");
+    if (textEl) {
+      textEl.textContent = effective === "dark" ? "Light" : "Dark";
+    }
     toggle.setAttribute(
       "aria-label",
       effective === "dark" ? "Switch to light mode" : "Switch to dark mode",
@@ -86,7 +89,7 @@ export function setupThemeToggle() {
   document.addEventListener("click", (event) => {
     const target = event.target;
     if (!(target instanceof Element)) return;
-    if (target.id !== "theme-toggle") return;
+    if (!target.closest("#theme-toggle")) return;
 
     if (event.altKey || event.metaKey) {
       persistThemePreference("system");

@@ -6,7 +6,7 @@ defmodule Micelio.AITokens.TokenEarning do
   @primary_key {:id, :binary_id, autogenerate: true}
   @foreign_key_type :binary_id
 
-  @reason_values [:prompt_request_accepted, :prompt_suggestion_submitted]
+  @reason_values [:plan_accepted, :plan_suggestion_submitted]
 
   schema "ai_token_earnings" do
     field :amount, :integer
@@ -14,8 +14,8 @@ defmodule Micelio.AITokens.TokenEarning do
 
     belongs_to :repository, Micelio.Repositories.Repository
     belongs_to :user, Micelio.Accounts.User
-    belongs_to :prompt_request, Micelio.PromptRequests.PromptRequest
-    belongs_to :prompt_suggestion, Micelio.PromptRequests.PromptSuggestion
+    belongs_to :plan, Micelio.Plans.Plan
+    belongs_to :plan_suggestion, Micelio.Plans.PlanSuggestion
 
     timestamps(type: :utc_datetime)
   end
@@ -30,24 +30,24 @@ defmodule Micelio.AITokens.TokenEarning do
       :reason,
       :repository_id,
       :user_id,
-      :prompt_request_id,
-      :prompt_suggestion_id
+      :plan_id,
+      :plan_suggestion_id
     ])
-    |> validate_required([:amount, :reason, :repository_id, :user_id, :prompt_request_id])
+    |> validate_required([:amount, :reason, :repository_id, :user_id, :plan_id])
     |> validate_number(:amount, greater_than: 0)
     |> maybe_require_prompt_suggestion()
     |> assoc_constraint(:repository)
     |> assoc_constraint(:user)
-    |> assoc_constraint(:prompt_request)
-    |> assoc_constraint(:prompt_suggestion)
-    |> unique_constraint(:prompt_request_id,
-      name: :ai_token_earnings_prompt_request_id_user_id_reason_index
+    |> assoc_constraint(:plan)
+    |> assoc_constraint(:plan_suggestion)
+    |> unique_constraint(:plan_id,
+      name: :ai_token_earnings_plan_id_user_id_reason_index
     )
   end
 
   defp maybe_require_prompt_suggestion(%Ecto.Changeset{} = changeset) do
     case get_field(changeset, :reason) do
-      :prompt_suggestion_submitted -> validate_required(changeset, [:prompt_suggestion_id])
+      :plan_suggestion_submitted -> validate_required(changeset, [:plan_suggestion_id])
       _ -> changeset
     end
   end

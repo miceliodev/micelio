@@ -36,7 +36,7 @@ config :hammer,
 # Configure Elixir's Logger
 config :logger, :default_formatter,
   format: "$time $metadata[$level] $message\n",
-  metadata: [:request_id]
+  metadata: [:request_id, :trace_id, :span_id]
 
 config :micelio, Micelio.AgentInfra.Billing,
   limits: %{
@@ -71,6 +71,23 @@ config :micelio, Micelio.GRPC,
 # For production it's recommended to configure a different adapter
 # at the `config/runtime.exs`.
 config :micelio, Micelio.Mailer, adapter: Swoosh.Adapters.Local
+config :micelio, Micelio.Plans.ACPClient, default_model: "sonnet"
+
+config :micelio, Micelio.PromEx,
+  manual_metrics_start_delay: :no_delay,
+  grafana: :disabled
+
+config :micelio, Micelio.Sandboxes, default_provider: "daytona", module_server_url: nil
+
+config :micelio, Micelio.Sandboxes.DaytonaProvider,
+  base_url: "https://app.daytona.io/api",
+  api_key: nil,
+  preview_port: 3000
+
+config :micelio, Micelio.Sandboxes.Limits,
+  max_concurrent_workspaces: 1,
+  max_session_duration_minutes: 90,
+  max_daily_minutes: 90
 
 # Configure the endpoint
 config :micelio, MicelioWeb.Endpoint,
@@ -88,6 +105,7 @@ config :micelio, MicelioWeb.Gettext,
   default_locale: "en",
   locales: ~w(en ko zh_CN zh_TW ja)
 
+config :micelio, MicelioWeb.Plugs.Metrics, bearer_token: nil
 config :micelio, :admin_emails, []
 
 config :micelio, :api_rate_limit,
@@ -121,10 +139,10 @@ config :micelio, :errors,
 
 config :micelio, :github_oauth, []
 config :micelio, :gitlab_oauth, []
-config :micelio, :project_llm_default, "gpt-4.1-mini"
-config :micelio, :project_llm_models, ["gpt-4.1-mini", "gpt-4.1"]
 config :micelio, :remote_execution, allowed_commands: []
 config :micelio, :repository_limits, max_projects_per_tenant: 25
+config :micelio, :repository_llm_default, "gpt-4.1-mini"
+config :micelio, :repository_llm_models, ["gpt-4.1-mini", "gpt-4.1"]
 
 config :micelio, :s3_validation_rate_limit,
   limit: 10,

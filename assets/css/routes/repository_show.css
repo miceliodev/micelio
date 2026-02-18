@@ -106,11 +106,16 @@
   border: 1px solid var(--theme-ui-colors-border);
   border-radius: var(--theme-ui-radii-default);
   cursor: pointer;
-  transition: background-color 0.15s ease, border-color 0.15s ease;
+  transition: background-color 0.1s ease, border-color 0.1s ease;
 }
 
 .repository-star-toggle:hover {
   background-color: var(--theme-ui-colors-border);
+}
+
+.repository-star-toggle:focus-visible {
+  outline: 2px solid var(--theme-ui-colors-text);
+  outline-offset: 1px;
 }
 
 .repository-star-toggle.is-starred {
@@ -148,44 +153,6 @@
   border-radius: var(--theme-ui-radii-default);
 }
 
-/* ============ Tab navigation ============ */
-
-.repository-tabs {
-  display: flex;
-  gap: 0;
-  border-bottom: 1px solid var(--theme-ui-colors-border);
-  margin-bottom: var(--theme-ui-space-3);
-}
-
-.repository-tab {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: var(--theme-ui-space-1) var(--theme-ui-space-2);
-  font-size: var(--theme-ui-font-size-sm);
-  color: var(--theme-ui-colors-muted);
-  text-decoration: none;
-  border-bottom: 2px solid transparent;
-  margin-bottom: -1px;
-  transition: color 0.15s ease, border-color 0.15s ease;
-}
-
-.repository-tab:hover {
-  color: var(--theme-ui-colors-text);
-}
-
-.repository-tab.is-active {
-  color: var(--theme-ui-colors-text);
-  font-weight: var(--theme-ui-font-weights-semibold);
-  border-bottom-color: var(--theme-ui-colors-primary);
-}
-
-.repository-tab-icon {
-  width: 16px;
-  height: 16px;
-  flex-shrink: 0;
-}
-
 /* ============ Two-column layout ============ */
 
 .repository-layout {
@@ -207,6 +174,9 @@
 
 .repository-main {
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--theme-ui-space-3);
 }
 
 /* ============ File browser ============ */
@@ -332,7 +302,6 @@
 /* ============ README ============ */
 
 .repository-readme {
-  margin-top: var(--theme-ui-space-3);
   border: 1px solid var(--theme-ui-colors-border);
   border-radius: var(--theme-ui-radii-default);
   background-color: var(--theme-ui-colors-background);
@@ -379,6 +348,22 @@
 }
 
 /* README markdown uses .prose from tokens.css */
+
+/* GitHub README: hide heading permalink anchors */
+.repository-readme-markdown .markdown-heading .anchor {
+  display: none;
+}
+
+/* GitHub README: code blocks */
+.repository-readme-markdown .highlight pre {
+  background-color: var(--theme-ui-colors-surface);
+  border: 1px solid var(--theme-ui-colors-border);
+  border-radius: var(--theme-ui-radii-default);
+  padding: var(--theme-ui-space-2);
+  overflow-x: auto;
+  font-family: var(--theme-ui-fonts-mono);
+  font-size: var(--theme-ui-font-size-sm);
+}
 
 .repository-readme-binary {
   color: var(--theme-ui-colors-muted);
@@ -488,6 +473,11 @@
   background-color: var(--theme-ui-colors-surface);
 }
 
+.repository-file-back:focus-visible {
+  outline: 2px solid var(--theme-ui-colors-text);
+  outline-offset: 1px;
+}
+
 .repository-file {
   margin-top: var(--theme-ui-space-2);
 }
@@ -538,7 +528,7 @@
 .highlight .kr,
 .highlight .kt {
   color: var(--theme-ui-colors-primary);
-  font-weight: var(--theme-ui-font-weights-bold);
+  font-weight: 600;
 }
 
 .highlight .s,
@@ -611,7 +601,7 @@
 
 .repository-badge-title {
   font-family: var(--theme-ui-fonts-heading);
-  font-weight: var(--theme-ui-font-weights-bold);
+  font-weight: 600;
   margin-bottom: var(--theme-ui-space-1);
 }
 
@@ -639,7 +629,7 @@
 
 .repository-badge-snippet h3 {
   font-size: var(--theme-ui-font-size-sm);
-  font-weight: var(--theme-ui-font-weights-bold);
+  font-weight: 600;
   margin-bottom: var(--theme-ui-space-1);
 }
 
@@ -679,7 +669,7 @@
 
 .repository-token-title {
   font-family: var(--theme-ui-fonts-heading);
-  font-weight: var(--theme-ui-font-weights-bold);
+  font-weight: 600;
   margin-bottom: var(--theme-ui-space-1);
 }
 
@@ -713,6 +703,11 @@
 
 .repository-token-submit:hover {
   background-color: var(--theme-ui-colors-border);
+}
+
+.repository-token-submit:focus-visible {
+  outline: 2px solid var(--theme-ui-colors-text);
+  outline-offset: 1px;
 }
 
 .repository-token-login a {
@@ -757,7 +752,7 @@
 .repository-token-usage-value {
   display: block;
   font-size: var(--theme-ui-font-size-xl);
-  font-weight: var(--theme-ui-font-weights-bold);
+  font-weight: 600;
   color: var(--theme-ui-colors-text);
 }
 
@@ -794,6 +789,11 @@
 
 .repository-fork-submit:hover {
   background-color: var(--theme-ui-colors-border);
+}
+
+.repository-fork-submit:focus-visible {
+  outline: 2px solid var(--theme-ui-colors-text);
+  outline-offset: 1px;
 }
 
 /* ============ Forked from ============ */

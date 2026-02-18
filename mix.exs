@@ -21,7 +21,17 @@ defmodule Micelio.MixProject do
   def application do
     [
       mod: {Micelio.Application, []},
-      extra_applications: [:logger, :runtime_tools, :crypto, :ssl, :public_key]
+      extra_applications: [
+        :opentelemetry_exporter,
+        :opentelemetry,
+        :inets,
+        :ssl,
+        :logger,
+        :runtime_tools,
+        :os_mon,
+        :crypto,
+        :public_key
+      ]
     ]
   end
 
@@ -57,6 +67,13 @@ defmodule Micelio.MixProject do
       {:req, "~> 0.5"},
       {:telemetry_metrics, "~> 1.0"},
       {:telemetry_poller, "~> 1.0"},
+      {:opentelemetry, "~> 1.7"},
+      {:opentelemetry_exporter, "~> 1.10"},
+      {:opentelemetry_phoenix, "~> 2.0"},
+      {:opentelemetry_bandit, "~> 0.3.0"},
+      {:opentelemetry_ecto, "~> 1.2"},
+      {:opentelemetry_logger_metadata, "~> 0.2.0"},
+      {:prom_ex, "~> 1.11"},
       {:gettext, "~> 1.0"},
       {:open_api_spex, "~> 3.21"},
       {:jason, "~> 1.2"},
@@ -80,7 +97,8 @@ defmodule Micelio.MixProject do
       {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
       {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false},
       {:sobelow, "~> 0.13", only: [:dev, :test], runtime: false},
-      {:uuid_v7, "~> 0.6"}
+      {:uuid_v7, "~> 0.6"},
+      {:acpex, "~> 0.1.0"}
     ]
   end
 

@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+mix precommit
+
+(
+  cd mic
+  cargo build --release
+  cargo fmt --check
+  cargo test
+)

@@ -1,0 +1,75 @@
+apiVersion: 1
+
+datasources:
+  - name: Loki
+    uid: loki
+    type: loki
+    access: proxy
+    url: http://micelio-loki:3100
+    isDefault: false
+    editable: false
+    jsonData:
+      derivedFields:
+        - name: TraceID
+          matcherRegex: "trace_id=([0-9a-f]{32})"
+          datasourceUid: tempo
+          url: "$${__value.raw}"
+          urlDisplayLabel: "View trace"
+
+  - name: Tempo
+    uid: tempo
+    type: tempo
+    access: proxy
+    url: http://micelio-tempo:3200
+    isDefault: true
+    editable: false
+    jsonData:
+      tracesToLogsV2:
+        datasourceUid: loki
+        tags:
+          - key: service.name
+            value: service
+        filterByTraceID: true
+        filterBySpanID: false
+        spanStartTimeShift: "-5m"
+        spanEndTimeShift: "5m"
+        customQuery: false
+      serviceMap:
+        datasourceUid: prometheus
+      nodeGraph:
+        enabled: true
+
+  - name: Prometheus
+    uid: prometheus
+    type: prometheus
+    access: proxy
+    url: http://micelio-prometheus:9090
+    editable: false
+
+  - name: Postgres
+    uid: postgres
+    type: postgres
+    access: proxy
+    url: micelio-postgres:5432
+    user: micelio
+    editable: false
+    secureJsonData:
+      password: ${POSTGRES_PASSWORD}
+    jsonData:
+      database: micelio_prod
+      sslmode: disable
+      postgresVersion: 1700
+
+  - name: ClickHouse
+    uid: clickhouse
+    type: grafana-clickhouse-datasource
+    access: proxy
+    editable: false
+    secureJsonData:
+      password: ${CLICKHOUSE_PASSWORD}
+    jsonData:
+      host: micelio-clickhouse
+      port: 9000
+      protocol: native
+      defaultDatabase: micelio
+      username: micelio

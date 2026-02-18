@@ -1,4 +1,4 @@
-defmodule MicelioWeb.Api.PromptRequestControllerTest do
+defmodule MicelioWeb.Api.PlanControllerTest do
   use MicelioWeb.ConnCase, async: true
 
   alias Boruta.Oauth.ResourceOwner
@@ -7,9 +7,8 @@ defmodule MicelioWeb.Api.PromptRequestControllerTest do
   alias Micelio.OAuth
   alias Micelio.OAuth.AccessTokens
   alias Micelio.OAuth.Clients
-  alias Micelio.PromptRequests.PromptRequest
+  alias Micelio.Plans.Plan
   alias Micelio.Repo
-  alias Micelio.Repositories
   alias Micelio.Sessions
 
   setup do
@@ -28,10 +27,16 @@ defmodule MicelioWeb.Api.PromptRequestControllerTest do
     token = create_access_token(user)
     {:ok, _pool} = AITokens.create_token_pool(repository, %{balance: 5_000, reserved: 0})
 
-    %{user: user, token: token, repository: repository, organization: organization}
+    %{
+      user: user,
+      token: token,
+      repository: repository,
+      project: repository,
+      organization: organization
+    }
   end
 
-  test "creates prompt request and converts to session when validation passes", %{
+  test "creates plan and converts to session when validation passes", %{
     conn: conn,
     token: token,
     project: repository,
@@ -58,8 +63,8 @@ defmodule MicelioWeb.Api.PromptRequestControllerTest do
     ]
 
     params = %{
-      prompt_request: %{
-        title: "API prompt request",
+      plan: %{
+        title: "API plan",
         prompt: "Generate the change",
         result: "Change output",
         model: "gpt-4.1",
@@ -74,11 +79,11 @@ defmodule MicelioWeb.Api.PromptRequestControllerTest do
 
     conn =
       conn
-      |> assign(:prompt_request_flow_opts, flow_opts)
+      |> assign(:plan_flow_opts, flow_opts)
       |> put_req_header("accept", "application/json")
       |> put_req_header("authorization", "Bearer #{token}")
       |> post(
-        ~p"/api/repositories/#{organization.account.handle}/#{repository.handle}/prompt-requests",
+        ~p"/api/repositories/#{organization.account.handle}/#{repository.handle}/plans",
         params
       )
 
@@ -90,10 +95,10 @@ defmodule MicelioWeb.Api.PromptRequestControllerTest do
     assert data["validation_iterations"] == 1
     assert is_binary(data["session_id"])
 
-    prompt_request = Repo.get!(PromptRequest, data["id"])
-    session = Sessions.get_session(prompt_request.session_id)
+    plan = Repo.get!(Plan, data["id"])
+    session = Sessions.get_session(plan.session_id)
 
-    assert session.session_id == "prompt-request-#{prompt_request.id}"
+    assert session.session_id == "plan-#{plan.id}"
   end
 
   test "returns validation feedback when quality gate fails", %{
@@ -122,8 +127,8 @@ defmodule MicelioWeb.Api.PromptRequestControllerTest do
     ]
 
     params = %{
-      prompt_request: %{
-        title: "API prompt request failure",
+      plan: %{
+        title: "API plan failure",
         prompt: "Generate the change",
         result: "Change output",
         model: "gpt-4.1",
@@ -138,11 +143,11 @@ defmodule MicelioWeb.Api.PromptRequestControllerTest do
 
     conn =
       conn
-      |> assign(:prompt_request_flow_opts, flow_opts)
+      |> assign(:plan_flow_opts, flow_opts)
       |> put_req_header("accept", "application/json")
       |> put_req_header("authorization", "Bearer #{token}")
       |> post(
-        ~p"/api/repositories/#{organization.account.handle}/#{repository.handle}/prompt-requests",
+        ~p"/api/repositories/#{organization.account.handle}/#{repository.handle}/plans",
         params
       )
 
@@ -180,8 +185,8 @@ defmodule MicelioWeb.Api.PromptRequestControllerTest do
     ]
 
     params = %{
-      prompt_request: %{
-        title: "API prompt request low quality score",
+      plan: %{
+        title: "API plan low quality score",
         prompt: "Generate the change",
         result: "Change output",
         model: "gpt-4.1",
@@ -196,11 +201,11 @@ defmodule MicelioWeb.Api.PromptRequestControllerTest do
 
     conn =
       conn
-      |> assign(:prompt_request_flow_opts, flow_opts)
+      |> assign(:plan_flow_opts, flow_opts)
       |> put_req_header("accept", "application/json")
       |> put_req_header("authorization", "Bearer #{token}")
       |> post(
-        ~p"/api/repositories/#{organization.account.handle}/#{repository.handle}/prompt-requests",
+        ~p"/api/repositories/#{organization.account.handle}/#{repository.handle}/plans",
         params
       )
 

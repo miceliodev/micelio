@@ -43,6 +43,8 @@ defmodule MicelioWeb.Browser.AccountController do
               []
           end
 
+        account_forge_namespace = detect_account_forge_namespace(repositories)
+
         activity_counts =
           if user do
             Sessions.activity_counts_for_user_public(user)
@@ -80,10 +82,15 @@ defmodule MicelioWeb.Browser.AccountController do
           end
 
         title =
-          if organization && organization.name && organization.name != "" do
-            organization.name
+          if account_forge_namespace && account_forge_namespace.owner &&
+               account_forge_namespace.owner != "" do
+            account_forge_namespace.owner
           else
-            account.handle
+            if organization && organization.name && organization.name != "" do
+              organization.name
+            else
+              account.handle
+            end
           end
 
         reputation =
@@ -107,6 +114,7 @@ defmodule MicelioWeb.Browser.AccountController do
         |> assign(:account, account)
         |> assign(:organization, organization)
         |> assign(:user, user)
+        |> assign(:account_forge_namespace, account_forge_namespace)
         |> assign(:repositories, repositories)
         |> assign(:repositories_title, "Repositories")
         |> assign(
@@ -142,4 +150,27 @@ defmodule MicelioWeb.Browser.AccountController do
     |> DateTime.add(1, :second)
     |> DateTime.truncate(:second)
   end
+
+  defp detect_account_forge_namespace(repositories) do
+    Enum.find_value(repositories, fn repository ->
+      host = normalize_forge_value(repository.forge_host)
+      owner = normalize_forge_value(repository.forge_owner)
+      provider = normalize_forge_value(repository.forge_provider)
+
+      if host && owner do
+        %{host: host, owner: owner, provider: provider}
+      end
+    end)
+  end
+
+  defp normalize_forge_value(value) when is_binary(value) do
+    value
+    |> String.trim()
+    |> case do
+      "" -> nil
+      trimmed -> trimmed
+    end
+  end
+
+  defp normalize_forge_value(_), do: nil
 end

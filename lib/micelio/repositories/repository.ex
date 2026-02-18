@@ -9,6 +9,14 @@ defmodule Micelio.Repositories.Repository do
     field :description, :string
     field :url, :string
     field :visibility, :string, default: "private"
+    field :forge_provider, :string
+    field :forge_host, :string
+    field :forge_owner, :string
+    field :forge_repo, :string
+    field :forge_external_id, :string
+    field :forge_default_branch, :string
+    field :mirror_status, :string, default: "pending"
+    field :mirror_last_synced_at, :utc_datetime
     field :star_count, :integer, virtual: true
     field :starred, :boolean, virtual: true
 
@@ -18,7 +26,7 @@ defmodule Micelio.Repositories.Repository do
     has_many :stars, Micelio.Repositories.RepositoryStar
     has_many :access_tokens, Micelio.Repositories.RepositoryAccessToken
     has_many :webhooks, Micelio.Webhooks.Webhook
-    has_many :prompt_requests, Micelio.PromptRequests.PromptRequest
+    has_many :plans, Micelio.Plans.Plan
     has_many :token_contributions, Micelio.AITokens.TokenContribution
     has_one :token_pool, Micelio.AITokens.TokenPool
 
@@ -35,18 +43,30 @@ defmodule Micelio.Repositories.Repository do
       :name,
       :description,
       :url,
-      :visibility
+      :visibility,
+      :forge_provider,
+      :forge_host,
+      :forge_owner,
+      :forge_repo,
+      :forge_external_id,
+      :forge_default_branch,
+      :mirror_status,
+      :mirror_last_synced_at
     ])
     |> maybe_put_organization_id(attrs)
     |> validate_required([:handle, :name, :organization_id, :visibility])
     |> validate_handle()
     |> validate_inclusion(:visibility, ["public", "private"])
+    |> validate_inclusion(:mirror_status, ["pending", "syncing", "ready", "error"])
+    |> normalize_forge_fields()
+    |> validate_forge_fields()
     |> normalize_url_change()
     |> validate_url()
     |> unique_constraint(:handle,
       name: :repositories_organization_handle_index,
       message: "has already been taken for this organization"
     )
+    |> unique_constraint(:forge_repo, name: :repositories_forge_host_owner_repo_index)
     |> assoc_constraint(:organization)
   end
 
@@ -93,6 +113,49 @@ defmodule Micelio.Repositories.Repository do
           url
       end
     end)
+  end
+
+  defp normalize_forge_fields(changeset) do
+    changeset
+    |> update_change(:forge_provider, &normalize_forge_value/1)
+    |> update_change(:forge_host, &normalize_forge_value/1)
+    |> update_change(:forge_owner, &normalize_forge_value/1)
+    |> update_change(:forge_repo, &normalize_forge_value/1)
+    |> update_change(:forge_external_id, &normalize_forge_value/1)
+    |> update_change(:forge_default_branch, &normalize_forge_value/1)
+  end
+
+  defp normalize_forge_value(nil), do: nil
+
+  defp normalize_forge_value(value) when is_binary(value) do
+    value
+    |> String.trim()
+    |> case do
+      "" -> nil
+      trimmed -> trimmed
+    end
+  end
+
+  defp normalize_forge_value(value), do: value
+
+  defp validate_forge_fields(changeset) do
+    host = get_field(changeset, :forge_host)
+    owner = get_field(changeset, :forge_owner)
+    repo = get_field(changeset, :forge_repo)
+    provider = get_field(changeset, :forge_provider)
+
+    if Enum.any?([host, owner, repo, provider], &(!is_nil(&1) and &1 != "")) do
+      changeset
+      |> validate_required([:forge_host, :forge_owner, :forge_repo, :forge_provider])
+      |> validate_inclusion(:forge_provider, ["github", "gitlab"])
+      |> validate_length(:forge_host, max: 120)
+      |> validate_length(:forge_owner, max: 255)
+      |> validate_length(:forge_repo, max: 255)
+      |> validate_length(:forge_external_id, max: 255)
+      |> validate_length(:forge_default_branch, max: 255)
+    else
+      changeset
+    end
   end
 
   defp validate_url(changeset) do

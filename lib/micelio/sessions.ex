@@ -414,7 +414,7 @@ defmodule Micelio.Sessions do
   def get_session_with_changes(id) do
     Session
     |> Repo.get(id)
-    |> Repo.preload([{:user, :account}, :repository, :changes, :prompt_request])
+    |> Repo.preload([{:user, :account}, :repository, :changes, :plan])
   end
 
   @doc """

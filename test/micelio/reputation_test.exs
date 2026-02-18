@@ -4,8 +4,8 @@ defmodule Micelio.ReputationTest do
   import Ecto.Query, warn: false
 
   alias Micelio.Accounts
-  alias Micelio.PromptRequests
-  alias Micelio.PromptRequests.PromptRequest
+  alias Micelio.Plans
+  alias Micelio.Plans.Plan
   alias Micelio.Repo
   alias Micelio.Repositories
   alias Micelio.Reputation
@@ -32,8 +32,8 @@ defmodule Micelio.ReputationTest do
     {user, repository}
   end
 
-  defp create_prompt_request(user, repository, attrs \\ %{}) do
-    PromptRequests.create_prompt_request(
+  defp create_plan(user, repository, attrs \\ %{}) do
+    Plans.create_plan(
       Map.merge(
         %{
           title: "Fix validation",
@@ -57,9 +57,9 @@ defmodule Micelio.ReputationTest do
   test "builds trust scores with per-type tracks" do
     {user, repository} = setup_repository("rep-user@example.com")
 
-    {:ok, prompt_request} = create_prompt_request(user, repository, %{title: "Docs update"})
-    {:ok, _reviewed} = PromptRequests.review_prompt_request(prompt_request, user, :accepted)
-    {:ok, _run} = ValidationEnvironments.create_run(prompt_request, %{status: :passed})
+    {:ok, plan} = create_plan(user, repository, %{title: "Docs update"})
+    {:ok, _reviewed} = Plans.review_plan(plan, user, :accepted)
+    {:ok, _run} = ValidationEnvironments.create_run(plan, %{status: :passed})
 
     {:ok, session} =
       Sessions.create_session(%{
@@ -83,17 +83,17 @@ defmodule Micelio.ReputationTest do
   test "penalizes rejected contributions that passed validation" do
     {good_user, repository} = setup_repository("rep-good@example.com")
 
-    {:ok, good_prompt} = create_prompt_request(good_user, repository)
-    {:ok, _reviewed} = PromptRequests.review_prompt_request(good_prompt, good_user, :accepted)
-    {:ok, _run} = ValidationEnvironments.create_run(good_prompt, %{status: :passed})
+    {:ok, good_plan} = create_plan(good_user, repository)
+    {:ok, _reviewed} = Plans.review_plan(good_plan, good_user, :accepted)
+    {:ok, _run} = ValidationEnvironments.create_run(good_plan, %{status: :passed})
 
     good_score = Reputation.trust_score_for_user(good_user).overall
 
     {bad_user, bad_project} = setup_repository("rep-bad@example.com")
 
-    {:ok, bad_prompt} = create_prompt_request(bad_user, bad_project)
-    {:ok, _reviewed} = PromptRequests.review_prompt_request(bad_prompt, bad_user, :rejected)
-    {:ok, _run} = ValidationEnvironments.create_run(bad_prompt, %{status: :passed})
+    {:ok, bad_plan} = create_plan(bad_user, bad_project)
+    {:ok, _reviewed} = Plans.review_plan(bad_plan, bad_user, :rejected)
+    {:ok, _run} = ValidationEnvironments.create_run(bad_plan, %{status: :passed})
 
     bad_score = Reputation.trust_score_for_user(bad_user).overall
 
@@ -103,27 +103,27 @@ defmodule Micelio.ReputationTest do
   test "reduces trust score when review iterations increase" do
     {clean_user, repository} = setup_repository("rep-clean@example.com")
 
-    {:ok, clean_prompt} = create_prompt_request(clean_user, repository)
-    {:ok, _reviewed} = PromptRequests.review_prompt_request(clean_prompt, clean_user, :accepted)
-    {:ok, _run} = ValidationEnvironments.create_run(clean_prompt, %{status: :passed})
+    {:ok, clean_plan} = create_plan(clean_user, repository)
+    {:ok, _reviewed} = Plans.review_plan(clean_plan, clean_user, :accepted)
+    {:ok, _run} = ValidationEnvironments.create_run(clean_plan, %{status: :passed})
 
     clean_score = Reputation.trust_score_for_user(clean_user).overall
 
     {iter_user, iter_project} = setup_repository("rep-iter@example.com")
 
-    {:ok, iter_prompt} = create_prompt_request(iter_user, iter_project)
+    {:ok, iter_plan} = create_plan(iter_user, iter_project)
 
     for index <- 1..5 do
       {:ok, _suggestion} =
-        PromptRequests.create_prompt_suggestion(
-          iter_prompt,
+        Plans.create_plan_suggestion(
+          iter_plan,
           %{suggestion: "Iteration #{index}"},
           user: iter_user
         )
     end
 
-    {:ok, _reviewed} = PromptRequests.review_prompt_request(iter_prompt, iter_user, :accepted)
-    {:ok, _run} = ValidationEnvironments.create_run(iter_prompt, %{status: :passed})
+    {:ok, _reviewed} = Plans.review_plan(iter_plan, iter_user, :accepted)
+    {:ok, _run} = ValidationEnvironments.create_run(iter_plan, %{status: :passed})
 
     iter_score = Reputation.trust_score_for_user(iter_user).overall
 
@@ -133,17 +133,17 @@ defmodule Micelio.ReputationTest do
   test "decays trust score for older contributions" do
     {recent_user, recent_project} = setup_repository("rep-recent@example.com")
 
-    {:ok, recent_prompt} = create_prompt_request(recent_user, recent_project)
-    {:ok, _reviewed} = PromptRequests.review_prompt_request(recent_prompt, recent_user, :accepted)
-    {:ok, _run} = ValidationEnvironments.create_run(recent_prompt, %{status: :passed})
+    {:ok, recent_plan} = create_plan(recent_user, recent_project)
+    {:ok, _reviewed} = Plans.review_plan(recent_plan, recent_user, :accepted)
+    {:ok, _run} = ValidationEnvironments.create_run(recent_plan, %{status: :passed})
 
     recent_score = Reputation.trust_score_for_user(recent_user).overall
 
     {old_user, old_project} = setup_repository("rep-old@example.com")
 
-    {:ok, old_prompt} = create_prompt_request(old_user, old_project)
-    {:ok, _reviewed} = PromptRequests.review_prompt_request(old_prompt, old_user, :accepted)
-    {:ok, _run} = ValidationEnvironments.create_run(old_prompt, %{status: :passed})
+    {:ok, old_plan} = create_plan(old_user, old_project)
+    {:ok, _reviewed} = Plans.review_plan(old_plan, old_user, :accepted)
+    {:ok, _run} = ValidationEnvironments.create_run(old_plan, %{status: :passed})
 
     old_time =
       DateTime.utc_now()
@@ -151,12 +151,12 @@ defmodule Micelio.ReputationTest do
       |> DateTime.add(-720 * 24 * 60 * 60, :second)
 
     Repo.update_all(
-      from(prompt_request in PromptRequest, where: prompt_request.id == ^old_prompt.id),
+      from(plan in Plan, where: plan.id == ^old_plan.id),
       set: [inserted_at: old_time, updated_at: old_time]
     )
 
     Repo.update_all(
-      from(run in ValidationRun, where: run.prompt_request_id == ^old_prompt.id),
+      from(run in ValidationRun, where: run.plan_id == ^old_plan.id),
       set: [inserted_at: old_time, updated_at: old_time, completed_at: old_time]
     )
 

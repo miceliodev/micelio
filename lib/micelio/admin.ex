@@ -6,7 +6,7 @@ defmodule Micelio.Admin do
   import Ecto.Query
 
   alias Micelio.Accounts.{Organization, User}
-  alias Micelio.PromptRequests.PromptRequest
+  alias Micelio.Plans.Plan
   alias Micelio.Repo
   alias Micelio.Repositories.Repository
   alias Micelio.Sessions.Session
@@ -107,40 +107,40 @@ defmodule Micelio.Admin do
   end
 
   @doc """
-  Returns aggregate AI token usage metrics across all prompt requests.
+  Returns aggregate AI token usage metrics across all plans.
   """
   def usage_dashboard_stats do
     tokens_spent =
       Repo.one(
-        from pr in PromptRequest,
+        from pr in Plan,
           select: fragment("COALESCE(?, 0)", sum(pr.token_count))
       ) || 0
 
-    accepted_prompt_requests =
+    accepted_plans =
       Repo.one(
-        from pr in PromptRequest,
+        from pr in Plan,
           where: pr.review_status == :accepted,
           select: count(pr.id)
       ) || 0
 
-    total_prompt_requests =
+    total_plans =
       Repo.one(
-        from pr in PromptRequest,
+        from pr in Plan,
           select: count(pr.id)
       ) || 0
 
     %{
       tokens_spent: tokens_spent,
-      accepted_prompt_requests: accepted_prompt_requests,
-      total_prompt_requests: total_prompt_requests
+      accepted_plans: accepted_plans,
+      total_plans: total_plans
     }
   end
 
   @doc """
-  Returns per-repository usage stats for prompt request token usage.
+  Returns per-repository usage stats for plan token usage.
   """
   def list_repository_usage(limit \\ 20) when is_integer(limit) and limit > 0 do
-    PromptRequest
+    Plan
     |> join(:inner, [pr], p in assoc(pr, :repository))
     |> join(:inner, [pr, p], o in assoc(p, :organization))
     |> join(:inner, [pr, p, o], a in assoc(o, :account))
@@ -151,8 +151,8 @@ defmodule Micelio.Admin do
       repository_handle: p.handle,
       account_handle: a.handle,
       tokens_spent: fragment("COALESCE(?, 0)", sum(pr.token_count)),
-      total_prompt_requests: count(pr.id),
-      accepted_prompt_requests:
+      total_plans: count(pr.id),
+      accepted_plans:
         fragment("SUM(CASE WHEN ? = 'accepted' THEN 1 ELSE 0 END)", pr.review_status)
     })
     |> order_by([pr, _p, _o, _a],

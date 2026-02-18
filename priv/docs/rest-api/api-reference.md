@@ -4,7 +4,7 @@
 }
 ---
 
-The Micelio REST API provides programmatic access to repositories, sessions, content, and organizations. All endpoints are under `/api/v1/` and return JSON.
+The Micelio REST API provides programmatic access to repositories, sessions, content, and organizations. All endpoints are under `/api/` and return JSON.
 
 ## Authentication
 
@@ -13,7 +13,7 @@ The REST API uses the same OAuth2 bearer tokens as the gRPC API. See [Authentica
 Include the access token in the `Authorization` header:
 
 ```bash
-curl https://micelio.example/api/v1/orgs \
+curl https://micelio.example/api/orgs \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
 ```
 
@@ -23,123 +23,123 @@ The interactive examples below use your current browser session, so no token is 
 
 | Method | Path | Scope | Description |
 |---|---|---|---|
-| GET | `/api/v1/orgs` | `organizations:read` | List your organizations |
-| GET | `/api/v1/orgs/:handle` | `organizations:read` | Get an organization |
+| GET | `/api/orgs` | `organizations:read` | List your organizations |
+| GET | `/api/orgs/:handle` | `organizations:read` | Get an organization |
 
 ### List organizations
 
 ```try-it
-{"method":"GET","path":"/api/v1/orgs","description":"List organizations you belong to","params":[]}
+{"method":"GET","path":"/api/orgs","description":"List organizations you belong to","params":[]}
 ```
 
 ### Get an organization
 
 ```try-it
-{"method":"GET","path":"/api/v1/orgs/:org","description":"Get details for a single organization","params":[{"name":"org","placeholder":"my-org","description":"Organization handle"}]}
+{"method":"GET","path":"/api/orgs/:org","description":"Get details for a single organization","params":[{"name":"org","placeholder":"my-org","description":"Organization handle"}]}
 ```
 
 ## Repositories
 
 | Method | Path | Scope | Description |
 |---|---|---|---|
-| GET | `/api/v1/orgs/:org/repositories` | `repositories:read` | List repositories |
-| POST | `/api/v1/orgs/:org/repositories` | `repositories:write` | Create a repository |
-| GET | `/api/v1/orgs/:org/repositories/:handle` | `repositories:read` | Get a repository |
-| PATCH | `/api/v1/orgs/:org/repositories/:handle` | `repositories:write` | Update a repository |
-| DELETE | `/api/v1/orgs/:org/repositories/:handle` | `repositories:write` | Delete a repository |
+| GET | `/api/orgs/:org/repositories` | `repositories:read` | List repositories |
+| POST | `/api/orgs/:org/repositories` | `repositories:write` | Create a repository |
+| GET | `/api/orgs/:org/repositories/:handle` | `repositories:read` | Get a repository |
+| PATCH | `/api/orgs/:org/repositories/:handle` | `repositories:write` | Update a repository |
+| DELETE | `/api/orgs/:org/repositories/:handle` | `repositories:write` | Delete a repository |
 
 ### List repositories
 
 ```try-it
-{"method":"GET","path":"/api/v1/orgs/:org/repositories","description":"List all repositories in an organization","params":[{"name":"org","placeholder":"my-org","description":"Organization handle"}]}
+{"method":"GET","path":"/api/orgs/:org/repositories","description":"List all repositories in an organization","params":[{"name":"org","placeholder":"my-org","description":"Organization handle"}]}
 ```
 
 ### Get a repository
 
 ```try-it
-{"method":"GET","path":"/api/v1/orgs/:org/repositories/:repo","description":"Get details for a single repository","params":[{"name":"org","placeholder":"my-org","description":"Organization handle"},{"name":"repo","placeholder":"my-repo","description":"Repository handle"}]}
+{"method":"GET","path":"/api/orgs/:org/repositories/:repo","description":"Get details for a single repository","params":[{"name":"org","placeholder":"my-org","description":"Organization handle"},{"name":"repo","placeholder":"my-repo","description":"Repository handle"}]}
 ```
 
 ## Sessions
 
 | Method | Path | Scope | Description |
 |---|---|---|---|
-| GET | `/api/v1/orgs/:org/repositories/:repo/sessions` | `sessions:read` | List sessions |
-| POST | `/api/v1/orgs/:org/repositories/:repo/sessions` | `sessions:write` | Start a session |
-| GET | `/api/v1/sessions/:session_id` | `sessions:read` | Get a session |
-| POST | `/api/v1/sessions/:session_id/land` | `sessions:write` | Land a session |
+| GET | `/api/orgs/:org/repositories/:repo/sessions` | `sessions:read` | List sessions |
+| POST | `/api/orgs/:org/repositories/:repo/sessions` | `sessions:write` | Start a session |
+| GET | `/api/sessions/:session_id` | `sessions:read` | Get a session |
+| POST | `/api/sessions/:session_id/land` | `sessions:write` | Land a session |
 
 ### List sessions
 
 ```try-it
-{"method":"GET","path":"/api/v1/orgs/:org/repositories/:repo/sessions","description":"List all sessions for a repository","params":[{"name":"org","placeholder":"my-org","description":"Organization handle"},{"name":"repo","placeholder":"my-repo","description":"Repository handle"}]}
+{"method":"GET","path":"/api/orgs/:org/repositories/:repo/sessions","description":"List all sessions for a repository","params":[{"name":"org","placeholder":"my-org","description":"Organization handle"},{"name":"repo","placeholder":"my-repo","description":"Repository handle"}]}
 ```
 
 ### Start a session
 
 ```try-it
-{"method":"POST","path":"/api/v1/orgs/:org/repositories/:repo/sessions","description":"Start a new session on a repository","params":[{"name":"org","placeholder":"my-org","description":"Organization handle"},{"name":"repo","placeholder":"my-repo","description":"Repository handle"}],"body":{"goal":"Add user authentication"}}
+{"method":"POST","path":"/api/orgs/:org/repositories/:repo/sessions","description":"Start a new session on a repository","params":[{"name":"org","placeholder":"my-org","description":"Organization handle"},{"name":"repo","placeholder":"my-repo","description":"Repository handle"}],"body":{"goal":"Add user authentication"}}
 ```
 
-## Prompt Requests
+## Plans
 
 | Method | Path | Scope | Description |
 |---|---|---|---|
-| GET | `/api/v1/orgs/:org/repositories/:repo/prompt-requests` | `prompt_requests:read` | List prompt requests |
-| POST | `/api/v1/orgs/:org/repositories/:repo/prompt-requests` | `prompt_requests:write` | Create a prompt request |
-| GET | `/api/v1/orgs/:org/repositories/:repo/prompt-requests/:number` | `prompt_requests:read` | Get a prompt request |
-| PATCH | `/api/v1/orgs/:org/repositories/:repo/prompt-requests/:number` | `prompt_requests:write` | Update a prompt request |
-| POST | `/api/v1/orgs/:org/repositories/:repo/prompt-requests/:number/close` | `prompt_requests:write` | Close a prompt request |
-| POST | `/api/v1/orgs/:org/repositories/:repo/prompt-requests/:number/reopen` | `prompt_requests:write` | Reopen a prompt request |
+| GET | `/api/orgs/:org/repositories/:repo/plans` | `plans:read` | List plans |
+| POST | `/api/orgs/:org/repositories/:repo/plans` | `plans:write` | Create a plan |
+| GET | `/api/orgs/:org/repositories/:repo/plans/:number` | `plans:read` | Get a plan |
+| PATCH | `/api/orgs/:org/repositories/:repo/plans/:number` | `plans:write` | Update a plan |
+| POST | `/api/orgs/:org/repositories/:repo/plans/:number/close` | `plans:write` | Close a plan |
+| POST | `/api/orgs/:org/repositories/:repo/plans/:number/reopen` | `plans:write` | Reopen a plan |
 
-### List prompt requests
+### List plans
 
 ```try-it
-{"method":"GET","path":"/api/v1/orgs/:org/repositories/:repo/prompt-requests","description":"List all prompt requests for a repository","params":[{"name":"org","placeholder":"my-org","description":"Organization handle"},{"name":"repo","placeholder":"my-repo","description":"Repository handle"}]}
+{"method":"GET","path":"/api/orgs/:org/repositories/:repo/plans","description":"List all plans for a repository","params":[{"name":"org","placeholder":"my-org","description":"Organization handle"},{"name":"repo","placeholder":"my-repo","description":"Repository handle"}]}
 ```
 
-### Create a prompt request
+### Create a plan
 
 ```try-it
-{"method":"POST","path":"/api/v1/orgs/:org/repositories/:repo/prompt-requests","description":"Create a new prompt request","params":[{"name":"org","placeholder":"my-org","description":"Organization handle"},{"name":"repo","placeholder":"my-repo","description":"Repository handle"}],"body":{"title":"Fix login bug","description":"The login form fails when using special characters in the password"}}
+{"method":"POST","path":"/api/orgs/:org/repositories/:repo/plans","description":"Create a new plan","params":[{"name":"org","placeholder":"my-org","description":"Organization handle"},{"name":"repo","placeholder":"my-repo","description":"Repository handle"}],"body":{"title":"Fix login bug","description":"The login form fails when using special characters in the password"}}
 ```
 
-### Get a prompt request
+### Get a plan
 
 ```try-it
-{"method":"GET","path":"/api/v1/orgs/:org/repositories/:repo/prompt-requests/:number","description":"Get a prompt request by number","params":[{"name":"org","placeholder":"my-org","description":"Organization handle"},{"name":"repo","placeholder":"my-repo","description":"Repository handle"},{"name":"number","placeholder":"1","description":"Prompt request number"}]}
+{"method":"GET","path":"/api/orgs/:org/repositories/:repo/plans/:number","description":"Get a plan by number","params":[{"name":"org","placeholder":"my-org","description":"Organization handle"},{"name":"repo","placeholder":"my-repo","description":"Repository handle"},{"name":"number","placeholder":"1","description":"Plan number"}]}
 ```
 
-### Close a prompt request
+### Close a plan
 
 ```try-it
-{"method":"POST","path":"/api/v1/orgs/:org/repositories/:repo/prompt-requests/:number/close","description":"Close a prompt request","params":[{"name":"org","placeholder":"my-org","description":"Organization handle"},{"name":"repo","placeholder":"my-repo","description":"Repository handle"},{"name":"number","placeholder":"1","description":"Prompt request number"}]}
+{"method":"POST","path":"/api/orgs/:org/repositories/:repo/plans/:number/close","description":"Close a plan","params":[{"name":"org","placeholder":"my-org","description":"Organization handle"},{"name":"repo","placeholder":"my-repo","description":"Repository handle"},{"name":"number","placeholder":"1","description":"Plan number"}]}
 ```
 
-### Reopen a prompt request
+### Reopen a plan
 
 ```try-it
-{"method":"POST","path":"/api/v1/orgs/:org/repositories/:repo/prompt-requests/:number/reopen","description":"Reopen a closed prompt request","params":[{"name":"org","placeholder":"my-org","description":"Organization handle"},{"name":"repo","placeholder":"my-repo","description":"Repository handle"},{"name":"number","placeholder":"1","description":"Prompt request number"}]}
+{"method":"POST","path":"/api/orgs/:org/repositories/:repo/plans/:number/reopen","description":"Reopen a closed plan","params":[{"name":"org","placeholder":"my-org","description":"Organization handle"},{"name":"repo","placeholder":"my-repo","description":"Repository handle"},{"name":"number","placeholder":"1","description":"Plan number"}]}
 ```
 
 ## Content
 
 | Method | Path | Scope | Description |
 |---|---|---|---|
-| GET | `/api/v1/orgs/:org/repositories/:repo/tree` | `content:read` | List files in a repository |
-| GET | `/api/v1/orgs/:org/repositories/:repo/blob/*path` | `content:read` | Get file content |
-| GET | `/api/v1/orgs/:org/repositories/:repo/blame/*path` | `content:read` | Get file blame |
+| GET | `/api/orgs/:org/repositories/:repo/tree` | `content:read` | List files in a repository |
+| GET | `/api/orgs/:org/repositories/:repo/blob/*path` | `content:read` | Get file content |
+| GET | `/api/orgs/:org/repositories/:repo/blame/*path` | `content:read` | Get file blame |
 
 ### List files
 
 ```try-it
-{"method":"GET","path":"/api/v1/orgs/:org/repositories/:repo/tree","description":"List all files in the repository tree","params":[{"name":"org","placeholder":"my-org","description":"Organization handle"},{"name":"repo","placeholder":"my-repo","description":"Repository handle"}]}
+{"method":"GET","path":"/api/orgs/:org/repositories/:repo/tree","description":"List all files in the repository tree","params":[{"name":"org","placeholder":"my-org","description":"Organization handle"},{"name":"repo","placeholder":"my-repo","description":"Repository handle"}]}
 ```
 
 ### Get file content
 
 ```try-it
-{"method":"GET","path":"/api/v1/orgs/:org/repositories/:repo/blob/:path","description":"Read the content of a single file","params":[{"name":"org","placeholder":"my-org","description":"Organization handle"},{"name":"repo","placeholder":"my-repo","description":"Repository handle"},{"name":"path","placeholder":"README.md","description":"File path"}]}
+{"method":"GET","path":"/api/orgs/:org/repositories/:repo/blob/:path","description":"Read the content of a single file","params":[{"name":"org","placeholder":"my-org","description":"Organization handle"},{"name":"repo","placeholder":"my-repo","description":"Repository handle"},{"name":"path","placeholder":"README.md","description":"File path"}]}
 ```
 
 ## Error format

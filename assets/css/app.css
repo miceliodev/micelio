@@ -1,6 +1,8 @@
 @import "./theme/tokens.css";
 
 @import "./components/error_boundary.css";
+@import "./components/collapsible_toc.css";
+@import "./components/sidebar.css";
 
 @import "./routes/navbar.css";
 @import "./routes/footer.css";
@@ -14,7 +16,7 @@
 @import "./routes/repository_blame.css";
 @import "./routes/auth.css";
 @import "./routes/repositories.css";
-@import "./routes/prompt_requests.css";
+@import "./routes/plans.css";
 @import "./routes/sessions.css";
 @import "./routes/agent_progress.css";
 @import "./routes/organizations.css";

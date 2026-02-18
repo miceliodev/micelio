@@ -1,4 +1,4 @@
-/* Auth styles */
+/* Auth styles -- Pajamas-inspired */
 
 .auth-screen {
   display: grid;
@@ -26,6 +26,7 @@
   align-content: center;
   gap: var(--theme-ui-space-1);
   padding: var(--theme-ui-space-2);
+  border-radius: var(--theme-ui-radii-large);
 }
 
 .auth-header {
@@ -34,7 +35,7 @@
 }
 
 .auth-header h1 {
-  font-weight: var(--theme-ui-font-weights-bold);
+  font-weight: 600;
   margin-bottom: var(--theme-ui-space-1);
 }
 
@@ -55,28 +56,28 @@
 }
 
 .auth-form-group label {
-  font-weight: var(--theme-ui-font-weights-bold);
+  font-weight: 600;
+  font-size: 14px;
 }
 
 /* Auth input uses shared .input styles from tokens.css */
 .auth-input {
   width: 100%;
   padding: 5px 12px;
-  font-size: var(--theme-ui-font-sizes-body);
+  font-size: 14px;
   font-family: inherit;
   line-height: 20px;
   color: var(--theme-ui-colors-text);
   background-color: var(--theme-ui-colors-control-bg);
   border: 1px solid var(--theme-ui-colors-control-border);
   border-radius: var(--theme-ui-radii-default);
-  box-shadow: inset 0 1px 0 rgba(208, 215, 222, 0.2);
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  transition: border-color 0.1s ease;
 }
 
 .auth-input:focus {
-  border-color: var(--theme-ui-colors-primary);
+  border-color: var(--theme-ui-colors-text);
   outline: none;
-  box-shadow: 0 0 0 3px rgba(9, 105, 218, 0.3);
+  box-shadow: none;
 }
 
 .auth-input-error {
@@ -84,7 +85,8 @@
 }
 
 .auth-input-error:focus {
-  box-shadow: 0 0 0 3px rgba(209, 36, 47, 0.3);
+  border-color: var(--theme-ui-colors-danger);
+  box-shadow: none;
 }
 
 .auth-input::placeholder {
@@ -100,8 +102,8 @@
   gap: var(--theme-ui-space-1);
   width: 100%;
   padding: 5px 16px;
-  font-size: var(--theme-ui-font-sizes-body);
-  font-weight: var(--theme-ui-font-weights-medium);
+  font-size: 14px;
+  font-weight: 600;
   font-family: inherit;
   line-height: 20px;
   color: var(--theme-ui-colors-button-primary-fg);
@@ -109,7 +111,7 @@
   border: 1px solid transparent;
   border-radius: var(--theme-ui-radii-default);
   cursor: pointer;
-  transition: background-color 0.15s ease;
+  transition: background-color 0.1s ease;
 }
 
 .auth-button:hover {
@@ -117,8 +119,8 @@
 }
 
 .auth-button:focus-visible {
-  outline: 2px solid var(--theme-ui-colors-primary);
-  outline-offset: 2px;
+  outline: 2px solid var(--theme-ui-colors-text);
+  outline-offset: 1px;
 }
 
 .auth-button-passkey {
@@ -184,8 +186,8 @@
   gap: var(--theme-ui-space-1);
   width: 100%;
   padding: 5px 16px;
-  font-size: var(--theme-ui-font-sizes-body);
-  font-weight: var(--theme-ui-font-weights-medium);
+  font-size: 14px;
+  font-weight: 600;
   line-height: 20px;
   background-color: var(--theme-ui-colors-button-default-bg);
   color: var(--theme-ui-colors-button-default-fg);
@@ -193,13 +195,19 @@
   border-radius: var(--theme-ui-radii-default);
   text-align: center;
   text-decoration: none;
-  transition: background-color 0.15s ease;
+  transition: background-color 0.1s ease;
 }
 
 .auth-button-github:hover,
 .auth-button-gitlab:hover {
   background-color: var(--theme-ui-colors-button-default-bg-hover);
   text-decoration: none;
+}
+
+.auth-button-github:focus-visible,
+.auth-button-gitlab:focus-visible {
+  outline: 2px solid var(--theme-ui-colors-text);
+  outline-offset: 1px;
 }
 
 .auth-body {

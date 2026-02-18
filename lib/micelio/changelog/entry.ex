@@ -17,7 +17,7 @@ defmodule Micelio.Changelog.Entry do
       [
         id: id,
         date: date,
-        body: body
+        body: Micelio.Docs.HtmlConverter.add_heading_ids(body)
       ] ++ Map.to_list(attrs)
     )
   end

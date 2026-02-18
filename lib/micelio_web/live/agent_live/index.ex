@@ -202,6 +202,14 @@ defmodule MicelioWeb.AgentLive.Index do
       flash={@flash}
       current_scope={@current_scope}
       current_user={@current_user}
+      repository_nav={
+        %{
+          account_handle: @organization.account.handle,
+          repository_handle: @repository.handle,
+          active: :sessions,
+          show_settings?: @current_user != nil
+        }
+      }
     >
       <.repository_header
         account_handle={@organization.account.handle}

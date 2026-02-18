@@ -1,3 +1,0 @@
-getting-started
-architecture
-code-style

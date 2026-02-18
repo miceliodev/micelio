@@ -1,7 +1,7 @@
 defmodule MicelioWeb.Browser.AccountControllerTest do
   use MicelioWeb.ConnCase, async: true
 
-  alias Micelio.{Accounts, PromptRequests, Projects, Sessions}
+  alias Micelio.{Accounts, Plans, Projects, Sessions}
 
   test "shows activity and projects for user accounts", %{conn: conn} do
     {:ok, user} = Accounts.get_or_create_user_by_email("public-user@example.com")
@@ -49,8 +49,8 @@ defmodule MicelioWeb.Browser.AccountControllerTest do
     {:ok, _} = Sessions.land_session(private_session)
     {:ok, _} = Repositories.star_repository(user, public_repository)
 
-    {:ok, _prompt_request} =
-      PromptRequests.create_prompt_request(
+    {:ok, _plan} =
+      Plans.create_plan(
         %{
           title: "AI contribution",
           prompt: "Summarize change",
@@ -74,7 +74,7 @@ defmodule MicelioWeb.Browser.AccountControllerTest do
     assert html =~ "activity-graph"
     assert html =~ "id=\"account-activity-feed\""
     assert html =~ "Landed a session in"
-    assert html =~ "Submitted prompt request in"
+    assert html =~ "Submitted plan in"
     assert html =~ "AI-assisted"
     assert html =~ "id=\"account-reputation\""
     assert html =~ "Trust"

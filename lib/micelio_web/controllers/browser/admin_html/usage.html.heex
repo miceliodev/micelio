@@ -6,7 +6,7 @@
   <div class="admin-dashboard" id="admin-usage-dashboard">
     <.header>
       Usage dashboard
-      <:subtitle>Token usage and value delivered across prompt requests.</:subtitle>
+      <:subtitle>Token usage and value delivered across plans.</:subtitle>
       <:actions>
         <.link navigate={~p"/admin"} class="button button--secondary">
           Back to admin
@@ -23,18 +23,18 @@
         </article>
         <article class="admin-metric-card" id="admin-usage-value">
           <h3 class="admin-metric-label">Value delivered</h3>
-          <div class="admin-metric-value">{@usage_stats.accepted_prompt_requests}</div>
+          <div class="admin-metric-value">{@usage_stats.accepted_plans}</div>
         </article>
         <article class="admin-metric-card" id="admin-usage-total-prompts">
-          <h3 class="admin-metric-label">Prompt requests</h3>
-          <div class="admin-metric-value">{@usage_stats.total_prompt_requests}</div>
+          <h3 class="admin-metric-label">Plans</h3>
+          <div class="admin-metric-value">{@usage_stats.total_plans}</div>
         </article>
         <article class="admin-metric-card" id="admin-usage-acceptance-rate">
           <h3 class="admin-metric-label">Acceptance rate</h3>
           <div class="admin-metric-value">
             {format_acceptance_rate(
-              @usage_stats.accepted_prompt_requests,
-              @usage_stats.total_prompt_requests
+              @usage_stats.accepted_plans,
+              @usage_stats.total_plans
             )}
           </div>
         </article>
@@ -56,10 +56,10 @@
                 </span>
               </div>
               <div class="admin-list-meta">
-                {repository.tokens_spent} tokens · {repository.accepted_prompt_requests}/ {repository.total_prompt_requests} accepted
+                {repository.tokens_spent} tokens · {repository.accepted_plans}/ {repository.total_plans} accepted
                 ({format_acceptance_rate(
-                  repository.accepted_prompt_requests,
-                  repository.total_prompt_requests
+                  repository.accepted_plans,
+                  repository.total_plans
                 )})
               </div>
             </div>

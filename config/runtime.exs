@@ -507,6 +507,40 @@ if og_cache_busters != %{} do
   config :micelio, :open_graph_cache_busters, og_cache_busters
 end
 
+daytona_base_url = System.get_env("DAYTONA_API_BASE_URL") || "https://app.daytona.io/api"
+daytona_api_key = System.get_env("DAYTONA_API_KEY")
+daytona_organization_id = System.get_env("DAYTONA_ORGANIZATION_ID")
+daytona_preview_port = String.to_integer(System.get_env("DAYTONA_PREVIEW_PORT") || "3000")
+
+daytona_auto_stop_interval =
+  String.to_integer(System.get_env("DAYTONA_AUTO_STOP_MINUTES") || "15")
+
+daytona_auto_archive_interval =
+  String.to_integer(System.get_env("DAYTONA_AUTO_ARCHIVE_MINUTES") || "30")
+
+daytona_checkout_root = System.get_env("DAYTONA_LOCAL_CHECKOUT_ROOT")
+sandbox_provider = System.get_env("SANDBOX_PROVIDER") || "daytona"
+sandbox_module_server_url = System.get_env("SANDBOX_MODULE_SERVER_URL")
+
+config :micelio, Micelio.Sandboxes,
+  default_provider: sandbox_provider,
+  module_server_url: sandbox_module_server_url
+
+config :micelio, Micelio.Sandboxes.DaytonaProvider,
+  base_url: daytona_base_url,
+  api_key: daytona_api_key,
+  organization_id: daytona_organization_id,
+  preview_port: daytona_preview_port,
+  auto_stop_interval_minutes: daytona_auto_stop_interval,
+  auto_archive_interval_minutes: daytona_auto_archive_interval,
+  local_checkout_root: daytona_checkout_root
+
+config :micelio, :clickhouse,
+  url: System.get_env("CLICKHOUSE_URL"),
+  user: System.get_env("CLICKHOUSE_USER"),
+  password: System.get_env("CLICKHOUSE_PASSWORD"),
+  database: System.get_env("CLICKHOUSE_DATABASE") || "micelio"
+
 if grpc_enabled do
   config :micelio, Micelio.GRPC,
     enabled: true,
@@ -532,6 +566,20 @@ if config_env() == :prod do
 
   maybe_ipv6 = if System.get_env("ECTO_IPV6") in ~w(true 1), do: [:inet6], else: []
 
+  otel_protocol =
+    case System.get_env("OTEL_EXPORTER_OTLP_PROTOCOL", "grpc") do
+      "grpc" -> :grpc
+      "http_protobuf" -> :http_protobuf
+      protocol -> raise "unsupported OTEL_EXPORTER_OTLP_PROTOCOL=#{inspect(protocol)}"
+    end
+
+  metrics_bearer_token =
+    System.get_env("METRICS_BEARER_TOKEN") ||
+      raise """
+      environment variable METRICS_BEARER_TOKEN is missing.
+      Generate one with: mix phx.gen.secret 32
+      """
+
   # The secret key base is used to sign/encrypt cookies and other secrets.
   # A default value is used in config/dev.exs and config/test.exs but you
   # want to use a different value for prod and you most likely don't want
@@ -545,6 +593,8 @@ if config_env() == :prod do
       """
 
   host = System.get_env("PHX_HOST") || "example.com"
+  otel_service_name = System.get_env("OTEL_SERVICE_NAME", "micelio-web")
+  otel_deployment_environment = System.get_env("OTEL_DEPLOYMENT_ENVIRONMENT", "production")
 
   # Configure SMTP mailer
   smtp_host = System.get_env("SMTP_HOST")
@@ -580,7 +630,25 @@ if config_env() == :prod do
     ],
     secret_key_base: secret_key_base
 
+  config :micelio, MicelioWeb.Plugs.Metrics, bearer_token: metrics_bearer_token
   config :micelio, :dns_cluster_query, System.get_env("DNS_CLUSTER_QUERY")
+
+  config :opentelemetry,
+    span_processor: :batch,
+    traces_exporter: :otlp,
+    resource: [
+      service: %{
+        name: otel_service_name,
+        version: to_string(Application.spec(:micelio, :vsn))
+      },
+      deployment: %{
+        environment: otel_deployment_environment
+      }
+    ]
+
+  config :opentelemetry_exporter,
+    otlp_protocol: otel_protocol,
+    otlp_endpoint: System.get_env("OTEL_EXPORTER_OTLP_ENDPOINT", "http://micelio-alloy:4317")
 
   if Enum.any?(missing_smtp_vars) do
     raise """

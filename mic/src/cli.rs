@@ -707,7 +707,10 @@ pub fn generate_help_json() -> serde_json::Value {
             "no_active_session": "Run 'mic session start \"<goal>\"' first",
             "session_already_active": "Run 'mic session land' or 'mic session abandon' first",
             "invalid_project_ref": "Use format: org/project (e.g., 'acme/myapp')",
-            "conflicts_detected": "Run 'mic session resolve' or 'mic sync'"
+            "conflicts_detected": "Run 'mic session resolve' or 'mic sync'",
+            "no_web_url": "Set web_url in config.json for the server",
+            "no_grpc_url": "Set grpc_url in config.json or enable discovery via /.well-known/micelio.json",
+            "discovery_failed": "Check /.well-known/micelio.json or set grpc_url manually"
         },
         
         "project_ref_format": {

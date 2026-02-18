@@ -53,6 +53,12 @@ env:
   clear:
     PHX_HOST: micelio.dev
     STORAGE_BACKEND: s3
+    OTEL_EXPORTER_OTLP_ENDPOINT: http://micelio-alloy:4317
+    OTEL_EXPORTER_OTLP_PROTOCOL: grpc
+    OTEL_SERVICE_NAME: micelio-web
+    OTEL_DEPLOYMENT_ENVIRONMENT: production
+    CLICKHOUSE_URL: http://micelio-clickhouse:8123/micelio
+    CLICKHOUSE_USER: micelio
     SMTP_PORT: "587"
     SMTP_SSL: "false"
     SMTP_TLS: "always"
@@ -78,6 +84,10 @@ env:
     - GITHUB_OAUTH_REDIRECT_URI
     - GITHUB_OAUTH_CLIENT_ID
     - GITHUB_OAUTH_CLIENT_SECRET
+    - DAYTONA_API_KEY
+    - DAYTONA_ORGANIZATION_ID
+    - CLICKHOUSE_PASSWORD
+    - METRICS_BEARER_TOKEN
 
 accessories:
   postgres:
@@ -98,3 +108,137 @@ accessories:
     port: 5000
     directories:
       - data:/var/lib/registry
+  clickhouse:
+    image: clickhouse/clickhouse-server:24.8
+    host: 91.98.64.68
+    port: 8123
+    env:
+      clear:
+        CLICKHOUSE_DB: micelio
+        CLICKHOUSE_USER: micelio
+      secret:
+        - CLICKHOUSE_PASSWORD
+    directories:
+      - data:/var/lib/clickhouse
+  loki:
+    image: grafana/loki:3.4
+    host: 91.98.64.68
+    port: "3100"
+    files:
+      - config/loki/config.yaml:/etc/loki/config.yaml
+    cmd: -config.file=/etc/loki/config.yaml
+    directories:
+      - data:/loki
+  tempo:
+    image: grafana/tempo:2.8.3
+    host: 91.98.64.68
+    port: "3200:3200"
+    options:
+      publish:
+        - "4417:4317"
+        - "4418:4318"
+    files:
+      - config/tempo/config.yaml:/etc/tempo/config.yaml
+    cmd: -config.file=/etc/tempo/config.yaml
+    directories:
+      - data:/var/tempo
+  prometheus:
+    image: prom/prometheus:v3.2.1
+    host: 91.98.64.68
+    port: "9090"
+    files:
+      - config/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    cmd: --config.file=/etc/prometheus/prometheus.yml --web.enable-remote-write-receiver --storage.tsdb.retention.time=15d --storage.tsdb.retention.size=10GB
+    directories:
+      - data:/prometheus
+  alloy:
+    image: grafana/alloy:latest
+    host: 91.98.64.68
+    port: "12345:12345"
+    options:
+      publish:
+        - "4317:4317"
+        - "4318:4318"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+    files:
+      - config/alloy/config.alloy:/etc/alloy/config.alloy
+    env:
+      secret:
+        - METRICS_BEARER_TOKEN
+    cmd: run --server.http.listen-addr=0.0.0.0:12345 --storage.path=/var/lib/alloy/data /etc/alloy/config.alloy
+  grafana:
+    image: grafana/grafana:11.5
+    host: 91.98.64.68
+    proxy:
+      host: data.micelio.dev
+      app_port: 3000
+      ssl:
+        certificate_pem: TLS_CERT_PEM
+        private_key_pem: TLS_KEY_PEM
+      forward_headers: true
+    env:
+      clear:
+        GF_SERVER_ROOT_URL: https://data.micelio.dev
+        GF_SERVER_DOMAIN: data.micelio.dev
+        GF_INSTALL_PLUGINS: grafana-clickhouse-datasource
+      secret:
+        - GF_SECURITY_ADMIN_PASSWORD
+        - POSTGRES_PASSWORD
+        - CLICKHOUSE_PASSWORD
+    files:
+      - config/grafana/provisioning/datasources/datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml
+    directories:
+      - data:/var/lib/grafana
+  plausible-db:
+    image: postgres:16-alpine
+    host: 91.98.64.68
+    env:
+      secret:
+        - POSTGRES_PASSWORD:PLAUSIBLE_POSTGRES_PASSWORD
+    directories:
+      - data:/var/lib/postgresql/data
+  plausible-events-db:
+    image: clickhouse/clickhouse-server:24.12-alpine
+    host: 91.98.64.68
+    env:
+      clear:
+        CLICKHOUSE_SKIP_USER_SETUP: "1"
+    options:
+      ulimit: "nofile=262144:262144"
+    directories:
+      - data:/var/lib/clickhouse
+      - logs:/var/log/clickhouse-server
+    files:
+      - config/plausible/clickhouse/logs.xml:/etc/clickhouse-server/config.d/logs.xml
+      - config/plausible/clickhouse/ipv4-only.xml:/etc/clickhouse-server/config.d/ipv4-only.xml
+      - config/plausible/clickhouse/low-resources.xml:/etc/clickhouse-server/config.d/low-resources.xml
+      - config/plausible/clickhouse/default-profile-low-resources-overrides.xml:/etc/clickhouse-server/users.d/default-profile-low-resources-overrides.xml
+  plausible:
+    image: ghcr.io/plausible/community-edition:v3.2.0
+    host: 91.98.64.68
+    proxy:
+      host: analytics.micelio.dev
+      app_port: 8000
+      ssl:
+        certificate_pem: TLS_CERT_PEM
+        private_key_pem: TLS_KEY_PEM
+      forward_headers: true
+      healthcheck:
+        path: /login
+    cmd: sh -c "/entrypoint.sh db createdb && /entrypoint.sh db migrate && /entrypoint.sh run"
+    options:
+      ulimit: "nofile=65535:65535"
+    env:
+      clear:
+        BASE_URL: https://analytics.micelio.dev
+        TMPDIR: /var/lib/plausible/tmp
+        DISABLE_REGISTRATION: invite_only
+        CLICKHOUSE_DATABASE_URL: http://micelio-plausible-events-db:8123/plausible_events_db
+      secret:
+        - SECRET_KEY_BASE:PLAUSIBLE_SECRET_KEY_BASE
+        - DATABASE_URL:PLAUSIBLE_DATABASE_URL
+    directories:
+      - data:/var/lib/plausible

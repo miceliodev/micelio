@@ -16,7 +16,7 @@ defmodule Micelio.ValidationEnvironments.ValidationRun do
     field :started_at, :utc_datetime
     field :completed_at, :utc_datetime
 
-    belongs_to :prompt_request, Micelio.PromptRequests.PromptRequest
+    belongs_to :plan, Micelio.Plans.Plan
 
     timestamps(type: :utc_datetime)
   end
@@ -33,8 +33,8 @@ defmodule Micelio.ValidationEnvironments.ValidationRun do
       :coverage_delta,
       :started_at,
       :completed_at,
-      :prompt_request_id
+      :plan_id
     ])
-    |> validate_required([:status, :prompt_request_id])
+    |> validate_required([:status, :plan_id])
   end
 end

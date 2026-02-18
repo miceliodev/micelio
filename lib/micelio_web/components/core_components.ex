@@ -382,7 +382,7 @@ defmodule MicelioWeb.CoreComponents do
   end
 
   @doc """
-  Renders a repository page header with breadcrumb and tab navigation.
+  Renders a repository page header with breadcrumb.
 
   ## Examples
 
@@ -430,84 +430,6 @@ defmodule MicelioWeb.CoreComponents do
           </h1>
         </div>
       </div>
-      <nav class="repository-tabs" aria-label="Repository navigation" id="repository-tabs">
-        <.link
-          navigate={"/#{@account_handle}/#{@repository_handle}"}
-          class={["repository-tab", @active_tab == :code && "is-active"]}
-        >
-          <svg
-            class="repository-tab-icon"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.5"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            aria-hidden="true"
-          >
-            <path d="M10 20l4-16m4.5 4l4.5 4-4.5 4M5.5 8L1 12l4.5 4" />
-          </svg>
-          {gettext("Code")}
-        </.link>
-        <.link
-          navigate={"/#{@account_handle}/#{@repository_handle}/sessions"}
-          class={["repository-tab", @active_tab == :sessions && "is-active"]}
-        >
-          <svg
-            class="repository-tab-icon"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.5"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            aria-hidden="true"
-          >
-            <path d="M12 8v4l3 3" />
-            <circle cx="12" cy="12" r="9" />
-          </svg>
-          {gettext("Sessions")}
-        </.link>
-        <.link
-          navigate={"/#{@account_handle}/#{@repository_handle}/prs"}
-          class={["repository-tab", @active_tab == :prompt_requests && "is-active"]}
-        >
-          <svg
-            class="repository-tab-icon"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.5"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            aria-hidden="true"
-          >
-            <path d="M8 9h8" />
-            <path d="M8 13h6" />
-            <path d="M9 18h-3a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3h12a3 3 0 0 1 3 3v8a3 3 0 0 1-3 3h-3l-3 3-3-3z" />
-          </svg>
-          {gettext("Prompt Requests")}
-        </.link>
-        <.link
-          navigate={"/#{@account_handle}/#{@repository_handle}/settings"}
-          class={["repository-tab", @active_tab == :settings && "is-active"]}
-        >
-          <svg
-            class="repository-tab-icon"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.5"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            aria-hidden="true"
-          >
-            <path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 0 0 1.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 0 0-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 0 0-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 0 0-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 0 0-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 0 0 1.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-            <circle cx="12" cy="12" r="3" />
-          </svg>
-          {gettext("Settings")}
-        </.link>
-      </nav>
       {render_slot(@inner_block)}
     </div>
     """
@@ -1027,5 +949,34 @@ defmodule MicelioWeb.CoreComponents do
       ratio <= 0.75 -> 3
       true -> 4
     end
+  end
+
+  @doc """
+  Renders a collapsible table of contents using a `<details>` element.
+
+  Renders nothing if the toc list is empty.
+
+  ## Examples
+
+      <.collapsible_toc toc={@toc} />
+  """
+  attr :toc, :list, required: true, doc: "list of %{level, id, text} maps"
+  attr :class, :string, default: nil
+
+  def collapsible_toc(assigns) do
+    ~H"""
+    <details :if={@toc != []} class={["collapsible-toc", @class]}>
+      <summary class="collapsible-toc-summary">{gettext("On this page")}</summary>
+      <nav class="collapsible-toc-nav">
+        <a
+          :for={entry <- @toc}
+          href={"##{entry.id}"}
+          class={["collapsible-toc-link", entry.level == 3 && "collapsible-toc-link-nested"]}
+        >
+          {entry.text}
+        </a>
+      </nav>
+    </details>
+    """
   end
 end

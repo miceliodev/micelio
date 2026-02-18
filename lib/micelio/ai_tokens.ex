@@ -12,8 +12,8 @@ defmodule Micelio.AITokens do
   alias Micelio.AITokens.TokenContribution
   alias Micelio.AITokens.TokenEarning
   alias Micelio.AITokens.TokenPool
-  alias Micelio.PromptRequests.PromptRequest
-  alias Micelio.PromptRequests.PromptSuggestion
+  alias Micelio.Plans.Plan
+  alias Micelio.Plans.PlanSuggestion
   alias Micelio.Repo
   alias Micelio.Repositories.Repository
 
@@ -53,31 +53,21 @@ defmodule Micelio.AITokens do
   end
 
   def repository_usage_summary(%Repository{} = repository) do
-    tokens_spent =
+    {tokens_spent, accepted_plans, total_plans} =
       Repo.one(
-        from pr in PromptRequest,
+        from pr in Plan,
           where: pr.repository_id == ^repository.id,
-          select: fragment("COALESCE(?, 0)", sum(pr.token_count))
-      ) || 0
-
-    accepted_prompt_requests =
-      Repo.one(
-        from pr in PromptRequest,
-          where: pr.repository_id == ^repository.id and pr.review_status == :accepted,
-          select: count(pr.id)
-      ) || 0
-
-    total_prompt_requests =
-      Repo.one(
-        from pr in PromptRequest,
-          where: pr.repository_id == ^repository.id,
-          select: count(pr.id)
-      ) || 0
+          select: {
+            fragment("COALESCE(?, 0)", sum(pr.token_count)),
+            fragment("COUNT(CASE WHEN ? = 'accepted' THEN 1 END)", pr.review_status),
+            count(pr.id)
+          }
+      ) || {0, 0, 0}
 
     %{
       tokens_spent: tokens_spent,
-      accepted_prompt_requests: accepted_prompt_requests,
-      total_prompt_requests: total_prompt_requests
+      accepted_plans: accepted_plans,
+      total_plans: total_plans
     }
   end
 
@@ -85,32 +75,32 @@ defmodule Micelio.AITokens do
     TokenContribution.changeset(contribution, attrs)
   end
 
-  def prompt_request_reward(%PromptRequest{} = prompt_request) do
-    EarningPolicy.prompt_request_reward(prompt_request.token_count)
+  def plan_reward(%Plan{} = plan) do
+    EarningPolicy.plan_reward(plan.token_count)
   end
 
-  def ensure_prompt_request_earning(repo \\ Repo, %PromptRequest{} = prompt_request) do
+  def ensure_plan_earning(repo \\ Repo, %Plan{} = plan) do
     case repo.get_by(TokenEarning,
-           prompt_request_id: prompt_request.id,
-           reason: :prompt_request_accepted
+           plan_id: plan.id,
+           reason: :plan_accepted
          ) do
       %TokenEarning{} ->
         {:ok, :skipped}
 
       nil ->
-        amount = prompt_request_reward(prompt_request)
+        amount = plan_reward(plan)
 
         if amount > 0 do
           insert_token_earning(
             repo,
             %{
               amount: amount,
-              reason: :prompt_request_accepted,
-              repository_id: prompt_request.repository_id,
-              user_id: prompt_request.user_id,
-              prompt_request_id: prompt_request.id
+              reason: :plan_accepted,
+              repository_id: plan.repository_id,
+              user_id: plan.user_id,
+              plan_id: plan.id
             },
-            [:prompt_request_id, :user_id, :reason]
+            [:plan_id, :user_id, :reason]
           )
         else
           {:ok, :skipped}
@@ -118,38 +108,34 @@ defmodule Micelio.AITokens do
     end
   end
 
-  def prompt_suggestion_reward(%PromptSuggestion{} = suggestion) do
-    EarningPolicy.prompt_suggestion_reward(suggestion.suggestion)
+  def plan_suggestion_reward(%PlanSuggestion{} = suggestion) do
+    EarningPolicy.plan_suggestion_reward(suggestion.suggestion)
   end
 
-  def ensure_prompt_suggestion_earning(
-        repo \\ Repo,
-        %PromptSuggestion{} = suggestion,
-        %PromptRequest{} = prompt_request
-      ) do
+  def ensure_plan_suggestion_earning(repo \\ Repo, %PlanSuggestion{} = suggestion, %Plan{} = plan) do
     case repo.get_by(TokenEarning,
-           prompt_request_id: prompt_request.id,
+           plan_id: plan.id,
            user_id: suggestion.user_id,
-           reason: :prompt_suggestion_submitted
+           reason: :plan_suggestion_submitted
          ) do
       %TokenEarning{} ->
         {:ok, :skipped}
 
       nil ->
-        amount = prompt_suggestion_reward(suggestion)
+        amount = plan_suggestion_reward(suggestion)
 
         if amount > 0 do
           insert_token_earning(
             repo,
             %{
               amount: amount,
-              reason: :prompt_suggestion_submitted,
-              repository_id: prompt_request.repository_id,
+              reason: :plan_suggestion_submitted,
+              repository_id: plan.repository_id,
               user_id: suggestion.user_id,
-              prompt_request_id: prompt_request.id,
-              prompt_suggestion_id: suggestion.id
+              plan_id: plan.id,
+              plan_suggestion_id: suggestion.id
             },
-            [:prompt_request_id, :user_id, :reason]
+            [:plan_id, :user_id, :reason]
           )
         else
           {:ok, :skipped}
@@ -188,22 +174,22 @@ defmodule Micelio.AITokens do
     end
   end
 
-  def get_task_budget_for_prompt_request(%PromptRequest{} = prompt_request) do
-    Repo.get_by(TaskBudget, prompt_request_id: prompt_request.id)
+  def get_task_budget_for_plan(%Plan{} = plan) do
+    Repo.get_by(TaskBudget, plan_id: plan.id)
   end
 
-  def ensure_budget_for_prompt_request(%PromptRequest{} = prompt_request) do
-    case prompt_request.origin do
+  def ensure_budget_for_plan(%Plan{} = plan) do
+    case plan.origin do
       :human ->
         :ok
 
       _ ->
-        case get_task_budget_for_prompt_request(prompt_request) do
+        case get_task_budget_for_plan(plan) do
           nil ->
             {:error, :missing_budget}
 
           %TaskBudget{} = budget ->
-            required_tokens = prompt_request.token_count || 0
+            required_tokens = plan.token_count || 0
 
             cond do
               budget.amount <= 0 ->
@@ -223,7 +209,7 @@ defmodule Micelio.AITokens do
     TaskBudget.changeset(task_budget, attrs)
   end
 
-  def upsert_task_budget(%PromptRequest{} = prompt_request, attrs) when is_map(attrs) do
+  def upsert_task_budget(%Plan{} = plan, attrs) when is_map(attrs) do
     attrs =
       attrs
       |> Map.new(fn {key, value} -> {to_string(key), value} end)
@@ -231,14 +217,14 @@ defmodule Micelio.AITokens do
 
     Multi.new()
     |> Multi.run(:pool, fn repo, _changes ->
-      fetch_or_create_pool(repo, prompt_request.repository_id)
+      fetch_or_create_pool(repo, plan.repository_id)
     end)
-    |> Multi.run(:budget, fn repo, _changes -> fetch_budget(repo, prompt_request.id) end)
+    |> Multi.run(:budget, fn repo, _changes -> fetch_budget(repo, plan.id) end)
     |> Multi.run(:budget_changeset, fn _repo, %{budget: budget, pool: pool} ->
       changeset =
         budget
         |> TaskBudget.changeset(attrs)
-        |> Ecto.Changeset.put_change(:prompt_request_id, prompt_request.id)
+        |> Ecto.Changeset.put_change(:plan_id, plan.id)
         |> Ecto.Changeset.put_change(:token_pool_id, pool.id)
 
       if changeset.valid?, do: {:ok, changeset}, else: {:error, changeset}
@@ -297,13 +283,13 @@ defmodule Micelio.AITokens do
     end
   end
 
-  defp fetch_budget(repo, prompt_request_id) do
+  defp fetch_budget(repo, plan_id) do
     TaskBudget
-    |> where([budget], budget.prompt_request_id == ^prompt_request_id)
+    |> where([budget], budget.plan_id == ^plan_id)
     |> lock("FOR UPDATE")
     |> repo.one()
     |> case do
-      nil -> {:ok, %TaskBudget{prompt_request_id: prompt_request_id}}
+      nil -> {:ok, %TaskBudget{plan_id: plan_id}}
       %TaskBudget{} = budget -> {:ok, budget}
     end
   end

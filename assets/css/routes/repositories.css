@@ -18,7 +18,7 @@
   border-radius: var(--theme-ui-radii-default);
   text-decoration: none;
   color: inherit;
-  transition: border-color 0.15s ease;
+  transition: border-color 0.1s ease;
 }
 
 .repository-card:hover {
@@ -82,7 +82,7 @@
   background-color: var(--theme-ui-colors-background);
   color: var(--theme-ui-colors-text);
   cursor: pointer;
-  transition: border-color 0.15s ease, background-color 0.15s ease;
+  transition: border-color 0.1s ease, background-color 0.1s ease;
 }
 
 .repository-card-action:hover {
@@ -143,6 +143,38 @@
   margin: 0;
 }
 
+/* Settings sections -- Pajamas-inspired grouped fieldsets */
+
+.settings-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--theme-ui-space-2);
+  border: none;
+  padding: 0;
+  margin: 0;
+}
+
+.settings-section + .settings-section {
+  padding-top: var(--theme-ui-space-3);
+  border-top: 1px solid var(--theme-ui-colors-border);
+}
+
+.settings-section-title {
+  font-family: var(--theme-ui-fonts-heading);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--theme-ui-colors-text);
+  padding: 0;
+  margin: 0;
+}
+
+.settings-section-description {
+  font-size: 14px;
+  color: var(--theme-ui-colors-muted);
+  margin: 0 0 var(--theme-ui-space-1);
+  line-height: 20px;
+}
+
 .repository-form-group {
   display: flex;
   flex-direction: column;
@@ -155,9 +187,9 @@
 
 .repository-input {
   width: 100%;
-  padding: 5px 12px;
+  padding: 6px 12px;
   font-family: var(--theme-ui-fonts-body);
-  font-size: var(--theme-ui-font-sizes-body);
+  font-size: 14px;
   line-height: 20px;
   color: var(--theme-ui-colors-text);
   vertical-align: middle;
@@ -166,14 +198,12 @@
   background-position: right 8px center;
   border: 1px solid var(--theme-ui-colors-control-border);
   border-radius: var(--theme-ui-radii-default);
-  box-shadow: inset 0 1px 0 rgba(208, 215, 222, 0.2);
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  transition: border-color 0.1s ease;
 }
 
 .repository-input:focus {
-  border-color: var(--theme-ui-colors-primary);
+  border-color: var(--theme-ui-colors-text);
   outline: none;
-  box-shadow: 0 0 0 3px rgba(9, 105, 218, 0.3);
 }
 
 .repository-input::placeholder {
@@ -186,7 +216,7 @@
 }
 
 .repository-input-error:focus {
-  box-shadow: 0 0 0 3px rgba(209, 36, 47, 0.3);
+  border-color: var(--theme-ui-colors-danger);
 }
 
 .repository-textarea {
@@ -204,9 +234,9 @@
   justify-content: center;
   gap: var(--theme-ui-space-1);
   width: 100%;
-  padding: 5px 16px;
-  font-size: var(--theme-ui-font-sizes-body);
-  font-weight: var(--theme-ui-font-weights-medium);
+  padding: 6px 16px;
+  font-size: 14px;
+  font-weight: 600;
   font-family: inherit;
   line-height: 20px;
   color: var(--theme-ui-colors-button-primary-fg);
@@ -215,7 +245,7 @@
   border-radius: var(--theme-ui-radii-default);
   text-decoration: none;
   cursor: pointer;
-  transition: background-color 0.2s ease;
+  transition: background-color 0.1s ease;
 }
 
 .repository-button:hover {
@@ -223,9 +253,9 @@
   text-decoration: none;
 }
 
-.repository-button:focus {
-  outline: 2px solid var(--theme-ui-colors-primary);
-  outline-offset: 2px;
+.repository-button:focus-visible {
+  outline: 2px solid var(--theme-ui-colors-text);
+  outline-offset: 1px;
 }
 
 .repository-button-secondary {
@@ -280,7 +310,7 @@
   text-decoration: none;
   cursor: pointer;
   border-radius: var(--theme-ui-radii-default);
-  transition: background-color 0.15s ease;
+  transition: background-color 0.1s ease;
 }
 
 .repository-show-action-edit {
@@ -350,7 +380,7 @@
   border: var(--theme-ui-borders-thin);
   border-radius: var(--theme-ui-radii-default);
   background-color: var(--theme-ui-colors-background);
-  transition: background-color 0.15s ease;
+  transition: background-color 0.1s ease;
 }
 
 .repository-show-nav-link:hover {
@@ -382,7 +412,7 @@
   border-radius: var(--theme-ui-radii-default);
   text-decoration: none;
   color: inherit;
-  transition: border-color 0.15s ease;
+  transition: border-color 0.1s ease;
 }
 
 .session-card-compact:hover {

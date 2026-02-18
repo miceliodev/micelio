@@ -29,7 +29,10 @@ defmodule Micelio.Docs.HtmlConverter do
     end)
   end
 
-  defp add_heading_ids(html) do
+  @doc """
+  Adds id attributes to h2 and h3 headings that don't already have them.
+  """
+  def add_heading_ids(html) do
     Regex.replace(~r/<h([23])>(.*?)<\/h\1>/si, html, fn _, level, content ->
       id = slugify(strip_tags(content))
       "<h#{level} id=\"#{id}\">#{content}</h#{level}>"

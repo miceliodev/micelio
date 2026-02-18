@@ -3,17 +3,10 @@ defmodule Micelio.Docs do
   The Docs context for managing documentation pages using NimblePublisher.
 
   Docs are organized by category in the filesystem:
-  - priv/docs/users/mic-workflows.md
-  - priv/docs/hosters/deployment.md
+  - priv/docs/auth/authentication.md
 
   Page ordering is defined in `_index.txt` files within each category directory.
   Each line in the index file is a page ID (filename without extension).
-
-  Categories:
-  - users: Documentation for people using mic and Micelio day-to-day
-  - hosters: Documentation for people running their own Micelio instance
-  - contributors: Documentation for people contributing to the Micelio repository
-  - shapers: Documentation for people shaping Micelio
   """
   use Gettext, backend: MicelioWeb.Gettext
 
@@ -28,27 +21,6 @@ defmodule Micelio.Docs do
   require Micelio.SyntaxHighlighting
 
   @categories %{
-    "users" => %{
-      title: gettext_noop("Users"),
-      description: gettext_noop("Documentation for people using mic and Micelio day-to-day."),
-      kind: :guide
-    },
-    "hosters" => %{
-      title: gettext_noop("Hosters"),
-      description: gettext_noop("Documentation for people running their own Micelio instance."),
-      kind: :guide
-    },
-    "contributors" => %{
-      title: gettext_noop("Contributors"),
-      description:
-        gettext_noop("Documentation for people contributing to the Micelio repository."),
-      kind: :guide
-    },
-    "shapers" => %{
-      title: gettext_noop("Shapers"),
-      description: gettext_noop("Documentation for people shaping Micelio."),
-      kind: :guide
-    },
     "grpc" => %{
       title: gettext_noop("gRPC API"),
       description: gettext_noop("gRPC API reference generated from protocol buffer definitions."),

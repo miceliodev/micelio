@@ -1,0 +1,153 @@
+// ============================================
+// OTLP receiver (traces and logs from the app)
+// ============================================
+
+otelcol.receiver.otlp "default" {
+  grpc {
+    endpoint = "0.0.0.0:4317"
+  }
+
+  http {
+    endpoint = "0.0.0.0:4318"
+  }
+
+  output {
+    traces = [otelcol.exporter.otlp.tempo.input]
+    logs   = [otelcol.exporter.loki.default.input]
+  }
+}
+
+// ============================================
+// Export traces to Tempo
+// ============================================
+
+otelcol.exporter.otlp "tempo" {
+  client {
+    endpoint = "micelio-tempo:4317"
+
+    tls {
+      insecure = true
+    }
+  }
+}
+
+// ============================================
+// Export logs to Loki (via OTLP)
+// ============================================
+
+otelcol.exporter.loki "default" {
+  forward_to = [loki.write.local.receiver]
+}
+
+// ============================================
+// Docker container logs
+// ============================================
+
+discovery.docker "containers" {
+  host = "unix:///var/run/docker.sock"
+}
+
+loki.source.docker "containers" {
+  host       = "unix:///var/run/docker.sock"
+  targets    = discovery.docker.containers.targets
+  forward_to = [loki.relabel.docker_logs.receiver]
+}
+
+loki.relabel "docker_logs" {
+  forward_to = [loki.process.docker_logs.receiver]
+
+  rule {
+    source_labels = ["__meta_docker_container_name"]
+    target_label  = "container"
+  }
+}
+
+loki.process "docker_logs" {
+  stage.static_labels {
+    values = {
+      service_name = "micelio-docker",
+      source       = "docker",
+    }
+  }
+
+  forward_to = [loki.write.local.receiver]
+}
+
+// ============================================
+// Host metrics (CPU, memory, disk, network)
+// ============================================
+
+prometheus.exporter.unix "host" {
+  procfs_path = "/host/proc"
+  sysfs_path  = "/host/sys"
+  rootfs_path = "/"
+}
+
+prometheus.scrape "host_metrics" {
+  targets         = prometheus.exporter.unix.host.targets
+  forward_to      = [prometheus.remote_write.local.receiver]
+  scrape_interval = "60s"
+}
+
+// ============================================
+// App metrics (Phoenix, Ecto, BEAM via prom_ex)
+// ============================================
+
+discovery.docker "app" {
+  host = "unix:///var/run/docker.sock"
+
+  filter {
+    name   = "label"
+    values = ["service=micelio"]
+  }
+
+  filter {
+    name   = "label"
+    values = ["role=web"]
+  }
+}
+
+discovery.relabel "app" {
+  targets = discovery.docker.app.targets
+
+  rule {
+    source_labels = ["__meta_docker_network_ip"]
+    regex         = "(.+)"
+    replacement   = "$1:4000"
+    target_label  = "__address__"
+  }
+
+  rule {
+    replacement  = "micelio-web"
+    target_label = "job"
+  }
+}
+
+prometheus.scrape "app_metrics" {
+  targets         = discovery.relabel.app.output
+  forward_to      = [prometheus.remote_write.local.receiver]
+  scrape_interval = "30s"
+  metrics_path    = "/metrics"
+
+  bearer_token = sys.env("METRICS_BEARER_TOKEN")
+}
+
+// ============================================
+// Write: Loki (local)
+// ============================================
+
+loki.write "local" {
+  endpoint {
+    url = "http://micelio-loki:3100/loki/api/v1/push"
+  }
+}
+
+// ============================================
+// Write: Prometheus (local)
+// ============================================
+
+prometheus.remote_write "local" {
+  endpoint {
+    url = "http://micelio-prometheus:9090/api/v1/write"
+  }
+}

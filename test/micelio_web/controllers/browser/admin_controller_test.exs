@@ -2,7 +2,7 @@ defmodule MicelioWeb.Browser.AdminControllerTest do
   use MicelioWeb.ConnCase, async: true
 
   alias Micelio.Accounts
-  alias Micelio.PromptRequests
+  alias Micelio.Plans
   alias Micelio.Repositories
   alias Micelio.Sessions
 
@@ -93,8 +93,8 @@ defmodule MicelioWeb.Browser.AdminControllerTest do
         visibility: "public"
       })
 
-    {:ok, prompt_request} =
-      PromptRequests.create_prompt_request(
+    {:ok, plan} =
+      Plans.create_plan(
         %{
           title: "Add usage dashboard",
           prompt: "Build the usage dashboard.",
@@ -111,7 +111,7 @@ defmodule MicelioWeb.Browser.AdminControllerTest do
         user: admin
       )
 
-    {:ok, _} = PromptRequests.review_prompt_request(prompt_request, admin, :accepted)
+    {:ok, _} = Plans.review_plan(plan, admin, :accepted)
 
     conn =
       conn
@@ -127,7 +127,7 @@ defmodule MicelioWeb.Browser.AdminControllerTest do
     assert html =~ "id=\"admin-usage-project-#{repository.id}\""
   end
 
-  test "shows empty usage dashboard when no prompt requests exist", %{conn: conn} do
+  test "shows empty usage dashboard when no plans exist", %{conn: conn} do
     {:ok, admin} = Accounts.get_or_create_user_by_email("admin@example.com")
 
     conn =

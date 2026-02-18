@@ -1,6 +1,12 @@
 defmodule Micelio.Mic.RollupScheduler do
   @moduledoc """
   Periodic rollup rebuild scheduler.
+
+  NOTE: This GenServer runs independently on every node. When scaling to
+  multiple nodes, every instance will redundantly rebuild rollups for all
+  repositories. Consider migrating to Oban (which uses Postgres advisory
+  locks for single-execution guarantees) or a distributed singleton
+  (e.g. `:global`, Horde) to avoid redundant work.
   """
 
   use GenServer

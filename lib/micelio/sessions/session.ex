@@ -16,7 +16,7 @@ defmodule Micelio.Sessions.Session do
     belongs_to :repository, Micelio.Repositories.Repository
     belongs_to :user, Micelio.Accounts.User
     has_many :changes, Micelio.Sessions.SessionChange
-    has_one :prompt_request, Micelio.PromptRequests.PromptRequest, foreign_key: :session_id
+    has_one :plan, Micelio.Plans.Plan, foreign_key: :session_id
 
     timestamps()
   end

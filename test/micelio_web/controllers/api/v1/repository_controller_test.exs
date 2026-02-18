@@ -38,12 +38,12 @@ defmodule MicelioWeb.Api.V1.RepositoryControllerTest do
     }
   end
 
-  describe "GET /api/v1/orgs/:org/repositories" do
+  describe "GET /api/orgs/:org/repositories" do
     test "returns 403 without token", %{conn: conn, org_handle: org_handle} do
       conn =
         conn
         |> put_req_header("accept", "application/json")
-        |> get(~p"/api/v1/orgs/#{org_handle}/repositories")
+        |> get(~p"/api/orgs/#{org_handle}/repositories")
 
       body = json_response(conn, 403)
       assert body["error"] == "insufficient_scope"
@@ -59,7 +59,7 @@ defmodule MicelioWeb.Api.V1.RepositoryControllerTest do
         conn
         |> put_req_header("accept", "application/json")
         |> put_req_header("authorization", "Bearer #{token}")
-        |> get(~p"/api/v1/orgs/#{org_handle}/repositories")
+        |> get(~p"/api/orgs/#{org_handle}/repositories")
 
       body = json_response(conn, 200)
       assert is_list(body["data"])
@@ -71,7 +71,7 @@ defmodule MicelioWeb.Api.V1.RepositoryControllerTest do
     end
   end
 
-  describe "GET /api/v1/orgs/:org/repositories/:handle" do
+  describe "GET /api/orgs/:org/repositories/:handle" do
     test "returns repository by handle", %{
       conn: conn,
       token: token,
@@ -82,7 +82,7 @@ defmodule MicelioWeb.Api.V1.RepositoryControllerTest do
         conn
         |> put_req_header("accept", "application/json")
         |> put_req_header("authorization", "Bearer #{token}")
-        |> get(~p"/api/v1/orgs/#{org_handle}/repositories/#{repository.handle}")
+        |> get(~p"/api/orgs/#{org_handle}/repositories/#{repository.handle}")
 
       body = json_response(conn, 200)
       assert body["data"]["handle"] == repository.handle
@@ -94,13 +94,13 @@ defmodule MicelioWeb.Api.V1.RepositoryControllerTest do
         conn
         |> put_req_header("accept", "application/json")
         |> put_req_header("authorization", "Bearer #{token}")
-        |> get(~p"/api/v1/orgs/#{org_handle}/repositories/nonexistent")
+        |> get(~p"/api/orgs/#{org_handle}/repositories/nonexistent")
 
       assert json_response(conn, 404)
     end
   end
 
-  describe "POST /api/v1/orgs/:org/repositories" do
+  describe "POST /api/orgs/:org/repositories" do
     test "creates a repository", %{
       conn: conn,
       token: token,
@@ -111,7 +111,7 @@ defmodule MicelioWeb.Api.V1.RepositoryControllerTest do
         conn
         |> put_req_header("accept", "application/json")
         |> put_req_header("authorization", "Bearer #{token}")
-        |> post(~p"/api/v1/orgs/#{org_handle}/repositories", %{
+        |> post(~p"/api/orgs/#{org_handle}/repositories", %{
           handle: "new-repo-#{unique}",
           name: "New Repository"
         })
@@ -122,7 +122,7 @@ defmodule MicelioWeb.Api.V1.RepositoryControllerTest do
     end
   end
 
-  describe "PATCH /api/v1/orgs/:org/repositories/:handle" do
+  describe "PATCH /api/orgs/:org/repositories/:handle" do
     test "updates a repository", %{
       conn: conn,
       token: token,
@@ -133,7 +133,7 @@ defmodule MicelioWeb.Api.V1.RepositoryControllerTest do
         conn
         |> put_req_header("accept", "application/json")
         |> put_req_header("authorization", "Bearer #{token}")
-        |> patch(~p"/api/v1/orgs/#{org_handle}/repositories/#{repository.handle}", %{
+        |> patch(~p"/api/orgs/#{org_handle}/repositories/#{repository.handle}", %{
           name: "Updated Name"
         })
 
@@ -142,7 +142,7 @@ defmodule MicelioWeb.Api.V1.RepositoryControllerTest do
     end
   end
 
-  describe "DELETE /api/v1/orgs/:org/repositories/:handle" do
+  describe "DELETE /api/orgs/:org/repositories/:handle" do
     test "deletes a repository", %{
       conn: conn,
       token: token,
@@ -161,7 +161,7 @@ defmodule MicelioWeb.Api.V1.RepositoryControllerTest do
         conn
         |> put_req_header("accept", "application/json")
         |> put_req_header("authorization", "Bearer #{token}")
-        |> delete(~p"/api/v1/orgs/#{org_handle}/repositories/#{to_delete.handle}")
+        |> delete(~p"/api/orgs/#{org_handle}/repositories/#{to_delete.handle}")
 
       assert conn.status == 204
     end

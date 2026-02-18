@@ -4,7 +4,7 @@ defmodule MicelioWeb.SessionLiveTest do
   import Phoenix.LiveViewTest
 
   alias Micelio.Sessions.OGSummary
-  alias Micelio.{Accounts, PromptRequests, Sessions}
+  alias Micelio.{Accounts, Plans, Sessions}
   alias MicelioWeb.OpenGraphImage
 
   describe "SessionLive.Index" do
@@ -183,14 +183,14 @@ defmodule MicelioWeb.SessionLiveTest do
       assert html =~ "custom_key"
     end
 
-    test "shows prompt request link when session originates from a prompt request", %{
+    test "shows plan link when session originates from a plan", %{
       conn: conn,
       repository: repository,
       user: user,
       organization: organization
     } do
-      {:ok, prompt_request} =
-        PromptRequests.create_prompt_request(
+      {:ok, plan} =
+        Plans.create_plan(
           %{
             title: "Prompt to PR",
             prompt: "Do the thing",
@@ -207,10 +207,10 @@ defmodule MicelioWeb.SessionLiveTest do
           user: user
         )
 
-      {:ok, accepted_prompt_request} =
-        PromptRequests.review_prompt_request(prompt_request, user, :accepted)
+      {:ok, accepted_plan} =
+        Plans.review_plan(plan, user, :accepted)
 
-      session = Sessions.get_session(accepted_prompt_request.session_id)
+      session = Sessions.get_session(accepted_plan.session_id)
 
       {:ok, _live, html} =
         live(
@@ -221,7 +221,7 @@ defmodule MicelioWeb.SessionLiveTest do
       assert html =~ "Prompt to PR"
 
       assert html =~
-               "/#{organization.account.handle}/#{repository.handle}/prompt-requests/#{prompt_request.id}"
+               "/#{organization.account.handle}/#{repository.handle}/plans/#{plan.id}"
     end
 
     test "renders session event viewer controls", %{

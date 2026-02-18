@@ -1,6 +1,7 @@
 defmodule MicelioWeb.Browser.RepositoryController do
   use MicelioWeb, :controller
 
+  alias Micelio.Accounts
   alias Micelio.AITokens
   alias Micelio.AITokens.TokenContribution
   alias Micelio.AITokens.TokenPool
@@ -216,6 +217,7 @@ defmodule MicelioWeb.Browser.RepositoryController do
     |> assign(:license, license)
     |> assign_star_data(repository)
     |> assign_token_pool_data(repository)
+    |> assign_user_accounts()
     |> maybe_assign_schema_json_ld(dir_path, account, repository)
     |> track_repository_interaction(repository, "view")
     |> render(:show)
@@ -251,6 +253,7 @@ defmodule MicelioWeb.Browser.RepositoryController do
           |> assign(:blob_download_url, blob_download_url)
           |> assign(:file_content, format_blob_content(file_path, content))
           |> assign_star_data(repository)
+          |> assign_user_accounts()
           |> track_repository_interaction(repository, "view")
           |> render(:blob)
         else
@@ -304,6 +307,7 @@ defmodule MicelioWeb.Browser.RepositoryController do
           |> assign(:blame_content, blame_content)
           |> assign(:blame_lines, blame_lines)
           |> assign_star_data(repository)
+          |> assign_user_accounts()
           |> track_repository_interaction(repository, "view")
           |> render(:blame)
         else
@@ -339,10 +343,28 @@ defmodule MicelioWeb.Browser.RepositoryController do
   defp assign_star_data(conn, repository) do
     return_to = current_path(conn)
 
+    {stars_count, starred?} =
+      Repositories.repository_star_summary(repository, conn.assigns.current_user)
+
     conn
     |> assign(:star_form, Phoenix.Component.to_form(%{"return_to" => return_to}, as: :star))
-    |> assign(:starred?, Repositories.repository_starred?(conn.assigns.current_user, repository))
-    |> assign(:stars_count, Repositories.count_repository_stars(repository))
+    |> assign(:starred?, starred?)
+    |> assign(:stars_count, stars_count)
+  end
+
+  defp assign_user_accounts(conn) do
+    case conn.assigns.current_user do
+      %{account: personal_account} = user ->
+        org_accounts =
+          user
+          |> Accounts.list_organizations_for_user()
+          |> Enum.map(& &1.account)
+
+        assign(conn, :user_accounts, [personal_account | org_accounts])
+
+      _ ->
+        assign(conn, :user_accounts, [])
+    end
   end
 
   defp track_repository_interaction(conn, repository, type) do
@@ -367,7 +389,7 @@ defmodule MicelioWeb.Browser.RepositoryController do
     usage = AITokens.repository_usage_summary(repository)
 
     acceptance_rate =
-      format_acceptance_rate(usage.accepted_prompt_requests, usage.total_prompt_requests)
+      format_acceptance_rate(usage.accepted_plans, usage.total_plans)
 
     form =
       Phoenix.Component.to_form(

@@ -1,0 +1,198 @@
+/* Left sidebar navigation -- GitLab Pajamas-inspired */
+
+.app-shell {
+  display: flex;
+  flex: 1 0 auto;
+  min-height: 0;
+}
+
+.app-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Sidebar */
+.sidebar {
+  width: 220px;
+  flex-shrink: 0;
+  background: var(--theme-ui-colors-surface);
+  border-right: var(--theme-ui-borders-thin);
+  position: sticky;
+  top: 41px; /* navbar height */
+  height: calc(100vh - 41px);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  z-index: 40;
+}
+
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  padding: var(--theme-ui-space-1);
+  flex: 1;
+}
+
+.sidebar-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.sidebar-section + .sidebar-section {
+  margin-top: var(--theme-ui-space-1);
+  padding-top: var(--theme-ui-space-1);
+  border-top: var(--theme-ui-borders-thin);
+}
+
+/* Navigation link */
+.sidebar-link {
+  display: flex;
+  align-items: center;
+  gap: var(--theme-ui-space-1);
+  padding: 6px 8px;
+  font-size: var(--theme-ui-font-size-sm);
+  color: var(--theme-ui-colors-surface-text);
+  text-decoration: none;
+  border-radius: var(--theme-ui-radii-default);
+  transition: background-color 0.1s ease;
+  line-height: 20px;
+}
+
+.sidebar-link:hover {
+  background-color: var(--theme-ui-colors-hover);
+  text-decoration: none;
+  color: var(--theme-ui-colors-text);
+}
+
+.sidebar-link:focus-visible {
+  outline: 2px solid var(--theme-ui-colors-text);
+  outline-offset: -2px;
+}
+
+.sidebar-link-active {
+  background-color: var(--theme-ui-colors-primary-alpha);
+  color: var(--theme-ui-colors-primary);
+  font-weight: var(--theme-ui-font-weights-semibold);
+}
+
+.sidebar-link-active:hover {
+  background-color: var(--theme-ui-colors-primary-alpha);
+  color: var(--theme-ui-colors-primary);
+}
+
+/* Icon inside sidebar link */
+.sidebar-link-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  color: var(--theme-ui-colors-muted);
+}
+
+.sidebar-link-icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+.sidebar-link-active .sidebar-link-icon {
+  color: var(--theme-ui-colors-primary);
+}
+
+.sidebar-link:hover .sidebar-link-icon {
+  color: var(--theme-ui-colors-text);
+}
+
+.sidebar-link-active:hover .sidebar-link-icon {
+  color: var(--theme-ui-colors-primary);
+}
+
+/* Sidebar bottom section -- pushed to bottom */
+.sidebar-bottom {
+  margin-top: auto;
+  padding: var(--theme-ui-space-1);
+  border-top: var(--theme-ui-borders-thin);
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+/* Logout button styled as sidebar link */
+.sidebar-logout-form {
+  margin: 0;
+}
+
+.sidebar-logout-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--theme-ui-space-1);
+  width: 100%;
+  padding: 6px 8px;
+  font-size: var(--theme-ui-font-size-sm);
+  font-family: inherit;
+  color: var(--theme-ui-colors-surface-text);
+  text-decoration: none;
+  border-radius: var(--theme-ui-radii-default);
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  transition: background-color 0.1s ease;
+  line-height: 20px;
+  text-align: left;
+}
+
+.sidebar-logout-btn:hover {
+  background-color: var(--theme-ui-colors-hover);
+  color: var(--theme-ui-colors-text);
+}
+
+.sidebar-logout-btn:focus-visible {
+  outline: 2px solid var(--theme-ui-colors-text);
+  outline-offset: -2px;
+}
+
+/* Mobile: sidebar as overlay */
+@media (max-width: 48rem) {
+  .sidebar {
+    position: fixed;
+    top: 41px;
+    left: 0;
+    bottom: 0;
+    height: auto;
+    transform: translateX(-100%);
+    transition: transform 0.15s ease;
+    z-index: 45;
+    box-shadow: none;
+  }
+
+  .sidebar.is-open {
+    transform: translateX(0);
+    box-shadow: 4px 0 12px rgba(0, 0, 0, 0.1);
+  }
+
+  /* Overlay backdrop */
+  .sidebar-backdrop {
+    display: none;
+    position: fixed;
+    top: 41px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.3);
+    z-index: 44;
+  }
+
+  .sidebar-backdrop.is-visible {
+    display: block;
+  }
+}
+
+@media (min-width: 48.0625rem) {
+  .sidebar-backdrop {
+    display: none !important;
+  }
+}

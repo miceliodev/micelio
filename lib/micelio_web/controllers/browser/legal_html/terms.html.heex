@@ -13,12 +13,14 @@
       </:subtitle>
     </.header>
 
+    <.collapsible_toc toc={@toc} />
+
     <div class="legal-content prose">
       <p class="legal-updated">
         <strong>Last updated:</strong> {Date.utc_today() |> Date.to_iso8601()}
       </p>
 
-      <h2>1. Provider</h2>
+      <h2 id="1-provider">1. Provider</h2>
       <p>
         <strong>Provider:</strong> <em>{MicelioWeb.LegalInfo.operator_name()}</em> <br />
         <strong>Address:</strong> {MicelioWeb.LegalInfo.address_one_line()} <br />
@@ -28,26 +30,26 @@
         </a>
       </p>
 
-      <h2>2. About the service</h2>
+      <h2 id="2-about-the-service">2. About the service</h2>
       <p>
         Micelio is a hosted forge for hif, similar to how GitHub is a forge for git.
         These terms govern access to and use of the Micelio website and services (the “Service”).
       </p>
 
-      <h2>3. Accounts</h2>
+      <h2 id="3-accounts">3. Accounts</h2>
       <ul>
         <li>You must provide accurate information and keep your account secure.</li>
         <li>You are responsible for activity under your account.</li>
         <li>The Service is available to businesses and individuals.</li>
       </ul>
 
-      <h2>4. Pricing</h2>
+      <h2 id="4-pricing">4. Pricing</h2>
       <p>
         Micelio is currently free to use. We may introduce paid features in the future, at which
         point we will update these terms and provide notice.
       </p>
 
-      <h2>5. Acceptable use</h2>
+      <h2 id="5-acceptable-use">5. Acceptable use</h2>
       <ul>
         <li>No unlawful content or activity.</li>
         <li>No abuse, interference, or attempts to access unauthorized systems.</li>
@@ -56,7 +58,7 @@
         </li>
       </ul>
 
-      <h2>6. Content and intellectual property</h2>
+      <h2 id="6-content-and-intellectual-property">6. Content and intellectual property</h2>
       <p>
         You retain ownership of content you upload to the Service (including repositories and related materials)
         (“Customer Content”). You grant Micelio a worldwide, non-exclusive, royalty-free license to host, store,
@@ -68,13 +70,13 @@
         secure, and improve the Service. Service Data does not include repository contents.
       </p>
 
-      <h2>7. Availability and changes</h2>
+      <h2 id="7-availability-and-changes">7. Availability and changes</h2>
       <p>
         We may modify or discontinue features. We use best efforts to keep the Service available, but we do not
         provide a guaranteed uptime or service level agreement unless we explicitly agree to one in writing.
       </p>
 
-      <h2>8. Termination</h2>
+      <h2 id="8-termination">8. Termination</h2>
       <p>
         You may stop using the Service at any time. We may suspend or terminate access for breach of these terms,
         legal compliance, or security reasons.
@@ -88,7 +90,7 @@
         We may retain certain information for longer where required by law (e.g., accounting and tax records).
       </p>
 
-      <h2>9. Warranty and liability</h2>
+      <h2 id="9-warranty-and-liability">9. Warranty and liability</h2>
       <p>
         Liability is governed by applicable German law. Nothing in these terms limits liability where such
         limitation is prohibited by law (including liability for intent, gross negligence, injury to life, body
@@ -101,7 +103,7 @@
         is excluded to the extent permitted by law.
       </p>
 
-      <h2>10. Governing law and jurisdiction</h2>
+      <h2 id="10-governing-law-and-jurisdiction">10. Governing law and jurisdiction</h2>
       <p>
         <strong>Governing law:</strong>
         Laws of the Federal Republic of Germany.<br />
@@ -110,13 +112,13 @@
         consumer, statutory rules on jurisdiction apply.
       </p>
 
-      <h2>11. Privacy</h2>
+      <h2 id="11-privacy">11. Privacy</h2>
       <p>
         Our <a href={~p"/privacy"}>Privacy Policy</a>
         explains how we process personal data, including GDPR legal bases.
       </p>
 
-      <h2>12. Changes to these terms</h2>
+      <h2 id="12-changes-to-these-terms">12. Changes to these terms</h2>
       <p>We may update these terms. We will post the current version on this page.</p>
     </div>
   </div>

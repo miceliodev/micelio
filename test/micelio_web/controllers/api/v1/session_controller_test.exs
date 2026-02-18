@@ -38,7 +38,7 @@ defmodule MicelioWeb.Api.V1.SessionControllerTest do
     }
   end
 
-  describe "GET /api/v1/orgs/:org/repositories/:repo/sessions" do
+  describe "GET /api/orgs/:org/repositories/:repo/sessions" do
     test "returns 403 without token", %{
       conn: conn,
       org_handle: org_handle,
@@ -47,7 +47,7 @@ defmodule MicelioWeb.Api.V1.SessionControllerTest do
       conn =
         conn
         |> put_req_header("accept", "application/json")
-        |> get(~p"/api/v1/orgs/#{org_handle}/repositories/#{repository.handle}/sessions")
+        |> get(~p"/api/orgs/#{org_handle}/repositories/#{repository.handle}/sessions")
 
       body = json_response(conn, 403)
       assert body["error"] == "insufficient_scope"
@@ -73,7 +73,7 @@ defmodule MicelioWeb.Api.V1.SessionControllerTest do
         conn
         |> put_req_header("accept", "application/json")
         |> put_req_header("authorization", "Bearer #{token}")
-        |> get(~p"/api/v1/orgs/#{org_handle}/repositories/#{repository.handle}/sessions")
+        |> get(~p"/api/orgs/#{org_handle}/repositories/#{repository.handle}/sessions")
 
       body = json_response(conn, 200)
       assert is_list(body["data"])
@@ -81,7 +81,7 @@ defmodule MicelioWeb.Api.V1.SessionControllerTest do
     end
   end
 
-  describe "POST /api/v1/orgs/:org/repositories/:repo/sessions" do
+  describe "POST /api/orgs/:org/repositories/:repo/sessions" do
     test "starts a new session", %{
       conn: conn,
       token: token,
@@ -93,7 +93,7 @@ defmodule MicelioWeb.Api.V1.SessionControllerTest do
         |> put_req_header("accept", "application/json")
         |> put_req_header("authorization", "Bearer #{token}")
         |> post(
-          ~p"/api/v1/orgs/#{org_handle}/repositories/#{repository.handle}/sessions",
+          ~p"/api/orgs/#{org_handle}/repositories/#{repository.handle}/sessions",
           %{goal: "Add new feature"}
         )
 
@@ -104,7 +104,7 @@ defmodule MicelioWeb.Api.V1.SessionControllerTest do
     end
   end
 
-  describe "GET /api/v1/sessions/:session_id" do
+  describe "GET /api/sessions/:session_id" do
     test "returns session by session_id", %{
       conn: conn,
       token: token,
@@ -126,7 +126,7 @@ defmodule MicelioWeb.Api.V1.SessionControllerTest do
         conn
         |> put_req_header("accept", "application/json")
         |> put_req_header("authorization", "Bearer #{token}")
-        |> get(~p"/api/v1/sessions/#{session_id}")
+        |> get(~p"/api/sessions/#{session_id}")
 
       body = json_response(conn, 200)
       assert body["data"]["session_id"] == session_id
@@ -138,13 +138,13 @@ defmodule MicelioWeb.Api.V1.SessionControllerTest do
         conn
         |> put_req_header("accept", "application/json")
         |> put_req_header("authorization", "Bearer #{token}")
-        |> get(~p"/api/v1/sessions/#{Ecto.UUID.generate()}")
+        |> get(~p"/api/sessions/#{Ecto.UUID.generate()}")
 
       assert json_response(conn, 404)
     end
   end
 
-  describe "POST /api/v1/sessions/:session_id/land" do
+  describe "POST /api/sessions/:session_id/land" do
     test "lands an active session", %{
       conn: conn,
       token: token,
@@ -166,7 +166,7 @@ defmodule MicelioWeb.Api.V1.SessionControllerTest do
         conn
         |> put_req_header("accept", "application/json")
         |> put_req_header("authorization", "Bearer #{token}")
-        |> post(~p"/api/v1/sessions/#{session_id}/land")
+        |> post(~p"/api/sessions/#{session_id}/land")
 
       body = json_response(conn, 200)
       assert body["data"]["status"] == "landed"

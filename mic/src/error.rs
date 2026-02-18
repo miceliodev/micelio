@@ -43,6 +43,9 @@ pub enum MicError {
     #[error("Server configuration missing grpc_url")]
     NoGrpcUrl,
 
+    #[error("Server discovery failed: {0}")]
+    DiscoveryFailed(String),
+
     #[error("Invalid server URL: {0}")]
     InvalidServer(String),
 
@@ -138,6 +141,7 @@ impl MicError {
             MicError::NoDefaultServer => "no_default_server",
             MicError::NoWebUrl => "no_web_url",
             MicError::NoGrpcUrl => "no_grpc_url",
+            MicError::DiscoveryFailed(_) => "discovery_failed",
             MicError::InvalidServer(_) => "invalid_server",
             MicError::InsecureServer => "insecure_server",
             MicError::ConfigError(_) => "config_error",
@@ -218,6 +222,7 @@ mod tests {
             MicError::InvalidProjectRef("test".into()),
             MicError::ConfigError("test".into()),
             MicError::GrpcError("test".into()),
+            MicError::DiscoveryFailed("test".into()),
         ];
 
         for error in errors {

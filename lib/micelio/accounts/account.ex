@@ -9,6 +9,11 @@ defmodule Micelio.Accounts.Account do
     field :handle, :string
     field :llm_models, {:array, :string}
     field :llm_default_model, :string
+    field :llm_provider, :string
+    field :llm_api_key_encrypted, Micelio.Encrypted.Binary
+    field :sandbox_provider, :string
+    field :forge_provider, :string
+    field :forge_host, :string
 
     belongs_to :user, Micelio.Accounts.User
     belongs_to :organization, Micelio.Accounts.Organization
@@ -97,11 +102,28 @@ defmodule Micelio.Accounts.Account do
   """
   def settings_changeset(account, attrs) do
     account
-    |> cast(attrs, [:llm_models, :llm_default_model])
+    |> cast(attrs, [
+      :llm_models,
+      :llm_default_model,
+      :llm_provider,
+      :llm_api_key_encrypted,
+      :sandbox_provider,
+      :forge_provider,
+      :forge_host
+    ])
     |> normalize_llm_models()
     |> normalize_llm_default_model()
     |> validate_llm_models()
     |> validate_llm_default_model()
+    |> validate_sandbox_provider()
+    |> validate_forge_fields()
+  end
+
+  defp validate_sandbox_provider(changeset) do
+    case get_field(changeset, :sandbox_provider) do
+      nil -> changeset
+      _ -> validate_inclusion(changeset, :sandbox_provider, ["docker", "daytona"])
+    end
   end
 
   defp validate_llm_models(changeset) do
@@ -156,6 +178,34 @@ defmodule Micelio.Accounts.Account do
         end
 
       _ ->
+        changeset
+    end
+  end
+
+  defp validate_forge_fields(changeset) do
+    provider = get_field(changeset, :forge_provider)
+    host = get_field(changeset, :forge_host)
+
+    has_provider = not is_nil(provider) and provider != ""
+    has_host = not is_nil(host) and host != ""
+
+    cond do
+      has_provider and not has_host ->
+        changeset
+        |> validate_inclusion(:forge_provider, ["github", "gitlab"])
+        |> validate_required([:forge_host])
+
+      has_host and not has_provider ->
+        changeset
+        |> validate_required([:forge_provider])
+        |> validate_length(:forge_host, max: 120)
+
+      has_provider and has_host ->
+        changeset
+        |> validate_inclusion(:forge_provider, ["github", "gitlab"])
+        |> validate_length(:forge_host, max: 120)
+
+      true ->
         changeset
     end
   end

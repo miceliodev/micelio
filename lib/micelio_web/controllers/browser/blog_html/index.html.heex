@@ -17,22 +17,40 @@
       </:actions>
     </.header>
 
-    <div class="content-card-list">
-      <%= for post <- @posts do %>
-        <.content_card href={~p"/blog/#{post.id}"} id={"blog-post-#{post.id}"}>
-          <:title>{post.title}</:title>
-          <:subtitle>
-            <time datetime={post.date}>{format_date(post.date)}</time>
-            <span>by {author_name(post.author)}</span>
-            <%= if length(post.tags) > 0 do %>
-              <%= for tag <- post.tags do %>
-                <.badge>{tag}</.badge>
+    <%= if Enum.empty?(@posts) do %>
+      <div class="blog-empty">
+        <div class="blog-empty-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path
+              d="M3 4m0 2a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2z"
+              stroke-linejoin="round"
+            />
+            <path d="M7 8h10" stroke-linecap="round" />
+            <path d="M7 12h10" stroke-linecap="round" />
+            <path d="M7 16h10" stroke-linecap="round" />
+          </svg>
+        </div>
+        <h3 class="blog-empty-title">{gettext("No blog posts yet")}</h3>
+        <p class="blog-empty-message">{gettext("Check back soon for updates!")}</p>
+      </div>
+    <% else %>
+      <div class="content-card-list">
+        <%= for post <- @posts do %>
+          <.content_card href={~p"/blog/#{post.id}"} id={"blog-post-#{post.id}"}>
+            <:title>{post.title}</:title>
+            <:subtitle>
+              <time datetime={post.date}>{format_date(post.date)}</time>
+              <span>by {author_name(post.author)}</span>
+              <%= if length(post.tags) > 0 do %>
+                <%= for tag <- post.tags do %>
+                  <.badge>{tag}</.badge>
+                <% end %>
               <% end %>
-            <% end %>
-          </:subtitle>
-          <:description>{post.description}</:description>
-        </.content_card>
-      <% end %>
-    </div>
+            </:subtitle>
+            <:description>{post.description}</:description>
+          </.content_card>
+        <% end %>
+      </div>
+    <% end %>
   </div>
 </Layouts.app>

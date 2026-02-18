@@ -1,13 +1,12 @@
-defmodule Micelio.PromptRequestsTest do
+defmodule Micelio.PlansTest do
   use Micelio.DataCase, async: true
 
   alias Micelio.Accounts
   alias Micelio.AITokens
   alias Micelio.AITokens.TokenEarning
-  alias Micelio.PromptRequests
-  alias Micelio.PromptRequests.PromptRequest
+  alias Micelio.Plans
+  alias Micelio.Plans.Plan
   alias Micelio.Repo
-  alias Micelio.Repositories
   alias Micelio.Sessions
 
   defp unique_handle(prefix) do
@@ -35,12 +34,12 @@ defmodule Micelio.PromptRequestsTest do
     {user, repository}
   end
 
-  test "creates prompt request with agent context" do
+  test "creates plan with agent context" do
     {user, repository} = setup_repository()
 
     attrs = %{
-      title: "Add prompt request system",
-      prompt: "Implement the prompt request flow",
+      title: "Add plan system",
+      prompt: "Implement the plan flow",
       result: "Diff output",
       model: "gpt-4.1",
       model_version: "2025-02-01",
@@ -55,23 +54,23 @@ defmodule Micelio.PromptRequestsTest do
       }
     }
 
-    assert {:ok, prompt_request} =
-             PromptRequests.create_prompt_request(attrs, repository: repository, user: user)
+    assert {:ok, plan} =
+             Plans.create_plan(attrs, repository: repository, user: user)
 
-    assert prompt_request.repository_id == repository.id
-    assert prompt_request.user_id == user.id
-    assert prompt_request.conversation["messages"] != []
-    assert PromptRequests.attestation_status(prompt_request) == :verified
+    assert plan.repository_id == repository.id
+    assert plan.user_id == user.id
+    assert plan.conversation["messages"] != []
+    assert Plans.attestation_status(plan) == :verified
 
-    assert [listed] = PromptRequests.list_prompt_requests_for_repository(repository)
-    assert listed.id == prompt_request.id
+    assert [listed] = Plans.list_plans_for_repository(repository)
+    assert listed.id == plan.id
   end
 
   test "captures execution metadata and lineage" do
     {user, repository} = setup_repository()
 
     {:ok, parent} =
-      PromptRequests.create_prompt_request(
+      Plans.create_plan(
         %{
           title: "Parent prompt",
           prompt: "Initial prompt",
@@ -91,7 +90,7 @@ defmodule Micelio.PromptRequestsTest do
     execution_environment = %{"runtime" => "phoenix", "os" => "linux"}
 
     {:ok, child} =
-      PromptRequests.create_prompt_request(
+      Plans.create_plan(
         %{
           title: "Child prompt",
           prompt: "Follow-up prompt",
@@ -103,7 +102,7 @@ defmodule Micelio.PromptRequestsTest do
           generated_at: DateTime.utc_now() |> DateTime.truncate(:second),
           system_prompt: "System",
           conversation: %{"messages" => [%{"role" => "user", "content" => "Prompt"}]},
-          parent_prompt_request_id: parent.id,
+          parent_plan_id: parent.id,
           execution_environment: execution_environment,
           execution_duration_ms: 12_500
         },
@@ -111,16 +110,16 @@ defmodule Micelio.PromptRequestsTest do
         user: user
       )
 
-    assert child.parent_prompt_request_id == parent.id
+    assert child.parent_plan_id == parent.id
     assert child.execution_environment["runtime"] == "phoenix"
     assert child.execution_duration_ms == 12_500
   end
 
-  test "rejects prompt request when generation depth exceeds limit" do
+  test "rejects plan when generation depth exceeds limit" do
     {user, repository} = setup_repository()
 
     {:ok, root} =
-      PromptRequests.create_prompt_request(
+      Plans.create_plan(
         %{
           title: "Root prompt",
           prompt: "Root prompt",
@@ -138,7 +137,7 @@ defmodule Micelio.PromptRequestsTest do
       )
 
     {:ok, child} =
-      PromptRequests.create_prompt_request(
+      Plans.create_plan(
         %{
           title: "Child prompt",
           prompt: "Child prompt",
@@ -150,14 +149,14 @@ defmodule Micelio.PromptRequestsTest do
           generated_at: DateTime.utc_now() |> DateTime.truncate(:second),
           system_prompt: "System",
           conversation: %{"messages" => [%{"role" => "user", "content" => "Prompt"}]},
-          parent_prompt_request_id: root.id
+          parent_plan_id: root.id
         },
         project: repository,
         user: user
       )
 
     assert {:error, changeset} =
-             PromptRequests.create_prompt_request(
+             Plans.create_plan(
                %{
                  title: "Third prompt",
                  prompt: "Third prompt",
@@ -169,17 +168,17 @@ defmodule Micelio.PromptRequestsTest do
                  generated_at: DateTime.utc_now() |> DateTime.truncate(:second),
                  system_prompt: "System",
                  conversation: %{"messages" => [%{"role" => "user", "content" => "Prompt"}]},
-                 parent_prompt_request_id: child.id
+                 parent_plan_id: child.id
                },
                project: repository,
                user: user,
                max_generation_depth: 2
              )
 
-    assert "exceeds max generation depth" in errors_on(changeset).parent_prompt_request_id
+    assert "exceeds max generation depth" in errors_on(changeset).parent_plan_id
   end
 
-  test "submit_prompt_request validates and accepts prompt requests" do
+  test "submit_plan validates and accepts plans" do
     {user, repository} = setup_repository()
 
     attrs = %{
@@ -199,8 +198,8 @@ defmodule Micelio.PromptRequestsTest do
 
     {:ok, _pool} = AITokens.create_token_pool(repository, %{balance: 5000, reserved: 0})
 
-    {:ok, prompt_request} =
-      PromptRequests.submit_prompt_request(attrs,
+    {:ok, plan} =
+      Plans.submit_plan(attrs,
         project: repository,
         user: user,
         validation_enabled: true,
@@ -222,28 +221,28 @@ defmodule Micelio.PromptRequestsTest do
         ]
       )
 
-    updated = Repo.get!(PromptRequest, prompt_request.id)
+    updated = Repo.get!(Plan, plan.id)
     assert updated.review_status == :accepted
     assert updated.validation_feedback == nil
     assert updated.validation_iterations == 1
     assert is_binary(updated.session_id)
 
     session = Sessions.get_session(updated.session_id)
-    assert session.session_id == "prompt-request-#{prompt_request.id}"
-    assert session.metadata["prompt_request"]["prompt"] == attrs.prompt
+    assert session.session_id == "plan-#{plan.id}"
+    assert session.metadata["plan"]["prompt"] == attrs.prompt
 
-    assert session.metadata["prompt_request"]["execution_environment"] ==
+    assert session.metadata["plan"]["execution_environment"] ==
              attrs.execution_environment
 
-    assert session.metadata["prompt_request"]["execution_duration_ms"] ==
+    assert session.metadata["plan"]["execution_duration_ms"] ==
              attrs.execution_duration_ms
 
-    assert is_binary(session.metadata["prompt_request"]["attestation"]["signature"])
-    [run | _] = PromptRequests.list_validation_runs(updated)
+    assert is_binary(session.metadata["plan"]["attestation"]["signature"])
+    [run | _] = Plans.list_validation_runs(updated)
     assert run.status == :passed
   end
 
-  test "keeps prompt request pending when confidence is low after validation" do
+  test "keeps plan pending when confidence is low after validation" do
     {user, repository} = setup_repository()
 
     attrs = %{
@@ -261,8 +260,8 @@ defmodule Micelio.PromptRequestsTest do
 
     {:ok, _pool} = AITokens.create_token_pool(repository, %{balance: 200_000, reserved: 0})
 
-    {:ok, prompt_request} =
-      PromptRequests.submit_prompt_request(attrs,
+    {:ok, plan} =
+      Plans.submit_plan(attrs,
         project: repository,
         user: user,
         validation_enabled: true,
@@ -284,17 +283,17 @@ defmodule Micelio.PromptRequestsTest do
         ]
       )
 
-    updated = Repo.get!(PromptRequest, prompt_request.id)
+    updated = Repo.get!(Plan, plan.id)
     assert updated.review_status == :pending
     assert updated.validation_feedback == nil
     assert updated.validation_iterations == 1
     assert updated.session_id == nil
 
-    [run | _] = PromptRequests.list_validation_runs(updated)
+    [run | _] = Plans.list_validation_runs(updated)
     assert run.status == :passed
   end
 
-  test "submit_prompt_request stores feedback when validation fails" do
+  test "submit_plan stores feedback when validation fails" do
     {user, repository} = setup_repository()
 
     attrs = %{
@@ -312,8 +311,8 @@ defmodule Micelio.PromptRequestsTest do
 
     {:ok, _pool} = AITokens.create_token_pool(repository, %{balance: 5000, reserved: 0})
 
-    assert {:error, {:validation_failed, feedback, failed_prompt_request}} =
-             PromptRequests.submit_prompt_request(attrs,
+    assert {:error, {:validation_failed, feedback, failed_plan}} =
+             Plans.submit_plan(attrs,
                project: repository,
                user: user,
                validation_enabled: true,
@@ -339,23 +338,23 @@ defmodule Micelio.PromptRequestsTest do
     assert feedback["summary"] =~ "Validation failed"
     assert Enum.any?(feedback["failures"], &(&1["check_id"] == "test"))
 
-    assert failed_prompt_request.repository_id == repository.id
+    assert failed_plan.repository_id == repository.id
 
-    [prompt_request | _] = PromptRequests.list_prompt_requests_for_repository(repository)
-    updated = Repo.get!(PromptRequest, prompt_request.id)
+    [plan | _] = Plans.list_plans_for_repository(repository)
+    updated = Repo.get!(Plan, plan.id)
     assert updated.review_status == :rejected
     assert updated.validation_iterations == 1
     assert is_binary(updated.validation_feedback)
     assert updated.session_id == nil
-    [run | _] = PromptRequests.list_validation_runs(updated)
+    [run | _] = Plans.list_validation_runs(updated)
     assert run.status == :failed
   end
 
-  test "reviewing prompt requests as accepted creates a session" do
+  test "reviewing plans as accepted creates a session" do
     {user, repository} = setup_repository()
 
-    {:ok, prompt_request} =
-      PromptRequests.create_prompt_request(
+    {:ok, plan} =
+      Plans.create_plan(
         %{
           title: "Create session",
           prompt: "Do the work",
@@ -372,19 +371,19 @@ defmodule Micelio.PromptRequestsTest do
         user: user
       )
 
-    assert {:ok, updated} = PromptRequests.review_prompt_request(prompt_request, user, :accepted)
+    assert {:ok, updated} = Plans.review_plan(plan, user, :accepted)
     assert is_binary(updated.session_id)
 
     session = Sessions.get_session(updated.session_id)
     assert session.goal == "Create session"
-    assert session.metadata["prompt_request"]["result"] == "Output"
+    assert session.metadata["plan"]["result"] == "Output"
   end
 
-  test "creates prompt improvement suggestions" do
+  test "creates plan improvement suggestions" do
     {user, repository} = setup_repository()
 
-    {:ok, prompt_request} =
-      PromptRequests.create_prompt_request(
+    {:ok, plan} =
+      Plans.create_plan(
         %{
           title: "Improve prompt",
           prompt: "Do the thing",
@@ -402,21 +401,21 @@ defmodule Micelio.PromptRequestsTest do
       )
 
     assert {:ok, _suggestion} =
-             PromptRequests.create_prompt_suggestion(
-               prompt_request,
+             Plans.create_plan_suggestion(
+               plan,
                %{suggestion: "Add constraints for edge cases"},
                user: user
              )
 
-    assert [suggestion] = PromptRequests.list_prompt_suggestions(prompt_request)
+    assert [suggestion] = Plans.list_plan_suggestions(plan)
     assert suggestion.suggestion =~ "edge cases"
   end
 
-  test "awards token earnings for thorough prompt suggestions" do
+  test "awards token earnings for thorough plan suggestions" do
     {user, repository} = setup_repository()
 
-    {:ok, prompt_request} =
-      PromptRequests.create_prompt_request(
+    {:ok, plan} =
+      Plans.create_plan(
         %{
           title: "Suggestion rewards",
           prompt: "Improve prompt quality",
@@ -442,8 +441,8 @@ defmodule Micelio.PromptRequestsTest do
     assert Repo.aggregate(TokenEarning, :count, :id) == 0
 
     assert {:ok, suggestion} =
-             PromptRequests.create_prompt_suggestion(
-               prompt_request,
+             Plans.create_plan_suggestion(
+               plan,
                %{suggestion: suggestion_text},
                user: user
              )
@@ -452,11 +451,11 @@ defmodule Micelio.PromptRequestsTest do
 
     earning =
       Repo.get_by!(TokenEarning,
-        prompt_suggestion_id: suggestion.id,
-        reason: :prompt_suggestion_submitted
+        plan_suggestion_id: suggestion.id,
+        reason: :plan_suggestion_submitted
       )
 
-    assert earning.amount == AITokens.prompt_suggestion_reward(suggestion)
+    assert earning.amount == AITokens.plan_suggestion_reward(suggestion)
     assert earning.user_id == user.id
     assert earning.repository_id == repository.id
   end
@@ -464,8 +463,8 @@ defmodule Micelio.PromptRequestsTest do
   test "does not award suggestion earnings for short feedback" do
     {user, repository} = setup_repository()
 
-    {:ok, prompt_request} =
-      PromptRequests.create_prompt_request(
+    {:ok, plan} =
+      Plans.create_plan(
         %{
           title: "Short suggestion",
           prompt: "Improve prompt quality",
@@ -483,8 +482,8 @@ defmodule Micelio.PromptRequestsTest do
       )
 
     assert {:ok, _suggestion} =
-             PromptRequests.create_prompt_suggestion(
-               prompt_request,
+             Plans.create_plan_suggestion(
+               plan,
                %{suggestion: "Consider edge cases."},
                user: user
              )
@@ -492,11 +491,11 @@ defmodule Micelio.PromptRequestsTest do
     assert Repo.aggregate(TokenEarning, :count, :id) == 0
   end
 
-  test "awards only one suggestion earning per user and prompt request" do
+  test "awards only one suggestion earning per user and plan" do
     {user, repository} = setup_repository()
 
-    {:ok, prompt_request} =
-      PromptRequests.create_prompt_request(
+    {:ok, plan} =
+      Plans.create_plan(
         %{
           title: "Multiple suggestions",
           prompt: "Improve prompt quality",
@@ -520,8 +519,8 @@ defmodule Micelio.PromptRequestsTest do
       )
 
     assert {:ok, _suggestion} =
-             PromptRequests.create_prompt_suggestion(
-               prompt_request,
+             Plans.create_plan_suggestion(
+               plan,
                %{suggestion: suggestion_text},
                user: user
              )
@@ -529,8 +528,8 @@ defmodule Micelio.PromptRequestsTest do
     assert Repo.aggregate(TokenEarning, :count, :id) == 1
 
     assert {:ok, _suggestion} =
-             PromptRequests.create_prompt_suggestion(
-               prompt_request,
+             Plans.create_plan_suggestion(
+               plan,
                %{suggestion: suggestion_text},
                user: user
              )
@@ -538,11 +537,11 @@ defmodule Micelio.PromptRequestsTest do
     assert Repo.aggregate(TokenEarning, :count, :id) == 1
   end
 
-  test "accepts human-origin prompt requests with model metadata" do
+  test "accepts human-origin plans with model metadata" do
     {user, repository} = setup_repository()
 
-    assert {:ok, prompt_request} =
-             PromptRequests.create_prompt_request(
+    assert {:ok, plan} =
+             Plans.create_plan(
                %{
                  title: "Human authored fix",
                  prompt: "Summarize the change",
@@ -563,19 +562,19 @@ defmodule Micelio.PromptRequestsTest do
                user: user
              )
 
-    assert prompt_request.model == "gpt-4.1"
-    assert prompt_request.model_version == "2025-02-01"
-    assert prompt_request.token_count == 0
-    assert prompt_request.generated_at != nil
-    assert PromptRequests.attestation_status(prompt_request) == :verified
-    assert prompt_request.attestation["payload"]["origin"] == "human"
+    assert plan.model == "gpt-4.1"
+    assert plan.model_version == "2025-02-01"
+    assert plan.token_count == 0
+    assert plan.generated_at != nil
+    assert Plans.attestation_status(plan) == :verified
+    assert plan.attestation["payload"]["origin"] == "human"
   end
 
-  test "runs validation for a prompt request and records runs" do
+  test "runs validation for a plan and records runs" do
     {user, repository} = setup_repository()
 
-    {:ok, prompt_request} =
-      PromptRequests.create_prompt_request(
+    {:ok, plan} =
+      Plans.create_plan(
         %{
           title: "Validate contribution",
           prompt: "Do the thing",
@@ -595,10 +594,10 @@ defmodule Micelio.PromptRequestsTest do
     {:ok, _pool} = AITokens.create_token_pool(repository, %{balance: 5000, reserved: 0})
 
     assert {:ok, _budget, _pool} =
-             AITokens.upsert_task_budget(prompt_request, %{"amount" => "3000"})
+             AITokens.upsert_task_budget(plan, %{"amount" => "3000"})
 
     assert {:ok, run} =
-             PromptRequests.run_validation(prompt_request,
+             Plans.run_validation(plan,
                provider_module: Micelio.TestValidationProvider,
                provider_opts: [notify_pid: self()],
                executor: Micelio.TestValidationExecutor,
@@ -622,15 +621,15 @@ defmodule Micelio.PromptRequestsTest do
     assert_received {:provision, _request}
     assert_received {:terminate, %{id: "test-vm"}}
 
-    [listed | _] = PromptRequests.list_validation_runs(prompt_request)
+    [listed | _] = Plans.list_validation_runs(plan)
     assert listed.id == run.id
   end
 
-  test "run_validation_async promotes prompt request to a session when validation passes" do
+  test "run_validation_async promotes plan to a session when validation passes" do
     {user, repository} = setup_repository()
 
-    {:ok, prompt_request} =
-      PromptRequests.create_prompt_request(
+    {:ok, plan} =
+      Plans.create_plan(
         %{
           title: "Async validation promotion",
           prompt: "Do the thing",
@@ -650,10 +649,10 @@ defmodule Micelio.PromptRequestsTest do
     {:ok, _pool} = AITokens.create_token_pool(repository, %{balance: 5000, reserved: 0})
 
     assert {:ok, _budget, _pool} =
-             AITokens.upsert_task_budget(prompt_request, %{"amount" => "3000"})
+             AITokens.upsert_task_budget(plan, %{"amount" => "3000"})
 
     assert {:ok, pid} =
-             PromptRequests.run_validation_async(prompt_request, self(),
+             Plans.run_validation_async(plan, self(),
                provider_module: Micelio.TestValidationProvider,
                executor: Micelio.TestValidationExecutor,
                plan_attrs: %{
@@ -669,13 +668,13 @@ defmodule Micelio.PromptRequestsTest do
 
     Ecto.Adapters.SQL.Sandbox.allow(Repo, self(), pid)
 
-    prompt_request_id = prompt_request.id
-    assert_receive {:validation_finished, ^prompt_request_id, {:ok, _run}}, 5_000
+    plan_id = plan.id
+    assert_receive {:validation_finished, ^plan_id, {:ok, _run}}, 5_000
 
     ref = Process.monitor(pid)
     assert_receive {:DOWN, ^ref, :process, ^pid, _reason}, 5_000
 
-    updated = Repo.get!(PromptRequest, prompt_request.id)
+    updated = Repo.get!(Plan, plan.id)
 
     assert updated.review_status == :accepted
     assert updated.validation_feedback == nil
@@ -683,14 +682,14 @@ defmodule Micelio.PromptRequestsTest do
     assert is_binary(updated.session_id)
 
     session = Sessions.get_session(updated.session_id)
-    assert session.session_id == "prompt-request-#{prompt_request.id}"
+    assert session.session_id == "plan-#{plan.id}"
   end
 
-  test "run_validation requires a task budget for ai prompt requests" do
+  test "run_validation requires a task budget for ai plans" do
     {user, repository} = setup_repository()
 
-    {:ok, prompt_request} =
-      PromptRequests.create_prompt_request(
+    {:ok, plan} =
+      Plans.create_plan(
         %{
           title: "Validate contribution without budget",
           prompt: "Do the thing",
@@ -708,7 +707,7 @@ defmodule Micelio.PromptRequestsTest do
       )
 
     assert {:error, :missing_budget} =
-             PromptRequests.run_validation(prompt_request,
+             Plans.run_validation(plan,
                provider_module: Micelio.TestValidationProvider,
                executor: Micelio.TestValidationExecutor,
                plan_attrs: %{
@@ -722,14 +721,14 @@ defmodule Micelio.PromptRequestsTest do
                }
              )
 
-    assert [] == PromptRequests.list_validation_runs(prompt_request)
+    assert [] == Plans.list_validation_runs(plan)
   end
 
-  test "marks attestation invalid when prompt request data is tampered" do
+  test "marks attestation invalid when plan data is tampered" do
     {user, repository} = setup_repository()
 
-    {:ok, prompt_request} =
-      PromptRequests.create_prompt_request(
+    {:ok, plan} =
+      Plans.create_plan(
         %{
           title: "Audit attestation",
           prompt: "Prompt",
@@ -746,21 +745,21 @@ defmodule Micelio.PromptRequestsTest do
         user: user
       )
 
-    prompt_request
-    |> Ecto.Changeset.change(%{token_count: prompt_request.token_count + 1})
+    plan
+    |> Ecto.Changeset.change(%{token_count: plan.token_count + 1})
     |> Repo.update!()
 
-    updated = Repo.get!(PromptRequest, prompt_request.id)
-    assert PromptRequests.attestation_status(updated) == :invalid
+    updated = Repo.get!(Plan, plan.id)
+    assert Plans.attestation_status(updated) == :invalid
   end
 
-  test "updates review status for prompt requests" do
+  test "updates review status for plans" do
     {user, repository} = setup_repository()
 
     {:ok, reviewer} = Accounts.get_or_create_user_by_email("reviewer@example.com")
 
-    {:ok, prompt_request} =
-      PromptRequests.create_prompt_request(
+    {:ok, plan} =
+      Plans.create_plan(
         %{
           title: "Review status check",
           prompt: "Prompt",
@@ -777,22 +776,22 @@ defmodule Micelio.PromptRequestsTest do
         user: user
       )
 
-    assert prompt_request.review_status == :pending
+    assert plan.review_status == :pending
 
-    {:ok, updated} = PromptRequests.review_prompt_request(prompt_request, reviewer, :accepted)
+    {:ok, updated} = Plans.review_plan(plan, reviewer, :accepted)
 
     assert updated.review_status == :accepted
     assert updated.reviewed_by_id == reviewer.id
     assert updated.reviewed_at != nil
   end
 
-  test "awards token earnings when prompt requests are accepted" do
+  test "awards token earnings when plans are accepted" do
     {user, repository} = setup_repository()
 
     {:ok, reviewer} = Accounts.get_or_create_user_by_email("earnings-reviewer@example.com")
 
-    {:ok, prompt_request} =
-      PromptRequests.create_prompt_request(
+    {:ok, plan} =
+      Plans.create_plan(
         %{
           title: "Earn tokens",
           prompt: "Prompt",
@@ -811,25 +810,25 @@ defmodule Micelio.PromptRequestsTest do
 
     assert Repo.aggregate(TokenEarning, :count, :id) == 0
 
-    {:ok, accepted} = PromptRequests.review_prompt_request(prompt_request, reviewer, :accepted)
+    {:ok, accepted} = Plans.review_plan(plan, reviewer, :accepted)
 
     assert Repo.aggregate(TokenEarning, :count, :id) == 1
 
     earning =
       Repo.get_by!(TokenEarning,
-        prompt_request_id: accepted.id,
-        reason: :prompt_request_accepted
+        plan_id: accepted.id,
+        reason: :plan_accepted
       )
 
-    assert earning.amount == AITokens.prompt_request_reward(accepted)
+    assert earning.amount == AITokens.plan_reward(accepted)
     assert earning.user_id == user.id
     assert earning.repository_id == repository.id
 
-    {:ok, _} = PromptRequests.review_prompt_request(accepted, reviewer, :accepted)
+    {:ok, _} = Plans.review_plan(accepted, reviewer, :accepted)
     assert Repo.aggregate(TokenEarning, :count, :id) == 1
   end
 
-  test "lists prompt registry with search and review status filters" do
+  test "lists plan registry with search and review status filters" do
     {user, repository} = setup_repository()
 
     {:ok, reviewer} = Accounts.get_or_create_user_by_email("registry-reviewer@example.com")
@@ -845,7 +844,7 @@ defmodule Micelio.PromptRequestsTest do
     }
 
     {:ok, accepted_request} =
-      PromptRequests.create_prompt_request(
+      Plans.create_plan(
         Map.merge(base_attrs, %{
           title: "Bug fix prompt",
           prompt: "Fix a bug in the registry",
@@ -856,7 +855,7 @@ defmodule Micelio.PromptRequestsTest do
       )
 
     {:ok, rejected_request} =
-      PromptRequests.create_prompt_request(
+      Plans.create_plan(
         Map.merge(base_attrs, %{
           title: "Refactor prompt",
           prompt: "Refactor a subsystem",
@@ -867,27 +866,27 @@ defmodule Micelio.PromptRequestsTest do
       )
 
     {:ok, accepted_request} =
-      PromptRequests.review_prompt_request(accepted_request, reviewer, :accepted)
+      Plans.review_plan(accepted_request, reviewer, :accepted)
 
     {:ok, _rejected_request} =
-      PromptRequests.review_prompt_request(rejected_request, reviewer, :rejected)
+      Plans.review_plan(rejected_request, reviewer, :rejected)
 
     [listed] =
-      PromptRequests.list_prompt_registry(
+      Plans.list_plan_registry(
         search: "Bug fix",
         review_status: :accepted
       )
 
     assert listed.id == accepted_request.id
-    assert [] == PromptRequests.list_prompt_registry(review_status: :pending)
-    assert [_] = PromptRequests.list_prompt_registry(review_status: :rejected)
+    assert [] == Plans.list_plan_registry(review_status: :pending)
+    assert [_] = Plans.list_plan_registry(review_status: :rejected)
   end
 
-  test "curates prompt requests and filters curated registry" do
+  test "curates plans and filters curated registry" do
     {user, repository} = setup_repository()
 
-    {:ok, prompt_request} =
-      PromptRequests.create_prompt_request(
+    {:ok, plan} =
+      Plans.create_plan(
         %{
           title: "Curate me",
           prompt: "Do a thing",
@@ -904,21 +903,21 @@ defmodule Micelio.PromptRequestsTest do
         user: user
       )
 
-    assert [] == PromptRequests.list_prompt_registry(curated_only: true)
+    assert [] == Plans.list_plan_registry(curated_only: true)
 
-    {:ok, curated} = PromptRequests.curate_prompt_request(prompt_request, user)
+    {:ok, curated} = Plans.curate_plan(plan, user)
     assert curated.curated_at
     assert curated.curated_by_id == user.id
 
-    [listed] = PromptRequests.list_prompt_registry(curated_only: true)
+    [listed] = Plans.list_plan_registry(curated_only: true)
     assert listed.id == curated.id
   end
 
-  test "creates and approves prompt templates for registry use" do
+  test "creates and approves plan templates for registry use" do
     {user, repository} = setup_repository()
 
     {:ok, template} =
-      PromptRequests.create_prompt_template(
+      Plans.create_plan_template(
         %{
           name: "Bug fix template",
           description: "Template for fixing a bug",
@@ -929,14 +928,14 @@ defmodule Micelio.PromptRequestsTest do
         created_by: user
       )
 
-    assert [] == PromptRequests.list_prompt_templates(only_approved: true)
+    assert [] == Plans.list_plan_templates(only_approved: true)
 
-    {:ok, approved} = PromptRequests.approve_prompt_template(template, user)
-    [listed] = PromptRequests.list_prompt_templates(only_approved: true)
+    {:ok, approved} = Plans.approve_plan_template(template, user)
+    [listed] = Plans.list_plan_templates(only_approved: true)
     assert listed.id == approved.id
 
-    {:ok, prompt_request} =
-      PromptRequests.create_prompt_request(
+    {:ok, plan} =
+      Plans.create_plan(
         %{
           title: "Template prompt",
           prompt: "Use the template",
@@ -948,12 +947,12 @@ defmodule Micelio.PromptRequestsTest do
           generated_at: DateTime.utc_now() |> DateTime.truncate(:second),
           system_prompt: "System",
           conversation: %{"messages" => [%{"role" => "user", "content" => "Prompt"}]},
-          prompt_template_id: approved.id
+          plan_template_id: approved.id
         },
         project: repository,
         user: user
       )
 
-    assert prompt_request.prompt_template_id == approved.id
+    assert plan.plan_template_id == approved.id
   end
 end

@@ -1,22 +1,28 @@
 /**
  * Accessible dropdown menu functionality.
+ * Supports multiple dropdowns via [data-dropdown-toggle] / [data-dropdown-menu] pairs.
  */
 
 /**
- * Setup dropdown toggle behavior.
+ * Setup dropdown toggle behavior for all dropdowns on the page.
  */
 export function setupDropdown() {
   document.addEventListener("click", (event) => {
     const target = event.target;
     if (!(target instanceof Element)) return;
 
-    const toggle = target.closest("#navbar-add-toggle");
+    const toggle = target.closest("[data-dropdown-toggle]");
     if (toggle) {
       event.preventDefault();
-      const menu = document.getElementById("navbar-add-menu");
+      const menuId = toggle.getAttribute("data-dropdown-toggle");
+      const menu = document.getElementById(menuId);
       if (!menu) return;
 
       const isExpanded = toggle.getAttribute("aria-expanded") === "true";
+
+      // Close all other open dropdowns first
+      closeAllDropdowns(menuId);
+
       toggle.setAttribute("aria-expanded", String(!isExpanded));
       menu.hidden = isExpanded;
 
@@ -29,26 +35,26 @@ export function setupDropdown() {
       return;
     }
 
-    closeDropdownIfOpen();
+    // Click outside: close all dropdowns
+    closeAllDropdowns();
   });
 
   document.addEventListener("keydown", (event) => {
-    const menu = document.getElementById("navbar-add-menu");
-    const toggle = document.getElementById("navbar-add-toggle");
-    if (!menu || !toggle) return;
+    const openMenu = document.querySelector("[data-dropdown-menu]:not([hidden])");
+    if (!openMenu) return;
 
-    const isOpen = !menu.hidden;
+    const menuId = openMenu.id;
+    const toggle = document.querySelector(`[data-dropdown-toggle="${menuId}"]`);
+    if (!toggle) return;
 
-    if (event.key === "Escape" && isOpen) {
+    if (event.key === "Escape") {
       event.preventDefault();
-      closeDropdown(toggle, menu);
-      toggle.focus();
+      closeDropdown(toggle, openMenu);
+      if (toggle instanceof HTMLElement) toggle.focus();
       return;
     }
 
-    if (!isOpen) return;
-
-    const items = Array.from(menu.querySelectorAll("[role='menuitem']"));
+    const items = Array.from(openMenu.querySelectorAll("[role='menuitem']"));
     const currentIndex = items.indexOf(document.activeElement);
 
     if (event.key === "ArrowDown") {
@@ -64,21 +70,27 @@ export function setupDropdown() {
         items[prevIndex].focus();
       }
     } else if (event.key === "Tab") {
-      closeDropdown(toggle, menu);
+      closeDropdown(toggle, openMenu);
     }
   });
 
   window.addEventListener("phx:page-loading-stop", () => {
-    closeDropdownIfOpen();
+    closeAllDropdowns();
   });
 }
 
-function closeDropdownIfOpen() {
-  const toggle = document.getElementById("navbar-add-toggle");
-  const menu = document.getElementById("navbar-add-menu");
-  if (toggle && menu && !menu.hidden) {
-    closeDropdown(toggle, menu);
-  }
+/**
+ * Close all open dropdowns, optionally excluding one by menu ID.
+ */
+function closeAllDropdowns(excludeMenuId) {
+  const openMenus = document.querySelectorAll("[data-dropdown-menu]:not([hidden])");
+  openMenus.forEach((menu) => {
+    if (excludeMenuId && menu.id === excludeMenuId) return;
+    const toggle = document.querySelector(`[data-dropdown-toggle="${menu.id}"]`);
+    if (toggle) {
+      closeDropdown(toggle, menu);
+    }
+  });
 }
 
 function closeDropdown(toggle, menu) {

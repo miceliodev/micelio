@@ -7,7 +7,7 @@ defmodule Micelio.Activity do
 
   alias Micelio.Accounts
   alias Micelio.Accounts.User
-  alias Micelio.PromptRequests.PromptRequest
+  alias Micelio.Plans.Plan
   alias Micelio.Repo
   alias Micelio.Sessions.Session
 
@@ -43,7 +43,7 @@ defmodule Micelio.Activity do
 
     items =
       list_session_activity(user, before, per_type_limit) ++
-        list_prompt_request_activity(user, before, per_type_limit) ++
+        list_plan_activity(user, before, per_type_limit) ++
         list_star_activity(user, before, per_type_limit) ++
         list_repository_activity(organization_ids, before, per_type_limit)
 
@@ -101,8 +101,8 @@ defmodule Micelio.Activity do
     end)
   end
 
-  defp list_prompt_request_activity(%User{} = user, before, limit) do
-    PromptRequest
+  defp list_plan_activity(%User{} = user, before, limit) do
+    Plan
     |> join(:inner, [pr], p in assoc(pr, :repository))
     |> join(:left, [pr, p], o in assoc(p, :organization))
     |> join(:left, [pr, p, o], a in assoc(o, :account))
@@ -113,13 +113,13 @@ defmodule Micelio.Activity do
     |> order_by([pr], desc: pr.inserted_at)
     |> limit(^limit)
     |> Repo.all()
-    |> Enum.map(fn prompt_request ->
+    |> Enum.map(fn plan ->
       %{
-        id: prompt_request.id,
-        type: :prompt_request_submitted,
-        project: prompt_request.repository,
-        origin: prompt_request.origin,
-        occurred_at: prompt_request.inserted_at
+        id: plan.id,
+        type: :plan_submitted,
+        project: plan.repository,
+        origin: plan.origin,
+        occurred_at: plan.inserted_at
       }
     end)
   end

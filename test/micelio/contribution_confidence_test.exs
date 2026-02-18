@@ -3,12 +3,12 @@ defmodule Micelio.ContributionConfidenceTest do
 
   alias Micelio.Accounts
   alias Micelio.ContributionConfidence
-  alias Micelio.PromptRequests
+  alias Micelio.Plans
   alias Micelio.Repo
   alias Micelio.Repositories
   alias Micelio.ValidationEnvironments.ValidationRun
 
-  defp setup_prompt_request(attrs) do
+  defp setup_plan(attrs) do
     {:ok, user} = Accounts.get_or_create_user_by_email("confidence@example.com")
 
     unique = System.unique_integer([:positive])
@@ -26,15 +26,15 @@ defmodule Micelio.ContributionConfidenceTest do
         organization_id: organization.id
       })
 
-    {:ok, prompt_request} =
-      PromptRequests.create_prompt_request(attrs, repository: repository, user: user)
+    {:ok, plan} =
+      Plans.create_plan(attrs, repository: repository, user: user)
 
-    prompt_request
+    plan
   end
 
-  test "scores prompt requests using validation, reputation, and token efficiency" do
-    prompt_request =
-      setup_prompt_request(%{
+  test "scores plans using validation, reputation, and token efficiency" do
+    plan =
+      setup_plan(%{
         title: "Add confidence scoring",
         prompt: "Implement contribution confidence scoring",
         result: "Diff output",
@@ -51,13 +51,13 @@ defmodule Micelio.ContributionConfidenceTest do
       %ValidationRun{}
       |> ValidationRun.changeset(%{
         status: :passed,
-        prompt_request_id: prompt_request.id,
+        plan_id: plan.id,
         metrics: %{"quality_score" => 90}
       })
       |> Repo.insert()
 
     score =
-      ContributionConfidence.score_for_prompt_request(prompt_request,
+      ContributionConfidence.score_for_plan(plan,
         validation_run: run,
         reputation: 80,
         token_baseline: 2000
@@ -71,8 +71,8 @@ defmodule Micelio.ContributionConfidenceTest do
   end
 
   test "uses the latest validation run when scoring lists" do
-    prompt_request =
-      setup_prompt_request(%{
+    plan =
+      setup_plan(%{
         title: "Score list request",
         prompt: "Use latest validation run",
         result: "Diff output",
@@ -91,7 +91,7 @@ defmodule Micelio.ContributionConfidenceTest do
       %ValidationRun{}
       |> ValidationRun.changeset(%{
         status: :failed,
-        prompt_request_id: prompt_request.id,
+        plan_id: plan.id,
         metrics: %{"quality_score" => 20},
         completed_at: past
       })
@@ -101,23 +101,23 @@ defmodule Micelio.ContributionConfidenceTest do
       %ValidationRun{}
       |> ValidationRun.changeset(%{
         status: :passed,
-        prompt_request_id: prompt_request.id,
+        plan_id: plan.id,
         metrics: %{"quality_score" => 85},
         completed_at: DateTime.utc_now() |> DateTime.truncate(:second)
       })
       |> Repo.insert()
 
     scores =
-      ContributionConfidence.scores_for_prompt_requests([prompt_request],
-        reputation_by_user_id: %{prompt_request.user_id => %Micelio.Reputation.Score{overall: 65}}
+      ContributionConfidence.scores_for_plans([plan],
+        reputation_by_user_id: %{plan.user_id => %Micelio.Reputation.Score{overall: 65}}
       )
 
-    assert scores[prompt_request.id].components.validation == 85
+    assert scores[plan.id].components.validation == 85
   end
 
   test "defaults scores when data is missing" do
-    prompt_request =
-      setup_prompt_request(%{
+    plan =
+      setup_plan(%{
         title: "Human prompt",
         prompt: "Manual update",
         result: "Diff output",
@@ -128,7 +128,7 @@ defmodule Micelio.ContributionConfidenceTest do
       })
 
     score =
-      ContributionConfidence.score_for_prompt_request(prompt_request,
+      ContributionConfidence.score_for_plan(plan,
         validation_runs: [],
         reputation: 50
       )

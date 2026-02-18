@@ -49,6 +49,8 @@ defmodule MicelioWeb.Endpoint do
     param_key: "request_logger",
     cookie_key: "request_logger"
 
+  plug MicelioWeb.Plugs.Metrics, prom_ex_module: Micelio.PromEx
+
   plug Plug.RequestId
   plug MicelioWeb.ErrorCapturePlug
   plug Plug.Telemetry, event_prefix: [:phoenix, :endpoint]

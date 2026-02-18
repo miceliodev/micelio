@@ -63,12 +63,11 @@
   border: var(--theme-ui-borders-thin);
   border-radius: var(--theme-ui-radii-default);
   text-decoration: none;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  transition: border-color 0.1s ease;
 }
 
 .docs-category-card:hover {
   border-color: var(--theme-ui-colors-primary);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   text-decoration: none;
 }
 
@@ -129,7 +128,7 @@
   border: var(--theme-ui-borders-thin);
   border-radius: var(--theme-ui-radii-default);
   text-decoration: none;
-  transition: border-color 0.15s ease;
+  transition: border-color 0.1s ease;
 }
 
 .docs-page-item:hover {
@@ -203,7 +202,7 @@
   color: var(--theme-ui-colors-text);
   text-decoration: none;
   border-radius: var(--theme-ui-radii-small);
-  transition: background-color 0.15s ease;
+  transition: background-color 0.1s ease;
 }
 
 .docs-sidebar-link:hover {
@@ -241,7 +240,7 @@
   color: var(--theme-ui-colors-muted);
   text-decoration: none;
   border-radius: var(--theme-ui-radii-small);
-  transition: color 0.15s ease;
+  transition: color 0.1s ease;
 }
 
 .docs-sidebar-toc-link:hover {
@@ -254,67 +253,15 @@
   font-size: var(--theme-ui-font-size-xs);
 }
 
-/* Mobile TOC (inside article, visible only on small screens) */
-.docs-mobile-toc {
+/* On docs pages, hide the collapsible TOC on desktop (sidebar TOC is used instead) */
+.docs-content .collapsible-toc {
   display: none;
-  margin-bottom: var(--theme-ui-space-3);
-  border: var(--theme-ui-borders-thin);
-  border-radius: var(--theme-ui-radii-default);
-  background-color: var(--theme-ui-colors-surface);
 }
 
 @media (max-width: 768px) {
-  .docs-mobile-toc {
+  .docs-content .collapsible-toc {
     display: block;
   }
-}
-
-.docs-mobile-toc-summary {
-  padding: var(--theme-ui-space-1) var(--theme-ui-space-2);
-  font-size: var(--theme-ui-font-sizes-small);
-  font-weight: var(--theme-ui-font-weights-bold);
-  color: var(--theme-ui-colors-muted);
-  cursor: pointer;
-  list-style: none;
-}
-
-.docs-mobile-toc-summary::-webkit-details-marker {
-  display: none;
-}
-
-.docs-mobile-toc-summary::before {
-  content: "\25B6";
-  display: inline-block;
-  margin-right: var(--theme-ui-space-1);
-  font-size: var(--theme-ui-font-size-xs);
-  transition: transform 0.15s ease;
-}
-
-.docs-mobile-toc[open] > .docs-mobile-toc-summary::before {
-  transform: rotate(90deg);
-}
-
-.docs-mobile-toc-nav {
-  display: flex;
-  flex-direction: column;
-  padding: 0 var(--theme-ui-space-2) var(--theme-ui-space-1);
-}
-
-.docs-mobile-toc-link {
-  display: block;
-  padding: 2px var(--theme-ui-space-1);
-  font-size: var(--theme-ui-font-sizes-small);
-  color: var(--theme-ui-colors-muted);
-  text-decoration: none;
-}
-
-.docs-mobile-toc-link:hover {
-  color: var(--theme-ui-colors-primary);
-}
-
-.docs-mobile-toc-link-nested {
-  padding-left: var(--theme-ui-space-2);
-  font-size: var(--theme-ui-font-size-xs);
 }
 
 .docs-sidebar-back {
@@ -393,8 +340,7 @@
 }
 
 .docs-search-input-wrapper:focus-within {
-  border-color: var(--theme-ui-colors-primary);
-  box-shadow: 0 0 0 3px rgba(9, 105, 218, 0.3);
+  border-color: var(--theme-ui-colors-text);
 }
 
 .docs-search-input {
@@ -419,7 +365,7 @@
   border-left: 1px solid var(--theme-ui-colors-border);
   color: var(--theme-ui-colors-text);
   cursor: pointer;
-  transition: background-color 0.15s ease;
+  transition: background-color 0.1s ease;
 }
 
 .docs-search-button:hover {
@@ -440,7 +386,7 @@
 
 .docs-search-clear {
   cursor: pointer;
-  transition: color 0.15s ease;
+  transition: color 0.1s ease;
 }
 
 .docs-search-clear:hover {
@@ -467,7 +413,7 @@
   border: var(--theme-ui-borders-thin);
   border-radius: var(--theme-ui-radii-default);
   text-decoration: none;
-  transition: border-color 0.15s ease;
+  transition: border-color 0.1s ease;
 }
 
 .docs-search-result:hover {

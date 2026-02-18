@@ -4,7 +4,7 @@ defmodule Micelio.AdminTest do
   alias Micelio.Accounts.{Account, User}
   alias Micelio.Admin
   alias Micelio.Repo
-  alias Micelio.{Accounts, Projects, Sessions}
+  alias Micelio.{Accounts, Plans, Projects, Sessions}
 
   setup do
     Repo.delete_all(Account)
@@ -198,29 +198,29 @@ defmodule Micelio.AdminTest do
         })
 
       {:ok, pr_one} =
-        create_prompt_request(repository_one, admin, %{token_count: 150})
+        create_plan(repository_one, admin, %{token_count: 150})
 
       {:ok, _pr_two} =
-        create_prompt_request(repository_one, admin, %{token_count: 75})
+        create_plan(repository_one, admin, %{token_count: 75})
 
       {:ok, pr_three} =
-        create_prompt_request(repository_two, admin, %{token_count: 200})
+        create_plan(repository_two, admin, %{token_count: 200})
 
-      {:ok, _} = Micelio.PromptRequests.review_prompt_request(pr_one, admin, :accepted)
-      {:ok, _} = Micelio.PromptRequests.review_prompt_request(pr_three, admin, :accepted)
+      {:ok, _} = Micelio.Plans.review_plan(pr_one, admin, :accepted)
+      {:ok, _} = Micelio.Plans.review_plan(pr_three, admin, :accepted)
 
       stats = Admin.usage_dashboard_stats()
       assert stats.tokens_spent == 425
-      assert stats.accepted_prompt_requests == 2
-      assert stats.total_prompt_requests == 3
+      assert stats.accepted_plans == 2
+      assert stats.total_plans == 3
 
       repositories = Admin.list_repository_usage(2)
       assert Enum.map(repositories, & &1.repository_id) == [repository_one.id, repository_two.id]
 
       [top | rest] = repositories
       assert top.tokens_spent == 225
-      assert top.accepted_prompt_requests == 1
-      assert top.total_prompt_requests == 2
+      assert top.accepted_plans == 1
+      assert top.total_plans == 2
 
       assert Enum.any?(rest, fn entry ->
                entry.repository_id == repository_two.id and entry.tokens_spent == 200
@@ -241,7 +241,7 @@ defmodule Micelio.AdminTest do
     |> Repo.update!()
   end
 
-  defp create_prompt_request(repository, user, attrs) do
+  defp create_plan(repository, user, attrs) do
     now = DateTime.utc_now() |> DateTime.truncate(:second)
 
     base_attrs = %{
@@ -257,7 +257,7 @@ defmodule Micelio.AdminTest do
       generated_at: now
     }
 
-    Micelio.PromptRequests.create_prompt_request(Map.merge(base_attrs, attrs),
+    Micelio.Plans.create_plan(Map.merge(base_attrs, attrs),
       project: repository,
       user: user
     )

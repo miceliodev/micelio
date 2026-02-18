@@ -74,8 +74,8 @@ struct PollRequest {
 
 /// Perform device flow login.
 async fn login() -> Result<()> {
-    let config = Config::load()?;
-    let (server_name, server) = get_default_server(&config)?;
+    let mut config = Config::load()?;
+    let (server_name, server) = config.resolve_default_server().await?;
     
     let web_url = server.web_url.as_ref().ok_or(MicError::NoWebUrl)?;
     let grpc_url = server.grpc_url.as_ref().ok_or(MicError::NoGrpcUrl)?;
@@ -138,19 +138,6 @@ fn logout() -> Result<()> {
 // =============================================================================
 // Helpers
 // =============================================================================
-
-/// Get the default server configuration.
-fn get_default_server(config: &Config) -> Result<(&str, &config::ServerConfig)> {
-    let name = config
-        .get_default_server_name()
-        .ok_or(MicError::NoDefaultServer)?;
-    
-    let server = config
-        .get_server(name)
-        .ok_or(MicError::NoDefaultServer)?;
-    
-    Ok((name, server))
-}
 
 /// Resolve the client ID for authentication.
 fn resolve_client_id(server: &config::ServerConfig, web_url: &str) -> Option<String> {

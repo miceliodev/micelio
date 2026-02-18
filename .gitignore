@@ -47,8 +47,7 @@ zig-out/
 .env
 .direnv/
 .devenv/
-.devenv.flake.nix
-mic/.devenv.flake.nix
+.mise.local.toml
 
 # Rust build artifacts
 /mic/target/

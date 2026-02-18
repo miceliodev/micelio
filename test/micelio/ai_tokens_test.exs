@@ -4,7 +4,7 @@ defmodule Micelio.AITokensTest do
   alias Micelio.Accounts
   alias Micelio.AITokens
   alias Micelio.AITokens.TokenContribution
-  alias Micelio.PromptRequests
+  alias Micelio.Plans
   alias Micelio.Repo
   alias Micelio.Repositories
 
@@ -47,8 +47,8 @@ defmodule Micelio.AITokensTest do
   test "project_usage_summary/1 aggregates usage metrics", %{repository: repository} do
     {:ok, user} = Accounts.get_or_create_user_by_email("usage@example.com")
 
-    {:ok, prompt_request} =
-      PromptRequests.create_prompt_request(
+    {:ok, plan} =
+      Plans.create_plan(
         %{
           title: "Usage prompt",
           prompt: "Prompt",
@@ -65,10 +65,10 @@ defmodule Micelio.AITokensTest do
         user: user
       )
 
-    {:ok, _} = PromptRequests.review_prompt_request(prompt_request, user, :accepted)
+    {:ok, _} = Plans.review_plan(plan, user, :accepted)
 
-    {:ok, rejected_request} =
-      PromptRequests.create_prompt_request(
+    {:ok, rejected_plan} =
+      Plans.create_plan(
         %{
           title: "Usage reject",
           prompt: "Prompt",
@@ -85,10 +85,10 @@ defmodule Micelio.AITokensTest do
         user: user
       )
 
-    {:ok, _} = PromptRequests.review_prompt_request(rejected_request, user, :rejected)
+    {:ok, _} = Plans.review_plan(rejected_plan, user, :rejected)
 
     {:ok, _} =
-      PromptRequests.create_prompt_request(
+      Plans.create_plan(
         %{
           title: "Human prompt",
           prompt: "Prompt",
@@ -108,8 +108,8 @@ defmodule Micelio.AITokensTest do
     summary = AITokens.project_usage_summary(repository)
 
     assert summary.tokens_spent == 150
-    assert summary.accepted_prompt_requests == 1
-    assert summary.total_prompt_requests == 3
+    assert summary.accepted_plans == 1
+    assert summary.total_plans == 3
   end
 
   test "contribute_tokens/3 records contribution and updates balance", %{repository: repository} do
@@ -134,11 +134,11 @@ defmodule Micelio.AITokensTest do
     assert "must be greater than 0" in errors_on(changeset).amount
   end
 
-  test "upsert_task_budget/2 reserves tokens for a prompt request", %{repository: repository} do
+  test "upsert_task_budget/2 reserves tokens for a plan", %{repository: repository} do
     {:ok, user} = Accounts.get_or_create_user_by_email("budgeter@example.com")
 
-    {:ok, prompt_request} =
-      PromptRequests.create_prompt_request(
+    {:ok, plan} =
+      Plans.create_plan(
         %{
           title: "Budget task",
           prompt: "Prompt",
@@ -158,14 +158,14 @@ defmodule Micelio.AITokensTest do
     {:ok, pool} = AITokens.create_token_pool(repository, %{balance: 120, reserved: 0})
 
     assert {:ok, budget, updated_pool} =
-             AITokens.upsert_task_budget(prompt_request, %{"amount" => "40"})
+             AITokens.upsert_task_budget(plan, %{"amount" => "40"})
 
     assert budget.amount == 40
     assert updated_pool.id == pool.id
     assert updated_pool.reserved == 40
 
     assert {:ok, budget, updated_pool} =
-             AITokens.upsert_task_budget(prompt_request, %{"amount" => "70"})
+             AITokens.upsert_task_budget(plan, %{"amount" => "70"})
 
     assert budget.amount == 70
     assert updated_pool.reserved == 70
@@ -174,8 +174,8 @@ defmodule Micelio.AITokensTest do
   test "upsert_task_budget/2 rejects allocations above available", %{repository: repository} do
     {:ok, user} = Accounts.get_or_create_user_by_email("budgeter-two@example.com")
 
-    {:ok, prompt_request} =
-      PromptRequests.create_prompt_request(
+    {:ok, plan} =
+      Plans.create_plan(
         %{
           title: "Budget overflow",
           prompt: "Prompt",
@@ -195,6 +195,6 @@ defmodule Micelio.AITokensTest do
     {:ok, _pool} = AITokens.create_token_pool(repository, %{balance: 50, reserved: 0})
 
     assert {:error, :insufficient_tokens} =
-             AITokens.upsert_task_budget(prompt_request, %{"amount" => "70"})
+             AITokens.upsert_task_budget(plan, %{"amount" => "70"})
   end
 end

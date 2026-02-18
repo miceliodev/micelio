@@ -13,8 +13,8 @@ defmodule Micelio.OAuth.Scopes do
     %{name: "sessions:write", description: "Start, land, and abandon sessions"},
     %{name: "content:read", description: "Read files, trees, and blame"},
     %{name: "organizations:read", description: "List and get organizations"},
-    %{name: "prompt_requests:read", description: "List and get prompt requests"},
-    %{name: "prompt_requests:write", description: "Create prompt requests"},
+    %{name: "plans:read", description: "List, get, and create plans"},
+    %{name: "plans:write", description: "Update plans and manage coding sessions"},
     %{name: "tokens:read", description: "Read token pool balance"},
     %{name: "tokens:write", description: "Update token pool and contribute tokens"}
   ]

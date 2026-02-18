@@ -31,7 +31,7 @@
   color: var(--theme-ui-colors-text);
   text-decoration: none;
   border-radius: var(--theme-ui-radii-small);
-  transition: background-color 0.15s ease;
+  transition: background-color 0.1s ease;
 }
 
 .settings-sidebar-link:hover {

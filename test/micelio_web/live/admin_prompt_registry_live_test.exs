@@ -4,7 +4,7 @@ defmodule MicelioWeb.AdminPromptRegistryLiveTest do
   import Phoenix.LiveViewTest
 
   alias Micelio.Accounts
-  alias Micelio.PromptRequests
+  alias Micelio.Plans
   alias Micelio.Repositories
 
   test "shows prompt registry for admins", %{conn: conn} do
@@ -21,8 +21,8 @@ defmodule MicelioWeb.AdminPromptRegistryLiveTest do
         visibility: "public"
       })
 
-    {:ok, prompt_request} =
-      PromptRequests.create_prompt_request(
+    {:ok, plan} =
+      Plans.create_plan(
         %{
           title: "Registry entry",
           prompt: "Prompt",
@@ -44,6 +44,6 @@ defmodule MicelioWeb.AdminPromptRegistryLiveTest do
 
     assert render(view) =~ "Prompt registry"
     assert render(view) =~ "Registry entry"
-    assert render(view) =~ "admin-prompt-#{prompt_request.id}"
+    assert render(view) =~ "admin-prompt-#{plan.id}"
   end
 end

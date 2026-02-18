@@ -67,6 +67,15 @@ pub struct ServerConfig {
     pub client_secret: Option<String>,
 }
 
+/// Well-known discovery document.
+#[derive(Debug, Deserialize)]
+struct DiscoveryDocument {
+    grpc_url: Option<String>,
+    web_url: Option<String>,
+    cdn_url: Option<String>,
+    client_id: Option<String>,
+}
+
 /// Output format preference.
 #[derive(Debug, Clone, Copy, Default, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "lowercase")]
@@ -145,11 +154,60 @@ impl Config {
     }
 
     /// Get the default server URL.
+    #[allow(dead_code)]
     pub fn get_default_server(&self) -> Option<&str> {
         self.default_server
             .as_ref()
             .and_then(|name| self.servers.get(name))
             .and_then(|server| server.grpc_url.as_deref())
+    }
+
+    /// Resolve the default server configuration, using discovery when needed.
+    pub async fn resolve_default_server(&mut self) -> Result<(String, ServerConfig)> {
+        let name = self
+            .get_default_server_name()
+            .ok_or(MicError::NoDefaultServer)?
+            .to_string();
+
+        let mut needs_discovery = false;
+        let mut web_url = None;
+
+        if let Some(server) = self.servers.get(&name) {
+            if server.grpc_url.is_none() {
+                web_url = Some(server.web_url.as_ref().ok_or(MicError::NoWebUrl)?.to_string());
+                needs_discovery = true;
+            }
+        } else {
+            return Err(MicError::NoDefaultServer);
+        }
+
+        let mut updated = false;
+
+        if needs_discovery {
+            let discovery = discover_server(web_url.as_ref().unwrap()).await?;
+            let server = self
+                .servers
+                .get_mut(&name)
+                .ok_or(MicError::NoDefaultServer)?;
+            updated = apply_discovery(server, discovery);
+        }
+
+        if updated {
+            self.save()?;
+        }
+
+        let server = self
+            .servers
+            .get(&name)
+            .ok_or(MicError::NoDefaultServer)?;
+
+        Ok((name, server.clone()))
+    }
+
+    /// Resolve the default gRPC server URL, using discovery when needed.
+    pub async fn resolve_default_grpc_url(&mut self) -> Result<String> {
+        let (_name, server) = self.resolve_default_server().await?;
+        server.grpc_url.ok_or(MicError::NoGrpcUrl)
     }
 
     /// Get the default server name.
@@ -164,6 +222,7 @@ impl Config {
     }
 
     /// Get server configuration by name.
+    #[allow(dead_code)]
     pub fn get_server(&self, name: &str) -> Option<&ServerConfig> {
         self.servers.get(name)
     }
@@ -230,6 +289,77 @@ impl Config {
         // Set default to production
         self.default_server = Some("micelio.dev".to_string());
     }
+}
+
+// =============================================================================
+// Discovery
+// =============================================================================
+
+fn discovery_url_for(web_url: &str) -> String {
+    let base = web_url.trim_end_matches('/');
+    format!("{}/.well-known/micelio.json", base)
+}
+
+async fn discover_server(web_url: &str) -> Result<DiscoveryDocument> {
+    let client = crate::http_client::create_client();
+    let url = discovery_url_for(web_url);
+    let response = crate::http_client::get(&client, &url).await?;
+
+    if !response.status.is_success() {
+        return Err(MicError::DiscoveryFailed(format!(
+            "Discovery request to {} failed with status {}. Set grpc_url in config.json or ensure /.well-known/micelio.json is reachable.",
+            url, response.status
+        )));
+    }
+
+    let document: DiscoveryDocument = serde_json::from_str(&response.body).map_err(|e| {
+        MicError::DiscoveryFailed(format!(
+            "Invalid discovery document: {}. Set grpc_url in config.json or ensure /.well-known/micelio.json returns valid JSON.",
+            e
+        ))
+    })?;
+
+    if document.grpc_url.is_none() {
+        return Err(MicError::DiscoveryFailed(
+            "Discovery document missing grpc_url. Set grpc_url in config.json or update the server's /.well-known/micelio.json.".to_string(),
+        ));
+    }
+
+    Ok(document)
+}
+
+fn apply_discovery(server: &mut ServerConfig, discovery: DiscoveryDocument) -> bool {
+    let mut updated = false;
+
+    if server.grpc_url.is_none() {
+        if let Some(grpc_url) = discovery.grpc_url {
+            server.grpc_url = Some(grpc_url.trim_end_matches('/').to_string());
+            updated = true;
+        }
+    }
+
+    if server.web_url.is_none() {
+        if let Some(web_url) = discovery.web_url {
+            server.web_url = Some(web_url.trim_end_matches('/').to_string());
+            updated = true;
+        }
+    }
+
+    if server.cdn_url.is_none() {
+        if let Some(cdn_url) = discovery.cdn_url {
+            server.cdn_url = Some(cdn_url.trim_end_matches('/').to_string());
+            updated = true;
+        }
+    }
+
+    if server.client_id.is_none() {
+        if let Some(client_id) = discovery.client_id {
+            server.client_id = Some(client_id);
+            updated = true;
+        }
+    }
+
+    updated
 }
 
 // =============================================================================
@@ -544,5 +674,14 @@ mod tests {
         };
         assert!(!no_expiry.is_expired());
         assert!(!no_expiry.is_expiring_soon());
+    }
+
+    #[test]
+    fn discovery_url_trims_trailing_slash() {
+        let url = discovery_url_for("https://micelio.example/");
+        assert_eq!(url, "https://micelio.example/.well-known/micelio.json");
+
+        let url = discovery_url_for("https://micelio.example");
+        assert_eq!(url, "https://micelio.example/.well-known/micelio.json");
     }
 }

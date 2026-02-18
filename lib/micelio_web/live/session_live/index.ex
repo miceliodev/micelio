@@ -99,6 +99,14 @@ defmodule MicelioWeb.SessionLive.Index do
       flash={@flash}
       current_scope={@current_scope}
       current_user={@current_user}
+      repository_nav={
+        %{
+          account_handle: @organization.account.handle,
+          repository_handle: @repository.handle,
+          active: :sessions,
+          show_settings?: true
+        }
+      }
     >
       <.repository_header
         account_handle={@organization.account.handle}

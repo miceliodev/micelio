@@ -3,7 +3,7 @@ defmodule Micelio.ValidationEnvironmentsTest do
 
   alias Micelio.Accounts
   alias Micelio.AITokens
-  alias Micelio.PromptRequests
+  alias Micelio.Plans
   alias Micelio.Repositories
   alias Micelio.ValidationEnvironments
 
@@ -84,7 +84,7 @@ defmodule Micelio.ValidationEnvironmentsTest do
     "#{prefix}-#{random}"
   end
 
-  defp setup_prompt_request do
+  defp setup_plan do
     handle = unique_handle("validation")
     {:ok, user} = Accounts.get_or_create_user_by_email("user-#{handle}@example.com")
 
@@ -101,8 +101,8 @@ defmodule Micelio.ValidationEnvironmentsTest do
         organization_id: organization.id
       })
 
-    {:ok, prompt_request} =
-      PromptRequests.create_prompt_request(
+    {:ok, plan} =
+      Plans.create_plan(
         %{
           title: "Validate contribution",
           prompt: "Do the thing",
@@ -120,9 +120,9 @@ defmodule Micelio.ValidationEnvironmentsTest do
       )
 
     {:ok, _pool} = AITokens.create_token_pool(repository, %{balance: 5_000, reserved: 0})
-    {:ok, _budget, _pool} = AITokens.upsert_task_budget(prompt_request, %{"amount" => "3000"})
+    {:ok, _budget, _pool} = AITokens.upsert_task_budget(plan, %{"amount" => "3000"})
 
-    prompt_request
+    plan
   end
 
   defp plan_attrs do
@@ -138,7 +138,7 @@ defmodule Micelio.ValidationEnvironmentsTest do
   end
 
   test "runs validation checks and records metrics" do
-    prompt_request = setup_prompt_request()
+    plan = setup_plan()
 
     checks = [
       %{id: "compile", label: "Compile", kind: :build, command: "compile", args: [], env: %{}},
@@ -146,7 +146,7 @@ defmodule Micelio.ValidationEnvironmentsTest do
     ]
 
     assert {:ok, run} =
-             ValidationEnvironments.run_for_prompt_request(prompt_request,
+             ValidationEnvironments.run_for_plan(plan,
                provider_module: TestProvider,
                provider_opts: [notify_pid: self()],
                executor: TestExecutor,
@@ -166,7 +166,7 @@ defmodule Micelio.ValidationEnvironmentsTest do
   end
 
   test "fails validation when a check exits non-zero" do
-    prompt_request = setup_prompt_request()
+    plan = setup_plan()
 
     checks = [
       %{id: "format", label: "Format", kind: :style, command: "format", args: [], env: %{}},
@@ -174,7 +174,7 @@ defmodule Micelio.ValidationEnvironmentsTest do
     ]
 
     assert {:error, run} =
-             ValidationEnvironments.run_for_prompt_request(prompt_request,
+             ValidationEnvironments.run_for_plan(plan,
                provider_module: TestProvider,
                provider_opts: [notify_pid: self()],
                executor: TestExecutor,

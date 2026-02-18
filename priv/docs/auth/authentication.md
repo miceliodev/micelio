@@ -4,7 +4,7 @@
 }
 ---
 
-Micelio exposes two APIs: a REST API (`/api/v1/`) and a gRPC API (port 50051). Both use the same OAuth2 bearer tokens for authentication.
+Micelio exposes two APIs: a REST API (`/api/`) and a gRPC API (port 50051). Both use the same OAuth2 bearer tokens for authentication.
 
 ## Obtaining a token
 
@@ -83,7 +83,7 @@ mic auth status   # Verify authentication
 Include the token in the `Authorization` header:
 
 ```bash
-curl https://micelio.example/api/v1/orgs \
+curl https://micelio.example/api/orgs \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
 ```
 
@@ -96,6 +96,14 @@ authorization: Bearer YOUR_ACCESS_TOKEN
 ```
 
 In the `mic` CLI, the token is stored locally after login and sent automatically with every gRPC call.
+
+### CLI discovery
+
+The CLI can discover server URLs from `/.well-known/micelio.json` on the web URL. The document includes the gRPC URL, web URL, and API base path (and optionally a CDN base URL).
+
+```bash
+curl https://micelio.example/.well-known/micelio.json
+```
 
 ## Token lifecycle
 

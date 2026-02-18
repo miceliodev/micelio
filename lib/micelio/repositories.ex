@@ -9,6 +9,7 @@ defmodule Micelio.Repositories do
   alias Micelio.Accounts
   alias Micelio.Accounts.OrganizationMembership
   alias Micelio.Audit
+  alias Micelio.Forges
   alias Micelio.Mic.Seed
   alias Micelio.Repo
 
@@ -31,6 +32,8 @@ defmodule Micelio.Repositories do
   @micelio_workspace_repository_url "https://micelio.dev"
   @micelio_workspace_repository_visibility "public"
   @micelio_workspace_lock_key :erlang.phash2("micelio_workspace")
+  @max_account_handle_length 39
+  @max_repository_handle_length 100
 
   @doc """
   Gets a repository by ID.
@@ -61,6 +64,51 @@ defmodule Micelio.Repositories do
     |> where([p], p.organization_id == ^organization_id)
     |> where([p], fragment("lower(?)", p.handle) == ^String.downcase(handle))
     |> Repo.one()
+  end
+
+  @doc """
+  Gets a repository by forge host/owner/repo reference (case-insensitive).
+  """
+  def get_repository_by_forge_reference(forge_host, forge_owner, forge_repo) do
+    host = String.downcase(String.trim(forge_host))
+    owner = String.downcase(String.trim(forge_owner))
+    repo = String.downcase(String.trim(forge_repo))
+
+    Repository
+    |> where([r], fragment("lower(?)", r.forge_host) == ^host)
+    |> where([r], fragment("lower(?)", r.forge_owner) == ^owner)
+    |> where([r], fragment("lower(?)", r.forge_repo) == ^repo)
+    |> Repo.one()
+  end
+
+  @doc """
+  Resolves an external forge reference to a mirrored repository.
+
+  If a repository mirror does not exist yet, it is created lazily from forge metadata.
+  """
+  def get_or_create_repository_for_forge_reference(user, forge_host, forge_owner, forge_repo)
+      when is_binary(forge_host) and is_binary(forge_owner) and is_binary(forge_repo) do
+    with {:ok, provider} <- Forges.provider_for_host(forge_host),
+         {:ok, metadata} <-
+           Forges.fetch_repository(provider,
+             owner: forge_owner,
+             repo: forge_repo,
+             access_token: oauth_access_token(user, provider)
+           ) do
+      upsert_forge_repository(user, metadata)
+    else
+      {:error, :provider_not_supported} ->
+        {:error, :not_found}
+
+      {:error, :access_denied} ->
+        {:error, :integration_required}
+
+      {:error, :not_found} ->
+        {:error, :not_found}
+
+      {:error, reason} ->
+        {:error, reason}
+    end
   end
 
   @doc """
@@ -503,6 +551,33 @@ defmodule Micelio.Repositories do
   def repository_starred?(_, _), do: false
 
   @doc """
+  Returns star count and whether the user has starred the repository in a single query.
+
+  Returns `{star_count, starred?}`.
+  """
+  def repository_star_summary(%Repository{} = repository, %Accounts.User{} = user) do
+    {count, starred} =
+      RepositoryStar
+      |> where([ps], ps.repository_id == ^repository.id)
+      |> select([ps], {
+        count(ps.id),
+        fragment("bool_or(? = ?)", ps.user_id, type(^user.id, :binary_id))
+      })
+      |> Repo.one()
+
+    {count, starred == true}
+  end
+
+  def repository_star_summary(%Repository{} = repository, _user) do
+    count =
+      RepositoryStar
+      |> where([ps], ps.repository_id == ^repository.id)
+      |> Repo.aggregate(:count)
+
+    {count, false}
+  end
+
+  @doc """
   Stars a repository for a user.
   """
   def star_repository(%Accounts.User{} = user, %Repository{} = repository, _opts \\ []) do
@@ -632,6 +707,164 @@ defmodule Micelio.Repositories do
     do: Accounts.user_in_organization?(user, organization_id)
 
   defp user_in_organization?(_, _), do: false
+
+  defp oauth_access_token(%Accounts.User{} = user, provider)
+       when provider in ["github", "gitlab"] do
+    provider_atom =
+      case provider do
+        "github" -> :github
+        "gitlab" -> :gitlab
+      end
+
+    case Accounts.get_oauth_identity_for_user(user, provider_atom) do
+      %{access_token_encrypted: token} when is_binary(token) and token != "" -> token
+      _ -> nil
+    end
+  end
+
+  defp oauth_access_token(_, _provider), do: nil
+
+  defp upsert_forge_repository(%Accounts.User{} = user, metadata) do
+    Repo.transaction(fn ->
+      case get_repository_by_forge_reference(
+             metadata.forge_host,
+             metadata.forge_owner,
+             metadata.forge_repo
+           ) do
+        %Repository{} = existing ->
+          ensure_repository_access(existing, user)
+          |> case do
+            :ok -> preload_repository_with_organization(existing)
+            {:error, reason} -> Repo.rollback(reason)
+          end
+
+        nil ->
+          with {:ok, organization} <- ensure_forge_organization(user, metadata),
+               :ok <- ensure_forge_membership(user, organization),
+               attrs = forge_repository_attrs(metadata, organization.id),
+               attrs = ensure_unique_repository_handle(attrs),
+               {:ok, repository} <- create_repository(attrs, user: user) do
+            preload_repository_with_organization(repository)
+          else
+            {:error, reason} -> Repo.rollback(reason)
+          end
+      end
+    end)
+    |> normalize_transaction_result()
+  end
+
+  defp ensure_repository_access(%Repository{visibility: "public"}, _user), do: :ok
+
+  defp ensure_repository_access(%Repository{} = repository, %Accounts.User{} = user) do
+    if user_in_organization?(user, repository.organization_id) do
+      :ok
+    else
+      {:error, :integration_required}
+    end
+  end
+
+  defp ensure_repository_access(_repository, _user), do: {:error, :integration_required}
+
+  defp ensure_forge_organization(%Accounts.User{} = user, metadata) do
+    handle = forge_account_handle(metadata.forge_provider, metadata.forge_owner)
+    display_name = "#{metadata.forge_owner} (#{String.capitalize(metadata.forge_provider)})"
+
+    case Accounts.get_organization_by_handle(handle) do
+      {:ok, organization} ->
+        {:ok, organization}
+
+      {:error, :not_found} ->
+        Accounts.create_organization_for_user(
+          user,
+          %{handle: handle, name: display_name},
+          allow_reserved: true
+        )
+    end
+  end
+
+  defp ensure_forge_membership(%Accounts.User{} = user, organization) do
+    if Accounts.user_in_organization?(user, organization.id) do
+      :ok
+    else
+      case Accounts.create_organization_membership(%{
+             user_id: user.id,
+             organization_id: organization.id,
+             role: :admin
+           }) do
+        {:ok, _membership} -> :ok
+        {:error, reason} -> {:error, reason}
+      end
+    end
+  end
+
+  defp forge_repository_attrs(metadata, organization_id) do
+    %{
+      handle: forge_repository_handle(metadata.forge_repo),
+      name: metadata.name,
+      description: metadata.description,
+      url: metadata.url,
+      visibility: metadata.visibility,
+      organization_id: organization_id,
+      forge_provider: metadata.forge_provider,
+      forge_host: metadata.forge_host,
+      forge_owner: metadata.forge_owner,
+      forge_repo: metadata.forge_repo,
+      forge_external_id: metadata.forge_external_id,
+      forge_default_branch: metadata.forge_default_branch,
+      mirror_status: "pending"
+    }
+  end
+
+  defp ensure_unique_repository_handle(attrs) do
+    organization_id = Map.fetch!(attrs, :organization_id)
+    base_handle = Map.fetch!(attrs, :handle)
+
+    if handle_available?(organization_id, base_handle) do
+      attrs
+    else
+      suffix =
+        attrs
+        |> Map.get(:forge_repo, "")
+        |> :erlang.phash2()
+        |> Integer.to_string(16)
+        |> String.slice(0, 6)
+
+      candidate =
+        "#{base_handle}-#{suffix}"
+        |> String.slice(0, @max_repository_handle_length)
+
+      Map.put(attrs, :handle, candidate)
+    end
+  end
+
+  defp preload_repository_with_organization(%Repository{} = repository) do
+    repository
+    |> Repo.preload(organization: :account)
+  end
+
+  defp forge_account_handle(provider, owner) do
+    suffix = normalize_slug(owner)
+    base = "#{provider}-#{suffix}"
+    String.slice(base, 0, @max_account_handle_length)
+  end
+
+  defp forge_repository_handle(repo) do
+    repo
+    |> normalize_slug()
+    |> String.slice(0, @max_repository_handle_length)
+  end
+
+  defp normalize_slug(value) when is_binary(value) do
+    normalized =
+      value
+      |> String.downcase()
+      |> String.replace(~r/[^a-z0-9]+/u, "-")
+      |> String.trim("-")
+
+    if normalized == "", do: "repo", else: normalized
+  end
+
+  defp normalize_slug(_value), do: "repo"
 
   defp lock_micelio_workspace! do
     Repo.query!("SELECT pg_advisory_xact_lock($1)", [@micelio_workspace_lock_key])

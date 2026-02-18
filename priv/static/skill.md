@@ -25,18 +25,6 @@ Use open source icons from https://icones.js.org/ and embed them as inline SVG i
 
 When adding new user interactions that should influence "recent repositories", add them to the repository interaction tracking in the Repositories context and update the relevant controllers/live views to record them.
 
-## IMPORTANT: Session Workflow
-
-When working on code changes, use Micelio sessions:
-
-```bash
-mic session start <org> <repository> "goal"
-mic session note "progress update"
-mic session land
-```
-
-Use sessions for all changes unless the user explicitly requests otherwise.
-
 ## IMPORTANT: CLI Design for Agents
 
 **The `mic` CLI must be self-documenting for AI agents.** Agents should be able to learn how to use the CLI just from help output, without needing separate documentation files.

@@ -10,12 +10,29 @@ defmodule MicelioWeb.LiveAuth do
         {:halt, redirect(socket, to: "/auth/login")}
 
       user ->
-        {:cont, assign(socket, current_user: user, current_scope: nil)}
+        socket =
+          socket
+          |> assign(current_user: user, current_scope: nil)
+          |> attach_current_path_hook()
+
+        {:cont, socket}
     end
   end
 
   def on_mount(:current_user, _params, session, socket) do
-    {:cont, assign(socket, current_user: fetch_current_user(session), current_scope: nil)}
+    socket =
+      socket
+      |> assign(current_user: fetch_current_user(session), current_scope: nil)
+      |> attach_current_path_hook()
+
+    {:cont, socket}
+  end
+
+  defp attach_current_path_hook(socket) do
+    attach_hook(socket, :set_current_path, :handle_params, fn _params, uri, socket ->
+      path = URI.parse(uri).path
+      {:cont, assign(socket, current_path: path)}
+    end)
   end
 
   defp fetch_current_user(session) do

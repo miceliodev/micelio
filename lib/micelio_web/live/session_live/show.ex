@@ -162,14 +162,14 @@ defmodule MicelioWeb.SessionLive.Show do
 
   defp format_file_size(_), do: ""
 
-  defp prompt_request_title(%{title: title, id: id}) do
+  defp plan_title(%{title: title, id: id}) do
     case title do
       value when is_binary(value) ->
         trimmed = String.trim(value)
-        if trimmed == "", do: "Prompt request #{id}", else: trimmed
+        if trimmed == "", do: "Plan #{id}", else: trimmed
 
       _ ->
-        "Prompt request #{id}"
+        "Plan #{id}"
     end
   end
 
@@ -399,6 +399,14 @@ defmodule MicelioWeb.SessionLive.Show do
       flash={@flash}
       current_scope={@current_scope}
       current_user={@current_user}
+      repository_nav={
+        %{
+          account_handle: @organization.account.handle,
+          repository_handle: @repository.handle,
+          active: :sessions,
+          show_settings?: true
+        }
+      }
     >
       <.repository_header
         account_handle={@organization.account.handle}
@@ -720,17 +728,17 @@ defmodule MicelioWeb.SessionLive.Show do
               </div>
             <% end %>
 
-            <%= if @session.prompt_request do %>
+            <%= if @session.plan do %>
               <div class="session-sidebar-section">
-                <span class="session-sidebar-label">{gettext("Prompt Request")}</span>
+                <span class="session-sidebar-label">{gettext("Plan")}</span>
                 <.link
                   navigate={
-                    ~p"/#{@organization.account.handle}/#{@repository.handle}/prompt-requests/#{@session.prompt_request.id}"
+                    ~p"/#{@organization.account.handle}/#{@repository.handle}/prs/#{@session.plan.id}"
                   }
-                  class="session-prompt-request-link"
-                  id="session-prompt-request-link"
+                  class="session-plan-link"
+                  id="session-plan-link"
                 >
-                  {prompt_request_title(@session.prompt_request)}
+                  {plan_title(@session.plan)}
                 </.link>
               </div>
             <% end %>

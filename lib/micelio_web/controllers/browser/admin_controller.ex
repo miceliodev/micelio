@@ -35,7 +35,7 @@ defmodule MicelioWeb.Browser.AdminController do
     conn
     |> PageMeta.put(
       title_parts: ["Usage dashboard"],
-      description: "Token usage and value delivered across prompt requests.",
+      description: "Token usage and value delivered across plans.",
       canonical_url: url(~p"/admin/usage")
     )
     |> render(:usage,

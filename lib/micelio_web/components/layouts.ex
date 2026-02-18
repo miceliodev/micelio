@@ -19,6 +19,14 @@ defmodule MicelioWeb.Layouts do
     end
   end
 
+  defp sidebar_active?(current_path, link_path) do
+    if link_path == "/" do
+      current_path == "/"
+    else
+      String.starts_with?(current_path, link_path)
+    end
+  end
+
   # Embed all files in layouts/* within this module.
   # The default root.html.heex file contains the HTML
   # skeleton of your application, namely HTML headers
@@ -52,7 +60,9 @@ defmodule MicelioWeb.Layouts do
   attr :locale, :string, default: "en", doc: "the current locale"
   attr :current_path, :string, default: "/", doc: "the current path without locale prefix"
   attr :page_class, :string, default: nil, doc: "optional page-level layout class"
+  attr :repository_nav, :map, default: nil, doc: "optional repository navigation context"
 
+  slot :breadcrumb, doc: "optional breadcrumb content shown in the navbar"
   slot :inner_block, required: true
 
   def app(assigns) do
@@ -65,7 +75,7 @@ defmodule MicelioWeb.Layouts do
             class="navbar-hamburger"
             id="navbar-hamburger"
             aria-expanded="false"
-            aria-controls="navbar-menu"
+            aria-controls="sidebar"
             aria-label={gettext("Toggle navigation")}
           >
             <svg
@@ -94,99 +104,472 @@ defmodule MicelioWeb.Layouts do
           </span>
         </div>
 
-        <div class="navbar-menu" id="navbar-menu">
-          <%= if assigns[:current_user] do %>
-            <a href={~p"/repositories"}>{gettext("repositories")}</a>
-          <% end %>
-          <a href={~p"/blog"}>{gettext("blog")}</a>
-          <a href={~p"/docs"}>{gettext("docs")}</a>
-          <a href={~p"/changelog"}>{gettext("changelog")}</a>
-          <a href={~p"/search"}>{gettext("search")}</a>
+        <%= if @breadcrumb != [] do %>
+          <div class="navbar-breadcrumb">
+            {render_slot(@breadcrumb)}
+          </div>
+        <% end %>
 
-          <div class="navbar-spacer"></div>
-
+        <div class="navbar-end">
           <%= if assigns[:current_user] do %>
-            <%= if Micelio.Admin.admin_user?(assigns.current_user) do %>
-              <a href={~p"/admin"}>{gettext("admin")}</a>
-            <% end %>
-            <form action={~p"/auth/logout"} method="post" class="navbar-logout-form">
-              <input type="hidden" name="_csrf_token" value={Phoenix.Controller.get_csrf_token()} />
-              <input type="hidden" name="_method" value="delete" />
-              <button type="submit" class="navbar-link-button">{gettext("logout")}</button>
-            </form>
+            <a
+              href={~p"/account"}
+              class="navbar-user-avatar"
+              id="navbar-user"
+              aria-label={
+                gettext("Account (@%{handle})", handle: assigns.current_user.account.handle)
+              }
+              title={"@#{assigns.current_user.account.handle}"}
+            >
+              <img
+                src={gravatar_url(assigns.current_user.email)}
+                width="24"
+                height="24"
+                alt=""
+                loading="lazy"
+                decoding="async"
+                referrerpolicy="no-referrer"
+              />
+            </a>
           <% else %>
             <a href={~p"/auth/login"} class="navbar-cta">
               {gettext("Get started")}
-              <span class="icon">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512">
-                  <path d="M0 384.662V127.338c0-17.818 21.543-26.741 34.142-14.142l128.662 128.662c7.81 7.81 7.81 20.474 0 28.284L34.142 398.804C21.543 411.404 0 402.48 0 384.662z" />
-                </svg>
-              </span>
             </a>
           <% end %>
         </div>
-
-        <%= if assigns[:current_user] do %>
-          <a
-            href={~p"/account"}
-            class="navbar-user-avatar"
-            id="navbar-user"
-            aria-label={gettext("Account (@%{handle})", handle: assigns.current_user.account.handle)}
-            title={"@#{assigns.current_user.account.handle}"}
-          >
-            <img
-              src={gravatar_url(assigns.current_user.email)}
-              width="24"
-              height="24"
-              alt=""
-              loading="lazy"
-              decoding="async"
-              referrerpolicy="no-referrer"
-            />
-          </a>
-        <% end %>
       </nav>
     </div>
     <.flash_group flash={@flash} />
 
-    <main class={["page-main", @page_class]}>
-      <div class={["page-content", @page_class]}>
-        {render_slot(@inner_block)}
-      </div>
-    </main>
+    <div class="app-shell">
+      <aside class="sidebar" id="sidebar" aria-label={gettext("Main navigation")}>
+        <nav class="sidebar-nav">
+          <div class="sidebar-section">
+            <%= if @repository_nav do %>
+              <% repository_base_path =
+                "/#{@repository_nav.account_handle}/#{@repository_nav.repository_handle}" %>
+              <% prompt_requests_path = "#{repository_base_path}/prs" %>
+              <% sessions_path = "#{repository_base_path}/sessions" %>
+              <% settings_path = "#{repository_base_path}/settings" %>
+              <% active_nav = @repository_nav[:active] %>
+              <% prompt_requests_active =
+                if active_nav do
+                  active_nav == :prompt_requests
+                else
+                  sidebar_active?(@current_path, prompt_requests_path)
+                end %>
+              <% sessions_active =
+                if active_nav do
+                  active_nav == :sessions
+                else
+                  sidebar_active?(@current_path, sessions_path)
+                end %>
+              <% home_active =
+                if active_nav do
+                  active_nav == :home
+                else
+                  @current_path == repository_base_path
+                end %>
+              <% settings_active =
+                if active_nav do
+                  active_nav == :settings
+                else
+                  sidebar_active?(@current_path, settings_path)
+                end %>
+              <a
+                href={repository_base_path}
+                class={[
+                  "sidebar-link",
+                  home_active && "sidebar-link-active"
+                ]}
+              >
+                <span class="sidebar-link-icon">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M5 12l-2 0l9-9l9 9l-2 0" />
+                    <path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7" />
+                    <path d="M9 21v-6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v6" />
+                  </svg>
+                </span>
+                {gettext("Home")}
+              </a>
+              <a
+                href={prompt_requests_path}
+                class={[
+                  "sidebar-link",
+                  prompt_requests_active && "sidebar-link-active"
+                ]}
+              >
+                <span class="sidebar-link-icon">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M8 9h8" />
+                    <path d="M8 13h6" />
+                    <path d="M9 18h-3a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3h12a3 3 0 0 1 3 3v8a3 3 0 0 1-3 3h-3l-3 3-3-3z" />
+                  </svg>
+                </span>
+                {gettext("Prompt requests")}
+              </a>
+              <a
+                href={sessions_path}
+                class={[
+                  "sidebar-link",
+                  sessions_active && "sidebar-link-active"
+                ]}
+              >
+                <span class="sidebar-link-icon">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M12 8v4l3 3" />
+                    <circle cx="12" cy="12" r="9" />
+                  </svg>
+                </span>
+                {gettext("Sessions")}
+              </a>
+              <a
+                :if={@repository_nav[:show_settings?]}
+                href={settings_path}
+                class={[
+                  "sidebar-link",
+                  settings_active && "sidebar-link-active"
+                ]}
+              >
+                <span class="sidebar-link-icon">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 0 0 1.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 0 0-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 0 0-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 0 0-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 0 0-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 0 0 1.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                    <circle cx="12" cy="12" r="3" />
+                  </svg>
+                </span>
+                {gettext("Settings")}
+              </a>
+            <% else %>
+              <%= if assigns[:current_user] do %>
+                <a
+                  href={~p"/repositories"}
+                  class={[
+                    "sidebar-link",
+                    sidebar_active?(@current_path, "/repositories") && "sidebar-link-active"
+                  ]}
+                >
+                  <span class="sidebar-link-icon">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="18"
+                      height="18"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <path d="M5 4h4l3 3h7a2 2 0 0 1 2 2v8a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-11a2 2 0 0 1 2 -2" />
+                    </svg>
+                  </span>
+                  {gettext("Repositories")}
+                </a>
+              <% end %>
+              <a
+                href={~p"/blog"}
+                class={[
+                  "sidebar-link",
+                  sidebar_active?(@current_path, "/blog") && "sidebar-link-active"
+                ]}
+              >
+                <span class="sidebar-link-icon">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M3 4m0 2a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2z" /><path d="M7 8h10" /><path d="M7 12h10" /><path d="M7 16h10" />
+                  </svg>
+                </span>
+                {gettext("Blog")}
+              </a>
+              <a
+                href={~p"/docs"}
+                class={[
+                  "sidebar-link",
+                  sidebar_active?(@current_path, "/docs") && "sidebar-link-active"
+                ]}
+              >
+                <span class="sidebar-link-icon">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M3 19a9 9 0 0 1 9 0a9 9 0 0 1 9 0" /><path d="M3 6a9 9 0 0 1 9 0a9 9 0 0 1 9 0" /><line
+                      x1="3"
+                      y1="6"
+                      x2="3"
+                      y2="19"
+                    /><line x1="12" y1="6" x2="12" y2="19" /><line x1="21" y1="6" x2="21" y2="19" />
+                  </svg>
+                </span>
+                {gettext("Docs")}
+              </a>
+              <a
+                href={~p"/changelog"}
+                class={[
+                  "sidebar-link",
+                  sidebar_active?(@current_path, "/changelog") && "sidebar-link-active"
+                ]}
+              >
+                <span class="sidebar-link-icon">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <polyline points="12 8 12 12 14 14" /><path d="M3.05 11a9 9 0 1 1 .5 4m-.5 5v-5h5" />
+                  </svg>
+                </span>
+                {gettext("Changelog")}
+              </a>
+              <a
+                href={~p"/search"}
+                class={[
+                  "sidebar-link",
+                  sidebar_active?(@current_path, "/search") && "sidebar-link-active"
+                ]}
+              >
+                <span class="sidebar-link-icon">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <circle cx="10" cy="10" r="7" /><line x1="21" y1="21" x2="15" y2="15" />
+                  </svg>
+                </span>
+                {gettext("Search")}
+              </a>
+            <% end %>
+          </div>
 
-    <footer class="site-footer" id="site-footer">
-      <div class="site-footer-content">
-        <nav class="site-footer-nav" aria-label={gettext("Legal")}>
-          <a href={locale_path(assigns, "/terms")}>{gettext("terms")}</a>
-          <a href={locale_path(assigns, "/privacy")}>{gettext("privacy")}</a>
-          <a href={locale_path(assigns, "/cookies")}>{gettext("cookies")}</a>
-          <a href={locale_path(assigns, "/impressum")}>{gettext("impressum")}</a>
+          <%= if assigns[:current_user] && !@repository_nav do %>
+            <div class="sidebar-section">
+              <a
+                href={~p"/account"}
+                class={[
+                  "sidebar-link",
+                  sidebar_active?(@current_path, "/account") && "sidebar-link-active"
+                ]}
+              >
+                <span class="sidebar-link-icon">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <circle cx="12" cy="7" r="4" /><path d="M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" />
+                  </svg>
+                </span>
+                {gettext("Account")}
+              </a>
+              <%= if Micelio.Admin.admin_user?(assigns.current_user) do %>
+                <a
+                  href={~p"/admin"}
+                  class={[
+                    "sidebar-link",
+                    sidebar_active?(@current_path, "/admin") && "sidebar-link-active"
+                  ]}
+                >
+                  <span class="sidebar-link-icon">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="18"
+                      height="18"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <path d="M12 3a12 12 0 0 0 8.5 3a12 12 0 0 1 -8.5 15a12 12 0 0 1 -8.5 -15a12 12 0 0 0 8.5 -3" />
+                    </svg>
+                  </span>
+                  {gettext("Admin")}
+                </a>
+              <% end %>
+            </div>
+          <% end %>
         </nav>
 
-        <div class="site-footer-meta-group">
-          <div class="site-footer-locale">
-            <.language_selector
-              current_locale={@locale}
-              current_path={@current_path}
-            />
-          </div>
+        <div class="sidebar-bottom">
+          <%= if assigns[:current_user] do %>
+            <form action={~p"/auth/logout"} method="post" class="sidebar-logout-form">
+              <input type="hidden" name="_csrf_token" value={Phoenix.Controller.get_csrf_token()} />
+              <input type="hidden" name="_method" value="delete" />
+              <button type="submit" class="sidebar-logout-btn">
+                <span class="sidebar-link-icon">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M14 8v-2a2 2 0 0 0 -2 -2h-7a2 2 0 0 0 -2 2v12a2 2 0 0 0 2 2h7a2 2 0 0 0 2 -2v-2" /><path d="M9 12h12l-3 -3" /><path d="M18 15l3 -3" />
+                  </svg>
+                </span>
+                {gettext("Logout")}
+              </button>
+            </form>
+          <% else %>
+            <a href={~p"/auth/login"} class="sidebar-link">
+              <span class="sidebar-link-icon">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M9 12h12l-3 -3" /><path d="M18 15l3 -3" /><path d="M14 8v-2a2 2 0 0 0 -2 -2h-7a2 2 0 0 0 -2 2v12a2 2 0 0 0 2 2h7a2 2 0 0 0 2 -2v-2" />
+                </svg>
+              </span>
+              {gettext("Get started")}
+            </a>
+          <% end %>
 
           <button
             id="theme-toggle"
             type="button"
-            class="footer-theme-toggle"
+            class="sidebar-logout-btn"
             aria-label={gettext("Toggle theme")}
           >
-            {gettext("theme")}
+            <span class="sidebar-link-icon">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M12 12m-4 0a4 4 0 1 0 8 0a4 4 0 1 0 -8 0" /><path d="M3 12h1m8 -9v1m8 8h1m-9 8v1m-6.4 -15.4l.7 .7m12.1 -.7l-.7 .7m0 11.4l.7 .7m-12.1 -.7l-.7 .7" />
+              </svg>
+            </span>
+            <span id="theme-toggle-text">{gettext("Theme")}</span>
           </button>
-
-          <div class="site-footer-meta">
-            © {Date.utc_today().year} Micelio
-          </div>
         </div>
+      </aside>
+      <div id="sidebar-backdrop" class="sidebar-backdrop"></div>
+
+      <div class="app-main">
+        <main class={["page-main", @page_class]}>
+          <div class={["page-content", @page_class]}>
+            {render_slot(@inner_block)}
+          </div>
+        </main>
+
+        <footer class="site-footer" id="site-footer">
+          <div class="site-footer-content">
+            <nav class="site-footer-nav" aria-label={gettext("Legal")}>
+              <a href={locale_path(assigns, "/terms")}>{gettext("terms")}</a>
+              <a href={locale_path(assigns, "/privacy")}>{gettext("privacy")}</a>
+              <a href={locale_path(assigns, "/cookies")}>{gettext("cookies")}</a>
+              <a href={locale_path(assigns, "/impressum")}>{gettext("impressum")}</a>
+            </nav>
+
+            <div class="site-footer-meta-group">
+              <div class="site-footer-locale">
+                <.language_selector
+                  current_locale={@locale}
+                  current_path={@current_path}
+                />
+              </div>
+
+              <div class="site-footer-meta">
+                © {Date.utc_today().year} Micelio
+              </div>
+            </div>
+          </div>
+        </footer>
       </div>
-    </footer>
+    </div>
     """
   end
 

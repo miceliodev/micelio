@@ -1,7 +1,7 @@
 defmodule Micelio.ActivityTest do
   use Micelio.DataCase, async: true
 
-  alias Micelio.{Accounts, Activity, Projects, PromptRequests, Repo, Sessions}
+  alias Micelio.{Accounts, Activity, Plans, Projects, Repo, Sessions}
 
   test "list_user_activity_public returns ordered public items" do
     {:ok, user} = Accounts.get_or_create_user_by_email("activity-user@example.com")
@@ -48,8 +48,8 @@ defmodule Micelio.ActivityTest do
 
     {:ok, _} = Sessions.land_session(private_session)
 
-    {:ok, prompt_request} =
-      PromptRequests.create_prompt_request(
+    {:ok, plan} =
+      Plans.create_plan(
         %{
           title: "Transparency check",
           prompt: "Add transparency badges",
@@ -72,12 +72,12 @@ defmodule Micelio.ActivityTest do
     now = DateTime.utc_now() |> DateTime.truncate(:second)
     project_created_at = DateTime.add(now, -3600, :second)
     session_landed_at = DateTime.add(now, -7200, :second)
-    prompt_request_at = DateTime.add(now, -5400, :second)
+    plan_at = DateTime.add(now, -5400, :second)
     star_at = DateTime.add(now, -10_800, :second)
 
     update_timestamp(public_repository, %{inserted_at: project_created_at})
     update_session_timestamp(landed_session, %{landed_at: session_landed_at})
-    update_timestamp(prompt_request, %{inserted_at: prompt_request_at})
+    update_timestamp(plan, %{inserted_at: plan_at})
     update_timestamp(star, %{inserted_at: star_at})
 
     activity =
@@ -89,7 +89,7 @@ defmodule Micelio.ActivityTest do
     assert Enum.map(activity.items, & &1.type) ==
              [
                :repository_created,
-               :prompt_request_submitted,
+               :plan_submitted,
                :session_landed,
                :repository_starred
              ]

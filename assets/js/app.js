@@ -32,6 +32,9 @@ import { initTheme, setupThemeToggle } from "./ui/theme";
 import { setupFlashDismiss } from "./ui/flash";
 import { setupDropdown } from "./ui/dropdown";
 import { setupHamburger } from "./ui/hamburger";
+import { setupRepositoryAbout } from "./ui/repository-about";
+import { setupRepositoryReadme } from "./ui/repository-readme";
+import { updateSidebarActive } from "./ui/sidebar";
 import { setupProjectHandleGeneration } from "./forms/project-handle";
 import { FileMention } from "./forms/file-mention";
 import { setupApiTryIt } from "./docs/api-try-it";
@@ -624,10 +627,17 @@ setupThemeToggle();
 setupFlashDismiss();
 setupDropdown();
 setupHamburger();
+setupRepositoryAbout();
+setupRepositoryReadme();
+updateSidebarActive();
 setupPasskeys();
 document.addEventListener("DOMContentLoaded", setupProjectHandleGeneration);
 document.addEventListener("DOMContentLoaded", setupApiTryIt);
+document.addEventListener("DOMContentLoaded", setupRepositoryAbout);
 window.addEventListener("phx:page-loading-stop", setupPasskeys);
+window.addEventListener("phx:page-loading-stop", updateSidebarActive);
+window.addEventListener("phx:page-loading-stop", setupRepositoryAbout);
+window.addEventListener("phx:page-loading-stop", setupRepositoryReadme);
 
 // The lines below enable quality of life phoenix_live_reload
 // development features:

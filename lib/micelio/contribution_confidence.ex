@@ -1,11 +1,11 @@
 defmodule Micelio.ContributionConfidence do
   @moduledoc """
-  Calculates confidence scores for prompt request contributions.
+  Calculates confidence scores for plan contributions.
   """
 
   import Ecto.Query, warn: false
 
-  alias Micelio.PromptRequests.PromptRequest
+  alias Micelio.Plans.Plan
   alias Micelio.Repo
   alias Micelio.Reputation
   alias Micelio.ValidationEnvironments.ValidationRun
@@ -22,10 +22,10 @@ defmodule Micelio.ContributionConfidence do
     defstruct [:overall, :components, :label]
   end
 
-  def score_for_prompt_request(%PromptRequest{} = prompt_request, opts \\ []) do
-    validation_score = validation_score(prompt_request, opts)
-    reputation_score = reputation_score(prompt_request, opts)
-    token_efficiency_score = token_efficiency_score(prompt_request.token_count, opts)
+  def score_for_plan(%Plan{} = plan, opts \\ []) do
+    validation_score = validation_score(plan, opts)
+    reputation_score = reputation_score(plan, opts)
+    token_efficiency_score = token_efficiency_score(plan.token_count, opts)
 
     weights = resolve_weights(opts)
 
@@ -51,21 +51,21 @@ defmodule Micelio.ContributionConfidence do
     score.overall >= threshold
   end
 
-  def scores_for_prompt_requests(prompt_requests, opts \\ []) when is_list(prompt_requests) do
-    runs_by_prompt_request = latest_runs_by_prompt_request(prompt_requests)
-    reputation_by_user_id = reputations_by_user_id(prompt_requests, opts)
+  def scores_for_plans(plans, opts \\ []) when is_list(plans) do
+    runs_by_plan = latest_runs_by_plan(plans)
+    reputation_by_user_id = reputations_by_user_id(plans, opts)
 
-    prompt_requests
-    |> Map.new(fn prompt_request ->
-      reputation = Map.get(reputation_by_user_id, prompt_request.user_id)
+    plans
+    |> Map.new(fn plan ->
+      reputation = Map.get(reputation_by_user_id, plan.user_id)
 
       score =
-        score_for_prompt_request(prompt_request,
-          validation_run: Map.get(runs_by_prompt_request, prompt_request.id),
+        score_for_plan(plan,
+          validation_run: Map.get(runs_by_plan, plan.id),
           reputation: reputation
         )
 
-      {prompt_request.id, score}
+      {plan.id, score}
     end)
   end
 
@@ -79,10 +79,10 @@ defmodule Micelio.ContributionConfidence do
 
   def label_for_score(_score), do: "Unknown"
 
-  defp validation_score(prompt_request, opts) do
+  defp validation_score(plan, opts) do
     case Keyword.get(opts, :validation_score) do
       score when is_integer(score) -> clamp_score(score)
-      _ -> validation_score_from_run(resolve_validation_run(prompt_request, opts))
+      _ -> validation_score_from_run(resolve_validation_run(plan, opts))
     end
   end
 
@@ -95,22 +95,22 @@ defmodule Micelio.ContributionConfidence do
     |> clamp_score()
   end
 
-  defp reputation_score(%PromptRequest{} = prompt_request, opts) do
+  defp reputation_score(%Plan{} = plan, opts) do
     case Keyword.get(opts, :reputation) do
       %Reputation.Score{overall: score} -> clamp_score(score)
       score when is_integer(score) -> clamp_score(score)
-      _ -> reputation_from_prompt_request(prompt_request)
+      _ -> reputation_from_plan(plan)
     end
   end
 
-  defp reputation_from_prompt_request(%PromptRequest{user: %Micelio.Accounts.User{} = user}) do
+  defp reputation_from_plan(%Plan{user: %Micelio.Accounts.User{} = user}) do
     user
     |> Reputation.trust_score_for_user()
     |> Map.get(:overall, @default_reputation_score)
     |> clamp_score()
   end
 
-  defp reputation_from_prompt_request(_prompt_request), do: @default_reputation_score
+  defp reputation_from_plan(_plan), do: @default_reputation_score
 
   defp token_efficiency_score(nil, _opts), do: @default_token_efficiency_score
 
@@ -135,47 +135,47 @@ defmodule Micelio.ContributionConfidence do
 
   defp token_efficiency_score(_token_count, _opts), do: @default_token_efficiency_score
 
-  defp resolve_validation_run(%PromptRequest{} = prompt_request, opts) do
+  defp resolve_validation_run(%Plan{} = plan, opts) do
     case Keyword.get(opts, :validation_run) || List.first(Keyword.get(opts, :validation_runs, [])) do
       %ValidationRun{} = run ->
         run
 
       _ ->
         ValidationRun
-        |> where([run], run.prompt_request_id == ^prompt_request.id)
+        |> where([run], run.plan_id == ^plan.id)
         |> order_by([run], desc: run.completed_at, desc: run.inserted_at)
         |> limit(1)
         |> Repo.one()
     end
   end
 
-  defp latest_runs_by_prompt_request([]), do: %{}
+  defp latest_runs_by_plan([]), do: %{}
 
-  defp latest_runs_by_prompt_request(prompt_requests) do
-    ids = Enum.map(prompt_requests, & &1.id)
+  defp latest_runs_by_plan(plans) do
+    ids = Enum.map(plans, & &1.id)
 
     ValidationRun
-    |> where([run], run.prompt_request_id in ^ids)
+    |> where([run], run.plan_id in ^ids)
     |> order_by([run], desc: run.completed_at, desc: run.inserted_at)
-    |> distinct([run], run.prompt_request_id)
-    |> select([run], {run.prompt_request_id, run})
+    |> distinct([run], run.plan_id)
+    |> select([run], {run.plan_id, run})
     |> Repo.all()
     |> Map.new()
   end
 
-  defp reputations_by_user_id(prompt_requests, opts) do
+  defp reputations_by_user_id(plans, opts) do
     case Keyword.get(opts, :reputation_by_user_id) do
       %{} = map -> map
-      _ -> compute_reputations_by_user_id(prompt_requests)
+      _ -> compute_reputations_by_user_id(plans)
     end
   end
 
-  defp compute_reputations_by_user_id(prompt_requests) do
-    prompt_requests
+  defp compute_reputations_by_user_id(plans) do
+    plans
     |> Enum.filter(& &1.user)
     |> Enum.uniq_by(& &1.user_id)
-    |> Map.new(fn prompt_request ->
-      {prompt_request.user_id, Reputation.trust_score_for_user(prompt_request.user)}
+    |> Map.new(fn plan ->
+      {plan.user_id, Reputation.trust_score_for_user(plan.user)}
     end)
   end
 

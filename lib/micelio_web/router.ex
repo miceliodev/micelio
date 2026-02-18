@@ -82,6 +82,10 @@ defmodule MicelioWeb.Router do
     plug(MicelioWeb.ResourcePlug, :load_repository)
   end
 
+  pipeline :forge_resources do
+    plug(MicelioWeb.Plugs.ForgeResourcePlug)
+  end
+
   pipeline :og_image do
     plug(:put_secure_browser_headers)
   end
@@ -101,6 +105,17 @@ defmodule MicelioWeb.Router do
       live_dashboard("/dashboard", metrics: MicelioWeb.Telemetry)
       forward("/mailbox", Plug.Swoosh.MailboxPreview)
     end
+  end
+
+  # Sandbox module serving (authenticated via per-sandbox tokens)
+  pipeline :sandbox_modules do
+    plug(MicelioWeb.Plugs.SandboxTokenPlug)
+  end
+
+  scope "/sandbox/modules", MicelioWeb do
+    pipe_through(:sandbox_modules)
+
+    get("/*path", SandboxModuleController, :show)
   end
 
   # Blog routes (public)
@@ -183,7 +198,7 @@ defmodule MicelioWeb.Router do
     get("/docs", OpenApiSpex.Plug.SwaggerUI, path: "/api/openapi")
   end
 
-  scope "/api/v1", MicelioWeb.Api.V1 do
+  scope "/api", MicelioWeb.Api.V1 do
     pipe_through(:api)
 
     # Organizations
@@ -203,28 +218,58 @@ defmodule MicelioWeb.Router do
     get("/sessions/:session_id", SessionController, :show)
     post("/sessions/:session_id/land", SessionController, :land)
 
-    # Prompt Requests
-    get("/orgs/:org/repositories/:repo/prompt-requests", PromptRequestController, :index)
-    post("/orgs/:org/repositories/:repo/prompt-requests", PromptRequestController, :create)
+    # Plans
+    get("/orgs/:org/repositories/:repo/plans", PlanController, :index)
+    post("/orgs/:org/repositories/:repo/plans", PlanController, :create)
 
-    get("/orgs/:org/repositories/:repo/prompt-requests/:number", PromptRequestController, :show)
+    get("/orgs/:org/repositories/:repo/plans/:number", PlanController, :show)
 
     patch(
-      "/orgs/:org/repositories/:repo/prompt-requests/:number",
-      PromptRequestController,
+      "/orgs/:org/repositories/:repo/plans/:number",
+      PlanController,
       :update
     )
 
     post(
-      "/orgs/:org/repositories/:repo/prompt-requests/:number/close",
-      PromptRequestController,
+      "/orgs/:org/repositories/:repo/plans/:number/close",
+      PlanController,
       :close
     )
 
     post(
-      "/orgs/:org/repositories/:repo/prompt-requests/:number/reopen",
-      PromptRequestController,
+      "/orgs/:org/repositories/:repo/plans/:number/reopen",
+      PlanController,
       :reopen
+    )
+
+    get(
+      "/orgs/:org/repositories/:repo/plans/:number/comments",
+      PlanController,
+      :comments_index
+    )
+
+    post(
+      "/orgs/:org/repositories/:repo/plans/:number/comments",
+      PlanController,
+      :comments_create
+    )
+
+    post(
+      "/orgs/:org/repositories/:repo/plans/:number/session/start",
+      PlanController,
+      :start_session
+    )
+
+    post(
+      "/orgs/:org/repositories/:repo/plans/:number/session/stop",
+      PlanController,
+      :stop_session
+    )
+
+    post(
+      "/orgs/:org/repositories/:repo/plans/:number/session/messages",
+      PlanController,
+      :send_session_message
     )
 
     # Content
@@ -260,8 +305,8 @@ defmodule MicelioWeb.Router do
     )
 
     post(
-      "/:organization_handle/:repository_handle/prompt-requests",
-      PromptRequestController,
+      "/:organization_handle/:repository_handle/plans",
+      PlanController,
       :create
     )
   end
@@ -275,6 +320,7 @@ defmodule MicelioWeb.Router do
   scope "/.well-known", MicelioWeb do
     pipe_through(:activity_pub)
 
+    get("/micelio.json", WellKnownController, :micelio)
     get("/webfinger", ActivityPubController, :webfinger)
   end
 
@@ -288,6 +334,12 @@ defmodule MicelioWeb.Router do
     post("/actors/:handle/inbox", ActivityPubController, :inbox)
     get("/actors/:handle/followers", ActivityPubController, :followers)
     get("/actors/:handle/following", ActivityPubController, :following)
+  end
+
+  scope "/oauth", MicelioWeb.Oauth do
+    pipe_through(:browser)
+
+    get("/authorize", AuthorizeController, :authorize)
   end
 
   scope "/oauth", MicelioWeb.Oauth do
@@ -314,15 +366,15 @@ defmodule MicelioWeb.Router do
     get("/:account/:repository/edit", RedirectController, :projects_edit)
     get("/:account/:repository/sessions", RedirectController, :projects_sessions)
     get("/:account/:repository/sessions/:id", RedirectController, :projects_session)
-    get("/:account/:repository/prompt-requests", RedirectController, :projects_prompt_requests)
+    get("/:account/:repository/prompt-requests", RedirectController, :projects_plans)
 
     get(
       "/:account/:repository/prompt-requests/new",
       RedirectController,
-      :projects_prompt_request_new
+      :projects_plan_new
     )
 
-    get("/:account/:repository/prompt-requests/:id", RedirectController, :projects_prompt_request)
+    get("/:account/:repository/prompt-requests/:id", RedirectController, :projects_plan)
   end
 
   # Repository list routes (require authentication)
@@ -345,8 +397,8 @@ defmodule MicelioWeb.Router do
       live("/:account/:repository/edit", RepositoryLive.Edit, :edit)
       live("/:account/:repository/sessions", SessionLive.Index, :index)
       live("/:account/:repository/sessions/:id", SessionLive.Show, :show)
-      live("/:account/:repository/prs/new", PromptRequestLive.New, :new)
-      live("/:account/:repository/prs/:number/edit", PromptRequestLive.Edit, :edit)
+      live("/:account/:repository/prs/new", PlanLive.New, :new)
+      live("/:account/:repository/prs/:number/edit", PlanLive.Edit, :edit)
     end
   end
 
@@ -381,7 +433,7 @@ defmodule MicelioWeb.Router do
     live_session :admin,
       on_mount: [{MicelioWeb.LiveAuth, :require_auth}, MicelioWeb.LiveOpenGraphCacheBuster] do
       live("/prompts", AdminPromptRegistryLive.Index, :index)
-      live("/prompt-templates", AdminPromptTemplatesLive.Index, :index)
+      live("/prompt-templates", AdminPlanTemplatesLive.Index, :index)
       live("/errors", AdminErrorsLive.Index, :index)
       live("/errors/settings", AdminErrorNotificationsLive.Index, :index)
       live("/errors/:id", AdminErrorsLive.Show, :show)
@@ -443,8 +495,8 @@ defmodule MicelioWeb.Router do
     live_session :public,
       on_mount: [{MicelioWeb.LiveAuth, :current_user}, MicelioWeb.LiveOpenGraphCacheBuster] do
       live("/:account/:repository/agents", AgentLive.Index, :index)
-      live("/:account/:repository/prs", PromptRequestLive.Index, :index)
-      live("/:account/:repository/prs/:number", PromptRequestLive.Show, :show)
+      live("/:account/:repository/prs", PlanLive.Index, :index)
+      live("/:account/:repository/prs/:number", PlanLive.Show, :show)
     end
   end
 
@@ -452,15 +504,15 @@ defmodule MicelioWeb.Router do
   scope "/", MicelioWeb.Browser do
     pipe_through([:browser, :load_resources])
 
-    get("/:account/:repository/prompt-requests", RedirectController, :projects_prompt_requests)
+    get("/:account/:repository/prompt-requests", RedirectController, :projects_plans)
 
     get(
       "/:account/:repository/prompt-requests/new",
       RedirectController,
-      :projects_prompt_request_new
+      :projects_plan_new
     )
 
-    get("/:account/:repository/prompt-requests/:id", RedirectController, :projects_prompt_request)
+    get("/:account/:repository/prompt-requests/:id", RedirectController, :projects_plan)
   end
 
   # Locale-prefixed marketing routes (for SEO and explicit locale selection)
@@ -486,6 +538,33 @@ defmodule MicelioWeb.Router do
     get("/cookies", LegalController, :cookies)
     get("/impressum", LegalController, :impressum)
     get("/search", SearchController, :index)
+  end
+
+  # Forge URLs served directly (controller routes)
+  scope "/", MicelioWeb.Browser do
+    pipe_through([:browser, :forge_resources])
+
+    get("/github.com/:owner/:repo", RepositoryController, :show)
+    get("/github.com/:owner/:repo/tree/*path", RepositoryController, :tree)
+    get("/github.com/:owner/:repo/blob/*path", RepositoryController, :blob)
+    get("/github.com/:owner/:repo/blame/*path", RepositoryController, :blame)
+
+    get("/gitlab.com/:owner/:repo", RepositoryController, :show)
+    get("/gitlab.com/:owner/:repo/tree/*path", RepositoryController, :tree)
+    get("/gitlab.com/:owner/:repo/blob/*path", RepositoryController, :blob)
+    get("/gitlab.com/:owner/:repo/blame/*path", RepositoryController, :blame)
+  end
+
+  # Forge URLs catch-all (redirect LiveView sub-paths to internal URLs)
+  scope "/", MicelioWeb.Browser do
+    pipe_through([:browser])
+
+    get("/github.com/:owner/:repo/*rest", ForgeController, :show, forge_host: "github.com")
+    get("/gitlab.com/:owner/:repo/*rest", ForgeController, :show, forge_host: "gitlab.com")
+  end
+
+  scope "/", MicelioWeb.Browser do
+    pipe_through([:browser, :load_resources])
 
     get("/:account", AccountController, :show)
     get("/:account/:repository/badge.svg", RepositoryController, :badge)

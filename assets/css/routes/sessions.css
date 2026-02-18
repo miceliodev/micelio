@@ -52,7 +52,7 @@
   border: none;
   border-radius: var(--theme-ui-radii-default);
   cursor: pointer;
-  transition: color 0.15s ease;
+  transition: color 0.1s ease;
   white-space: nowrap;
   flex-shrink: 0;
 }
@@ -363,7 +363,7 @@
   background-color: var(--theme-ui-colors-background);
   color: var(--theme-ui-colors-text);
   cursor: pointer;
-  transition: background-color 0.15s ease;
+  transition: background-color 0.1s ease;
   text-align: center;
   width: 100%;
 }
@@ -381,13 +381,13 @@
   background-color: var(--sessions-status-abandoned-bg);
 }
 
-.session-prompt-request-link {
+.session-plan-link {
   color: var(--theme-ui-colors-primary);
   text-decoration: none;
   font-size: var(--theme-ui-font-size-sm);
 }
 
-.session-prompt-request-link:hover {
+.session-plan-link:hover {
   text-decoration: underline;
 }
 
@@ -592,7 +592,7 @@
   border-left: 5px solid var(--theme-ui-colors-muted);
   border-top: 4px solid transparent;
   border-bottom: 4px solid transparent;
-  transition: transform 0.15s ease;
+  transition: transform 0.1s ease;
   flex-shrink: 0;
 }
 

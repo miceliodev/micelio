@@ -7,11 +7,20 @@
 >
   <div class="account-page">
     <.header>
-      <%= if @organization do %>
-        {@organization.name}
-      <% else %>
-        {@account.handle}
-      <% end %>
+      <span class="account-title-with-forge">
+        <%= if github_forge?(@account_forge_namespace) do %>
+          <svg
+            class="account-title-forge-icon"
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+            aria-hidden="true"
+          >
+            <path d="M12 2a10 10 0 0 0-3.162 19.49c.5.092.682-.218.682-.483c0-.237-.009-.867-.014-1.7c-2.776.603-3.362-1.339-3.362-1.339c-.454-1.153-1.108-1.46-1.108-1.46c-.906-.619.069-.607.069-.607c1.001.071 1.527 1.03 1.527 1.03c.89 1.527 2.336 1.086 2.905.831c.091-.645.349-1.086.636-1.336c-2.217-.252-4.55-1.108-4.55-4.932c0-1.089.389-1.98 1.029-2.678c-.103-.253-.446-1.269.097-2.646c0 0 .84-.269 2.75 1.023A9.564 9.564 0 0 1 12 6.844c.85.004 1.706.115 2.504.337c1.909-1.292 2.748-1.023 2.748-1.023c.545 1.377.202 2.393.1 2.646c.64.698 1.028 1.589 1.028 2.678c0 3.833-2.337 4.677-4.56 4.925c.359.309.678.919.678 1.852c0 1.336-.012 2.414-.012 2.743c0 .268.18.58.688.481A10 10 0 0 0 12 2z" />
+          </svg>
+        <% end %>
+        <span>{account_display_name(@account, @organization, @account_forge_namespace)}</span>
+      </span>
       <:actions>
         <%= if @organization && @organization_admin? do %>
           <.link
@@ -26,7 +35,9 @@
       <:subtitle>
         <% social_links = MicelioWeb.ProfileLinks.social_links(@user) %>
         <div class="account-subtitle">
-          <span class="account-handle">@{@account.handle}</span>
+          <span class="account-handle">
+            {account_reference_label(@account, @account_forge_namespace)}
+          </span>
           <%= if @reputation do %>
             <div class="account-reputation" id="account-reputation">
               <div class="account-reputation-score">
@@ -88,11 +99,11 @@
                   <span class="account-activity-action">
                     {activity_action_label(activity.type)}
                   </span>
-                  <%= if activity.type == :prompt_request_submitted do %>
+                  <%= if activity.type == :plan_submitted do %>
                     <span class={
-                      "badge badge--caps prompt-request-origin prompt-request-origin-#{prompt_request_origin_value(activity.origin)}"
+                      "badge badge--caps plan-origin plan-origin-#{plan_origin_value(activity.origin)}"
                     }>
-                      {prompt_request_origin_label(activity.origin)}
+                      {plan_origin_label(activity.origin)}
                     </span>
                   <% end %>
                   <a
@@ -147,7 +158,7 @@
             >
               <:title>{repository.name}</:title>
               <:subtitle>
-                @{repository.organization.account.handle}/{repository.handle}
+                {repository_reference_label(repository)}
               </:subtitle>
               <:description>
                 <%= if repository.description do %>

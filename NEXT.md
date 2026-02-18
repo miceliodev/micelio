@@ -1,3 +1,0 @@
-- Set up devenv for development
-- Rename projects/ to repositories/
-- Figure out authorization

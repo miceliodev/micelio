@@ -59,7 +59,7 @@
   color: var(--theme-ui-colors-muted);
   display: inline-flex;
   align-items: center;
-  transition: color 0.2s ease;
+  transition: color 0.1s ease;
 }
 
 .blog-post-author-links a:hover {
@@ -82,3 +82,33 @@
 }
 
 /* Blog post content uses .prose from tokens.css + global syntax highlighting */
+
+/* Empty state */
+.blog-empty {
+  text-align: center;
+  padding: var(--theme-ui-space-4);
+}
+
+.blog-empty-icon {
+  width: 2rem;
+  height: 2rem;
+  color: var(--theme-ui-colors-muted);
+  margin: 0 auto var(--theme-ui-space-2);
+  opacity: 0.5;
+}
+
+.blog-empty-icon svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.blog-empty-title {
+  font-weight: var(--theme-ui-font-weights-bold);
+  color: var(--theme-ui-colors-text);
+  margin-bottom: var(--theme-ui-space-1);
+}
+
+.blog-empty-message {
+  color: var(--theme-ui-colors-muted);
+}

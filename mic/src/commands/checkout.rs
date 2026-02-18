@@ -16,8 +16,8 @@ pub async fn run(cmd: CheckoutCommand) -> Result<()> {
         ))
     })?;
 
-    let config = Config::load()?;
-    let server = config.get_default_server().ok_or(MicError::NoDefaultServer)?;
+    let mut config = Config::load()?;
+    let server = config.resolve_default_grpc_url().await?;
     let _tokens = config::require_tokens()?;
 
     // Determine target directory
@@ -32,7 +32,7 @@ pub async fn run(cmd: CheckoutCommand) -> Result<()> {
     std::env::set_current_dir(&target_path)?;
 
     // Create workspace manifest
-    let manifest = WorkspaceManifest::new(server, org, project);
+    let manifest = WorkspaceManifest::new(&server, org, project);
     manifest.save()?;
 
     println!("Checked out {}/{} to {}", org, project, target_path);

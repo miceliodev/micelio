@@ -22,12 +22,12 @@ defmodule MicelioWeb.Api.V1.OrganizationControllerTest do
     %{user: user, token: token, organization: organization}
   end
 
-  describe "GET /api/v1/orgs" do
+  describe "GET /api/orgs" do
     test "returns 403 without token", %{conn: conn} do
       conn =
         conn
         |> put_req_header("accept", "application/json")
-        |> get(~p"/api/v1/orgs")
+        |> get(~p"/api/orgs")
 
       body = json_response(conn, 403)
       assert body["error"] == "insufficient_scope"
@@ -42,7 +42,7 @@ defmodule MicelioWeb.Api.V1.OrganizationControllerTest do
         conn
         |> put_req_header("accept", "application/json")
         |> put_req_header("authorization", "Bearer #{token}")
-        |> get(~p"/api/v1/orgs")
+        |> get(~p"/api/orgs")
 
       body = json_response(conn, 200)
       assert is_list(body["data"])
@@ -54,12 +54,12 @@ defmodule MicelioWeb.Api.V1.OrganizationControllerTest do
     end
   end
 
-  describe "GET /api/v1/orgs/:handle" do
+  describe "GET /api/orgs/:handle" do
     test "returns 403 without token", %{conn: conn, organization: org} do
       conn =
         conn
         |> put_req_header("accept", "application/json")
-        |> get(~p"/api/v1/orgs/#{org.account.handle}")
+        |> get(~p"/api/orgs/#{org.account.handle}")
 
       body = json_response(conn, 403)
       assert body["error"] == "insufficient_scope"
@@ -70,7 +70,7 @@ defmodule MicelioWeb.Api.V1.OrganizationControllerTest do
         conn
         |> put_req_header("accept", "application/json")
         |> put_req_header("authorization", "Bearer #{token}")
-        |> get(~p"/api/v1/orgs/#{org.account.handle}")
+        |> get(~p"/api/orgs/#{org.account.handle}")
 
       body = json_response(conn, 200)
       assert body["data"]["handle"] == org.account.handle
@@ -82,7 +82,7 @@ defmodule MicelioWeb.Api.V1.OrganizationControllerTest do
         conn
         |> put_req_header("accept", "application/json")
         |> put_req_header("authorization", "Bearer #{token}")
-        |> get(~p"/api/v1/orgs/nonexistent-org")
+        |> get(~p"/api/orgs/nonexistent-org")
 
       assert json_response(conn, 404)
     end

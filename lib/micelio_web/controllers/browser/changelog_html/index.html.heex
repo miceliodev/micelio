@@ -17,15 +17,17 @@
       </:actions>
     </.header>
 
-    <div class="changelog-filters">
-      <div class="changelog-categories">
-        <span class="changelog-category-label">Filter by category:</span>
-        <.badge navigate={~p"/changelog"} active={true}>All</.badge>
-        <%= for category <- @categories do %>
-          <.badge navigate={~p"/changelog/category/#{category}"} caps>{category}</.badge>
-        <% end %>
+    <%= if Enum.any?(@categories) do %>
+      <div class="changelog-filters">
+        <div class="changelog-categories">
+          <span class="changelog-category-label">Filter by category:</span>
+          <.badge navigate={~p"/changelog"} active={true}>All</.badge>
+          <%= for category <- @categories do %>
+            <.badge navigate={~p"/changelog/category/#{category}"} caps>{category}</.badge>
+          <% end %>
+        </div>
       </div>
-    </div>
+    <% end %>
 
     <div class="content-card-list">
       <%= for entry <- @entries do %>

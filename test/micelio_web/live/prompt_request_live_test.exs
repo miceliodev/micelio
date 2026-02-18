@@ -1,10 +1,11 @@
-defmodule MicelioWeb.PromptRequestLiveTest do
+defmodule MicelioWeb.PlanLiveTest do
   use MicelioWeb.ConnCase, async: true
 
   import Phoenix.LiveViewTest
 
   alias Micelio.Accounts
-  alias Micelio.PromptRequests
+  alias Micelio.Plans
+  alias Micelio.Repo
 
   defp login_user(conn, user) do
     Plug.Test.init_test_session(conn, %{"user_id" => user.id})
@@ -41,7 +42,7 @@ defmodule MicelioWeb.PromptRequestLiveTest do
     {user, organization, repository}
   end
 
-  test "lists prompt requests and creates a new one", %{conn: conn} do
+  test "lists plans and opens a new plan drafting session", %{conn: conn} do
     {user, organization, repository} = setup_repository()
 
     conn = login_user(conn, user)
@@ -52,40 +53,28 @@ defmodule MicelioWeb.PromptRequestLiveTest do
         ~p"/#{organization.account.handle}/#{repository.handle}/prs"
       )
 
-    assert has_element?(view, "#new-prompt-request")
-    assert has_element?(view, "#prompt-requests-empty")
+    assert has_element?(view, "#new-plan")
+    assert has_element?(view, "#plans-empty")
 
-    {:ok, form_view, _html} =
+    {:ok, new_view, _html} =
       live(
         conn,
         ~p"/#{organization.account.handle}/#{repository.handle}/prs/new"
       )
 
-    form =
-      form(form_view, "#prompt-request-form",
-        prompt_request: %{
-          title: "Ship prompt request",
-          description: "Describe the change to make"
-        }
-      )
+    assert has_element?(new_view, "#plan-chat-form")
+    assert has_element?(new_view, "h2", "Untitled plan")
 
-    render_submit(form)
-
-    [prompt_request] = PromptRequests.list_prompt_requests_for_repository(repository)
-    assert prompt_request.number == 1
-    assert prompt_request.title == "Ship prompt request"
-
-    assert_redirect(
-      form_view,
-      ~p"/#{organization.account.handle}/#{repository.handle}/prs/#{prompt_request.number}"
-    )
+    [plan] = Plans.list_plans_for_repository(repository)
+    assert plan.number == 1
+    assert plan.title == "Untitled plan"
   end
 
-  test "shows a prompt request", %{conn: conn} do
+  test "shows a plan", %{conn: conn} do
     {user, organization, repository} = setup_repository()
 
-    {:ok, prompt_request} =
-      PromptRequests.create_simple_prompt_request(
+    {:ok, plan} =
+      Plans.create_simple_plan(
         %{"title" => "Review this", "description" => "Some description"},
         repository: repository,
         user: user
@@ -96,26 +85,74 @@ defmodule MicelioWeb.PromptRequestLiveTest do
     {:ok, view, html} =
       live(
         conn,
-        ~p"/#{organization.account.handle}/#{repository.handle}/prs/#{prompt_request.number}"
+        ~p"/#{organization.account.handle}/#{repository.handle}/prs/#{plan.number}"
       )
 
     assert html =~ "Review this"
-    assert html =~ "##{prompt_request.number}"
-    assert has_element?(view, "#prompt-request-description")
+    assert html =~ "##{plan.number}"
+    assert has_element?(view, "#plan-description")
   end
 
-  test "assigns sequential numbers to prompt requests", %{conn: _conn} do
+  test "shows draft PR and sandbox links when metadata is available", %{conn: conn} do
+    {user, organization, repository} = setup_repository()
+
+    {:ok, plan} =
+      Plans.create_simple_plan(
+        %{"title" => "Preview this", "description" => "Sandbox metadata"},
+        repository: repository,
+        user: user
+      )
+
+    {:ok, plan} =
+      plan
+      |> Micelio.Plans.Plan.forge_pr_changeset(%{
+        forge_branch_name: "micelio/#{plan.id}",
+        forge_pr_provider: "github",
+        forge_pr_number: 1,
+        forge_pr_url: "https://github.com/example/repo/pull/1",
+        forge_pr_state: "draft",
+        forge_pr_draft: true
+      })
+      |> Repo.update()
+
+    {:ok, _plan} =
+      plan
+      |> Micelio.Plans.Plan.sandbox_changeset(%{
+        sandbox_status: "running",
+        sandbox_metadata: %{
+          "preview_url" => "https://preview.example.com",
+          "dashboard_url" => "https://app.daytona.io/sandboxes/abc"
+        }
+      })
+      |> Repo.update()
+
+    conn = login_user(conn, user)
+
+    {:ok, view, html} =
+      live(
+        conn,
+        ~p"/#{organization.account.handle}/#{repository.handle}/prs/#{plan.number}"
+      )
+
+    assert html =~ "View draft PR"
+    assert html =~ "Open preview"
+    assert html =~ "Open sandbox"
+    assert has_element?(view, "a[href='https://preview.example.com']")
+    assert has_element?(view, "a[href='https://app.daytona.io/sandboxes/abc']")
+  end
+
+  test "assigns sequential numbers to plans", %{conn: _conn} do
     {user, _organization, repository} = setup_repository()
 
     {:ok, pr1} =
-      PromptRequests.create_simple_prompt_request(
+      Plans.create_simple_plan(
         %{"title" => "First"},
         repository: repository,
         user: user
       )
 
     {:ok, pr2} =
-      PromptRequests.create_simple_prompt_request(
+      Plans.create_simple_plan(
         %{"title" => "Second"},
         repository: repository,
         user: user
@@ -125,12 +162,12 @@ defmodule MicelioWeb.PromptRequestLiveTest do
     assert pr2.number == 2
   end
 
-  test "index shows prompt request list when not empty", %{conn: conn} do
+  test "index shows plan list when not empty", %{conn: conn} do
     {user, organization, repository} = setup_repository()
 
     {:ok, _pr} =
-      PromptRequests.create_simple_prompt_request(
-        %{"title" => "A prompt request"},
+      Plans.create_simple_plan(
+        %{"title" => "A plan"},
         repository: repository,
         user: user
       )
@@ -143,8 +180,8 @@ defmodule MicelioWeb.PromptRequestLiveTest do
         ~p"/#{organization.account.handle}/#{repository.handle}/prs"
       )
 
-    assert html =~ "A prompt request"
-    assert has_element?(view, "#prompt-requests-list")
-    refute has_element?(view, "#prompt-requests-empty")
+    assert html =~ "A plan"
+    assert has_element?(view, "#plans-list")
+    refute has_element?(view, "#plans-empty")
   end
 end

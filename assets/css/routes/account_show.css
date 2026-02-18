@@ -3,6 +3,18 @@
 .account-page {
 }
 
+.account-title-with-forge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--theme-ui-space-1);
+}
+
+.account-title-forge-icon {
+  width: 1rem;
+  height: 1rem;
+  color: var(--theme-ui-colors-muted);
+}
+
 .account-handle {
   color: var(--theme-ui-colors-muted);
 }

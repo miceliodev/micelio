@@ -6,8 +6,8 @@ defmodule Micelio.Reputation do
   import Ecto.Query, warn: false
 
   alias Micelio.Accounts.User
-  alias Micelio.PromptRequests.PromptRequest
-  alias Micelio.PromptRequests.PromptSuggestion
+  alias Micelio.Plans.Plan
+  alias Micelio.Plans.PlanSuggestion
   alias Micelio.Repo
   alias Micelio.Sessions.Session
   alias Micelio.ValidationEnvironments.ValidationRun
@@ -22,14 +22,14 @@ defmodule Micelio.Reputation do
   end
 
   def trust_score_for_user(%User{} = user) do
-    prompt_requests = list_prompt_requests(user)
+    plans = list_plans(user)
     sessions = list_sessions(user)
 
-    suggestion_counts = prompt_suggestion_counts(prompt_requests)
-    validation_stats = validation_stats(prompt_requests)
+    suggestion_counts = plan_suggestion_counts(plans)
+    validation_stats = validation_stats(plans)
 
     contributions =
-      build_contributions(prompt_requests, sessions, suggestion_counts, validation_stats)
+      build_contributions(plans, sessions, suggestion_counts, validation_stats)
 
     overall_metrics = metrics_for_contributions(contributions, validation_stats.all)
 
@@ -50,15 +50,15 @@ defmodule Micelio.Reputation do
 
   def types, do: @types
 
-  defp list_prompt_requests(%User{} = user) do
-    PromptRequest
-    |> where([prompt_request], prompt_request.user_id == ^user.id)
-    |> select([prompt_request], %{
-      id: prompt_request.id,
-      title: prompt_request.title,
-      prompt: prompt_request.prompt,
-      review_status: prompt_request.review_status,
-      inserted_at: prompt_request.inserted_at
+  defp list_plans(%User{} = user) do
+    Plan
+    |> where([plan], plan.user_id == ^user.id)
+    |> select([plan], %{
+      id: plan.id,
+      title: plan.title,
+      prompt: plan.prompt,
+      review_status: plan.review_status,
+      inserted_at: plan.inserted_at
     })
     |> Repo.all()
   end
@@ -76,33 +76,33 @@ defmodule Micelio.Reputation do
     |> Repo.all()
   end
 
-  defp prompt_suggestion_counts(prompt_requests) do
-    prompt_request_ids = Enum.map(prompt_requests, & &1.id)
+  defp plan_suggestion_counts(plans) do
+    plan_ids = Enum.map(plans, & &1.id)
 
-    if prompt_request_ids == [] do
+    if plan_ids == [] do
       %{}
     else
-      PromptSuggestion
-      |> where([suggestion], suggestion.prompt_request_id in ^prompt_request_ids)
-      |> group_by([suggestion], suggestion.prompt_request_id)
-      |> select([suggestion], {suggestion.prompt_request_id, count(suggestion.id)})
+      PlanSuggestion
+      |> where([suggestion], suggestion.plan_id in ^plan_ids)
+      |> group_by([suggestion], suggestion.plan_id)
+      |> select([suggestion], {suggestion.plan_id, count(suggestion.id)})
       |> Repo.all()
       |> Map.new()
     end
   end
 
-  defp validation_stats(prompt_requests) do
-    prompt_request_ids = Enum.map(prompt_requests, & &1.id)
+  defp validation_stats(plans) do
+    plan_ids = Enum.map(plans, & &1.id)
 
     runs =
-      if prompt_request_ids == [] do
+      if plan_ids == [] do
         []
       else
         ValidationRun
-        |> where([run], run.prompt_request_id in ^prompt_request_ids)
+        |> where([run], run.plan_id in ^plan_ids)
         |> where([run], run.status in [:passed, :failed])
         |> select([run], %{
-          prompt_request_id: run.prompt_request_id,
+          plan_id: run.plan_id,
           status: run.status,
           completed_at: run.completed_at,
           inserted_at: run.inserted_at
@@ -110,18 +110,18 @@ defmodule Micelio.Reputation do
         |> Repo.all()
       end
 
-    by_prompt_request =
+    by_plan =
       runs
-      |> Enum.group_by(& &1.prompt_request_id)
+      |> Enum.group_by(& &1.plan_id)
       |> Map.new(fn {id, entries} -> {id, entries} end)
 
     by_type =
-      prompt_requests
-      |> Enum.group_by(&classify_prompt_request/1)
+      plans
+      |> Enum.group_by(&classify_plan/1)
       |> Map.new(fn {type, requests} ->
         request_ids = MapSet.new(Enum.map(requests, & &1.id))
 
-        type_runs = Enum.filter(runs, &MapSet.member?(request_ids, &1.prompt_request_id))
+        type_runs = Enum.filter(runs, &MapSet.member?(request_ids, &1.plan_id))
 
         {type,
          %{
@@ -131,25 +131,25 @@ defmodule Micelio.Reputation do
       end)
 
     %{
-      by_prompt_request: by_prompt_request,
+      by_plan: by_plan,
       by_type: by_type,
       all: %{passed: Enum.filter(runs, &(&1.status == :passed)), total: runs}
     }
   end
 
-  defp build_contributions(prompt_requests, sessions, suggestion_counts, validation_stats) do
-    prompt_contributions =
-      Enum.map(prompt_requests, fn prompt_request ->
-        validations = Map.get(validation_stats.by_prompt_request, prompt_request.id, [])
+  defp build_contributions(plans, sessions, suggestion_counts, validation_stats) do
+    plan_contributions =
+      Enum.map(plans, fn plan ->
+        validations = Map.get(validation_stats.by_plan, plan.id, [])
         passed_validation = Enum.any?(validations, &(&1.status == :passed))
 
         %{
-          id: prompt_request.id,
-          type: classify_prompt_request(prompt_request),
-          kind: :prompt_request,
-          status: prompt_request.review_status,
-          occurred_at: prompt_request.inserted_at,
-          review_iterations: Map.get(suggestion_counts, prompt_request.id, 0),
+          id: plan.id,
+          type: classify_plan(plan),
+          kind: :plan,
+          status: plan.review_status,
+          occurred_at: plan.inserted_at,
+          review_iterations: Map.get(suggestion_counts, plan.id, 0),
           passed_validation: passed_validation
         }
       end)
@@ -169,7 +169,7 @@ defmodule Micelio.Reputation do
         }
       end)
 
-    prompt_contributions ++ session_contributions
+    plan_contributions ++ session_contributions
   end
 
   defp metrics_for_contributions(contributions, validation_stats) do
@@ -265,12 +265,12 @@ defmodule Micelio.Reputation do
   end
 
   defp review_metrics(contributions) do
-    prompt_contributions = Enum.filter(contributions, &(&1.kind == :prompt_request))
+    plan_contributions = Enum.filter(contributions, &(&1.kind == :plan))
 
-    weighted_total = Enum.reduce(prompt_contributions, 0.0, &(&1.weight + &2))
+    weighted_total = Enum.reduce(plan_contributions, 0.0, &(&1.weight + &2))
 
     weighted_iterations =
-      Enum.reduce(prompt_contributions, 0.0, fn contribution, acc ->
+      Enum.reduce(plan_contributions, 0.0, fn contribution, acc ->
         acc + contribution.weight * contribution.review_iterations
       end)
 
@@ -315,7 +315,7 @@ defmodule Micelio.Reputation do
   defp run_occurred_at(%{inserted_at: %DateTime{} = inserted_at}), do: inserted_at
   defp run_occurred_at(_), do: DateTime.utc_now()
 
-  defp classify_prompt_request(%{title: title, prompt: prompt}) do
+  defp classify_plan(%{title: title, prompt: prompt}) do
     classify_text([title, prompt])
   end
 

@@ -7,11 +7,8 @@ use crate::workspace::manifest::Manifest;
 
 /// Run the link command.
 pub async fn run(cmd: LinkCommand) -> Result<()> {
-    let config = Config::load()?;
-    let server = config
-        .get_default_server()
-        .ok_or(MicError::NoDefaultServer)?
-        .to_string();
+    let mut config = Config::load()?;
+    let server = config.resolve_default_grpc_url().await?;
 
     // Parse project reference
     let (org, project) = parse_project_ref(&cmd.project).ok_or_else(|| {

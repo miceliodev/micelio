@@ -3,7 +3,7 @@ defmodule MicelioWeb.RepositoryLive.Show do
 
   alias Micelio.Authorization
   alias Micelio.Notifications
-  alias Micelio.PromptRequests
+  alias Micelio.Plans
   alias Micelio.Repositories
   alias Micelio.Sessions
   alias MicelioWeb.PageMeta
@@ -23,7 +23,7 @@ defmodule MicelioWeb.RepositoryLive.Show do
             |> Enum.take(5)
 
           session_count = Sessions.count_sessions_for_repository(repository)
-          prompt_request_count = PromptRequests.count_prompt_requests_for_repository(repository)
+          plan_count = Plans.count_plans_for_repository(repository)
 
           socket =
             socket
@@ -36,7 +36,7 @@ defmodule MicelioWeb.RepositoryLive.Show do
             |> assign(:organization, organization)
             |> assign(:recent_sessions, recent_sessions)
             |> assign(:session_count, session_count)
-            |> assign(:prompt_request_count, prompt_request_count)
+            |> assign(:plan_count, plan_count)
             |> assign_star_data()
 
           _ =
@@ -175,10 +175,10 @@ defmodule MicelioWeb.RepositoryLive.Show do
             Sessions ({@session_count})
           </.link>
           <.link
-            navigate={~p"/#{@organization.account.handle}/#{@repository.handle}/prompt-requests"}
+            navigate={~p"/#{@organization.account.handle}/#{@repository.handle}/prs"}
             class="project-show-nav-link"
           >
-            Prompt Requests ({@prompt_request_count})
+            Plans ({@plan_count})
           </.link>
         </div>
 

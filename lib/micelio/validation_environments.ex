@@ -7,28 +7,28 @@ defmodule Micelio.ValidationEnvironments do
 
   alias Micelio.AgentInfra
   alias Micelio.AITokens
-  alias Micelio.PromptRequests.PromptRequest
+  alias Micelio.Plans.Plan
   alias Micelio.Repo
   alias Micelio.ValidationEnvironments.{Checks, LocalExecutor, ValidationRun}
 
   @default_image "micelio/validation-runner:latest"
 
-  def list_runs_for_prompt_request(%PromptRequest{} = prompt_request) do
+  def list_runs_for_plan(%Plan{} = plan) do
     ValidationRun
-    |> where([run], run.prompt_request_id == ^prompt_request.id)
+    |> where([run], run.plan_id == ^plan.id)
     |> order_by([run], desc: run.inserted_at)
     |> Repo.all()
   end
 
-  def create_run(%PromptRequest{} = prompt_request, attrs \\ %{}) do
-    attrs = Map.put(attrs, :prompt_request_id, prompt_request.id)
+  def create_run(%Plan{} = plan, attrs \\ %{}) do
+    attrs = Map.put(attrs, :plan_id, plan.id)
 
     %ValidationRun{}
     |> ValidationRun.changeset(attrs)
     |> Repo.insert()
   end
 
-  def run_for_prompt_request(%PromptRequest{} = prompt_request, opts \\ []) do
+  def run_for_plan(%Plan{} = plan, opts \\ []) do
     executor = Keyword.get(opts, :executor, LocalExecutor)
     checks = Keyword.get(opts, :checks, Checks.default_checks())
     plan_attrs = plan_attrs(Keyword.get(opts, :plan_attrs, %{}), opts)
@@ -36,13 +36,13 @@ defmodule Micelio.ValidationEnvironments do
     notify_pid = Keyword.get(opts, :notify_pid)
 
     result =
-      with :ok <- AITokens.ensure_budget_for_prompt_request(prompt_request),
-           {:ok, run} <- create_run(prompt_request, %{status: :pending}),
+      with :ok <- AITokens.ensure_budget_for_plan(plan),
+           {:ok, run} <- create_run(plan, %{status: :pending}),
            :ok <- notify(notify_pid, {:validation_started, run}) do
         run_with_environment(run, provider_id, executor, checks, plan_attrs, opts)
       end
 
-    notify(notify_pid, {:validation_finished, prompt_request.id, result})
+    notify(notify_pid, {:validation_finished, plan.id, result})
 
     result
   end

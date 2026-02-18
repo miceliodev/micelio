@@ -236,11 +236,11 @@ defmodule MicelioWeb.Api.Schemas do
     })
   end
 
-  defmodule PromptRequest do
+  defmodule Plan do
     require OpenApiSpex
 
     OpenApiSpex.schema(%{
-      title: "PromptRequest",
+      title: "Plan",
       type: :object,
       properties: %{
         id: %Schema{type: :string, format: :uuid},
@@ -248,6 +248,25 @@ defmodule MicelioWeb.Api.Schemas do
         title: %Schema{type: :string},
         description: %Schema{type: :string, nullable: true},
         status: %Schema{type: :string, enum: ["open", "closed"]},
+        sandbox_provider: %Schema{type: :string, nullable: true},
+        sandbox_status: %Schema{
+          type: :string,
+          nullable: true,
+          enum: ["none", "provisioning", "running", "stopping", "stopped", "error"]
+        },
+        sandbox_workspace_id: %Schema{type: :string, nullable: true},
+        sandbox_preview_url: %Schema{type: :string, nullable: true},
+        sandbox_dashboard_url: %Schema{type: :string, nullable: true},
+        forge_branch_name: %Schema{type: :string, nullable: true},
+        forge_pr_provider: %Schema{type: :string, nullable: true, enum: ["github", "gitlab"]},
+        forge_pr_number: %Schema{type: :integer, nullable: true},
+        forge_pr_url: %Schema{type: :string, nullable: true},
+        forge_pr_state: %Schema{
+          type: :string,
+          nullable: true,
+          enum: ["open", "closed", "merged", "draft", "unknown"]
+        },
+        forge_pr_draft: %Schema{type: :boolean, nullable: true},
         user: %Schema{
           type: :object,
           nullable: true,
@@ -263,38 +282,38 @@ defmodule MicelioWeb.Api.Schemas do
     })
   end
 
-  defmodule PromptRequestList do
+  defmodule PlanList do
     require OpenApiSpex
 
     OpenApiSpex.schema(%{
-      title: "PromptRequestList",
+      title: "PlanList",
       type: :object,
       properties: %{
-        data: %Schema{type: :array, items: PromptRequest}
+        data: %Schema{type: :array, items: Plan}
       },
       required: [:data]
     })
   end
 
-  defmodule CreatePromptRequestRequest do
+  defmodule CreatePlanRequest do
     require OpenApiSpex
 
     OpenApiSpex.schema(%{
-      title: "CreatePromptRequestRequest",
+      title: "CreatePlanRequest",
       type: :object,
       properties: %{
-        title: %Schema{type: :string, description: "Title of the prompt request"},
+        title: %Schema{type: :string, description: "Title of the plan"},
         description: %Schema{type: :string, description: "Detailed description", nullable: true}
       },
       required: [:title]
     })
   end
 
-  defmodule UpdatePromptRequestRequest do
+  defmodule UpdatePlanRequest do
     require OpenApiSpex
 
     OpenApiSpex.schema(%{
-      title: "UpdatePromptRequestRequest",
+      title: "UpdatePlanRequest",
       type: :object,
       properties: %{
         title: %Schema{type: :string},
