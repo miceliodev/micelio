@@ -4,18 +4,15 @@ defmodule MicelioWeb.PlanLive.New do
   alias Micelio.Authorization
   alias Micelio.Plans
   alias Micelio.Plans.Plan
-  alias Micelio.Repositories
   alias MicelioWeb.PageMeta
 
   @impl true
-  def mount(%{"account" => org_handle, "repository" => repository_handle}, _session, socket) do
+  def mount(params, _session, socket) do
     with {:ok, repository, organization} <-
-           Repositories.get_repository_for_user_by_handle(
-             socket.assigns.current_user,
-             org_handle,
-             repository_handle
-           ),
+           MicelioWeb.RepositoryResolver.resolve(params, socket.assigns),
          :ok <- Authorization.authorize(:repository_read, socket.assigns.current_user, repository) do
+      base_path = MicelioWeb.RepositoryURL.base_path(repository, organization)
+
       form =
         %Plan{}
         |> Plans.change_simple_plan()
@@ -24,9 +21,10 @@ defmodule MicelioWeb.PlanLive.New do
       socket =
         socket
         |> assign(:page_title, gettext("New Plan"))
+        |> assign(:base_path, base_path)
         |> PageMeta.assign(
           description: gettext("Create a plan for %{name}.", name: repository.name),
-          canonical_url: url(~p"/#{organization.account.handle}/#{repository.handle}/prs/new")
+          canonical_url: unverified_url(MicelioWeb.Endpoint, "#{base_path}/prs/new")
         )
         |> assign(:repository, repository)
         |> assign(:organization, organization)
@@ -56,16 +54,13 @@ defmodule MicelioWeb.PlanLive.New do
   def handle_event("save", %{"plan" => params}, socket) do
     repository = socket.assigns.repository
     user = socket.assigns.current_user
-    org_handle = socket.assigns.organization.account.handle
 
     case Plans.create_simple_plan(params, repository: repository, user: user) do
       {:ok, plan} ->
         {:noreply,
          socket
          |> put_flash(:info, gettext("Plan created."))
-         |> push_navigate(
-           to: ~p"/#{org_handle}/#{repository.handle}/prs/#{plan.number}"
-         )}
+         |> push_navigate(to: "#{socket.assigns.base_path}/prs/#{plan.number}")}
 
       {:error, %Ecto.Changeset{} = changeset} ->
         {:noreply,
@@ -89,7 +84,8 @@ defmodule MicelioWeb.PlanLive.New do
           account_handle: @organization.account.handle,
           repository_handle: @repository.handle,
           active: :prompt_requests,
-          show_settings?: true
+          show_settings?: true,
+          base_path: @base_path
         }
       }
     >
@@ -97,6 +93,7 @@ defmodule MicelioWeb.PlanLive.New do
         account_handle={@organization.account.handle}
         repository_handle={@repository.handle}
         active_tab={:plans}
+        base_path={@base_path}
       >
         <div class="pr-form-container">
           <.form
@@ -139,7 +136,7 @@ defmodule MicelioWeb.PlanLive.New do
                 {gettext("Submit new plan")}
               </button>
               <.link
-                navigate={~p"/#{@organization.account.handle}/#{@repository.handle}/prs"}
+                navigate={"#{@base_path}/prs"}
                 class="repository-button repository-button-secondary"
                 id="plan-cancel"
               >

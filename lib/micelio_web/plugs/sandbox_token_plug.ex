@@ -7,8 +7,8 @@ defmodule MicelioWeb.Plugs.SandboxTokenPlug do
   Only plans with `sandbox_status == "running"` are matched.
   """
 
-  import Plug.Conn
   import Ecto.Query, warn: false
+  import Plug.Conn
 
   alias Micelio.Plans.Plan
   alias Micelio.Repo

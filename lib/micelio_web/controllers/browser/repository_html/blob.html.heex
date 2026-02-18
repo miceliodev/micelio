@@ -10,7 +10,8 @@
       repository_handle: @repository.handle,
       active: :prompt_requests,
       show_settings?:
-        Micelio.Authorization.authorize(:repository_update, @current_user, @repository) == :ok
+        Micelio.Authorization.authorize(:repository_update, @current_user, @repository) == :ok,
+      base_path: @base_path
     }
   }
 >
@@ -18,11 +19,12 @@
     account_handle={@account.handle}
     repository_handle={@repository.handle}
     active_tab={:code}
+    base_path={@base_path}
   >
     <% file_segments = String.split(@file_path, "/") %>
     <% dir_segments = Enum.drop(file_segments, -1) %>
     <% filename = List.last(file_segments) %>
-    <% repo_href = ~p"/#{@account.handle}/#{@repository.handle}" %>
+    <% repo_href = @base_path %>
 
     <%!-- Breadcrumb + actions bar --%>
     <div class="repository-file-browser" id="repository-file-browser">
@@ -32,7 +34,7 @@
           <%= for {segment, idx} <- Enum.with_index(dir_segments) do %>
             <span class="repository-breadcrumb-sep">/</span>
             <% segment_path = Enum.take(dir_segments, idx + 1) %>
-            <a href={~p"/#{@account.handle}/#{@repository.handle}/tree/#{segment_path}"}>
+            <a href={"#{@base_path}/tree/#{Enum.join(segment_path, "/")}"}>
               {segment}
             </a>
           <% end %>
@@ -43,7 +45,7 @@
         <div class="repository-file-actions">
           <a
             class="repository-file-back"
-            href={~p"/#{@account.handle}/#{@repository.handle}/blame/#{file_segments}"}
+            href={"#{@base_path}/blame/#{Enum.join(file_segments, "/")}"}
             id="repository-blame-link"
           >
             {gettext("Blame")}

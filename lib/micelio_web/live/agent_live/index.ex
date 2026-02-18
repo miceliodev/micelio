@@ -7,23 +7,21 @@ defmodule MicelioWeb.AgentLive.Index do
   @refresh_ms 5_000
 
   @impl true
-  def mount(%{"account" => account_handle, "repository" => repository_handle}, session, socket) do
-    case Micelio.Repositories.get_repository_for_user_by_handle(
-           socket.assigns.current_user,
-           account_handle,
-           repository_handle
-         ) do
+  def mount(params, session, socket) do
+    case MicelioWeb.RepositoryResolver.resolve(params, socket.assigns) do
       {:ok, repository, organization} ->
         if Authorization.authorize(:repository_read, socket.assigns.current_user, repository) ==
              :ok do
+          base_path = MicelioWeb.RepositoryURL.base_path(repository, organization)
           og_summary_opts = og_summary_opts_from_session(session)
 
           socket =
             socket
             |> assign(:page_title, "Agent Progress - #{repository.name}")
+            |> assign(:base_path, base_path)
             |> PageMeta.assign(
               description: "Live agent progress for #{repository.name}.",
-              canonical_url: url(~p"/#{organization.account.handle}/#{repository.handle}/agents")
+              canonical_url: unverified_url(MicelioWeb.Endpoint, "#{base_path}/agents")
             )
             |> assign(:repository, repository)
             |> assign(:organization, organization)
@@ -31,12 +29,12 @@ defmodule MicelioWeb.AgentLive.Index do
             |> assign(:refresh_ms, @refresh_ms)
             |> assign(:refresh_seconds, div(@refresh_ms, 1000))
             |> assign(:error_boundary_context, %{
-              route: ~p"/#{organization.account.handle}/#{repository.handle}/agents",
-              params: %{"account" => account_handle, "repository" => repository_handle}
+              route: "#{base_path}/agents",
+              params: params
             })
             |> assign(
               :error_boundary_retry_path,
-              ~p"/#{organization.account.handle}/#{repository.handle}/agents"
+              "#{base_path}/agents"
             )
             |> assign(
               :error_boundary_user_id,
@@ -54,7 +52,7 @@ defmodule MicelioWeb.AgentLive.Index do
            |> push_navigate(to: ~p"/")}
         end
 
-      {:error, _reason} ->
+      _ ->
         {:ok,
          socket
          |> put_flash(:error, "Project not found.")
@@ -207,7 +205,8 @@ defmodule MicelioWeb.AgentLive.Index do
           account_handle: @organization.account.handle,
           repository_handle: @repository.handle,
           active: :sessions,
-          show_settings?: @current_user != nil
+          show_settings?: @current_user != nil,
+          base_path: @base_path
         }
       }
     >
@@ -215,6 +214,7 @@ defmodule MicelioWeb.AgentLive.Index do
         account_handle={@organization.account.handle}
         repository_handle={@repository.handle}
         active_tab={:sessions}
+        base_path={@base_path}
       >
         <.error_boundary
           id="agent-progress-boundary"
@@ -229,7 +229,7 @@ defmodule MicelioWeb.AgentLive.Index do
                 <div class="agent-progress-breadcrumb" id="agent-progress-breadcrumb">
                   <.link navigate={~p"/#{@organization.account.handle}"}>{@organization.name}</.link>
                   <span>/</span>
-                  <.link navigate={~p"/#{@organization.account.handle}/#{@repository.handle}"}>
+                  <.link navigate={@base_path}>
                     {@repository.name}
                   </.link>
                   <span>/</span>

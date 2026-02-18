@@ -3,26 +3,20 @@ defmodule MicelioWeb.PlanLive.Show do
 
   alias Micelio.Authorization
   alias Micelio.Plans
-  alias Micelio.Repositories
   alias MicelioWeb.PageMeta
 
   @impl true
-  def mount(
-        %{"account" => org_handle, "repository" => repository_handle, "number" => number_str},
-        _session,
-        socket
-      ) do
+  def mount(params, _session, socket) do
     current_user = socket.assigns[:current_user]
+    number_str = params["number"]
 
     with {:ok, repository, organization} <-
-           Repositories.get_repository_for_user_by_handle(
-             current_user,
-             org_handle,
-             repository_handle
-           ),
+           MicelioWeb.RepositoryResolver.resolve(params, socket.assigns),
          {number, ""} <- Integer.parse(number_str),
          %{} = plan <-
            Plans.get_plan_by_number(repository, number) do
+      base_path = MicelioWeb.RepositoryURL.base_path(repository, organization)
+
       can_edit =
         current_user != nil and
           Authorization.authorize(:repository_read, current_user, repository) == :ok and
@@ -35,10 +29,10 @@ defmodule MicelioWeb.PlanLive.Show do
       socket =
         socket
         |> assign(:page_title, plan.title)
+        |> assign(:base_path, base_path)
         |> PageMeta.assign(
           description: plan.title,
-          canonical_url:
-            url(~p"/#{organization.account.handle}/#{repository.handle}/prs/#{plan.number}")
+          canonical_url: unverified_url(MicelioWeb.Endpoint, "#{base_path}/prs/#{plan.number}")
         )
         |> assign(:repository, repository)
         |> assign(:organization, organization)
@@ -309,7 +303,8 @@ defmodule MicelioWeb.PlanLive.Show do
           account_handle: @organization.account.handle,
           repository_handle: @repository.handle,
           active: :prompt_requests,
-          show_settings?: @current_user != nil
+          show_settings?: @current_user != nil,
+          base_path: @base_path
         }
       }
     >
@@ -317,6 +312,7 @@ defmodule MicelioWeb.PlanLive.Show do
         account_handle={@organization.account.handle}
         repository_handle={@repository.handle}
         active_tab={:plans}
+        base_path={@base_path}
       >
         <div class={["plan-show", @sandbox_running && "plan-show--session-active"]}>
           <%!-- Header --%>
@@ -369,9 +365,7 @@ defmodule MicelioWeb.PlanLive.Show do
               <%= if @can_edit do %>
                 <div class="plan-show-actions">
                   <.link
-                    navigate={
-                      ~p"/#{@organization.account.handle}/#{@repository.handle}/prs/#{@plan.number}/edit"
-                    }
+                    navigate={"#{@base_path}/prs/#{@plan.number}/edit"}
                     class="repository-button repository-button-secondary"
                     id="edit-plan"
                   >

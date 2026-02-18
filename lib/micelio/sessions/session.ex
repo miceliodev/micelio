@@ -76,8 +76,7 @@ defmodule Micelio.Sessions.Session do
   @contributor_types ["human", "ai", "mixed", "unknown"]
 
   def contributor_type(%__MODULE__{metadata: %{"contributor_type" => type}})
-      when type in @contributor_types,
-      do: type
+      when type in @contributor_types, do: type
 
   def contributor_type(_session), do: "unknown"
 
@@ -86,14 +85,12 @@ defmodule Micelio.Sessions.Session do
   def model_id(_session), do: nil
 
   def tool_name(%__MODULE__{metadata: %{"tool_name" => name}})
-      when is_binary(name) and name != "",
-      do: name
+      when is_binary(name) and name != "", do: name
 
   def tool_name(_session), do: nil
 
   def tool_version(%__MODULE__{metadata: %{"tool_version" => version}})
-      when is_binary(version) and version != "",
-      do: version
+      when is_binary(version) and version != "", do: version
 
   def tool_version(_session), do: nil
 

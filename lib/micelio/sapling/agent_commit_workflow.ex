@@ -259,8 +259,7 @@ defmodule Micelio.Sapling.AgentCommitWorkflow do
          _env,
          _runner,
          _fs
-       ),
-       do: {steps, :error}
+       ), do: {steps, :error}
 
   defp create_session_commits({steps, :ok}, tool, session_ids, repo_path, env, runner, fs) do
     Enum.reduce(session_ids, {steps, :ok}, fn session_id, acc ->

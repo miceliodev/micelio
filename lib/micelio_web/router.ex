@@ -388,6 +388,67 @@ defmodule MicelioWeb.Router do
     end
   end
 
+  # Forge per-repository routes
+  for forge <- ["github.com", "gitlab.com"] do
+    scope "/", MicelioWeb do
+      pipe_through([:browser, :require_auth, :forge_resources])
+
+      live_session :"forge_#{String.replace(forge, ".", "_")}_management",
+        on_mount: [
+          {MicelioWeb.ForgeMount, forge},
+          {MicelioWeb.LiveAuth, :require_auth},
+          MicelioWeb.LiveOpenGraphCacheBuster
+        ] do
+        live("/#{forge}/:owner/:repo/edit", RepositoryLive.Edit, :edit)
+        live("/#{forge}/:owner/:repo/sessions", SessionLive.Index, :index)
+        live("/#{forge}/:owner/:repo/sessions/:id", SessionLive.Show, :show)
+        live("/#{forge}/:owner/:repo/prs/new", PlanLive.New, :new)
+        live("/#{forge}/:owner/:repo/prs/:number/edit", PlanLive.Edit, :edit)
+      end
+    end
+
+    scope "/", MicelioWeb do
+      pipe_through([:browser, :require_auth, :forge_resources])
+
+      live_session :"forge_#{String.replace(forge, ".", "_")}_settings",
+        on_mount: [
+          {MicelioWeb.ForgeMount, forge},
+          {MicelioWeb.LiveAuth, :require_auth},
+          MicelioWeb.LiveOpenGraphCacheBuster
+        ] do
+        live("/#{forge}/:owner/:repo/settings", RepositoryLive.Settings, :edit)
+        live("/#{forge}/:owner/:repo/settings/webhooks", RepositoryLive.Webhooks, :index)
+      end
+    end
+
+    scope "/", MicelioWeb do
+      pipe_through([:browser, :forge_resources])
+
+      live_session :"forge_#{String.replace(forge, ".", "_")}_public",
+        on_mount: [
+          {MicelioWeb.ForgeMount, forge},
+          {MicelioWeb.LiveAuth, :current_user},
+          MicelioWeb.LiveOpenGraphCacheBuster
+        ] do
+        live("/#{forge}/:owner/:repo/agents", AgentLive.Index, :index)
+        live("/#{forge}/:owner/:repo/prs", PlanLive.Index, :index)
+        live("/#{forge}/:owner/:repo/prs/:number", PlanLive.Show, :show)
+      end
+    end
+
+    scope "/", MicelioWeb.Browser do
+      pipe_through([:browser, :require_auth, :forge_resources])
+
+      post("/#{forge}/:owner/:repo/star", RepositoryController, :toggle_star)
+
+      post(
+        "/#{forge}/:owner/:repo/token-contributions",
+        RepositoryController,
+        :contribute_tokens
+      )
+    end
+  end
+
   # Per-repository routes (require authentication)
   scope "/", MicelioWeb do
     pipe_through([:browser, :require_auth, :load_resources])
@@ -553,14 +614,6 @@ defmodule MicelioWeb.Router do
     get("/gitlab.com/:owner/:repo/tree/*path", RepositoryController, :tree)
     get("/gitlab.com/:owner/:repo/blob/*path", RepositoryController, :blob)
     get("/gitlab.com/:owner/:repo/blame/*path", RepositoryController, :blame)
-  end
-
-  # Forge URLs catch-all (redirect LiveView sub-paths to internal URLs)
-  scope "/", MicelioWeb.Browser do
-    pipe_through([:browser])
-
-    get("/github.com/:owner/:repo/*rest", ForgeController, :show, forge_host: "github.com")
-    get("/gitlab.com/:owner/:repo/*rest", ForgeController, :show, forge_host: "gitlab.com")
   end
 
   scope "/", MicelioWeb.Browser do

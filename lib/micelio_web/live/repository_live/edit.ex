@@ -6,15 +6,13 @@ defmodule MicelioWeb.RepositoryLive.Edit do
   alias MicelioWeb.PageMeta
 
   @impl true
-  def mount(%{"account" => org_handle, "repository" => repository_handle}, _session, socket) do
-    case Micelio.Repositories.get_repository_for_user_by_handle(
-           socket.assigns.current_user,
-           org_handle,
-           repository_handle
-         ) do
+  def mount(params, _session, socket) do
+    case MicelioWeb.RepositoryResolver.resolve(params, socket.assigns) do
       {:ok, repository, organization} ->
         if Authorization.authorize(:repository_update, socket.assigns.current_user, repository) ==
              :ok do
+          base_path = MicelioWeb.RepositoryURL.base_path(repository, organization)
+
           form =
             repository
             |> Repositories.change_repository()
@@ -23,9 +21,10 @@ defmodule MicelioWeb.RepositoryLive.Edit do
           socket =
             socket
             |> assign(:page_title, "Edit Project")
+            |> assign(:base_path, base_path)
             |> PageMeta.assign(
               description: "Edit project settings.",
-              canonical_url: url(~p"/#{organization.account.handle}/#{repository.handle}/edit")
+              canonical_url: unverified_url(MicelioWeb.Endpoint, "#{base_path}/edit")
             )
             |> assign(:repository, repository)
             |> assign(:organization, organization)
@@ -39,7 +38,7 @@ defmodule MicelioWeb.RepositoryLive.Edit do
            |> push_navigate(to: ~p"/repositories")}
         end
 
-      {:error, _reason} ->
+      _ ->
         {:ok,
          socket
          |> put_flash(:error, "Project not found.")
@@ -68,13 +67,11 @@ defmodule MicelioWeb.RepositoryLive.Edit do
       case Micelio.Repositories.update_repository(socket.assigns.repository, params,
              user: socket.assigns.current_user
            ) do
-        {:ok, repository} ->
+        {:ok, _repository} ->
           {:noreply,
            socket
            |> put_flash(:info, "Project updated successfully!")
-           |> push_navigate(
-             to: ~p"/#{socket.assigns.organization.account.handle}/#{repository.handle}"
-           )}
+           |> push_navigate(to: socket.assigns.base_path)}
 
         {:error, changeset} ->
           {:noreply, assign(socket, form: to_form(Map.put(changeset, :action, :validate)))}
@@ -172,7 +169,7 @@ defmodule MicelioWeb.RepositoryLive.Edit do
               Save changes
             </button>
             <.link
-              navigate={~p"/#{@organization.account.handle}/#{@repository.handle}"}
+              navigate={@base_path}
               class="repository-button repository-button-secondary"
               id="project-cancel"
             >

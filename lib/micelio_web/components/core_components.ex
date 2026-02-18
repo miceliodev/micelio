@@ -392,10 +392,18 @@ defmodule MicelioWeb.CoreComponents do
   """
   attr :account_handle, :string, required: true
   attr :repository_handle, :string, required: true
+  attr :base_path, :string, default: nil
   attr :active_tab, :atom, required: true
   slot :inner_block, required: true
 
   def repository_header(assigns) do
+    assigns =
+      assign(
+        assigns,
+        :resolved_base_path,
+        assigns.base_path || "/#{assigns.account_handle}/#{assigns.repository_handle}"
+      )
+
     ~H"""
     <div class="repository-page">
       <div class="repository-header" id="repository-header">
@@ -422,7 +430,7 @@ defmodule MicelioWeb.CoreComponents do
             </.link>
             <span class="repository-header-sep">/</span>
             <.link
-              navigate={"/#{@account_handle}/#{@repository_handle}"}
+              navigate={@resolved_base_path}
               class="repository-header-repo"
             >
               {@repository_handle}

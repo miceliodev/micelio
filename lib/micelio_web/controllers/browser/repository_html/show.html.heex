@@ -10,7 +10,8 @@
       repository_handle: @repository.handle,
       active: :home,
       show_settings?:
-        Micelio.Authorization.authorize(:repository_update, @current_user, @repository) == :ok
+        Micelio.Authorization.authorize(:repository_update, @current_user, @repository) == :ok,
+      base_path: @base_path
     }
   }
 >
@@ -165,7 +166,7 @@
     </div>
     <span class="navbar-breadcrumb-sep">/</span>
     <a
-      href={~p"/#{@account.handle}/#{@repository.handle}"}
+      href={@base_path}
       class="navbar-breadcrumb-link navbar-breadcrumb-current"
     >
       {@repository.handle}
@@ -188,7 +189,7 @@
         <div class="repository-file-browser" id="repository-file-browser">
           <% segments = if @dir_path == "", do: [], else: String.split(@dir_path, "/") %>
           <% last_segment_index = length(segments) - 1 %>
-          <% repo_href = ~p"/#{@account.handle}/#{@repository.handle}" %>
+          <% repo_href = @base_path %>
 
           <%= if @dir_path != "" do %>
             <div class="repository-file-browser-path">
@@ -204,7 +205,7 @@
                   <%= if idx == last_segment_index do %>
                     <span class="repository-breadcrumb-current">{segment}</span>
                   <% else %>
-                    <a href={~p"/#{@account.handle}/#{@repository.handle}/tree/#{segment_path}"}>
+                    <a href={"#{@base_path}/tree/#{Enum.join(segment_path, "/")}"}>
                       {segment}
                     </a>
                   <% end %>
@@ -230,7 +231,7 @@
                       if parent_dir == "" do
                         repo_href
                       else
-                        ~p"/#{@account.handle}/#{@repository.handle}/tree/#{parent_segments}"
+                        "#{@base_path}/tree/#{Enum.join(parent_segments, "/")}"
                       end
                     }
                     class="repository-tree-link repository-tree-parent-link"
@@ -258,9 +259,9 @@
                 <a
                   href={
                     if entry.type == :tree do
-                      ~p"/#{@account.handle}/#{@repository.handle}/tree/#{entry_segments}"
+                      "#{@base_path}/tree/#{Enum.join(entry_segments, "/")}"
                     else
-                      ~p"/#{@account.handle}/#{@repository.handle}/blob/#{entry_segments}"
+                      "#{@base_path}/blob/#{Enum.join(entry_segments, "/")}"
                     end
                   }
                   class="repository-tree-link"
@@ -321,7 +322,7 @@
               <a
                 class="repository-readme-link"
                 href={
-                  ~p"/#{@account.handle}/#{@repository.handle}/blob/#{String.split(@readme.path, "/")}"
+                  "#{@base_path}/blob/#{@readme.path}"
                 }
               >
                 {@readme.path}
@@ -364,7 +365,9 @@
                 <path d="M12 6v13" />
                 <path d="M21 6v13" />
               </svg>
-              <span class="repository-readme-link" id="repository-forge-readme-name">README.md</span>
+              <span class="repository-readme-link" id="repository-forge-readme-name">
+                README.md
+              </span>
             </header>
             <div class="repository-readme-body">
               <div

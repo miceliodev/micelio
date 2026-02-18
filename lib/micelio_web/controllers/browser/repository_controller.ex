@@ -179,6 +179,7 @@ defmodule MicelioWeb.Browser.RepositoryController do
          dir_path
        ) do
     entries = MicProject.list_entries(tree, dir_path)
+    base_path = MicelioWeb.RepositoryURL.base_path(repository, %{account: account})
 
     readme =
       if dir_path == "" do
@@ -203,13 +204,14 @@ defmodule MicelioWeb.Browser.RepositoryController do
       description: repository.description,
       canonical_url:
         if dir_path == "" do
-          url(~p"/#{account_handle}/#{repository_handle}")
+          unverified_url(conn, base_path)
         else
-          url(~p"/#{account_handle}/#{repository_handle}/tree/#{path_segments(dir_path)}")
+          unverified_url(conn, "#{base_path}/tree/#{Enum.join(path_segments(dir_path), "/")}")
         end
     )
     |> assign(:account, account)
     |> assign(:repository, repository)
+    |> assign(:base_path, base_path)
     |> assign(:head, head)
     |> assign(:dir_path, dir_path)
     |> assign(:entries, entries)
@@ -238,16 +240,21 @@ defmodule MicelioWeb.Browser.RepositoryController do
              {:ok, content} <- MicProject.get_blob(repository.id, blob_hash) do
           title_parts = [file_path, "#{account_handle}/#{repository_handle}"]
           blob_download_url = maybe_blob_cdn_url(repository, blob_hash, storage_opts(conn))
+          base_path = MicelioWeb.RepositoryURL.base_path(repository, %{account: account})
 
           conn
           |> PageMeta.put(
             title_parts: title_parts,
             description: repository.description,
             canonical_url:
-              url(~p"/#{account_handle}/#{repository_handle}/blob/#{path_segments(file_path)}")
+              unverified_url(
+                conn,
+                "#{base_path}/blob/#{Enum.join(path_segments(file_path), "/")}"
+              )
           )
           |> assign(:account, account)
           |> assign(:repository, repository)
+          |> assign(:base_path, base_path)
           |> assign(:head, head)
           |> assign(:file_path, file_path)
           |> assign(:blob_download_url, blob_download_url)
@@ -280,6 +287,7 @@ defmodule MicelioWeb.Browser.RepositoryController do
              {:ok, content} <- MicProject.get_blob(repository.id, blob_hash) do
           title_parts = ["Blame", file_path, "#{account_handle}/#{repository_handle}"]
           blame_content = format_file_content(content)
+          base_path = MicelioWeb.RepositoryURL.base_path(repository, %{account: account})
 
           blame_lines =
             case blame_content do
@@ -298,10 +306,14 @@ defmodule MicelioWeb.Browser.RepositoryController do
             title_parts: title_parts,
             description: repository.description,
             canonical_url:
-              url(~p"/#{account_handle}/#{repository_handle}/blame/#{path_segments(file_path)}")
+              unverified_url(
+                conn,
+                "#{base_path}/blame/#{Enum.join(path_segments(file_path), "/")}"
+              )
           )
           |> assign(:account, account)
           |> assign(:repository, repository)
+          |> assign(:base_path, base_path)
           |> assign(:head, head)
           |> assign(:file_path, file_path)
           |> assign(:blame_content, blame_content)
@@ -328,7 +340,12 @@ defmodule MicelioWeb.Browser.RepositoryController do
   end
 
   defp repository_schema_json_ld(account, repository) do
-    repository_url = url(~p"/#{account.handle}/#{repository.handle}")
+    repository_url =
+      Phoenix.VerifiedRoutes.unverified_url(
+        MicelioWeb.Endpoint,
+        MicelioWeb.RepositoryURL.base_path(repository, %{account: account})
+      )
+
     author_url = url(~p"/#{account.handle}")
 
     account

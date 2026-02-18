@@ -147,7 +147,8 @@ defmodule MicelioWeb.Layouts do
           <div class="sidebar-section">
             <%= if @repository_nav do %>
               <% repository_base_path =
-                "/#{@repository_nav.account_handle}/#{@repository_nav.repository_handle}" %>
+                @repository_nav[:base_path] ||
+                  "/#{@repository_nav.account_handle}/#{@repository_nav.repository_handle}" %>
               <% prompt_requests_path = "#{repository_base_path}/prs" %>
               <% sessions_path = "#{repository_base_path}/sessions" %>
               <% settings_path = "#{repository_base_path}/settings" %>

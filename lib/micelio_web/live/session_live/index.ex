@@ -5,22 +5,20 @@ defmodule MicelioWeb.SessionLive.Index do
   alias MicelioWeb.PageMeta
 
   @impl true
-  def mount(%{"account" => org_handle, "repository" => repository_handle}, _session, socket) do
-    case Micelio.Repositories.get_repository_for_user_by_handle(
-           socket.assigns.current_user,
-           org_handle,
-           repository_handle
-         ) do
+  def mount(params, _session, socket) do
+    case MicelioWeb.RepositoryResolver.resolve(params, socket.assigns) do
       {:ok, repository, organization} ->
         if Authorization.authorize(:repository_read, socket.assigns.current_user, repository) ==
              :ok do
+          base_path = MicelioWeb.RepositoryURL.base_path(repository, organization)
+
           socket =
             socket
             |> assign(:page_title, "Sessions - #{repository.name}")
+            |> assign(:base_path, base_path)
             |> PageMeta.assign(
               description: "Browse sessions for #{repository.name}.",
-              canonical_url:
-                url(~p"/#{organization.account.handle}/#{repository.handle}/sessions")
+              canonical_url: unverified_url(MicelioWeb.Endpoint, "#{base_path}/sessions")
             )
             |> assign(:repository, repository)
             |> assign(:organization, organization)
@@ -104,7 +102,8 @@ defmodule MicelioWeb.SessionLive.Index do
           account_handle: @organization.account.handle,
           repository_handle: @repository.handle,
           active: :sessions,
-          show_settings?: true
+          show_settings?: true,
+          base_path: @base_path
         }
       }
     >
@@ -112,6 +111,7 @@ defmodule MicelioWeb.SessionLive.Index do
         account_handle={@organization.account.handle}
         repository_handle={@repository.handle}
         active_tab={:sessions}
+        base_path={@base_path}
       >
         <%!-- Filter bar --%>
         <div class="sessions-toolbar" id="sessions-toolbar">
@@ -223,9 +223,7 @@ defmodule MicelioWeb.SessionLive.Index do
           <div class="sessions-list" id="sessions-list">
             <%= for session <- @sessions do %>
               <.link
-                navigate={
-                  ~p"/#{@organization.account.handle}/#{@repository.handle}/sessions/#{session.id}"
-                }
+                navigate={"#{@base_path}/sessions/#{session.id}"}
                 class="sessions-item"
                 id={"session-#{session.id}"}
               >

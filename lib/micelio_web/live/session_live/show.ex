@@ -8,17 +8,13 @@ defmodule MicelioWeb.SessionLive.Show do
   @event_snapshot_limit 50
 
   @impl true
-  def mount(
-        %{"account" => org_handle, "repository" => repository_handle, "id" => session_id},
-        _session,
-        socket
-      ) do
-    case Micelio.Repositories.get_repository_for_user_by_handle(
-           socket.assigns.current_user,
-           org_handle,
-           repository_handle
-         ) do
+  def mount(params, _session, socket) do
+    session_id = params["id"]
+
+    case MicelioWeb.RepositoryResolver.resolve(params, socket.assigns) do
       {:ok, repository, organization} ->
+        base_path = MicelioWeb.RepositoryURL.base_path(repository, organization)
+
         if Authorization.authorize(:repository_read, socket.assigns.current_user, repository) ==
              :ok do
           case Sessions.get_session_with_changes(session_id) do
@@ -26,7 +22,7 @@ defmodule MicelioWeb.SessionLive.Show do
               {:ok,
                socket
                |> put_flash(:error, "Session not found.")
-               |> push_navigate(to: ~p"/#{org_handle}/#{repository_handle}/sessions")}
+               |> push_navigate(to: "#{base_path}/sessions")}
 
             session ->
               if session.repository_id == repository.id do
@@ -35,12 +31,11 @@ defmodule MicelioWeb.SessionLive.Show do
                 socket =
                   socket
                   |> assign(:page_title, "Session: #{session.goal}")
+                  |> assign(:base_path, base_path)
                   |> PageMeta.assign(
                     description: "Session details for #{repository.name}.",
                     canonical_url:
-                      url(
-                        ~p"/#{organization.account.handle}/#{repository.handle}/sessions/#{session.id}"
-                      ),
+                      unverified_url(MicelioWeb.Endpoint, "#{base_path}/sessions/#{session.id}"),
                     open_graph: %{
                       image_template: "agent_session",
                       image_stats: session_og_stats(change_stats)
@@ -64,7 +59,7 @@ defmodule MicelioWeb.SessionLive.Show do
                 {:ok,
                  socket
                  |> put_flash(:error, "Session not found.")
-                 |> push_navigate(to: ~p"/#{org_handle}/#{repository_handle}/sessions")}
+                 |> push_navigate(to: "#{base_path}/sessions")}
               end
           end
         else
@@ -404,7 +399,8 @@ defmodule MicelioWeb.SessionLive.Show do
           account_handle: @organization.account.handle,
           repository_handle: @repository.handle,
           active: :sessions,
-          show_settings?: true
+          show_settings?: true,
+          base_path: @base_path
         }
       }
     >
@@ -412,6 +408,7 @@ defmodule MicelioWeb.SessionLive.Show do
         account_handle={@organization.account.handle}
         repository_handle={@repository.handle}
         active_tab={:sessions}
+        base_path={@base_path}
       >
         <div class="session-layout">
           <%!-- Main content column --%>
@@ -732,9 +729,7 @@ defmodule MicelioWeb.SessionLive.Show do
               <div class="session-sidebar-section">
                 <span class="session-sidebar-label">{gettext("Plan")}</span>
                 <.link
-                  navigate={
-                    ~p"/#{@organization.account.handle}/#{@repository.handle}/prs/#{@session.plan.id}"
-                  }
+                  navigate={"#{@base_path}/prs/#{@session.plan.id}"}
                   class="session-plan-link"
                   id="session-plan-link"
                 >

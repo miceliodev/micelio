@@ -2,27 +2,22 @@ defmodule MicelioWeb.PlanLive.Index do
   use MicelioWeb, :live_view
 
   alias Micelio.Plans
-  alias Micelio.Repositories
   alias MicelioWeb.PageMeta
 
   @impl true
-  def mount(%{"account" => org_handle, "repository" => repository_handle}, _session, socket) do
-    current_user = socket.assigns[:current_user]
-
-    case Repositories.get_repository_for_user_by_handle(
-           current_user,
-           org_handle,
-           repository_handle
-         ) do
+  def mount(params, _session, socket) do
+    case MicelioWeb.RepositoryResolver.resolve(params, socket.assigns) do
       {:ok, repository, organization} ->
+        base_path = MicelioWeb.RepositoryURL.base_path(repository, organization)
         plans = Plans.list_plans_for_repository(repository)
 
         socket =
           socket
           |> assign(:page_title, gettext("Plans"))
+          |> assign(:base_path, base_path)
           |> PageMeta.assign(
             description: gettext("Plans for %{name}.", name: repository.name),
-            canonical_url: url(~p"/#{organization.account.handle}/#{repository.handle}/prs")
+            canonical_url: unverified_url(MicelioWeb.Endpoint, "#{base_path}/prs")
           )
           |> assign(:repository, repository)
           |> assign(:organization, organization)
@@ -52,7 +47,8 @@ defmodule MicelioWeb.PlanLive.Index do
           account_handle: @organization.account.handle,
           repository_handle: @repository.handle,
           active: :prompt_requests,
-          show_settings?: @current_user != nil
+          show_settings?: @current_user != nil,
+          base_path: @base_path
         }
       }
     >
@@ -60,6 +56,7 @@ defmodule MicelioWeb.PlanLive.Index do
         account_handle={@organization.account.handle}
         repository_handle={@repository.handle}
         active_tab={:plans}
+        base_path={@base_path}
       >
         <div class="plans-container">
           <div class="plans-toolbar">
@@ -84,7 +81,7 @@ defmodule MicelioWeb.PlanLive.Index do
             </div>
             <%= if assigns[:current_user] do %>
               <.link
-                navigate={~p"/#{@organization.account.handle}/#{@repository.handle}/prs/new"}
+                navigate={"#{@base_path}/prs/new"}
                 class="repository-button"
                 id="new-plan"
               >
@@ -138,9 +135,7 @@ defmodule MicelioWeb.PlanLive.Index do
                   <div class="plan-row-content">
                     <div class="plan-row-main">
                       <.link
-                        navigate={
-                          ~p"/#{@organization.account.handle}/#{@repository.handle}/prs/#{pr.number}"
-                        }
+                        navigate={"#{@base_path}/prs/#{pr.number}"}
                         class="plan-row-title"
                       >
                         {pr.title}

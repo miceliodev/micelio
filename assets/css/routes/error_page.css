@@ -1,0 +1,83 @@
+.error-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: var(--theme-ui-space-4);
+  background-color: var(--theme-ui-colors-background);
+  color: var(--theme-ui-colors-text);
+  font-family: var(--theme-ui-fonts-body);
+  text-align: center;
+}
+
+.error-page-code {
+  font-family: var(--theme-ui-fonts-heading);
+  font-size: 6rem;
+  font-weight: var(--theme-ui-font-weights-bold);
+  color: var(--theme-ui-colors-muted);
+  line-height: 1;
+  margin-bottom: var(--theme-ui-space-1);
+}
+
+.error-page-title {
+  font-family: var(--theme-ui-fonts-heading);
+  font-size: var(--theme-ui-font-size-2xl);
+  font-weight: var(--theme-ui-font-weights-semibold);
+  margin-bottom: var(--theme-ui-space-1);
+}
+
+.error-page-message {
+  font-size: var(--theme-ui-font-size-base);
+  color: var(--theme-ui-colors-muted);
+  max-width: 28rem;
+  margin-bottom: var(--theme-ui-space-3);
+}
+
+.error-page-actions {
+  display: flex;
+  gap: var(--theme-ui-space-1);
+}
+
+.error-page-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--theme-ui-space-0);
+  padding: 5px 16px;
+  font-size: var(--theme-ui-font-size-sm);
+  line-height: 20px;
+  font-weight: var(--theme-ui-font-weights-medium);
+  border-radius: var(--theme-ui-radii-default);
+  text-decoration: none;
+  transition: background-color 0.15s ease;
+}
+
+.error-page-link-primary {
+  background-color: var(--theme-ui-colors-button-primary-bg);
+  color: var(--theme-ui-colors-button-primary-fg);
+  border: 1px solid var(--theme-ui-colors-button-primary-bg);
+}
+
+.error-page-link-primary:hover {
+  background-color: var(--theme-ui-colors-button-primary-hover-bg);
+}
+
+.error-page-link-primary:focus {
+  outline: 2px solid var(--theme-ui-colors-primary);
+  outline-offset: 2px;
+}
+
+.error-page-link-secondary {
+  background-color: var(--theme-ui-colors-button-default-bg);
+  color: var(--theme-ui-colors-button-default-fg);
+  border: 1px solid var(--theme-ui-colors-button-default-border);
+}
+
+.error-page-link-secondary:hover {
+  background-color: var(--theme-ui-colors-button-default-hover-bg);
+}
+
+.error-page-link-secondary:focus {
+  outline: 2px solid var(--theme-ui-colors-primary);
+  outline-offset: 2px;
+}

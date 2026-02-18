@@ -152,8 +152,7 @@ defmodule Micelio.Sandboxes.DaytonaProvider do
           env_binary = System.find_executable("env") || "/usr/bin/env"
 
           {:ok,
-           {env_binary,
-            env_pairs ++ [deno_path, "run", "--allow-all", "--reload", module_url]}}
+           {env_binary, env_pairs ++ [deno_path, "run", "--allow-all", "--reload", module_url]}}
         end
     end
   end

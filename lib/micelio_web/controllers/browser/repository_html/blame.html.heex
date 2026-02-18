@@ -10,7 +10,8 @@
       repository_handle: @repository.handle,
       active: :prompt_requests,
       show_settings?:
-        Micelio.Authorization.authorize(:repository_update, @current_user, @repository) == :ok
+        Micelio.Authorization.authorize(:repository_update, @current_user, @repository) == :ok,
+      base_path: @base_path
     }
   }
 >
@@ -23,7 +24,7 @@
         <p class="project-file-path">{@file_path}</p>
       </:subtitle>
       <:actions>
-        <% repo_href = ~p"/#{@account.handle}/#{@repository.handle}" %>
+        <% repo_href = @base_path %>
         <% parent_dir = Path.dirname(@file_path) %>
         <% parent_dir = if parent_dir == ".", do: "", else: parent_dir %>
 
@@ -33,7 +34,7 @@
               for={@star_form}
               id="repository-star-form"
               class="repository-star-form"
-              action={~p"/#{@account.handle}/#{@repository.handle}/star"}
+              action={"#{@base_path}/star"}
               method="post"
             >
               <.input field={@star_form[:return_to]} type="hidden" />
@@ -93,7 +94,7 @@
 
         <a
           class="project-file-back"
-          href={~p"/#{@account.handle}/#{@repository.handle}/blob/#{file_segments}"}
+          href={"#{@base_path}/blob/#{Enum.join(file_segments, "/")}"}
           id="project-blame-view-file"
         >
           View file
@@ -104,7 +105,7 @@
         <% else %>
           <a
             class="project-file-back"
-            href={~p"/#{@account.handle}/#{@repository.handle}/tree/#{dir_segments}"}
+            href={"#{@base_path}/tree/#{Enum.join(dir_segments, "/")}"}
           >
             Back
           </a>
@@ -113,7 +114,7 @@
     </.header>
 
     <% filename = List.last(file_segments) %>
-    <% repo_href = ~p"/#{@account.handle}/#{@repository.handle}" %>
+    <% repo_href = @base_path %>
 
     <div class="project-browser">
       <nav class="project-breadcrumb" aria-label="Path" id="project-breadcrumb">
@@ -121,7 +122,7 @@
         <%= for {segment, idx} <- Enum.with_index(dir_segments) do %>
           <span class="project-breadcrumb-sep">/</span>
           <% segment_path = Enum.take(dir_segments, idx + 1) %>
-          <a href={~p"/#{@account.handle}/#{@repository.handle}/tree/#{segment_path}"}>
+          <a href={"#{@base_path}/tree/#{Enum.join(segment_path, "/")}"}>
             {segment}
           </a>
         <% end %>

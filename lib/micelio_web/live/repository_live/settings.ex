@@ -6,15 +6,13 @@ defmodule MicelioWeb.RepositoryLive.Settings do
   alias MicelioWeb.PageMeta
 
   @impl true
-  def mount(%{"account" => account_handle, "repository" => repository_handle}, _session, socket) do
-    case Micelio.Repositories.get_repository_for_user_by_handle(
-           socket.assigns.current_user,
-           account_handle,
-           repository_handle
-         ) do
+  def mount(params, _session, socket) do
+    case MicelioWeb.RepositoryResolver.resolve(params, socket.assigns) do
       {:ok, repository, organization} ->
         if Authorization.authorize(:repository_update, socket.assigns.current_user, repository) ==
              :ok do
+          base_path = MicelioWeb.RepositoryURL.base_path(repository, organization)
+
           form =
             repository
             |> Repositories.change_repository_settings(%{}, organization: organization)
@@ -23,10 +21,10 @@ defmodule MicelioWeb.RepositoryLive.Settings do
           socket =
             socket
             |> assign(:page_title, "Repository settings")
+            |> assign(:base_path, base_path)
             |> PageMeta.assign(
               description: "Edit repository settings.",
-              canonical_url:
-                url(~p"/#{organization.account.handle}/#{repository.handle}/settings")
+              canonical_url: unverified_url(MicelioWeb.Endpoint, "#{base_path}/settings")
             )
             |> assign(:repository, repository)
             |> assign(:organization, organization)
@@ -37,14 +35,14 @@ defmodule MicelioWeb.RepositoryLive.Settings do
           {:ok,
            socket
            |> put_flash(:error, "You do not have access to this repository.")
-           |> push_navigate(to: ~p"/#{account_handle}/#{repository_handle}")}
+           |> push_navigate(to: ~p"/repositories")}
         end
 
-      {:error, _reason} ->
+      _ ->
         {:ok,
          socket
          |> put_flash(:error, "Repository not found.")
-         |> push_navigate(to: ~p"/#{account_handle}/#{repository_handle}")}
+         |> push_navigate(to: ~p"/repositories")}
     end
   end
 
@@ -72,13 +70,11 @@ defmodule MicelioWeb.RepositoryLive.Settings do
              user: socket.assigns.current_user,
              organization: socket.assigns.organization
            ) do
-        {:ok, repository} ->
+        {:ok, _repository} ->
           {:noreply,
            socket
            |> put_flash(:info, "Repository updated successfully!")
-           |> push_navigate(
-             to: ~p"/#{socket.assigns.organization.account.handle}/#{repository.handle}"
-           )}
+           |> push_navigate(to: socket.assigns.base_path)}
 
         {:error, changeset} ->
           {:noreply,
@@ -103,7 +99,8 @@ defmodule MicelioWeb.RepositoryLive.Settings do
           account_handle: @organization.account.handle,
           repository_handle: @repository.handle,
           active: :settings,
-          show_settings?: true
+          show_settings?: true,
+          base_path: @base_path
         }
       }
     >
@@ -111,9 +108,10 @@ defmodule MicelioWeb.RepositoryLive.Settings do
         account_handle={@organization.account.handle}
         repository_handle={@repository.handle}
         active_tab={:settings}
+        base_path={@base_path}
       >
         <.settings_layout
-          base_path={~p"/#{@organization.account.handle}/#{@repository.handle}/settings"}
+          base_path={"#{@base_path}/settings"}
           active={:general}
         >
           <.header>
@@ -166,7 +164,7 @@ defmodule MicelioWeb.RepositoryLive.Settings do
                 Save changes
               </button>
               <.link
-                navigate={~p"/#{@organization.account.handle}/#{@repository.handle}"}
+                navigate={@base_path}
                 class="repository-button repository-button-secondary"
                 id="project-settings-cancel"
               >

@@ -247,8 +247,7 @@ defmodule Micelio.Mic.ConflictIndex do
   end
 
   defp do_expand(_repository_id, from_position, to_position, _paths, _levels, _loader)
-       when from_position > to_position,
-       do: []
+       when from_position > to_position, do: []
 
   defp do_expand(_repository_id, from_position, to_position, _paths, [], _loader) do
     [{from_position, to_position}]

@@ -24,10 +24,24 @@ defmodule MicelioWeb.ResourcePlug do
             Repositories.get_repository_by_handle(account.organization_id, repository_handle)
           end
 
-        assign(conn, :selected_repository, repository)
+        if forge_imported?(repository) do
+          conn
+          |> send_resp(404, "Not found")
+          |> halt()
+        else
+          assign(conn, :selected_repository, repository)
+        end
 
       _ ->
         assign(conn, :selected_repository, nil)
     end
   end
+
+  defp forge_imported?(%{forge_host: host, forge_owner: owner, forge_repo: repo})
+       when is_binary(host) and host != "" and is_binary(owner) and owner != "" and
+              is_binary(repo) and repo != "" do
+    true
+  end
+
+  defp forge_imported?(_), do: false
 end
