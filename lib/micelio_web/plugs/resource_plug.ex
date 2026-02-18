@@ -26,7 +26,9 @@ defmodule MicelioWeb.ResourcePlug do
 
         if forge_imported?(repository) do
           conn
-          |> send_resp(404, "Not found")
+          |> put_status(404)
+          |> Phoenix.Controller.put_view(MicelioWeb.Browser.ErrorHTML)
+          |> Phoenix.Controller.render("404.html")
           |> halt()
         else
           assign(conn, :selected_repository, repository)

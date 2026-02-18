@@ -24,7 +24,9 @@ defmodule MicelioWeb.Plugs.ForgeResourcePlug do
 
       {:error, _reason} ->
         conn
-        |> send_resp(404, "Not found")
+        |> put_status(404)
+        |> Phoenix.Controller.put_view(MicelioWeb.Browser.ErrorHTML)
+        |> Phoenix.Controller.render("404.html")
         |> halt()
     end
   end
