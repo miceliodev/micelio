@@ -42,7 +42,7 @@ defmodule MicelioWeb.PlanLiveTest do
     {user, organization, repository}
   end
 
-  test "lists plans and opens a new plan drafting session", %{conn: conn} do
+  test "lists plans and creates a new plan via form", %{conn: conn} do
     {user, organization, repository} = setup_repository()
 
     conn = login_user(conn, user)
@@ -62,12 +62,18 @@ defmodule MicelioWeb.PlanLiveTest do
         ~p"/#{organization.account.handle}/#{repository.handle}/prs/new"
       )
 
-    assert has_element?(new_view, "#plan-chat-form")
-    assert has_element?(new_view, "h2", "Untitled plan")
+    assert has_element?(new_view, "#plan-form")
+    assert has_element?(new_view, "#plan-title")
+    assert has_element?(new_view, "#plan-submit")
+
+    new_view
+    |> form("#plan-form", plan: %{title: "My new plan", description: "Plan description"})
+    |> render_submit()
 
     [plan] = Plans.list_plans_for_repository(repository)
     assert plan.number == 1
-    assert plan.title == "Untitled plan"
+    assert plan.title == "My new plan"
+    assert plan.description == "Plan description"
   end
 
   test "shows a plan", %{conn: conn} do
