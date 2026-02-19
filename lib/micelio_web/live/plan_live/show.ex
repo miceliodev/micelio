@@ -80,7 +80,7 @@ defmodule MicelioWeb.PlanLive.Show do
       _ ->
         {:ok,
          socket
-         |> put_flash(:error, gettext("Plan not found."))
+         |> put_flash(:error, gettext("Prompt request not found."))
          |> push_navigate(to: ~p"/repositories")}
     end
   end
@@ -96,7 +96,7 @@ defmodule MicelioWeb.PlanLive.Show do
         {:noreply, assign(socket, :plan, updated)}
 
       {:error, _} ->
-        {:noreply, put_flash(socket, :error, gettext("Unable to close plan."))}
+        {:noreply, put_flash(socket, :error, gettext("Unable to close prompt request."))}
     end
   end
 
@@ -109,7 +109,7 @@ defmodule MicelioWeb.PlanLive.Show do
         {:noreply, assign(socket, :plan, updated)}
 
       {:error, _} ->
-        {:noreply, put_flash(socket, :error, gettext("Unable to reopen plan."))}
+        {:noreply, put_flash(socket, :error, gettext("Unable to reopen prompt request."))}
     end
   end
 

@@ -12,10 +12,10 @@ defmodule MicelioWeb.PlanLive.Index do
 
         socket =
           socket
-          |> assign(:page_title, gettext("Plans"))
+          |> assign(:page_title, gettext("Prompt requests"))
           |> assign(:base_path, base_path)
           |> PageMeta.assign(
-            description: gettext("Plans for %{name}.", name: repository.name),
+            description: gettext("Prompt requests for %{name}.", name: repository.name),
             canonical_url: unverified_url(MicelioWeb.Endpoint, "#{base_path}/prompt-requests")
           )
           |> assign(:repository, repository)
@@ -47,7 +47,7 @@ defmodule MicelioWeb.PlanLive.Index do
     repository = socket.assigns.repository
     status_filter = socket.assigns.status_filter
 
-    status = if status_filter == "all", do: nil, else: status_filter
+    status = if status_filter != "all", do: status_filter
     plans = Plans.list_plans_for_repository(repository, status: status)
     counts = Plans.count_plans_by_status(repository)
 
@@ -144,7 +144,7 @@ defmodule MicelioWeb.PlanLive.Index do
                 class="repository-button"
                 id="new-plan"
               >
-                {gettext("New plan")}
+                {gettext("New prompt request")}
               </.link>
             <% end %>
           </div>
@@ -168,7 +168,7 @@ defmodule MicelioWeb.PlanLive.Index do
               <h3>{empty_message(@status_filter)}</h3>
               <p>
                 {gettext(
-                  "Plans let you tell collaborators about changes you'd like an agent to make."
+                  "Prompt requests let you tell collaborators about changes you'd like an agent to make."
                 )}
               </p>
             </div>
@@ -222,9 +222,9 @@ defmodule MicelioWeb.PlanLive.Index do
     counts |> Map.values() |> Enum.sum()
   end
 
-  defp empty_message("open"), do: gettext("There aren't any open plans.")
-  defp empty_message("closed"), do: gettext("There aren't any closed plans.")
-  defp empty_message(_), do: gettext("There aren't any plans.")
+  defp empty_message("open"), do: gettext("There aren't any open prompt requests.")
+  defp empty_message("closed"), do: gettext("There aren't any closed prompt requests.")
+  defp empty_message(_), do: gettext("There aren't any prompt requests.")
 
   defp format_time_ago(%DateTime{} = datetime) do
     diff = DateTime.diff(DateTime.utc_now(), datetime, :second)

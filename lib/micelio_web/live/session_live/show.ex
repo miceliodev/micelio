@@ -727,7 +727,7 @@ defmodule MicelioWeb.SessionLive.Show do
 
             <%= if @session.plan do %>
               <div class="session-sidebar-section">
-                <span class="session-sidebar-label">{gettext("Plan")}</span>
+                <span class="session-sidebar-label">{gettext("Prompt request")}</span>
                 <.link
                   navigate={"#{@base_path}/prompt-requests/#{@session.plan.id}"}
                   class="session-plan-link"
