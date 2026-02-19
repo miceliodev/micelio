@@ -76,3 +76,6 @@ zig-out/
 
 # Claude Code
 /.claude
+
+# Agent Knowledge Base
+/docs/akb
