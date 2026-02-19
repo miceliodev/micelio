@@ -108,11 +108,9 @@
                   <% end %>
                   <a
                     class="account-activity-repository"
-                    href={
-                      ~p"/#{activity.repository.organization.account.handle}/#{activity.repository.handle}"
-                    }
+                    href={MicelioWeb.RepositoryURL.base_path(activity.repository)}
                   >
-                    {activity.repository.organization.account.handle}/{activity.repository.handle}
+                    {String.trim_leading(MicelioWeb.RepositoryURL.base_path(activity.repository), "/")}
                   </a>
                 </div>
                 <time
@@ -153,7 +151,7 @@
         <div class="account-repositories-grid" id="account-repositories-list">
           <%= for repository <- @repositories do %>
             <.content_card
-              navigate={~p"/#{repository.organization.account.handle}/#{repository.handle}"}
+              navigate={MicelioWeb.RepositoryURL.base_path(repository)}
               id={"account-repository-#{repository.id}"}
             >
               <:title>{repository.name}</:title>

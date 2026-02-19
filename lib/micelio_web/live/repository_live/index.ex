@@ -5,6 +5,7 @@ defmodule MicelioWeb.RepositoryLive.Index do
   alias Micelio.Accounts
   alias Micelio.Repositories
   alias MicelioWeb.PageMeta
+  alias MicelioWeb.RepositoryURL
 
   @impl true
   def mount(_params, _session, socket) do
@@ -77,11 +78,11 @@ defmodule MicelioWeb.RepositoryLive.Index do
             <.content_card
               :for={{id, repository} <- @streams.repositories}
               id={id}
-              navigate={~p"/#{repository.organization.account.handle}/#{repository.handle}"}
+              navigate={RepositoryURL.base_path(repository)}
             >
               <:title>{repository.name}</:title>
               <:subtitle>
-                @{repository.organization.account.handle}/{repository.handle}
+                {String.trim_leading(RepositoryURL.base_path(repository), "/")}
               </:subtitle>
               <:description>
                 <%= if repository.description do %>
