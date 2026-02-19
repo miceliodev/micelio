@@ -409,8 +409,8 @@ defmodule MicelioWeb.Router do
         live("/#{forge}/:owner/:repo/edit", RepositoryLive.Edit, :edit)
         live("/#{forge}/:owner/:repo/sessions", SessionLive.Index, :index)
         live("/#{forge}/:owner/:repo/sessions/:id", SessionLive.Show, :show)
-        live("/#{forge}/:owner/:repo/prs/new", PlanLive.New, :new)
-        live("/#{forge}/:owner/:repo/prs/:number/edit", PlanLive.Edit, :edit)
+        live("/#{forge}/:owner/:repo/prompt-requests/new", PlanLive.New, :new)
+        live("/#{forge}/:owner/:repo/prompt-requests/:number/edit", PlanLive.Edit, :edit)
       end
     end
 
@@ -438,8 +438,8 @@ defmodule MicelioWeb.Router do
           MicelioWeb.LiveOpenGraphCacheBuster
         ] do
         live("/#{forge}/:owner/:repo/agents", AgentLive.Index, :index)
-        live("/#{forge}/:owner/:repo/prs", PlanLive.Index, :index)
-        live("/#{forge}/:owner/:repo/prs/:number", PlanLive.Show, :show)
+        live("/#{forge}/:owner/:repo/prompt-requests", PlanLive.Index, :index)
+        live("/#{forge}/:owner/:repo/prompt-requests/:number", PlanLive.Show, :show)
       end
     end
 
@@ -463,8 +463,8 @@ defmodule MicelioWeb.Router do
       live("/:account/:repository/edit", RepositoryLive.Edit, :edit)
       live("/:account/:repository/sessions", SessionLive.Index, :index)
       live("/:account/:repository/sessions/:id", SessionLive.Show, :show)
-      live("/:account/:repository/prs/new", PlanLive.New, :new)
-      live("/:account/:repository/prs/:number/edit", PlanLive.Edit, :edit)
+      live("/:account/:repository/prompt-requests/new", PlanLive.New, :new)
+      live("/:account/:repository/prompt-requests/:number/edit", PlanLive.Edit, :edit)
     end
   end
 
@@ -560,24 +560,9 @@ defmodule MicelioWeb.Router do
     live_session :public,
       on_mount: [{MicelioWeb.LiveAuth, :current_user}, MicelioWeb.LiveOpenGraphCacheBuster] do
       live("/:account/:repository/agents", AgentLive.Index, :index)
-      live("/:account/:repository/prs", PlanLive.Index, :index)
-      live("/:account/:repository/prs/:number", PlanLive.Show, :show)
+      live("/:account/:repository/prompt-requests", PlanLive.Index, :index)
+      live("/:account/:repository/prompt-requests/:number", PlanLive.Show, :show)
     end
-  end
-
-  # Redirect old /prompt-requests URLs to /prs
-  scope "/", MicelioWeb.Browser do
-    pipe_through([:browser, :load_resources])
-
-    get("/:account/:repository/prompt-requests", RedirectController, :projects_plans)
-
-    get(
-      "/:account/:repository/prompt-requests/new",
-      RedirectController,
-      :projects_plan_new
-    )
-
-    get("/:account/:repository/prompt-requests/:id", RedirectController, :projects_plan)
   end
 
   # Locale-prefixed marketing routes (for SEO and explicit locale selection)

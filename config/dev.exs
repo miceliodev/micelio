@@ -91,6 +91,9 @@ config :micelio, MicelioWeb.Endpoint,
 # configured to run both http and https servers on
 config :micelio, dev_routes: true
 
+# Disable OpenTelemetry exporter in dev (no collector running locally)
+config :opentelemetry, traces_exporter: :none
+
 #     ],
 # Initialize plugs at runtime for faster development compilation
 # different ports.
@@ -99,7 +102,6 @@ config :micelio, dev_routes: true
 #       keyfile: "priv/cert/selfsigned_key.pem",
 # Include debug annotations and locations in rendered markup.
 # If desired, both `http:` and `https:` keys can be
-
 # Changing this configuration will require mix clean and a full recompile.
 config :phoenix, :plug_init_mode, :runtime
 config :phoenix, :stacktrace_depth, 20
@@ -108,6 +110,7 @@ config :phoenix_live_view,
   debug_heex_annotations: true,
   debug_attributes: true,
   # Enable helpful, but potentially expensive runtime checks
+
   enable_expensive_runtime_checks: true
 
 # Disable swoosh api client as it is only required for production adapters.

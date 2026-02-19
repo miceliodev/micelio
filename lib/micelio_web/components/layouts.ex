@@ -149,7 +149,7 @@ defmodule MicelioWeb.Layouts do
               <% repository_base_path =
                 @repository_nav[:base_path] ||
                   "/#{@repository_nav.account_handle}/#{@repository_nav.repository_handle}" %>
-              <% prompt_requests_path = "#{repository_base_path}/prs" %>
+              <% prompt_requests_path = "#{repository_base_path}/prompt-requests" %>
               <% sessions_path = "#{repository_base_path}/sessions" %>
               <% settings_path = "#{repository_base_path}/settings" %>
               <% active_nav = @repository_nav[:active] %>

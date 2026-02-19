@@ -32,7 +32,8 @@ defmodule MicelioWeb.PlanLive.Show do
         |> assign(:base_path, base_path)
         |> PageMeta.assign(
           description: plan.title,
-          canonical_url: unverified_url(MicelioWeb.Endpoint, "#{base_path}/prs/#{plan.number}")
+          canonical_url:
+            unverified_url(MicelioWeb.Endpoint, "#{base_path}/prompt-requests/#{plan.number}")
         )
         |> assign(:repository, repository)
         |> assign(:organization, organization)
@@ -79,7 +80,7 @@ defmodule MicelioWeb.PlanLive.Show do
       _ ->
         {:ok,
          socket
-         |> put_flash(:error, gettext("Plan not found."))
+         |> put_flash(:error, gettext("Prompt request not found."))
          |> push_navigate(to: ~p"/repositories")}
     end
   end
@@ -95,7 +96,7 @@ defmodule MicelioWeb.PlanLive.Show do
         {:noreply, assign(socket, :plan, updated)}
 
       {:error, _} ->
-        {:noreply, put_flash(socket, :error, gettext("Unable to close plan."))}
+        {:noreply, put_flash(socket, :error, gettext("Unable to close prompt request."))}
     end
   end
 
@@ -108,7 +109,7 @@ defmodule MicelioWeb.PlanLive.Show do
         {:noreply, assign(socket, :plan, updated)}
 
       {:error, _} ->
-        {:noreply, put_flash(socket, :error, gettext("Unable to reopen plan."))}
+        {:noreply, put_flash(socket, :error, gettext("Unable to reopen prompt request."))}
     end
   end
 
@@ -365,7 +366,7 @@ defmodule MicelioWeb.PlanLive.Show do
               <%= if @can_edit do %>
                 <div class="plan-show-actions">
                   <.link
-                    navigate={"#{@base_path}/prs/#{@plan.number}/edit"}
+                    navigate={"#{@base_path}/prompt-requests/#{@plan.number}/edit"}
                     class="repository-button repository-button-secondary"
                     id="edit-plan"
                   >

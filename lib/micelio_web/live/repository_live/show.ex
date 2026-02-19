@@ -133,7 +133,7 @@ defmodule MicelioWeb.RepositoryLive.Show do
             Sessions ({@session_count})
           </.link>
           <.link
-            navigate={~p"/#{@organization.account.handle}/#{@repository.handle}/prs"}
+            navigate={~p"/#{@organization.account.handle}/#{@repository.handle}/prompt-requests"}
             class="project-show-nav-link"
           >
             Plans ({@plan_count})

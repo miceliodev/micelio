@@ -9,19 +9,19 @@ defmodule MicelioWeb.PlanLive.Index do
     case MicelioWeb.RepositoryResolver.resolve(params, socket.assigns) do
       {:ok, repository, organization} ->
         base_path = MicelioWeb.RepositoryURL.base_path(repository, organization)
-        plans = Plans.list_plans_for_repository(repository)
 
         socket =
           socket
-          |> assign(:page_title, gettext("Plans"))
+          |> assign(:page_title, gettext("Prompt requests"))
           |> assign(:base_path, base_path)
           |> PageMeta.assign(
-            description: gettext("Plans for %{name}.", name: repository.name),
-            canonical_url: unverified_url(MicelioWeb.Endpoint, "#{base_path}/prs")
+            description: gettext("Prompt requests for %{name}.", name: repository.name),
+            canonical_url: unverified_url(MicelioWeb.Endpoint, "#{base_path}/prompt-requests")
           )
           |> assign(:repository, repository)
           |> assign(:organization, organization)
-          |> assign(:plans, plans)
+          |> assign(:status_filter, "open")
+          |> load_plans()
 
         {:ok, socket}
 
@@ -31,6 +31,29 @@ defmodule MicelioWeb.PlanLive.Index do
          |> put_flash(:error, gettext("Repository not found or access denied."))
          |> push_navigate(to: ~p"/repositories")}
     end
+  end
+
+  @impl true
+  def handle_event("filter", %{"status" => status}, socket) do
+    socket =
+      socket
+      |> assign(:status_filter, status)
+      |> load_plans()
+
+    {:noreply, socket}
+  end
+
+  defp load_plans(socket) do
+    repository = socket.assigns.repository
+    status_filter = socket.assigns.status_filter
+
+    status = if status_filter != "all", do: status_filter
+    plans = Plans.list_plans_for_repository(repository, status: status)
+    counts = Plans.count_plans_by_status(repository)
+
+    socket
+    |> assign(:plans, plans)
+    |> assign(:plan_counts, counts)
   end
 
   @impl true
@@ -60,10 +83,24 @@ defmodule MicelioWeb.PlanLive.Index do
       >
         <div class="plans-container">
           <div class="plans-toolbar">
-            <div class="plans-toolbar-left">
-              <span class="plans-count">
+            <div class="plans-filter-bar">
+              <button
+                type="button"
+                class={["plans-filter-btn", @status_filter == "all" && "is-active"]}
+                phx-click="filter"
+                phx-value-status="all"
+              >
+                {gettext("All")}
+                <span class="plans-filter-count">{total_count(@plan_counts)}</span>
+              </button>
+              <button
+                type="button"
+                class={["plans-filter-btn", @status_filter == "open" && "is-active"]}
+                phx-click="filter"
+                phx-value-status="open"
+              >
                 <svg
-                  class="plans-count-icon"
+                  class="plans-filter-icon"
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
@@ -76,16 +113,38 @@ defmodule MicelioWeb.PlanLive.Index do
                   <path d="M8 13h6" />
                   <path d="M9 18h-3a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3h12a3 3 0 0 1 3 3v8a3 3 0 0 1-3 3h-3l-3 3-3-3z" />
                 </svg>
-                {gettext("%{count} Open", count: length(@plans))}
-              </span>
+                {gettext("Open")}
+                <span class="plans-filter-count">{Map.get(@plan_counts, "open", 0)}</span>
+              </button>
+              <button
+                type="button"
+                class={["plans-filter-btn", @status_filter == "closed" && "is-active"]}
+                phx-click="filter"
+                phx-value-status="closed"
+              >
+                <svg
+                  class="plans-filter-icon"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M20 6L9 17l-5-5" />
+                </svg>
+                {gettext("Closed")}
+                <span class="plans-filter-count">{Map.get(@plan_counts, "closed", 0)}</span>
+              </button>
             </div>
             <%= if assigns[:current_user] do %>
               <.link
-                navigate={"#{@base_path}/prs/new"}
+                navigate={"#{@base_path}/prompt-requests/new"}
                 class="repository-button"
                 id="new-plan"
               >
-                {gettext("New plan")}
+                {gettext("New prompt request")}
               </.link>
             <% end %>
           </div>
@@ -106,10 +165,10 @@ defmodule MicelioWeb.PlanLive.Index do
                 <path d="M8 13h6" />
                 <path d="M9 18h-3a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3h12a3 3 0 0 1 3 3v8a3 3 0 0 1-3 3h-3l-3 3-3-3z" />
               </svg>
-              <h3>{gettext("There aren't any open plans.")}</h3>
+              <h3>{empty_message(@status_filter)}</h3>
               <p>
                 {gettext(
-                  "Plans let you tell collaborators about changes you'd like an agent to make."
+                  "Prompt requests let you tell collaborators about changes you'd like an agent to make."
                 )}
               </p>
             </div>
@@ -135,7 +194,7 @@ defmodule MicelioWeb.PlanLive.Index do
                   <div class="plan-row-content">
                     <div class="plan-row-main">
                       <.link
-                        navigate={"#{@base_path}/prs/#{pr.number}"}
+                        navigate={"#{@base_path}/prompt-requests/#{pr.number}"}
                         class="plan-row-title"
                       >
                         {pr.title}
@@ -158,6 +217,14 @@ defmodule MicelioWeb.PlanLive.Index do
     </Layouts.app>
     """
   end
+
+  defp total_count(counts) do
+    counts |> Map.values() |> Enum.sum()
+  end
+
+  defp empty_message("open"), do: gettext("There aren't any open prompt requests.")
+  defp empty_message("closed"), do: gettext("There aren't any closed prompt requests.")
+  defp empty_message(_), do: gettext("There aren't any prompt requests.")
 
   defp format_time_ago(%DateTime{} = datetime) do
     diff = DateTime.diff(DateTime.utc_now(), datetime, :second)

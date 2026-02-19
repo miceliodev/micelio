@@ -29,12 +29,15 @@ defmodule MicelioWeb.PlanLive.Edit do
 
       socket =
         socket
-        |> assign(:page_title, gettext("Edit Plan"))
+        |> assign(:page_title, gettext("Edit prompt request"))
         |> assign(:base_path, base_path)
         |> PageMeta.assign(
-          description: gettext("Edit plan #%{number}.", number: plan.number),
+          description: gettext("Edit prompt request #%{number}.", number: plan.number),
           canonical_url:
-            unverified_url(MicelioWeb.Endpoint, "#{base_path}/prs/#{plan.number}/edit")
+            unverified_url(
+              MicelioWeb.Endpoint,
+              "#{base_path}/prompt-requests/#{plan.number}/edit"
+            )
         )
         |> assign(:repository, repository)
         |> assign(:organization, organization)
@@ -47,7 +50,7 @@ defmodule MicelioWeb.PlanLive.Edit do
       _ ->
         {:ok,
          socket
-         |> put_flash(:error, gettext("Plan not found or access denied."))
+         |> put_flash(:error, gettext("Prompt request not found or access denied."))
          |> push_navigate(to: ~p"/repositories")}
     end
   end
@@ -68,8 +71,8 @@ defmodule MicelioWeb.PlanLive.Edit do
       {:ok, plan} ->
         {:noreply,
          socket
-         |> put_flash(:info, gettext("Plan updated."))
-         |> push_navigate(to: "#{socket.assigns.base_path}/prs/#{plan.number}")}
+         |> put_flash(:info, gettext("Prompt request updated."))
+         |> push_navigate(to: "#{socket.assigns.base_path}/prompt-requests/#{plan.number}")}
 
       {:error, %Ecto.Changeset{} = changeset} ->
         {:noreply,
@@ -148,10 +151,10 @@ defmodule MicelioWeb.PlanLive.Edit do
 
             <div class="pr-form-actions">
               <button type="submit" class="repository-button" id="plan-submit">
-                {gettext("Update plan")}
+                {gettext("Update prompt request")}
               </button>
               <.link
-                navigate={"#{@base_path}/prs/#{@plan.number}"}
+                navigate={"#{@base_path}/prompt-requests/#{@plan.number}"}
                 class="repository-button repository-button-secondary"
                 id="plan-cancel"
               >

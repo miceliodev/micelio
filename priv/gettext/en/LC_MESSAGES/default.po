@@ -627,6 +627,7 @@ msgstr ""
 msgid "Active"
 msgstr ""
 
+#: lib/micelio_web/live/plan_live/index.ex:93
 #: lib/micelio_web/live/session_live/index.ex:125
 #, elixir-autogen, elixir-format
 msgid "All"
@@ -704,7 +705,7 @@ msgstr ""
 msgid "Changes"
 msgstr ""
 
-#: lib/micelio_web/live/plan_live/show.ex:547
+#: lib/micelio_web/live/plan_live/show.ex:548
 #: lib/micelio_web/live/session_live/show.ex:546
 #, elixir-autogen, elixir-format
 msgid "Connecting..."
@@ -785,33 +786,33 @@ msgstr ""
 msgid "Toggle navigation"
 msgstr ""
 
-#: lib/micelio_web/live/plan_live/index.ex:169
-#: lib/micelio_web/live/plan_live/show.ex:646
+#: lib/micelio_web/live/plan_live/index.ex:236
+#: lib/micelio_web/live/plan_live/show.ex:647
 #, elixir-autogen, elixir-format
 msgid "%{count} days ago"
 msgstr ""
 
-#: lib/micelio_web/live/plan_live/index.ex:168
-#: lib/micelio_web/live/plan_live/show.ex:645
+#: lib/micelio_web/live/plan_live/index.ex:235
+#: lib/micelio_web/live/plan_live/show.ex:646
 #, elixir-autogen, elixir-format
 msgid "%{count} hours ago"
 msgstr ""
 
-#: lib/micelio_web/live/plan_live/index.ex:167
-#: lib/micelio_web/live/plan_live/show.ex:644
+#: lib/micelio_web/live/plan_live/index.ex:234
+#: lib/micelio_web/live/plan_live/show.ex:645
 #, elixir-autogen, elixir-format
 msgid "%{count} minutes ago"
 msgstr ""
 
 #: lib/micelio_web/controllers/browser/profile_html/show.html.heex:301
 #: lib/micelio_web/live/organization_live/settings.ex:235
-#: lib/micelio_web/live/plan_live/edit.ex:158
+#: lib/micelio_web/live/plan_live/edit.ex:161
 #: lib/micelio_web/live/plan_live/new.ex:143
 #, elixir-autogen, elixir-format
 msgid "Cancel"
 msgstr ""
 
-#: lib/micelio_web/live/plan_live/show.ex:331
+#: lib/micelio_web/live/plan_live/show.ex:332
 #, elixir-autogen, elixir-format
 msgid "Opened %{time_ago} by %{author}"
 msgstr ""
@@ -822,44 +823,39 @@ msgstr ""
 msgid "Repository not found or access denied."
 msgstr ""
 
-#: lib/micelio_web/live/plan_live/edit.ex:121
+#: lib/micelio_web/live/plan_live/edit.ex:124
 #: lib/micelio_web/live/plan_live/new.ex:112
 #, elixir-autogen, elixir-format
 msgid "Title"
 msgstr ""
 
-#: lib/micelio_web/live/plan_live/index.ex:166
-#: lib/micelio_web/live/plan_live/show.ex:643
+#: lib/micelio_web/live/plan_live/index.ex:233
+#: lib/micelio_web/live/plan_live/show.ex:644
 #, elixir-autogen, elixir-format
 msgid "just now"
 msgstr ""
 
-#: lib/micelio_web/live/plan_live/index.ex:79
-#, elixir-autogen, elixir-format, fuzzy
-msgid "%{count} Open"
-msgstr ""
-
-#: lib/micelio_web/live/plan_live/index.ex:146
+#: lib/micelio_web/live/plan_live/index.ex:205
 #, elixir-autogen, elixir-format, fuzzy
 msgid "opened %{time_ago} by"
 msgstr ""
 
-#: lib/micelio_web/live/plan_live/edit.ex:142
+#: lib/micelio_web/live/plan_live/edit.ex:145
 #, elixir-autogen, elixir-format
 msgid "Describe the change you want. Use @ to reference files."
 msgstr ""
 
-#: lib/micelio_web/live/plan_live/show.ex:380
+#: lib/micelio_web/live/plan_live/show.ex:381
 #, elixir-autogen, elixir-format, fuzzy
 msgid "Close"
 msgstr ""
 
-#: lib/micelio_web/live/plan_live/show.ex:372
+#: lib/micelio_web/live/plan_live/show.ex:373
 #, elixir-autogen, elixir-format
 msgid "Edit"
 msgstr ""
 
-#: lib/micelio_web/live/plan_live/show.ex:388
+#: lib/micelio_web/live/plan_live/show.ex:389
 #, elixir-autogen, elixir-format
 msgid "Reopen"
 msgstr ""
@@ -915,168 +911,88 @@ msgstr ""
 msgid "Sign in to try this"
 msgstr ""
 
-#: lib/micelio_web/live/plan_live/show.ex:524
+#: lib/micelio_web/live/plan_live/show.ex:525
 #, elixir-autogen, elixir-format, fuzzy
 msgid "Agent"
 msgstr ""
 
-#: lib/micelio_web/live/plan_live/show.ex:283
+#: lib/micelio_web/live/plan_live/show.ex:284
 #, elixir-autogen, elixir-format
 msgid "Agent error: %{reason}"
 msgstr ""
 
-#: lib/micelio_web/live/plan_live/new.ex:26
-#, elixir-autogen, elixir-format
-msgid "Create a plan for %{name}."
-msgstr ""
-
-#: lib/micelio_web/live/plan_live/edit.ex:32
-#, elixir-autogen, elixir-format, fuzzy
-msgid "Edit Plan"
-msgstr ""
-
-#: lib/micelio_web/live/plan_live/edit.ex:35
-#, elixir-autogen, elixir-format
-msgid "Edit plan #%{number}."
-msgstr ""
-
-#: lib/micelio_web/live/plan_live/show.ex:224
+#: lib/micelio_web/live/plan_live/show.ex:225
 #, elixir-autogen, elixir-format
 msgid "Failed to send message."
 msgstr ""
 
-#: lib/micelio_web/live/plan_live/new.ex:23
-#, elixir-autogen, elixir-format
-msgid "New Plan"
-msgstr ""
-
-#: lib/micelio_web/live/plan_live/index.ex:88
-#, elixir-autogen, elixir-format
-msgid "New plan"
-msgstr ""
-
-#: lib/micelio_web/live/session_live/show.ex:730
-#, elixir-autogen, elixir-format
-msgid "Plan"
-msgstr ""
-
-#: lib/micelio_web/live/plan_live/edit.ex:50
-#, elixir-autogen, elixir-format
-msgid "Plan not found or access denied."
-msgstr ""
-
-#: lib/micelio_web/live/plan_live/show.ex:82
-#, elixir-autogen, elixir-format
-msgid "Plan not found."
-msgstr ""
-
-#: lib/micelio_web/live/plan_live/edit.ex:71
-#, elixir-autogen, elixir-format
-msgid "Plan updated."
-msgstr ""
-
-#: lib/micelio_web/live/plan_live/index.ex:16
-#, elixir-autogen, elixir-format
-msgid "Plans"
-msgstr ""
-
-#: lib/micelio_web/live/plan_live/index.ex:19
-#, elixir-autogen, elixir-format
-msgid "Plans for %{name}."
-msgstr ""
-
-#: lib/micelio_web/live/plan_live/index.ex:111
-#, elixir-autogen, elixir-format
-msgid "Plans let you tell collaborators about changes you'd like an agent to make."
-msgstr ""
-
-#: lib/micelio_web/live/plan_live/show.ex:575
+#: lib/micelio_web/live/plan_live/show.ex:576
 #, elixir-autogen, elixir-format
 msgid "Send"
 msgstr ""
 
-#: lib/micelio_web/live/plan_live/index.ex:109
-#, elixir-autogen, elixir-format, fuzzy
-msgid "There aren't any open plans."
-msgstr ""
-
-#: lib/micelio_web/live/plan_live/show.ex:98
-#, elixir-autogen, elixir-format, fuzzy
-msgid "Unable to close plan."
-msgstr ""
-
-#: lib/micelio_web/live/plan_live/show.ex:111
-#, elixir-autogen, elixir-format, fuzzy
-msgid "Unable to reopen plan."
-msgstr ""
-
-#: lib/micelio_web/live/plan_live/edit.ex:151
-#, elixir-autogen, elixir-format
-msgid "Update plan"
-msgstr ""
-
-#: lib/micelio_web/live/plan_live/show.ex:553
+#: lib/micelio_web/live/plan_live/show.ex:554
 #, elixir-autogen, elixir-format, fuzzy
 msgid "Error"
 msgstr ""
 
-#: lib/micelio_web/live/plan_live/show.ex:555
+#: lib/micelio_web/live/plan_live/show.ex:556
 #, elixir-autogen, elixir-format
 msgid "Idle"
 msgstr ""
 
-#: lib/micelio_web/live/plan_live/show.ex:145
+#: lib/micelio_web/live/plan_live/show.ex:146
 #, elixir-autogen, elixir-format
 msgid "Daily session limit reached. Try again tomorrow."
 msgstr ""
 
-#: lib/micelio_web/live/plan_live/show.ex:168
+#: lib/micelio_web/live/plan_live/show.ex:169
 #, elixir-autogen, elixir-format, fuzzy
 msgid "Failed to start session: %{reason}"
 msgstr ""
 
-#: lib/micelio_web/live/plan_live/show.ex:187
+#: lib/micelio_web/live/plan_live/show.ex:188
 #, elixir-autogen, elixir-format
 msgid "Failed to stop session."
 msgstr ""
 
-#: lib/micelio_web/live/plan_live/show.ex:426
+#: lib/micelio_web/live/plan_live/show.ex:427
 #, elixir-autogen, elixir-format
 msgid "Start agentic session"
 msgstr ""
 
-#: lib/micelio_web/live/plan_live/show.ex:598
+#: lib/micelio_web/live/plan_live/show.ex:599
 #, elixir-autogen, elixir-format
 msgid "Stop session"
 msgstr ""
 
-#: lib/micelio_web/live/plan_live/show.ex:139
+#: lib/micelio_web/live/plan_live/show.ex:140
 #, elixir-autogen, elixir-format
 msgid "You already have an active session. Stop it first."
 msgstr ""
 
-#: lib/micelio_web/live/plan_live/show.ex:549
+#: lib/micelio_web/live/plan_live/show.ex:550
 #, elixir-autogen, elixir-format
 msgid "Ready"
 msgstr ""
 
-#: lib/micelio_web/live/plan_live/show.ex:472
+#: lib/micelio_web/live/plan_live/show.ex:473
 #, elixir-autogen, elixir-format, fuzzy
 msgid "Session history"
 msgstr ""
 
-#: lib/micelio_web/live/plan_live/show.ex:565
+#: lib/micelio_web/live/plan_live/show.ex:566
 #, elixir-autogen, elixir-format
 msgid "Type a message..."
 msgstr ""
 
-#: lib/micelio_web/live/plan_live/show.ex:443
-#: lib/micelio_web/live/plan_live/show.ex:519
+#: lib/micelio_web/live/plan_live/show.ex:444
+#: lib/micelio_web/live/plan_live/show.ex:520
 #, elixir-autogen, elixir-format, fuzzy
 msgid "User"
 msgstr ""
 
-#: lib/micelio_web/live/plan_live/show.ex:551
+#: lib/micelio_web/live/plan_live/show.ex:552
 #, elixir-autogen, elixir-format
 msgid "Working..."
 msgstr ""
@@ -1406,42 +1322,42 @@ msgstr ""
 msgid "No blog posts yet"
 msgstr ""
 
-#: lib/micelio_web/live/plan_live/show.ex:457
+#: lib/micelio_web/live/plan_live/show.ex:458
 #, elixir-autogen, elixir-format
 msgid "Add a comment"
 msgstr ""
 
-#: lib/micelio_web/live/plan_live/show.ex:462
+#: lib/micelio_web/live/plan_live/show.ex:463
 #, elixir-autogen, elixir-format
 msgid "Comment"
 msgstr ""
 
-#: lib/micelio_web/live/plan_live/show.ex:242
+#: lib/micelio_web/live/plan_live/show.ex:243
 #, elixir-autogen, elixir-format
 msgid "Comment cannot be empty."
 msgstr ""
 
-#: lib/micelio_web/live/plan_live/show.ex:432
+#: lib/micelio_web/live/plan_live/show.ex:433
 #, elixir-autogen, elixir-format
 msgid "Comments"
 msgstr ""
 
-#: lib/micelio_web/live/plan_live/show.ex:159
+#: lib/micelio_web/live/plan_live/show.ex:160
 #, elixir-autogen, elixir-format
 msgid "Install and authorize the forge app to open a draft PR first."
 msgstr ""
 
-#: lib/micelio_web/live/plan_live/show.ex:434
+#: lib/micelio_web/live/plan_live/show.ex:435
 #, elixir-autogen, elixir-format, fuzzy
 msgid "No comments yet."
 msgstr ""
 
-#: lib/micelio_web/live/plan_live/show.ex:353
+#: lib/micelio_web/live/plan_live/show.ex:354
 #, elixir-autogen, elixir-format
 msgid "Open preview"
 msgstr ""
 
-#: lib/micelio_web/live/plan_live/show.ex:362
+#: lib/micelio_web/live/plan_live/show.ex:363
 #, elixir-autogen, elixir-format
 msgid "Open sandbox"
 msgstr ""
@@ -1456,22 +1372,23 @@ msgstr ""
 msgid "Unable to load repository from forge right now."
 msgstr ""
 
-#: lib/micelio_web/live/plan_live/show.ex:245
+#: lib/micelio_web/live/plan_live/show.ex:246
 #, elixir-autogen, elixir-format, fuzzy
 msgid "Unable to post comment."
 msgstr ""
 
-#: lib/micelio_web/live/plan_live/show.ex:344
+#: lib/micelio_web/live/plan_live/show.ex:345
 #, elixir-autogen, elixir-format
 msgid "View draft PR"
 msgstr ""
 
-#: lib/micelio_web/live/plan_live/show.ex:151
+#: lib/micelio_web/live/plan_live/show.ex:152
 #, elixir-autogen, elixir-format
 msgid "You need write access to start a coding session."
 msgstr ""
 
 #: lib/micelio_web/components/layouts.ex:230
+#: lib/micelio_web/live/plan_live/index.ex:15
 #, elixir-autogen, elixir-format
 msgid "Prompt requests"
 msgstr ""
@@ -1571,12 +1488,103 @@ msgstr ""
 msgid "Leave a comment"
 msgstr ""
 
+#: lib/micelio_web/live/plan_live/index.ex:137
+#, elixir-autogen, elixir-format, fuzzy
+msgid "Closed"
+msgstr ""
+
+#: lib/micelio_web/live/plan_live/new.ex:26
+#, elixir-autogen, elixir-format
+msgid "Create a prompt request for %{name}."
+msgstr ""
+
+#: lib/micelio_web/live/plan_live/edit.ex:32
+#, elixir-autogen, elixir-format
+msgid "Edit prompt request"
+msgstr ""
+
+#: lib/micelio_web/live/plan_live/edit.ex:35
+#, elixir-autogen, elixir-format
+msgid "Edit prompt request #%{number}."
+msgstr ""
+
+#: lib/micelio_web/live/plan_live/index.ex:147
+#: lib/micelio_web/live/plan_live/new.ex:23
+#, elixir-autogen, elixir-format
+msgid "New prompt request"
+msgstr ""
+
+#: lib/micelio_web/live/plan_live/index.ex:116
+#, elixir-autogen, elixir-format
+msgid "Open"
+msgstr ""
+
+#: lib/micelio_web/live/session_live/show.ex:730
+#, elixir-autogen, elixir-format, fuzzy
+msgid "Prompt request"
+msgstr ""
+
 #: lib/micelio_web/live/plan_live/new.ex:62
 #, elixir-autogen, elixir-format, fuzzy
-msgid "Plan created."
+msgid "Prompt request created."
+msgstr ""
+
+#: lib/micelio_web/live/plan_live/edit.ex:53
+#, elixir-autogen, elixir-format
+msgid "Prompt request not found or access denied."
+msgstr ""
+
+#: lib/micelio_web/live/plan_live/show.ex:83
+#, elixir-autogen, elixir-format, fuzzy
+msgid "Prompt request not found."
+msgstr ""
+
+#: lib/micelio_web/live/plan_live/edit.ex:74
+#, elixir-autogen, elixir-format, fuzzy
+msgid "Prompt request updated."
+msgstr ""
+
+#: lib/micelio_web/live/plan_live/index.ex:18
+#, elixir-autogen, elixir-format, fuzzy
+msgid "Prompt requests for %{name}."
+msgstr ""
+
+#: lib/micelio_web/live/plan_live/index.ex:170
+#, elixir-autogen, elixir-format
+msgid "Prompt requests let you tell collaborators about changes you'd like an agent to make."
 msgstr ""
 
 #: lib/micelio_web/live/plan_live/new.ex:136
 #, elixir-autogen, elixir-format
-msgid "Submit new plan"
+msgid "Submit new prompt request"
+msgstr ""
+
+#: lib/micelio_web/live/plan_live/index.ex:226
+#, elixir-autogen, elixir-format
+msgid "There aren't any closed prompt requests."
+msgstr ""
+
+#: lib/micelio_web/live/plan_live/index.ex:225
+#, elixir-autogen, elixir-format, fuzzy
+msgid "There aren't any open prompt requests."
+msgstr ""
+
+#: lib/micelio_web/live/plan_live/index.ex:227
+#, elixir-autogen, elixir-format, fuzzy
+msgid "There aren't any prompt requests."
+msgstr ""
+
+#: lib/micelio_web/live/plan_live/show.ex:99
+#, elixir-autogen, elixir-format, fuzzy
+msgid "Unable to close prompt request."
+msgstr ""
+
+#: lib/micelio_web/live/plan_live/show.ex:112
+#, elixir-autogen, elixir-format, fuzzy
+msgid "Unable to reopen prompt request."
+msgstr ""
+
+#: lib/micelio_web/live/plan_live/edit.ex:154
+#, elixir-autogen, elixir-format
+msgid "Update prompt request"
 msgstr ""

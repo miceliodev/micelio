@@ -484,13 +484,28 @@ defmodule Micelio.Plans do
     ContributionConfidence.scores_for_plans(plans, opts)
   end
 
-  def list_plans_for_repository(repository) do
+  def list_plans_for_repository(repository, opts \\ []) do
+    status = Keyword.get(opts, :status, "open")
+
     Plan
     |> where([plan], plan.repository_id == ^repository.id)
+    |> maybe_filter_plan_status(status)
     |> order_by([plan], desc: plan.number, desc: plan.inserted_at)
     |> preload(:user)
     |> Repo.all()
   end
+
+  def count_plans_by_status(repository) do
+    Plan
+    |> where([plan], plan.repository_id == ^repository.id)
+    |> group_by([plan], plan.status)
+    |> select([plan], {plan.status, count(plan.id)})
+    |> Repo.all()
+    |> Map.new()
+  end
+
+  defp maybe_filter_plan_status(query, nil), do: query
+  defp maybe_filter_plan_status(query, status), do: where(query, [plan], plan.status == ^status)
 
   def list_plan_registry(opts \\ []) do
     search = Keyword.get(opts, :search)

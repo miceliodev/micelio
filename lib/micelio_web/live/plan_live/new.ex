@@ -20,11 +20,11 @@ defmodule MicelioWeb.PlanLive.New do
 
       socket =
         socket
-        |> assign(:page_title, gettext("New Plan"))
+        |> assign(:page_title, gettext("New prompt request"))
         |> assign(:base_path, base_path)
         |> PageMeta.assign(
-          description: gettext("Create a plan for %{name}.", name: repository.name),
-          canonical_url: unverified_url(MicelioWeb.Endpoint, "#{base_path}/prs/new")
+          description: gettext("Create a prompt request for %{name}.", name: repository.name),
+          canonical_url: unverified_url(MicelioWeb.Endpoint, "#{base_path}/prompt-requests/new")
         )
         |> assign(:repository, repository)
         |> assign(:organization, organization)
@@ -59,8 +59,8 @@ defmodule MicelioWeb.PlanLive.New do
       {:ok, plan} ->
         {:noreply,
          socket
-         |> put_flash(:info, gettext("Plan created."))
-         |> push_navigate(to: "#{socket.assigns.base_path}/prs/#{plan.number}")}
+         |> put_flash(:info, gettext("Prompt request created."))
+         |> push_navigate(to: "#{socket.assigns.base_path}/prompt-requests/#{plan.number}")}
 
       {:error, %Ecto.Changeset{} = changeset} ->
         {:noreply,
@@ -133,10 +133,10 @@ defmodule MicelioWeb.PlanLive.New do
 
             <div class="pr-form-actions">
               <button type="submit" class="repository-button" id="plan-submit">
-                {gettext("Submit new plan")}
+                {gettext("Submit new prompt request")}
               </button>
               <.link
-                navigate={"#{@base_path}/prs"}
+                navigate={"#{@base_path}/prompt-requests"}
                 class="repository-button repository-button-secondary"
                 id="plan-cancel"
               >
