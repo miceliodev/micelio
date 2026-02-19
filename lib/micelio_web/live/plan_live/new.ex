@@ -112,6 +112,7 @@ defmodule MicelioWeb.PlanLive.New do
                 placeholder={gettext("Title")}
                 class="pr-form-title-input"
                 phx-debounce="300"
+                autofocus
               />
               <%= if Phoenix.Component.used_input?(@form[:title]) do %>
                 <%= for err <- @form[:title].errors do %>
@@ -124,7 +125,7 @@ defmodule MicelioWeb.PlanLive.New do
               <textarea
                 id="plan-description"
                 name={@form[:description].name}
-                placeholder={gettext("Leave a comment")}
+                placeholder={gettext("Describe the changes you'd like an agent to make")}
                 class="pr-form-description-textarea"
                 phx-debounce="300"
                 rows="12"

@@ -807,7 +807,7 @@ msgstr ""
 #: lib/micelio_web/controllers/browser/profile_html/show.html.heex:301
 #: lib/micelio_web/live/organization_live/settings.ex:235
 #: lib/micelio_web/live/plan_live/edit.ex:161
-#: lib/micelio_web/live/plan_live/new.ex:143
+#: lib/micelio_web/live/plan_live/new.ex:144
 #, elixir-autogen, elixir-format
 msgid "Cancel"
 msgstr ""
@@ -1483,11 +1483,6 @@ msgstr ""
 msgid "The hostname of the forge (e.g., github.com or gitlab.com)."
 msgstr ""
 
-#: lib/micelio_web/live/plan_live/new.ex:127
-#, elixir-autogen, elixir-format
-msgid "Leave a comment"
-msgstr ""
-
 #: lib/micelio_web/live/plan_live/index.ex:137
 #, elixir-autogen, elixir-format
 msgid "Closed"
@@ -1554,7 +1549,7 @@ msgstr ""
 msgid "Prompt requests let you tell collaborators about changes you'd like an agent to make."
 msgstr ""
 
-#: lib/micelio_web/live/plan_live/new.ex:136
+#: lib/micelio_web/live/plan_live/new.ex:137
 #, elixir-autogen, elixir-format
 msgid "Submit new prompt request"
 msgstr ""
@@ -1587,4 +1582,9 @@ msgstr ""
 #: lib/micelio_web/live/plan_live/edit.ex:154
 #, elixir-autogen, elixir-format
 msgid "Update prompt request"
+msgstr ""
+
+#: lib/micelio_web/live/plan_live/new.ex:128
+#, elixir-autogen, elixir-format
+msgid "Describe the changes you'd like an agent to make"
 msgstr ""
