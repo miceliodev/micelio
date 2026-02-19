@@ -24,7 +24,7 @@ defmodule MicelioWeb.PlanLive.New do
         |> assign(:base_path, base_path)
         |> PageMeta.assign(
           description: gettext("Create a plan for %{name}.", name: repository.name),
-          canonical_url: unverified_url(MicelioWeb.Endpoint, "#{base_path}/prs/new")
+          canonical_url: unverified_url(MicelioWeb.Endpoint, "#{base_path}/prompt-requests/new")
         )
         |> assign(:repository, repository)
         |> assign(:organization, organization)
@@ -60,7 +60,7 @@ defmodule MicelioWeb.PlanLive.New do
         {:noreply,
          socket
          |> put_flash(:info, gettext("Plan created."))
-         |> push_navigate(to: "#{socket.assigns.base_path}/prs/#{plan.number}")}
+         |> push_navigate(to: "#{socket.assigns.base_path}/prompt-requests/#{plan.number}")}
 
       {:error, %Ecto.Changeset{} = changeset} ->
         {:noreply,
@@ -136,7 +136,7 @@ defmodule MicelioWeb.PlanLive.New do
                 {gettext("Submit new plan")}
               </button>
               <.link
-                navigate={"#{@base_path}/prs"}
+                navigate={"#{@base_path}/prompt-requests"}
                 class="repository-button repository-button-secondary"
                 id="plan-cancel"
               >

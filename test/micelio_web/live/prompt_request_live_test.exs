@@ -50,7 +50,7 @@ defmodule MicelioWeb.PlanLiveTest do
     {:ok, view, _html} =
       live(
         conn,
-        ~p"/#{organization.account.handle}/#{repository.handle}/prs"
+        ~p"/#{organization.account.handle}/#{repository.handle}/prompt-requests"
       )
 
     assert has_element?(view, "#new-plan")
@@ -59,7 +59,7 @@ defmodule MicelioWeb.PlanLiveTest do
     {:ok, new_view, _html} =
       live(
         conn,
-        ~p"/#{organization.account.handle}/#{repository.handle}/prs/new"
+        ~p"/#{organization.account.handle}/#{repository.handle}/prompt-requests/new"
       )
 
     assert has_element?(new_view, "#plan-form")
@@ -91,7 +91,7 @@ defmodule MicelioWeb.PlanLiveTest do
     {:ok, view, html} =
       live(
         conn,
-        ~p"/#{organization.account.handle}/#{repository.handle}/prs/#{plan.number}"
+        ~p"/#{organization.account.handle}/#{repository.handle}/prompt-requests/#{plan.number}"
       )
 
     assert html =~ "Review this"
@@ -137,7 +137,7 @@ defmodule MicelioWeb.PlanLiveTest do
     {:ok, view, html} =
       live(
         conn,
-        ~p"/#{organization.account.handle}/#{repository.handle}/prs/#{plan.number}"
+        ~p"/#{organization.account.handle}/#{repository.handle}/prompt-requests/#{plan.number}"
       )
 
     assert html =~ "View draft PR"
@@ -183,7 +183,7 @@ defmodule MicelioWeb.PlanLiveTest do
     {:ok, view, html} =
       live(
         conn,
-        ~p"/#{organization.account.handle}/#{repository.handle}/prs"
+        ~p"/#{organization.account.handle}/#{repository.handle}/prompt-requests"
       )
 
     assert html =~ "A plan"

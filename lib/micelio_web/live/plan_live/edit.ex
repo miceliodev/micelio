@@ -34,7 +34,7 @@ defmodule MicelioWeb.PlanLive.Edit do
         |> PageMeta.assign(
           description: gettext("Edit plan #%{number}.", number: plan.number),
           canonical_url:
-            unverified_url(MicelioWeb.Endpoint, "#{base_path}/prs/#{plan.number}/edit")
+            unverified_url(MicelioWeb.Endpoint, "#{base_path}/prompt-requests/#{plan.number}/edit")
         )
         |> assign(:repository, repository)
         |> assign(:organization, organization)
@@ -69,7 +69,7 @@ defmodule MicelioWeb.PlanLive.Edit do
         {:noreply,
          socket
          |> put_flash(:info, gettext("Plan updated."))
-         |> push_navigate(to: "#{socket.assigns.base_path}/prs/#{plan.number}")}
+         |> push_navigate(to: "#{socket.assigns.base_path}/prompt-requests/#{plan.number}")}
 
       {:error, %Ecto.Changeset{} = changeset} ->
         {:noreply,
@@ -151,7 +151,7 @@ defmodule MicelioWeb.PlanLive.Edit do
                 {gettext("Update plan")}
               </button>
               <.link
-                navigate={"#{@base_path}/prs/#{@plan.number}"}
+                navigate={"#{@base_path}/prompt-requests/#{@plan.number}"}
                 class="repository-button repository-button-secondary"
                 id="plan-cancel"
               >

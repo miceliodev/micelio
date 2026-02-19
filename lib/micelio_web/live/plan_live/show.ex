@@ -32,7 +32,7 @@ defmodule MicelioWeb.PlanLive.Show do
         |> assign(:base_path, base_path)
         |> PageMeta.assign(
           description: plan.title,
-          canonical_url: unverified_url(MicelioWeb.Endpoint, "#{base_path}/prs/#{plan.number}")
+          canonical_url: unverified_url(MicelioWeb.Endpoint, "#{base_path}/prompt-requests/#{plan.number}")
         )
         |> assign(:repository, repository)
         |> assign(:organization, organization)
@@ -365,7 +365,7 @@ defmodule MicelioWeb.PlanLive.Show do
               <%= if @can_edit do %>
                 <div class="plan-show-actions">
                   <.link
-                    navigate={"#{@base_path}/prs/#{@plan.number}/edit"}
+                    navigate={"#{@base_path}/prompt-requests/#{@plan.number}/edit"}
                     class="repository-button repository-button-secondary"
                     id="edit-plan"
                   >

@@ -17,7 +17,7 @@ defmodule MicelioWeb.PlanLive.Index do
           |> assign(:base_path, base_path)
           |> PageMeta.assign(
             description: gettext("Plans for %{name}.", name: repository.name),
-            canonical_url: unverified_url(MicelioWeb.Endpoint, "#{base_path}/prs")
+            canonical_url: unverified_url(MicelioWeb.Endpoint, "#{base_path}/prompt-requests")
           )
           |> assign(:repository, repository)
           |> assign(:organization, organization)
@@ -81,7 +81,7 @@ defmodule MicelioWeb.PlanLive.Index do
             </div>
             <%= if assigns[:current_user] do %>
               <.link
-                navigate={"#{@base_path}/prs/new"}
+                navigate={"#{@base_path}/prompt-requests/new"}
                 class="repository-button"
                 id="new-plan"
               >
@@ -135,7 +135,7 @@ defmodule MicelioWeb.PlanLive.Index do
                   <div class="plan-row-content">
                     <div class="plan-row-main">
                       <.link
-                        navigate={"#{@base_path}/prs/#{pr.number}"}
+                        navigate={"#{@base_path}/prompt-requests/#{pr.number}"}
                         class="plan-row-title"
                       >
                         {pr.title}

@@ -113,6 +113,9 @@ config :phoenix_live_view,
 # Disable swoosh api client as it is only required for production adapters.
 config :swoosh, :api_client, false
 
+# Disable OpenTelemetry exporter in dev (no collector running locally)
+config :opentelemetry, traces_exporter: :none
+
 # For S3 storage (opt-in), uncomment and configure:
 # config :micelio, Micelio.Storage,
 #   backend: :s3,

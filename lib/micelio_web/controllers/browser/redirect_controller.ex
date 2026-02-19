@@ -26,14 +26,14 @@ defmodule MicelioWeb.Browser.RedirectController do
   end
 
   def projects_plans(conn, %{"account" => account, "repository" => repository}) do
-    conn |> redirect(to: ~p"/#{account}/#{repository}/prs") |> halt()
+    conn |> redirect(to: ~p"/#{account}/#{repository}/prompt-requests") |> halt()
   end
 
   def projects_plan_new(conn, %{"account" => account, "repository" => repository}) do
-    conn |> redirect(to: ~p"/#{account}/#{repository}/prs/new") |> halt()
+    conn |> redirect(to: ~p"/#{account}/#{repository}/prompt-requests/new") |> halt()
   end
 
   def projects_plan(conn, %{"account" => account, "repository" => repository, "id" => id}) do
-    conn |> redirect(to: ~p"/#{account}/#{repository}/prs/#{id}") |> halt()
+    conn |> redirect(to: ~p"/#{account}/#{repository}/prompt-requests/#{id}") |> halt()
   end
 end

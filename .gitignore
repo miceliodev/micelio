@@ -73,3 +73,6 @@ zig-out/
 /mobile/android/.gradle/
 /mobile/android/local.properties
 /mobile/android/**/build/
+
+# Claude Code
+/.claude
