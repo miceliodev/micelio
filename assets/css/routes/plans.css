@@ -21,25 +21,54 @@
   flex-shrink: 0;
 }
 
-.plans-toolbar-left {
+.plans-filter-bar {
   display: flex;
   align-items: center;
   gap: var(--theme-ui-space-2);
+  overflow-x: auto;
+  white-space: nowrap;
+  min-width: 0;
 }
 
-.plans-count {
-  display: flex;
+.plans-filter-btn {
+  display: inline-flex;
   align-items: center;
-  gap: var(--theme-ui-space-0);
+  gap: 4px;
+  padding: 4px 8px;
   font-size: var(--theme-ui-font-size-sm);
-  font-weight: var(--theme-ui-font-weights-semibold);
+  color: var(--theme-ui-colors-muted);
+  background: none;
+  border: none;
+  border-radius: var(--theme-ui-radii-default);
+  cursor: pointer;
+  transition: color 0.1s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.plans-filter-btn:hover {
   color: var(--theme-ui-colors-text);
 }
 
-.plans-count-icon {
-  width: 16px;
-  height: 16px;
+.plans-filter-btn.is-active {
+  color: var(--theme-ui-colors-text);
+  font-weight: var(--theme-ui-font-weights-semibold);
+}
+
+.plans-filter-icon {
+  width: 14px;
+  height: 14px;
   flex-shrink: 0;
+}
+
+.plans-filter-count {
+  font-size: var(--theme-ui-font-size-xs);
+  background-color: var(--theme-ui-colors-border);
+  padding: 0 6px;
+  border-radius: 999px;
+  min-width: 18px;
+  text-align: center;
+  line-height: 1.6;
 }
 
 .plans-empty {
