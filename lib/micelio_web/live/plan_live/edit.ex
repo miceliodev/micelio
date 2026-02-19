@@ -34,7 +34,10 @@ defmodule MicelioWeb.PlanLive.Edit do
         |> PageMeta.assign(
           description: gettext("Edit plan #%{number}.", number: plan.number),
           canonical_url:
-            unverified_url(MicelioWeb.Endpoint, "#{base_path}/prompt-requests/#{plan.number}/edit")
+            unverified_url(
+              MicelioWeb.Endpoint,
+              "#{base_path}/prompt-requests/#{plan.number}/edit"
+            )
         )
         |> assign(:repository, repository)
         |> assign(:organization, organization)

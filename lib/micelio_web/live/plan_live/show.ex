@@ -32,7 +32,8 @@ defmodule MicelioWeb.PlanLive.Show do
         |> assign(:base_path, base_path)
         |> PageMeta.assign(
           description: plan.title,
-          canonical_url: unverified_url(MicelioWeb.Endpoint, "#{base_path}/prompt-requests/#{plan.number}")
+          canonical_url:
+            unverified_url(MicelioWeb.Endpoint, "#{base_path}/prompt-requests/#{plan.number}")
         )
         |> assign(:repository, repository)
         |> assign(:organization, organization)
