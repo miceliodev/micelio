@@ -102,7 +102,7 @@ defmodule Micelio.Sapling.Benchmark do
 
   @spec tool_versions([tool()], keyword()) :: %{tool() => String.t()}
   def tool_versions(tools, opts \\ []) do
-    runner = Keyword.get(opts, :runner, &System.cmd/3)
+    runner = Keyword.get(opts, :runner, &MuonTrap.cmd/3)
 
     tools
     |> Map.new(fn tool ->
@@ -137,7 +137,7 @@ defmodule Micelio.Sapling.Benchmark do
     runs = Keyword.get(opts, :runs, 3)
     scenarios = Keyword.get(opts, :scenarios, build_scenarios())
     tools = Keyword.get(opts, :tools, [:git, :sapling])
-    runner = Keyword.get(opts, :runner, &System.cmd/3)
+    runner = Keyword.get(opts, :runner, &MuonTrap.cmd/3)
     timer = Keyword.get(opts, :timer, &:timer.tc/1)
     env = Keyword.get(opts, :env, [])
 

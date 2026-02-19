@@ -47,7 +47,7 @@ defmodule MicelioWeb.Api.Mobile.RepositoryController do
         "organization_handle" => organization_handle,
         "repository_handle" => repository_handle
       }) do
-    case Micelio.Repositories.get_repository_for_user_by_handle_with_star_count(
+    case Micelio.Repositories.get_repository_for_user_by_handle(
            conn.assigns[:current_user],
            organization_handle,
            repository_handle
@@ -79,7 +79,6 @@ defmodule MicelioWeb.Api.Mobile.RepositoryController do
       handle: repository.handle,
       description: repository.description,
       visibility: repository.visibility,
-      star_count: repository.star_count || 0,
       updated_at: format_datetime(repository.updated_at),
       organization: %{
         id: organization.id,

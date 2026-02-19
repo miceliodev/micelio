@@ -72,7 +72,7 @@ defmodule Micelio.RemoteExecution do
 
   defp run_command(%ExecutionTask{} = task) do
     {stdout, exit_code} =
-      System.cmd(task.command, task.args, env: env_list(task.env), stderr_to_stdout: true)
+      MuonTrap.cmd(task.command, task.args, env: env_list(task.env), stderr_to_stdout: true)
 
     status = if exit_code == 0, do: :succeeded, else: :failed
 

@@ -720,7 +720,7 @@ defmodule MicelioWeb.OpenGraphImage do
 
         try do
           :ok = File.write(path, svg)
-          {png, status} = System.cmd(exec, args)
+          {png, status} = MuonTrap.cmd(exec, args)
           if status == 0, do: {:ok, png}, else: {:error, :convert_failed}
         after
           _ = File.rm(path)

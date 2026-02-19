@@ -65,6 +65,7 @@ defmodule Micelio.MixProject do
       {:grpc, "~> 0.8"},
       {:protobuf, "~> 0.12"},
       {:req, "~> 0.5"},
+      {:muontrap, "~> 1.7"},
       {:telemetry_metrics, "~> 1.0"},
       {:telemetry_poller, "~> 1.0"},
       {:opentelemetry, "~> 1.7"},

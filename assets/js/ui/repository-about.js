@@ -42,46 +42,8 @@ function writeCachedValue(key, data) {
   }
 }
 
-function forgeApiUrl(host, owner, repo) {
-  if (host === "github.com") {
-    return `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}`;
-  }
-
-  if (host === "gitlab.com") {
-    const projectPath = encodeURIComponent(`${owner}/${repo}`);
-    return `https://gitlab.com/api/v4/projects/${projectPath}`;
-  }
-
-  return null;
-}
-
-function parseForgePayload(host, payload) {
-  if (!payload || typeof payload !== "object") return null;
-
-  if (host === "github.com") {
-    return {
-      description: normalizeValue(payload.description),
-      url: normalizeValue(payload.html_url),
-      stars: payload.stargazers_count,
-      forks: payload.forks_count,
-      watchers: payload.subscribers_count,
-      language: normalizeValue(payload.language),
-      license: payload.license ? normalizeValue(payload.license.spdx_id) : null,
-    };
-  }
-
-  if (host === "gitlab.com") {
-    return {
-      description: normalizeValue(payload.description),
-      url: normalizeValue(payload.web_url),
-      stars: payload.star_count,
-      forks: payload.forks_count,
-      language: null,
-      license: null,
-    };
-  }
-
-  return null;
+function forgeAboutUrl(host, owner, repo) {
+  return `/forge-about/${encodeURIComponent(host)}/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}`;
 }
 
 function formatCount(n) {
@@ -161,21 +123,13 @@ async function refreshAboutData(container) {
     applyAboutData(container, cached);
   }
 
-  const url = forgeApiUrl(host, owner, repo);
-  if (!url) return;
+  const url = forgeAboutUrl(host, owner, repo);
 
   try {
-    const response = await fetch(url, {
-      headers:
-        host === "github.com" ? { Accept: "application/vnd.github+json" } : {},
-    });
-
+    const response = await fetch(url);
     if (!response.ok) return;
 
-    const payload = await response.json();
-    const data = parseForgePayload(host, payload);
-    if (!data) return;
-
+    const data = await response.json();
     applyAboutData(container, data);
     writeCachedValue(key, data);
   } catch (_error) {

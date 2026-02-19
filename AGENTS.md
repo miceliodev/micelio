@@ -25,6 +25,10 @@ Use open source icons from https://icones.js.org/ and embed them as inline SVG i
 
 When adding new user interactions that should influence "recent repositories", add them to the repository interaction tracking in the Repositories context and update the relevant controllers/live views to record them.
 
+## IMPORTANT: Command Execution
+
+Use `MuonTrap.cmd/3` instead of `System.cmd/3` for running external commands.
+
 ## IMPORTANT: CLI Design for Agents
 
 **The `mic` CLI must be self-documenting for AI agents.** Agents should be able to learn how to use the CLI just from help output, without needing separate documentation files.

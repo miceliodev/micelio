@@ -27,6 +27,8 @@ defmodule MicelioWeb.ResourcePlug do
         if forge_imported?(repository) do
           conn
           |> put_status(404)
+          |> Phoenix.Controller.put_root_layout(false)
+          |> Phoenix.Controller.put_layout(false)
           |> Phoenix.Controller.put_view(MicelioWeb.Browser.ErrorHTML)
           |> Phoenix.Controller.render("404.html")
           |> halt()

@@ -58,7 +58,7 @@ defmodule Micelio.Sapling.Interoperability do
 
   @spec tool_versions([tool()], keyword()) :: %{tool() => String.t()}
   def tool_versions(tools, opts \\ []) do
-    runner = Keyword.get(opts, :runner, &System.cmd/3)
+    runner = Keyword.get(opts, :runner, &MuonTrap.cmd/3)
 
     tools
     |> Map.new(fn tool ->
@@ -82,7 +82,7 @@ defmodule Micelio.Sapling.Interoperability do
   @spec run(keyword()) :: {:ok, map()}
   def run(opts \\ []) do
     tools = Keyword.get(opts, :tools, @default_tools)
-    runner = Keyword.get(opts, :runner, &System.cmd/3)
+    runner = Keyword.get(opts, :runner, &MuonTrap.cmd/3)
     fs = Keyword.get(opts, :fs, File)
     tmp_root = Keyword.get(opts, :tmp_root, System.tmp_dir!())
     cleanup = Keyword.get(opts, :cleanup, true)

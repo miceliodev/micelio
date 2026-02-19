@@ -2,7 +2,6 @@ defmodule MicelioWeb.Browser.ProfileControllerTest do
   use MicelioWeb.ConnCase, async: true
 
   alias Micelio.Accounts
-  alias Micelio.Repositories
   alias Micelio.Sessions
   alias Micelio.Storage
 
@@ -33,29 +32,6 @@ defmodule MicelioWeb.Browser.ProfileControllerTest do
     assert html =~ "id=\"navbar-user\""
     assert html =~ "href=\"/account\""
     assert html =~ "gravatar.com/avatar/"
-  end
-
-  test "shows favorites list for starred projects", %{conn: conn, user: user} do
-    {:ok, organization} =
-      Accounts.create_organization(%{handle: "favorite-org", name: "Favorite Org"})
-
-    {:ok, repository} =
-      Micelio.Repositories.create_repository(%{
-        handle: "favorite-project",
-        name: "Favorite Project",
-        organization_id: organization.id,
-        visibility: "public"
-      })
-
-    assert {:ok, _star} = Repositories.star_repository(user, repository)
-
-    conn = get(conn, ~p"/account")
-    html = html_response(conn, 200)
-
-    assert html =~ "id=\"account-favorites\""
-    assert html =~ "id=\"account-favorites-list\""
-    assert html =~ "favorite-#{repository.id}"
-    assert html =~ "#{organization.account.handle}/#{repository.handle}"
   end
 
   test "shows owned projects list for admin organizations", %{conn: conn, user: user} do

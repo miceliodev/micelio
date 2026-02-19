@@ -17,13 +17,9 @@ defmodule Micelio.Repositories.Repository do
     field :forge_default_branch, :string
     field :mirror_status, :string, default: "pending"
     field :mirror_last_synced_at, :utc_datetime
-    field :star_count, :integer, virtual: true
-    field :starred, :boolean, virtual: true
-
     belongs_to :forked_from, Micelio.Repositories.Repository
     belongs_to :organization, Micelio.Accounts.Organization
     has_many :forks, Micelio.Repositories.Repository, foreign_key: :forked_from_id
-    has_many :stars, Micelio.Repositories.RepositoryStar
     has_many :access_tokens, Micelio.Repositories.RepositoryAccessToken
     has_many :webhooks, Micelio.Webhooks.Webhook
     has_many :plans, Micelio.Plans.Plan

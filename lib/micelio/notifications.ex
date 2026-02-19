@@ -37,28 +37,6 @@ defmodule Micelio.Notifications do
   end
 
   @doc """
-  Dispatches project starred notifications for a repository.
-  """
-  def dispatch_repository_starred(%Repository{} = repository, actor, opts \\ []) do
-    async = Keyword.get(opts, :async, default_async?())
-
-    if async do
-      case Task.Supervisor.start_child(@supervisor, fn ->
-             deliver_repository_starred(repository, actor)
-           end) do
-        {:ok, _pid} ->
-          :ok
-
-        {:error, reason} ->
-          Logger.warning("notification dispatch failed: #{inspect(reason)}")
-          :error
-      end
-    else
-      deliver_repository_starred(repository, actor)
-    end
-  end
-
-  @doc """
   Delivers session landed emails to organization members.
   """
   def deliver_session_landed(%Repository{} = repository, %Session{} = session) do
@@ -73,34 +51,6 @@ defmodule Micelio.Notifications do
     emails =
       Enum.map(recipients, fn recipient ->
         ActivityEmail.session_landed_email(recipient, repository, session)
-      end)
-
-    case emails do
-      [] ->
-        :ok
-
-      _ ->
-        case Mailer.deliver_many(emails) do
-          {:ok, _} -> :ok
-          {:error, reason} -> {:error, reason}
-        end
-    end
-  end
-
-  @doc """
-  Delivers repository starred emails to organization members.
-  """
-  def deliver_repository_starred(%Repository{} = repository, actor) do
-    repository = Repo.preload(repository, organization: :account)
-
-    recipients =
-      repository.organization_id
-      |> Accounts.list_users_for_organization()
-      |> Enum.filter(&valid_recipient?/1)
-
-    emails =
-      Enum.map(recipients, fn recipient ->
-        ActivityEmail.repository_starred_email(recipient, repository, actor)
       end)
 
     case emails do

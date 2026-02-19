@@ -40,8 +40,6 @@ defmodule Micelio.Accounts.User do
     has_one(:account, Micelio.Accounts.Account)
     has_many(:organization_memberships, Micelio.Accounts.OrganizationMembership)
     has_many(:organizations, through: [:organization_memberships, :organization])
-    has_many(:repository_stars, Micelio.Repositories.RepositoryStar)
-    has_many(:starred_repositories, through: [:repository_stars, :repository])
     has_many(:repository_access_tokens, Micelio.Repositories.RepositoryAccessToken)
     has_many(:plans, Micelio.Plans.Plan)
     has_many(:plan_suggestions, Micelio.Plans.PlanSuggestion)

@@ -21,8 +21,7 @@ defmodule MicelioWeb.Browser.PageController do
         _ ->
           Repositories.list_popular_repositories(
             limit: popular_limit + 1,
-            offset: popular_offset,
-            user: conn.assigns.current_user
+            offset: popular_offset
           )
       end
 

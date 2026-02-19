@@ -125,47 +125,4 @@ defmodule MicelioWeb.RepositoryLiveTest do
 
     assert_redirect(view, ~p"/#{organization.account.handle}/#{repository_handle}")
   end
-
-  test "toggles repository stars from the show view", %{conn: conn} do
-    {:ok, user} = Accounts.get_or_create_user_by_email(unique_email("projects-star"))
-    org_handle = unique_handle("star-org")
-    repository_handle = unique_handle("star-project")
-
-    {:ok, organization} =
-      Accounts.create_organization_for_user(user, %{
-        handle: org_handle,
-        name: "Star Org"
-      })
-
-    {:ok, repository} =
-      Micelio.Repositories.create_repository(%{
-        handle: repository_handle,
-        name: "Star Project",
-        organization_id: organization.id
-      })
-
-    conn = login_user(conn, user)
-
-    {:ok, view, _html} =
-      live(conn, ~p"/#{organization.account.handle}/#{repository.handle}")
-
-    assert has_element?(view, "#repository-star-toggle")
-    assert element(view, "#repository-stars-count") |> render() =~ "Stars: 0"
-
-    view
-    |> element("#repository-star-toggle")
-    |> render_click()
-
-    assert Repositories.repository_starred?(user, repository)
-    assert Repositories.count_repository_stars(repository) == 1
-    assert element(view, "#repository-stars-count") |> render() =~ "Stars: 1"
-
-    view
-    |> element("#repository-star-toggle")
-    |> render_click()
-
-    refute Repositories.repository_starred?(user, repository)
-    assert Repositories.count_repository_stars(repository) == 0
-    assert element(view, "#repository-stars-count") |> render() =~ "Stars: 0"
-  end
 end

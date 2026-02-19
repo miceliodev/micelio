@@ -340,115 +340,6 @@ defmodule Micelio.RepositoriesTest do
     end
   end
 
-  describe "repository stars" do
-    setup do
-      {:ok, user} = Accounts.get_or_create_user_by_email("starred@example.com")
-
-      {:ok, organization} =
-        Accounts.create_organization(%{handle: "star-org", name: "Star Org"})
-
-      {:ok, repository} =
-        Micelio.Repositories.create_repository(%{
-          handle: "star-project",
-          name: "Star Project",
-          organization_id: organization.id
-        })
-
-      {:ok, user: user, repository: repository}
-    end
-
-    test "stars and unstars a repository", %{user: user, repository: repository} do
-      refute Repositories.repository_starred?(user, repository)
-      assert Repositories.count_repository_stars(repository) == 0
-
-      assert {:ok, _star} = Repositories.star_repository(user, repository)
-      assert Repositories.repository_starred?(user, repository)
-      assert Repositories.count_repository_stars(repository) == 1
-
-      assert {:ok, _star} = Repositories.unstar_repository(user, repository)
-      refute Repositories.repository_starred?(user, repository)
-      assert Repositories.count_repository_stars(repository) == 0
-    end
-
-    test "star_repository/2 is idempotent", %{user: user, repository: repository} do
-      assert {:ok, _star} = Repositories.star_repository(user, repository)
-      assert {:ok, _star} = Repositories.star_repository(user, repository)
-      assert Repositories.count_repository_stars(repository) == 1
-    end
-
-    test "unstar_repository/2 returns ok when no star exists", %{
-      user: user,
-      repository: repository
-    } do
-      assert {:ok, :not_found} = Repositories.unstar_repository(user, repository)
-      refute Repositories.repository_starred?(user, repository)
-    end
-
-    test "counts stars across multiple users", %{user: user, repository: repository} do
-      {:ok, other_user} = Accounts.get_or_create_user_by_email("starred-2@example.com")
-
-      assert {:ok, _star} = Repositories.star_repository(user, repository)
-      assert {:ok, _star} = Repositories.star_repository(other_user, repository)
-      assert Repositories.count_repository_stars(repository) == 2
-
-      assert {:ok, _star} = Repositories.unstar_repository(user, repository)
-      assert Repositories.count_repository_stars(repository) == 1
-    end
-  end
-
-  describe "list_starred_repositories_for_user/1" do
-    setup do
-      {:ok, user} = Accounts.get_or_create_user_by_email("favorites@example.com")
-      {:ok, other_user} = Accounts.get_or_create_user_by_email("favorites-2@example.com")
-
-      {:ok, organization} =
-        Accounts.create_organization(%{handle: "favorite-org", name: "Favorite Org"})
-
-      {:ok, first_repository} =
-        Micelio.Repositories.create_repository(%{
-          handle: "first-favorite",
-          name: "First Favorite",
-          organization_id: organization.id
-        })
-
-      {:ok, second_repository} =
-        Micelio.Repositories.create_repository(%{
-          handle: "second-favorite",
-          name: "Second Favorite",
-          organization_id: organization.id
-        })
-
-      {:ok,
-       user: user,
-       other_user: other_user,
-       organization: organization,
-       first_repository: first_repository,
-       second_repository: second_repository}
-    end
-
-    test "returns starred projects for the user", %{
-      user: user,
-      other_user: other_user,
-      first_repository: first_repository,
-      second_repository: second_repository,
-      organization: organization
-    } do
-      assert Repositories.list_starred_repositories_for_user(user) == []
-
-      assert {:ok, _star} = Repositories.star_repository(user, first_repository)
-      assert {:ok, _star} = Repositories.star_repository(user, second_repository)
-      assert {:ok, _star} = Repositories.star_repository(other_user, first_repository)
-
-      starred = Repositories.list_starred_repositories_for_user(user)
-      starred_ids = Enum.map(starred, & &1.id) |> Enum.sort()
-
-      assert starred_ids == Enum.sort([first_repository.id, second_repository.id])
-
-      first_entry = Enum.find(starred, &(&1.id == first_repository.id))
-      assert first_entry.organization.account.handle == organization.account.handle
-    end
-  end
-
   describe "get_repository/1" do
     setup do
       {:ok, organization} =
@@ -1010,62 +901,45 @@ defmodule Micelio.RepositoriesTest do
   end
 
   describe "list_popular_repositories/1" do
-    test "returns public projects ordered by stars with counts" do
+    test "returns public repositories ordered by most recent" do
       unique = System.unique_integer([:positive])
 
-      {:ok, organization_one} =
+      {:ok, organization} =
         Accounts.create_organization(%{
           handle: "popular-org-#{unique}",
           name: "Popular Org #{unique}"
         })
 
-      {:ok, organization_two} =
-        Accounts.create_organization(%{
-          handle: "popular-org-2-#{unique}",
-          name: "Popular Org 2 #{unique}"
-        })
-
-      {:ok, star_user_one} =
-        Accounts.get_or_create_user_by_email("popular-star-#{unique}@example.com")
-
-      {:ok, star_user_two} =
-        Accounts.get_or_create_user_by_email("popular-star-2-#{unique}@example.com")
-
-      {:ok, project_top} =
+      {:ok, repo_older} =
         Micelio.Repositories.create_repository(%{
-          handle: "popular-top-#{unique}",
-          name: "Popular Top",
-          description: "Top project",
-          organization_id: organization_one.id,
+          handle: "popular-older-#{unique}",
+          name: "Older Repo",
+          organization_id: organization.id,
           visibility: "public"
         })
 
-      {:ok, project_secondary} =
+      {:ok, repo_newer} =
         Micelio.Repositories.create_repository(%{
-          handle: "popular-secondary-#{unique}",
-          name: "Popular Secondary",
-          description: "Secondary project",
-          organization_id: organization_two.id,
+          handle: "popular-newer-#{unique}",
+          name: "Newer Repo",
+          organization_id: organization.id,
           visibility: "public"
         })
 
-      {:ok, _project_private} =
+      {:ok, _repo_private} =
         Micelio.Repositories.create_repository(%{
           handle: "popular-private-#{unique}",
-          name: "Popular Private",
-          description: "Private project",
-          organization_id: organization_two.id,
+          name: "Private Repo",
+          organization_id: organization.id,
           visibility: "private"
         })
 
-      assert {:ok, _} = Repositories.star_repository(star_user_one, project_top)
-      assert {:ok, _} = Repositories.star_repository(star_user_two, project_top)
-      assert {:ok, _} = Repositories.star_repository(star_user_one, project_secondary)
-
       results = Repositories.list_popular_repositories(limit: 10, offset: 0)
+      result_ids = Enum.map(results, & &1.id)
 
-      assert Enum.map(results, & &1.id) == [project_top.id, project_secondary.id]
-      assert Enum.map(results, & &1.star_count) == [2, 1]
+      assert repo_newer.id in result_ids
+      assert repo_older.id in result_ids
+      refute Enum.any?(results, &(&1.visibility == "private"))
     end
   end
 

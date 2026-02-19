@@ -49,17 +49,17 @@ msgstr "法律資訊"
 msgid "New organization"
 msgstr "新建組織"
 
-#: lib/micelio_web/controllers/browser/page_html.ex:193
+#: lib/micelio_web/controllers/browser/page_html.ex:106
 #, elixir-autogen, elixir-format
 msgid "Next"
 msgstr "下一頁"
 
-#: lib/micelio_web/controllers/browser/page_html.ex:83
+#: lib/micelio_web/controllers/browser/page_html.ex:84
 #, elixir-autogen, elixir-format
 msgid "No description yet."
 msgstr "暫無描述。"
 
-#: lib/micelio_web/controllers/browser/page_html.ex:184
+#: lib/micelio_web/controllers/browser/page_html.ex:97
 #, elixir-autogen, elixir-format
 msgid "Previous"
 msgstr "上一頁"
@@ -236,32 +236,6 @@ msgstr "權杖交換失敗"
 #, elixir-autogen, elixir-format
 msgid "user fetch failed"
 msgstr "取得使用者失敗"
-
-#: lib/micelio_web/controllers/browser/page_html.ex:108
-#: lib/micelio_web/controllers/browser/page_html.ex:110
-#: lib/micelio_web/controllers/browser/page_html.ex:116
-#: lib/micelio_web/controllers/browser/repository_html/blame.html.heex:46
-#: lib/micelio_web/controllers/browser/repository_html/blame.html.heex:47
-#: lib/micelio_web/controllers/browser/repository_html/blame.html.heex:53
-#, elixir-autogen, elixir-format
-msgid "Pulse"
-msgstr "脈衝"
-
-#: lib/micelio_web/controllers/browser/page_html.ex:166
-#: lib/micelio_web/controllers/browser/repository_html/blame.html.heex:89
-#, elixir-autogen, elixir-format
-msgid "Pulses"
-msgstr "脈衝數"
-
-#: lib/micelio_web/controllers/browser/page_html.ex:108
-#: lib/micelio_web/controllers/browser/page_html.ex:110
-#: lib/micelio_web/controllers/browser/page_html.ex:114
-#: lib/micelio_web/controllers/browser/repository_html/blame.html.heex:46
-#: lib/micelio_web/controllers/browser/repository_html/blame.html.heex:47
-#: lib/micelio_web/controllers/browser/repository_html/blame.html.heex:51
-#, elixir-autogen, elixir-format
-msgid "Unpulse"
-msgstr "取消脈衝"
 
 #: lib/micelio_web/controllers/browser/auth_controller.ex:241
 #, elixir-autogen, elixir-format
@@ -600,7 +574,7 @@ msgstr ""
 msgid "Popular repositories"
 msgstr ""
 
-#: lib/micelio_web/controllers/browser/page_html.ex:177
+#: lib/micelio_web/controllers/browser/page_html.ex:90
 #, elixir-autogen, elixir-format, fuzzy
 msgid "Popular repositories pagination"
 msgstr "熱門專案分頁"
@@ -1179,11 +1153,6 @@ msgstr ""
 msgid "Extra protection for your account."
 msgstr ""
 
-#: lib/micelio_web/controllers/browser/profile_html/show.html.heex:453
-#, elixir-autogen, elixir-format
-msgid "Favorites"
-msgstr ""
-
 #: lib/micelio_web/controllers/browser/profile_html/show.html.heex:41
 #, elixir-autogen, elixir-format
 msgid "Keep it under 160 characters."
@@ -1193,11 +1162,6 @@ msgstr ""
 #, elixir-autogen, elixir-format
 msgid "Manage storage settings"
 msgstr ""
-
-#: lib/micelio_web/controllers/browser/profile_html/show.html.heex:455
-#, elixir-autogen, elixir-format, fuzzy
-msgid "No favorites yet."
-msgstr "暫無描述。"
 
 #: lib/micelio_web/controllers/browser/profile_html/show.html.heex:428
 #, elixir-autogen, elixir-format, fuzzy
@@ -1526,11 +1490,6 @@ msgstr ""
 msgid "Closed"
 msgstr "關閉"
 
-#: lib/micelio_web/live/plan_live/index.ex:116
-#, elixir-autogen, elixir-format
-msgid "Open"
-msgstr ""
-
 #: lib/micelio_web/live/plan_live/new.ex:26
 #, elixir-autogen, elixir-format
 msgid "Create a prompt request for %{name}."
@@ -1550,6 +1509,11 @@ msgstr ""
 #: lib/micelio_web/live/plan_live/new.ex:23
 #, elixir-autogen, elixir-format
 msgid "New prompt request"
+msgstr ""
+
+#: lib/micelio_web/live/plan_live/index.ex:116
+#, elixir-autogen, elixir-format
+msgid "Open"
 msgstr ""
 
 #: lib/micelio_web/live/session_live/show.ex:730
@@ -1593,7 +1557,7 @@ msgid "Submit new prompt request"
 msgstr ""
 
 #: lib/micelio_web/live/plan_live/index.ex:226
-#, elixir-autogen, elixir-format, fuzzy
+#, elixir-autogen, elixir-format
 msgid "There aren't any closed prompt requests."
 msgstr ""
 

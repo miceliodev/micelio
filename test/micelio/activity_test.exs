@@ -1,7 +1,7 @@
 defmodule Micelio.ActivityTest do
   use Micelio.DataCase, async: true
 
-  alias Micelio.{Accounts, Activity, Plans, Projects, Repo, Sessions}
+  alias Micelio.{Accounts, Activity, Plans, Repo, Sessions}
 
   test "list_user_activity_public returns ordered public items" do
     {:ok, user} = Accounts.get_or_create_user_by_email("activity-user@example.com")
@@ -66,19 +66,14 @@ defmodule Micelio.ActivityTest do
         user: user
       )
 
-    {:ok, star} = Repositories.star_repository(user, public_repository)
-    {:ok, _} = Repositories.star_repository(user, private_repository)
-
     now = DateTime.utc_now() |> DateTime.truncate(:second)
     project_created_at = DateTime.add(now, -3600, :second)
     session_landed_at = DateTime.add(now, -7200, :second)
     plan_at = DateTime.add(now, -5400, :second)
-    star_at = DateTime.add(now, -10_800, :second)
 
     update_timestamp(public_repository, %{inserted_at: project_created_at})
     update_session_timestamp(landed_session, %{landed_at: session_landed_at})
     update_timestamp(plan, %{inserted_at: plan_at})
-    update_timestamp(star, %{inserted_at: star_at})
 
     activity =
       Activity.list_user_activity_public(user, [organization.id],
@@ -90,8 +85,7 @@ defmodule Micelio.ActivityTest do
              [
                :repository_created,
                :plan_submitted,
-               :session_landed,
-               :repository_starred
+               :session_landed
              ]
 
     assert Enum.all?(activity.items, fn item -> item.repository.visibility == "public" end)
