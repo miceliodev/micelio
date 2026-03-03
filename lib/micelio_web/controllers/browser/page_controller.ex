@@ -31,7 +31,7 @@ defmodule MicelioWeb.Browser.PageController do
     conn
     |> PageMeta.put(
       title_parts: [],
-      description: "Micelio is a forge designed for agent-first development.",
+      description: "Micelio is a hif forge where humans and agents build software together through sessions.",
       canonical_url: url(~p"/")
     )
     |> assign(:popular_repositories, popular_repositories)

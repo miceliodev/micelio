@@ -124,29 +124,6 @@
   margin-bottom: var(--theme-ui-space-2);
 }
 
-.home-forges {
-  display: flex;
-  align-items: center;
-  gap: var(--theme-ui-space-1);
-  color: var(--theme-ui-colors-muted);
-  font-size: var(--theme-ui-font-size-sm);
-}
-
-.home-forge-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  color: var(--theme-ui-colors-text);
-}
-
-.home-forge-badge svg {
-  flex-shrink: 0;
-}
-
-.home-forges strong {
-  color: var(--theme-ui-colors-text);
-}
-
 .home-overview a {
   color: var(--theme-ui-colors-primary);
   text-decoration: underline;
