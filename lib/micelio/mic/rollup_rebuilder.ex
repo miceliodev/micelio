@@ -59,5 +59,5 @@ defmodule Micelio.Mic.RollupRebuilder do
     end
   end
 
-  defp head_key(repository_id), do: "projects/#{repository_id}/head"
+  defp head_key(repository_id), do: "repositories/#{repository_id}/head"
 end

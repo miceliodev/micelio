@@ -446,7 +446,14 @@ defmodule MicelioWeb.Browser.RepositoryController do
     end
   end
 
-  @readme_candidates ["readme.md", "readme.markdown", "readme.mdown", "readme.txt", "readme"]
+  @readme_candidates [
+    "readme.md",
+    "readme.markdown",
+    "readme.mdown",
+    "readme.txt",
+    "readme",
+    "agents.md"
+  ]
   @readme_markdown_extensions [".md", ".markdown", ".mdown"]
 
   defp readme_for_root(repository_id, tree, entries) do

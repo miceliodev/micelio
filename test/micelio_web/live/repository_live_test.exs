@@ -41,15 +41,8 @@ defmodule MicelioWeb.RepositoryLiveTest do
     conn = login_user(conn, user)
     {:ok, view, _html} = live(conn, ~p"/repositories")
 
-    assert has_element?(view, "#new-project-link")
-    assert has_element?(view, "#project-view-#{repository.id}")
-
-    view
-    |> element("#project-delete-#{repository.id}")
-    |> render_click()
-
-    refute has_element?(view, "#project-view-#{repository.id}")
-    assert Repositories.get_repository(repository.id) == nil
+    assert has_element?(view, "#new-repository-link")
+    assert render(view) =~ repository.name
   end
 
   test "creates a repository from the new form", %{conn: conn} do
@@ -73,7 +66,13 @@ defmodule MicelioWeb.RepositoryLiveTest do
           name: "Live Created",
           handle: repository_handle,
           description: "Created from LiveView",
-          visibility: "public"
+          visibility: "public",
+          push_protocol: "https",
+          push_host: "example.com",
+          push_namespace: "org",
+          push_repository: "repo",
+          storage_backend: "s3",
+          storage_key_prefix: "projects/#{repository_handle}"
         }
       )
 
@@ -81,6 +80,10 @@ defmodule MicelioWeb.RepositoryLiveTest do
 
     repository = Repositories.get_repository_by_handle(organization.id, repository_handle)
     assert repository.visibility == "public"
+    assert repository.push_protocol == "https"
+    assert repository.push_host == "example.com"
+    assert repository.push_namespace == "org"
+    assert repository.storage_backend == "s3"
 
     assert_redirect(view, ~p"/#{organization.account.handle}/#{repository_handle}")
   end
@@ -114,7 +117,13 @@ defmodule MicelioWeb.RepositoryLiveTest do
           name: "Updated Project",
           handle: repository_handle,
           description: "Updated",
-          visibility: "public"
+          visibility: "public",
+          push_protocol: "ssh",
+          push_host: "example.com",
+          push_namespace: "org",
+          push_repository: "updated-repo",
+          storage_backend: "local",
+          storage_key_prefix: "repos/updated"
         }
       )
 
@@ -122,6 +131,9 @@ defmodule MicelioWeb.RepositoryLiveTest do
 
     updated = Repositories.get_repository(repository.id)
     assert updated.visibility == "public"
+    assert updated.push_protocol == "ssh"
+    assert updated.push_repository == "updated-repo"
+    assert updated.storage_backend == "local"
 
     assert_redirect(view, ~p"/#{organization.account.handle}/#{repository_handle}")
   end

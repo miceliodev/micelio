@@ -117,20 +117,20 @@ defmodule Micelio.Mic.Project do
   end
 
   @spec head_key(binary()) :: String.t()
-  def head_key(repository_id) when is_binary(repository_id), do: "projects/#{repository_id}/head"
+  def head_key(repository_id) when is_binary(repository_id), do: "repositories/#{repository_id}/head"
 
   @spec tree_key(binary(), binary()) :: String.t()
   def tree_key(repository_id, tree_hash) when is_binary(repository_id) and is_binary(tree_hash) do
     hash_hex = Base.encode16(tree_hash, case: :lower)
     prefix = String.slice(hash_hex, 0, 2)
-    "projects/#{repository_id}/trees/#{prefix}/#{hash_hex}.bin"
+    "repositories/#{repository_id}/trees/#{prefix}/#{hash_hex}.bin"
   end
 
   @spec blob_key(binary(), binary()) :: String.t()
   def blob_key(repository_id, blob_hash) when is_binary(repository_id) and is_binary(blob_hash) do
     hash_hex = Base.encode16(blob_hash, case: :lower)
     prefix = String.slice(hash_hex, 0, 2)
-    "projects/#{repository_id}/blobs/#{prefix}/#{hash_hex}.bin"
+    "repositories/#{repository_id}/blobs/#{prefix}/#{hash_hex}.bin"
   end
 
   defp normalize_prefix(""), do: ""

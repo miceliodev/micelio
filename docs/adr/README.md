@@ -9,3 +9,5 @@ as the design evolves.
 - [0002 Tiered storage caching](./0002-tiered-storage-caching.md)
 - [0003 ActivityPub federation](./0003-activitypub-federation.md)
 - [0004 Sandboxed agent execution](./0004-sandboxed-agent-execution.md)
+
+For active build-planning ADRs, see [build/adr](../../build/adr/README.md).

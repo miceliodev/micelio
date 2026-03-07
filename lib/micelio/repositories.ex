@@ -846,7 +846,7 @@ defmodule Micelio.Repositories do
     end
   end
 
-  defp repository_storage_prefix(repository_id), do: "projects/#{repository_id}"
+  defp repository_storage_prefix(repository_id), do: "repositories/#{repository_id}"
 
   defp search_visibility_filter(query, %Accounts.User{} = user) do
     organization_ids =

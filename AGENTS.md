@@ -1,6 +1,6 @@
 # Micelio for AI Agents
 
-Micelio is a forge platform built with Elixir/Phoenix, Rust for CLI (`mic`), Zig for NIFs, and vanilla CSS for web UI.
+Micelio is a forge platform built with Elixir/Phoenix, Go for CLI (`mic`), and vanilla CSS for web UI.
 
 ## IMPORTANT: Terminology
 

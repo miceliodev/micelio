@@ -47,19 +47,6 @@ defmodule MicelioWeb.PlanLive.Show do
         |> assign(:comment_input, "")
         |> stream(:messages, messages)
 
-      {plan, socket} =
-        if can_edit and should_ensure_pull_request?(plan) do
-          case Plans.ensure_plan_forge_pull_request(plan, current_user) do
-            {:ok, updated_plan} ->
-              {updated_plan, assign(socket, :plan, updated_plan)}
-
-            {:error, _reason} ->
-              {plan, socket}
-          end
-        else
-          {plan, socket}
-        end
-
       socket =
         if sandbox_running do
           case Plans.reconnect_agentic_session(plan, notify_pid: self()) do
@@ -650,10 +637,6 @@ defmodule MicelioWeb.PlanLive.Show do
   end
 
   defp format_time_ago(_), do: ""
-
-  defp should_ensure_pull_request?(plan) do
-    plan.forge_pr_url in [nil, ""] and plan.forge_pr_provider in [nil, "github", "gitlab"]
-  end
 
   defp sandbox_preview_url(plan), do: sandbox_metadata_url(plan, "preview_url")
   defp sandbox_dashboard_url(plan), do: sandbox_metadata_url(plan, "dashboard_url")

@@ -183,13 +183,13 @@ defmodule Micelio.Mic.Landing do
     DateTime.to_unix(dt, :millisecond)
   end
 
-  defp head_key(repository_id), do: "projects/#{repository_id}/head"
+  defp head_key(repository_id), do: "repositories/#{repository_id}/head"
 
   defp landing_key(repository_id, position),
-    do: "projects/#{repository_id}/landing/#{pad_position(position)}.bin"
+    do: "repositories/#{repository_id}/landing/#{pad_position(position)}.bin"
 
   defp session_summary_key(repository_id, session_id),
-    do: "projects/#{repository_id}/sessions/#{session_id}.bin"
+    do: "repositories/#{repository_id}/sessions/#{session_id}.bin"
 
   defp pad_position(position) do
     position
@@ -200,13 +200,13 @@ defmodule Micelio.Mic.Landing do
   defp tree_key(repository_id, tree_hash) do
     hash_hex = Base.encode16(tree_hash, case: :lower)
     prefix = String.slice(hash_hex, 0, 2)
-    "projects/#{repository_id}/trees/#{prefix}/#{hash_hex}.bin"
+    "repositories/#{repository_id}/trees/#{prefix}/#{hash_hex}.bin"
   end
 
   defp blob_key(repository_id, blob_hash) do
     hash_hex = Base.encode16(blob_hash, case: :lower)
     prefix = String.slice(hash_hex, 0, 2)
-    "projects/#{repository_id}/blobs/#{prefix}/#{hash_hex}.bin"
+    "repositories/#{repository_id}/blobs/#{prefix}/#{hash_hex}.bin"
   end
 
   defp build_tree_hash(session, repository_id, base_tree_hash, override_tree_hash, opts) do

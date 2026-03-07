@@ -9,15 +9,34 @@ export function updateSidebarActive() {
   const path = window.location.pathname;
   const links = sidebar.querySelectorAll(".sidebar-link");
 
+  const normalizePath = (value) => {
+    if (!value) return value;
+    return value.length > 1 ? value.replace(/\/+$/, "") : value;
+  };
+
+  const normalizedPath = normalizePath(path);
+
+  let bestMatch = null;
+
   links.forEach((link) => {
-    const href = link.getAttribute("href");
+    link.classList.remove("sidebar-link-active");
+
+    const href = normalizePath(link.getAttribute("href"));
     if (!href) return;
 
-    const isActive =
+    const isMatch =
       href === "/"
-        ? path === "/"
-        : path === href || path.startsWith(href + "/");
+        ? normalizedPath === "/"
+        : normalizedPath === href || normalizedPath.startsWith(href + "/");
 
-    link.classList.toggle("sidebar-link-active", isActive);
+    if (!isMatch) return;
+
+    if (!bestMatch || href.length > bestMatch.href.length) {
+      bestMatch = {link, href};
+    }
   });
+
+  if (bestMatch) {
+    bestMatch.link.classList.add("sidebar-link-active");
+  }
 }

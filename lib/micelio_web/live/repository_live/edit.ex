@@ -3,6 +3,7 @@ defmodule MicelioWeb.RepositoryLive.Edit do
 
   alias Micelio.Authorization
   alias Micelio.Repositories
+  alias Micelio.Repositories.Repository
   alias MicelioWeb.PageMeta
 
   @impl true
@@ -18,12 +19,12 @@ defmodule MicelioWeb.RepositoryLive.Edit do
             |> Repositories.change_repository()
             |> to_form(as: :repository)
 
-          socket =
-            socket
-            |> assign(:page_title, "Edit Project")
+    socket =
+      socket
+            |> assign(:page_title, "Edit Repository")
             |> assign(:base_path, base_path)
             |> PageMeta.assign(
-              description: "Edit project settings.",
+              description: "Edit repository settings.",
               canonical_url: unverified_url(MicelioWeb.Endpoint, "#{base_path}/edit")
             )
             |> assign(:repository, repository)
@@ -41,7 +42,7 @@ defmodule MicelioWeb.RepositoryLive.Edit do
       _ ->
         {:ok,
          socket
-         |> put_flash(:error, "Project not found.")
+        |> put_flash(:error, "Repository not found.")
          |> push_navigate(to: ~p"/repositories")}
     end
   end
@@ -70,7 +71,7 @@ defmodule MicelioWeb.RepositoryLive.Edit do
         {:ok, _repository} ->
           {:noreply,
            socket
-           |> put_flash(:info, "Project updated successfully!")
+              |> put_flash(:info, "Repository updated successfully!")
            |> push_navigate(to: socket.assigns.base_path)}
 
         {:error, changeset} ->
@@ -90,8 +91,8 @@ defmodule MicelioWeb.RepositoryLive.Edit do
       current_user={@current_user}
     >
       <div class="repository-form-container">
-        <.header>
-          Edit project
+            <.header>
+              Edit repository
           <:subtitle>
             <p>
               {@organization.account.handle}/{@repository.handle}
@@ -110,8 +111,8 @@ defmodule MicelioWeb.RepositoryLive.Edit do
             <.input
               field={@form[:name]}
               type="text"
-              label="Project name"
-              placeholder="My Awesome Project"
+              label="Repository name"
+              placeholder="My Awesome Repository"
               class="repository-input"
               error_class="repository-input repository-input-error"
             />
@@ -121,12 +122,12 @@ defmodule MicelioWeb.RepositoryLive.Edit do
             <.input
               field={@form[:handle]}
               type="text"
-              label="Project handle"
+              label="Repository handle"
               placeholder="awesome-project"
               class="repository-input"
               error_class="repository-input repository-input-error"
             />
-            <p class="repository-form-hint">Handles appear in project URLs.</p>
+              <p class="repository-form-hint">Handles appear in repository URLs.</p>
           </div>
 
           <div class="repository-form-group">
@@ -164,14 +165,75 @@ defmodule MicelioWeb.RepositoryLive.Edit do
             <p class="repository-form-hint">Optional homepage or project URL.</p>
           </div>
 
+          <div class="repository-form-group">
+            <h3>{gettext("Push Transport")}</h3>
+            <.input
+              field={@form[:push_protocol]}
+              type="select"
+              label={gettext("Push protocol")}
+              options={[{gettext("Use platform default"), ""} | Repository.push_protocol_options()]}
+              class="repository-input"
+              error_class="repository-input repository-input-error"
+            />
+            <.input
+              field={@form[:push_host]}
+              type="text"
+              label={gettext("Push host")}
+              placeholder={gettext("forge.example")}
+              class="repository-input"
+              error_class="repository-input repository-input-error"
+            />
+            <.input
+              field={@form[:push_namespace]}
+              type="text"
+              label={gettext("Push namespace")}
+              placeholder={gettext("organization")}
+              class="repository-input"
+              error_class="repository-input repository-input-error"
+            />
+            <.input
+              field={@form[:push_repository]}
+              type="text"
+              label={gettext("Push repository")}
+                  placeholder={@form[:handle].value || gettext("repository-name")}
+              class="repository-input"
+              error_class="repository-input repository-input-error"
+            />
+          </div>
+
+          <div class="repository-form-group">
+            <h3>{gettext("Storage")}</h3>
+            <.input
+              field={@form[:storage_backend]}
+              type="select"
+              label={gettext("Storage backend")}
+              options={[{gettext("Use platform default"), ""} | Repository.storage_backend_options()]}
+              class="repository-input"
+              error_class="repository-input repository-input-error"
+            />
+            <.input
+              field={@form[:storage_key_prefix]}
+              type="text"
+              label={gettext("Storage key prefix")}
+              placeholder={gettext("Optional repository storage prefix")}
+              class="repository-input"
+              error_class="repository-input repository-input-error"
+            />
+            <p class="repository-form-hint">
+              {gettext(
+                "Configure optional per-repository storage behavior for scaling and migration."
+              )}
+            </p>
+          </div>
+
           <div class="repository-form-actions">
-            <button type="submit" class="repository-button" id="project-submit">
-              Save changes
-            </button>
+              <button type="submit" class="repository-button" id="repository-submit">
+                Save changes
+              </button>
             <.link
               navigate={@base_path}
               class="repository-button repository-button-secondary"
-              id="project-cancel"
+              id="repository-cancel"
             >
               Cancel
             </.link>

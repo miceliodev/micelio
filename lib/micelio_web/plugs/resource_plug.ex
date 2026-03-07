@@ -24,28 +24,10 @@ defmodule MicelioWeb.ResourcePlug do
             Repositories.get_repository_by_handle(account.organization_id, repository_handle)
           end
 
-        if forge_imported?(repository) do
-          conn
-          |> put_status(404)
-          |> Phoenix.Controller.put_root_layout(false)
-          |> Phoenix.Controller.put_layout(false)
-          |> Phoenix.Controller.put_view(MicelioWeb.Browser.ErrorHTML)
-          |> Phoenix.Controller.render("404.html")
-          |> halt()
-        else
-          assign(conn, :selected_repository, repository)
-        end
+        assign(conn, :selected_repository, repository)
 
       _ ->
         assign(conn, :selected_repository, nil)
     end
   end
-
-  defp forge_imported?(%{forge_host: host, forge_owner: owner, forge_repo: repo})
-       when is_binary(host) and host != "" and is_binary(owner) and owner != "" and
-              is_binary(repo) and repo != "" do
-    true
-  end
-
-  defp forge_imported?(_), do: false
 end

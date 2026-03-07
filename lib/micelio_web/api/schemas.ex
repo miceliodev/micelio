@@ -31,6 +31,12 @@ defmodule MicelioWeb.Api.Schemas do
         name: %Schema{type: :string},
         description: %Schema{type: :string, nullable: true},
         url: %Schema{type: :string, nullable: true},
+        push_protocol: %Schema{type: :string, nullable: true, enum: ["https", "ssh"]},
+        push_host: %Schema{type: :string, nullable: true},
+        push_namespace: %Schema{type: :string, nullable: true},
+        push_repository: %Schema{type: :string, nullable: true},
+        storage_backend: %Schema{type: :string, nullable: true, enum: ["local", "s3", "tiered"]},
+        storage_key_prefix: %Schema{type: :string, nullable: true},
         visibility: %Schema{type: :string, enum: ["public", "private"]},
         organization_handle: %Schema{type: :string},
         inserted_at: %Schema{type: :string, format: :"date-time"},
@@ -63,6 +69,12 @@ defmodule MicelioWeb.Api.Schemas do
         handle: %Schema{type: :string, description: "URL-safe identifier"},
         name: %Schema{type: :string, description: "Display name"},
         description: %Schema{type: :string, nullable: true},
+        push_protocol: %Schema{type: :string, nullable: true},
+        push_host: %Schema{type: :string, nullable: true},
+        push_namespace: %Schema{type: :string, nullable: true},
+        push_repository: %Schema{type: :string, nullable: true},
+        storage_backend: %Schema{type: :string, nullable: true},
+        storage_key_prefix: %Schema{type: :string, nullable: true},
         visibility: %Schema{type: :string, enum: ["public", "private"], default: "private"}
       },
       required: [:handle, :name]
@@ -78,8 +90,96 @@ defmodule MicelioWeb.Api.Schemas do
       properties: %{
         name: %Schema{type: :string},
         description: %Schema{type: :string, nullable: true},
-        visibility: %Schema{type: :string, enum: ["public", "private"]}
+        visibility: %Schema{type: :string, enum: ["public", "private"]},
+        push_protocol: %Schema{type: :string, nullable: true},
+        push_host: %Schema{type: :string, nullable: true},
+        push_namespace: %Schema{type: :string, nullable: true},
+        push_repository: %Schema{type: :string, nullable: true},
+        storage_backend: %Schema{type: :string, nullable: true},
+        storage_key_prefix: %Schema{type: :string, nullable: true}
       }
+    })
+  end
+
+  defmodule PushChange do
+    require OpenApiSpex
+
+    OpenApiSpex.schema(%{
+      title: "PushChange",
+      type: :object,
+      properties: %{
+        path: %Schema{type: :string},
+        change_type: %Schema{type: :string, enum: ["added", "modified", "deleted"]},
+        content: %Schema{
+          type: :string,
+          nullable: true,
+          description: "Required for added and modified changes."
+        }
+      },
+      required: [:path, :change_type]
+    })
+  end
+
+  defmodule PushRequest do
+    require OpenApiSpex
+
+    OpenApiSpex.schema(%{
+      title: "PushRequest",
+      type: :object,
+      properties: %{
+        goal: %Schema{type: :string, description: "What this repository push is for"},
+        changes: %Schema{type: :array, items: PushChange}
+      },
+      required: [:goal, :changes]
+    })
+  end
+
+  defmodule PushStats do
+    require OpenApiSpex
+
+    OpenApiSpex.schema(%{
+      title: "PushStats",
+      type: :object,
+      properties: %{
+        total: %Schema{type: :integer},
+        added: %Schema{type: :integer},
+        modified: %Schema{type: :integer},
+        deleted: %Schema{type: :integer}
+      },
+      required: [:total, :added, :modified, :deleted]
+    })
+  end
+
+  defmodule PushResponse do
+    require OpenApiSpex
+
+    OpenApiSpex.schema(%{
+      title: "PushResponse",
+      type: :object,
+      properties: %{
+        data: %Schema{
+          type: :object,
+          properties: %{
+            session: %Schema{
+              type: :object,
+              properties: %{
+                id: %Schema{type: :string, format: :uuid},
+                session_id: %Schema{type: :string},
+                goal: %Schema{type: :string},
+                status: %Schema{type: :string, enum: ["active", "landed", "abandoned"]},
+                started_at: %Schema{type: :string, format: :"date-time", nullable: true},
+                landed_at: %Schema{type: :string, format: :"date-time", nullable: true},
+                inserted_at: %Schema{type: :string, format: :"date-time"},
+                updated_at: %Schema{type: :string, format: :"date-time"}
+              }
+            },
+            landing_position: %Schema{type: :integer},
+            landed_at: %Schema{type: :string, format: :"date-time"},
+            stats: PushStats
+          }
+        }
+      },
+      required: [:data]
     })
   end
 

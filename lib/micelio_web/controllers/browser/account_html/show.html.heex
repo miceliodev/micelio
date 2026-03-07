@@ -8,18 +8,20 @@
   <div class="account-page">
     <.header>
       <span class="account-title-with-forge">
-        <%= if github_forge?(@account_forge_namespace) do %>
-          <svg
-            class="account-title-forge-icon"
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            fill="currentColor"
-            aria-hidden="true"
-          >
-            <path d="M12 2a10 10 0 0 0-3.162 19.49c.5.092.682-.218.682-.483c0-.237-.009-.867-.014-1.7c-2.776.603-3.362-1.339-3.362-1.339c-.454-1.153-1.108-1.46-1.108-1.46c-.906-.619.069-.607.069-.607c1.001.071 1.527 1.03 1.527 1.03c.89 1.527 2.336 1.086 2.905.831c.091-.645.349-1.086.636-1.336c-2.217-.252-4.55-1.108-4.55-4.932c0-1.089.389-1.98 1.029-2.678c-.103-.253-.446-1.269.097-2.646c0 0 .84-.269 2.75 1.023A9.564 9.564 0 0 1 12 6.844c.85.004 1.706.115 2.504.337c1.909-1.292 2.748-1.023 2.748-1.023c.545 1.377.202 2.393.1 2.646c.64.698 1.028 1.589 1.028 2.678c0 3.833-2.337 4.677-4.56 4.925c.359.309.678.919.678 1.852c0 1.336-.012 2.414-.012 2.743c0 .268.18.58.688.481A10 10 0 0 0 12 2z" />
-          </svg>
-        <% end %>
-        <span>{account_display_name(@account, @organization, @account_forge_namespace)}</span>
+        <svg
+          class="account-title-forge-icon"
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
+          <circle cx="12" cy="12" r="10" />
+        </svg>
+        <span>{account_display_name(@account)}</span>
       </span>
       <:actions>
         <%= if @organization && @organization_admin? do %>
@@ -36,7 +38,7 @@
         <% social_links = MicelioWeb.ProfileLinks.social_links(@user) %>
         <div class="account-subtitle">
           <span class="account-handle">
-            {account_reference_label(@account, @account_forge_namespace)}
+            {account_reference_label(@account)}
           </span>
           <%= if @reputation do %>
             <div class="account-reputation" id="account-reputation">
@@ -110,7 +112,10 @@
                     class="account-activity-repository"
                     href={MicelioWeb.RepositoryURL.base_path(activity.repository)}
                   >
-                    {String.trim_leading(MicelioWeb.RepositoryURL.base_path(activity.repository), "/")}
+                    {String.trim_leading(
+                      MicelioWeb.RepositoryURL.base_path(activity.repository),
+                      "/"
+                    )}
                   </a>
                 </div>
                 <time

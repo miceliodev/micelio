@@ -4,6 +4,7 @@ defmodule MicelioWeb.RepositoryLive.Show do
   alias Micelio.Authorization
   alias Micelio.Plans
   alias Micelio.Repositories
+  alias Micelio.Repositories.Repository
   alias Micelio.Sessions
   alias MicelioWeb.PageMeta
 
@@ -23,17 +24,19 @@ defmodule MicelioWeb.RepositoryLive.Show do
 
           session_count = Sessions.count_sessions_for_repository(repository)
           plan_count = Plans.count_plans_for_repository(repository)
+          push_url = Repository.push_url(repository)
 
           socket =
             socket
             |> assign(:page_title, repository.name)
             |> PageMeta.assign(
-              description: repository.description || "Project overview.",
+              description: repository.description || gettext("Repository overview."),
               canonical_url: url(~p"/#{organization.account.handle}/#{repository.handle}")
             )
             |> assign(:repository, repository)
             |> assign(:organization, organization)
             |> assign(:recent_sessions, recent_sessions)
+            |> assign(:push_url, push_url)
             |> assign(:session_count, session_count)
             |> assign(:plan_count, plan_count)
 
@@ -55,7 +58,7 @@ defmodule MicelioWeb.RepositoryLive.Show do
       {:error, _reason} ->
         {:ok,
          socket
-         |> put_flash(:error, "Project not found.")
+         |> put_flash(:error, gettext("Repository not found."))
          |> push_navigate(to: ~p"/repositories")}
     end
   end
@@ -70,7 +73,7 @@ defmodule MicelioWeb.RepositoryLive.Show do
 
       {:noreply,
        socket
-       |> put_flash(:info, "Project deleted successfully.")
+       |> put_flash(:info, gettext("Repository deleted successfully."))
        |> push_navigate(to: ~p"/repositories")}
     else
       {:noreply, put_flash(socket, :error, "You do not have access to this repository.")}
@@ -85,21 +88,31 @@ defmodule MicelioWeb.RepositoryLive.Show do
       current_scope={@current_scope}
       current_user={@current_user}
     >
-      <div class="project-show-container">
+      <div class="repository-show-container">
         <.header>
           {@repository.name}
           <:subtitle>
-            <div class="project-show-handle">
+            <div class="repository-show-handle">
               {@organization.account.handle}/{@repository.handle}
             </div>
             <%= if @repository.description do %>
-              <p class="project-show-description">{@repository.description}</p>
+              <p class="repository-show-description">{@repository.description}</p>
             <% end %>
             <%= if @repository.url do %>
-              <p class="project-show-url">
+                <p class="repository-show-url">
                 <a href={@repository.url} target="_blank" rel="noopener noreferrer">
                   {@repository.url}
                 </a>
+              </p>
+            <% end %>
+
+            <%= if @repository.push_protocol do %>
+              <p class="repository-show-description">
+                {gettext("Push endpoint:")} <code>{@push_url || ""}</code>
+              </p>
+              <p class="repository-show-description">
+                {gettext("Push protocol:")} {@repository.push_protocol} | {gettext("Storage backend:")} {@repository.storage_backend ||
+                  gettext("default")}
               </p>
             <% end %>
           </:subtitle>
@@ -107,15 +120,15 @@ defmodule MicelioWeb.RepositoryLive.Show do
             <%= if Authorization.authorize(:repository_update, @current_user, @repository) == :ok do %>
               <.link
                 navigate={~p"/#{@organization.account.handle}/#{@repository.handle}/edit"}
-                class="project-show-action project-show-action-edit"
+                class="repository-show-action repository-show-action-edit"
                 id="project-edit"
               >
                 Edit
               </.link>
               <button
                 type="button"
-                class="project-show-action project-show-action-delete"
-                id="project-delete"
+                class="repository-show-action repository-show-action-delete"
+                id="repository-delete"
                 phx-click="delete"
                 phx-confirm="Delete this repository?"
               >
@@ -125,23 +138,23 @@ defmodule MicelioWeb.RepositoryLive.Show do
           </:actions>
         </.header>
 
-        <div class="project-show-navigation">
+        <div class="repository-show-navigation">
           <.link
             navigate={~p"/#{@organization.account.handle}/#{@repository.handle}/sessions"}
-            class="project-show-nav-link"
+            class="repository-show-nav-link"
           >
             Sessions ({@session_count})
           </.link>
           <.link
             navigate={~p"/#{@organization.account.handle}/#{@repository.handle}/prompt-requests"}
-            class="project-show-nav-link"
+            class="repository-show-nav-link"
           >
             Plans ({@plan_count})
           </.link>
         </div>
 
         <%= if not Enum.empty?(@recent_sessions) do %>
-          <div class="project-recent-sessions">
+          <div class="repository-recent-sessions">
             <h2>Recent Sessions</h2>
             <div class="sessions-list-compact">
               <%= for session <- @recent_sessions do %>
@@ -162,7 +175,7 @@ defmodule MicelioWeb.RepositoryLive.Show do
             </div>
             <.link
               navigate={~p"/#{@organization.account.handle}/#{@repository.handle}/sessions"}
-              class="project-show-action"
+              class="repository-show-action"
             >
               View all sessions
             </.link>

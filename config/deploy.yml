@@ -8,14 +8,14 @@ volumes:
 servers:
   web:
     hosts:
-      - 91.98.64.68
+      - 89.167.26.150
     env:
       clear:
         PHX_SERVER: "true"
         MICELIO_GRPC_ENABLED: "false"
   grpc:
     hosts:
-      - 91.98.64.68
+      - 89.167.26.150
     proxy:
       host: api.micelio.dev
       app_port: 50051
@@ -40,14 +40,13 @@ proxy:
   app_port: 4000
 
 registry:
-  server: 91.98.64.68:5000
-  username: micelio
-  password:
-    - KAMAL_REGISTRY_PASSWORD
+  server: localhost:5555
+
 
 builder:
   arch: arm64
-  remote: ssh://root@91.98.64.68
+  remote: ssh://root@89.167.26.150
+  context: .
 
 env:
   clear:
@@ -92,7 +91,7 @@ env:
 accessories:
   postgres:
     image: postgres:17
-    host: 91.98.64.68
+    host: 89.167.26.150
     port: 5432
     env:
       clear:
@@ -104,13 +103,13 @@ accessories:
       - data:/var/lib/postgresql/data
   registry:
     image: registry:2
-    host: 91.98.64.68
+    host: 89.167.26.150
     port: 5000
     directories:
       - data:/var/lib/registry
   clickhouse:
     image: clickhouse/clickhouse-server:24.8
-    host: 91.98.64.68
+    host: 89.167.26.150
     port: 8123
     env:
       clear:
@@ -122,7 +121,7 @@ accessories:
       - data:/var/lib/clickhouse
   loki:
     image: grafana/loki:3.4
-    host: 91.98.64.68
+    host: 89.167.26.150
     port: "3100"
     files:
       - config/loki/config.yaml:/etc/loki/config.yaml
@@ -131,7 +130,7 @@ accessories:
       - data:/loki
   tempo:
     image: grafana/tempo:2.8.3
-    host: 91.98.64.68
+    host: 89.167.26.150
     port: "3200:3200"
     options:
       publish:
@@ -144,7 +143,7 @@ accessories:
       - data:/var/tempo
   prometheus:
     image: prom/prometheus:v3.2.1
-    host: 91.98.64.68
+    host: 89.167.26.150
     port: "9090"
     files:
       - config/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
@@ -153,7 +152,7 @@ accessories:
       - data:/prometheus
   alloy:
     image: grafana/alloy:latest
-    host: 91.98.64.68
+    host: 89.167.26.150
     port: "12345:12345"
     options:
       publish:
@@ -171,7 +170,7 @@ accessories:
     cmd: run --server.http.listen-addr=0.0.0.0:12345 --storage.path=/var/lib/alloy/data /etc/alloy/config.alloy
   grafana:
     image: grafana/grafana:11.5
-    host: 91.98.64.68
+    host: 89.167.26.150
     proxy:
       host: data.micelio.dev
       app_port: 3000
@@ -194,7 +193,7 @@ accessories:
       - data:/var/lib/grafana
   plausible-db:
     image: postgres:16-alpine
-    host: 91.98.64.68
+    host: 89.167.26.150
     env:
       secret:
         - POSTGRES_PASSWORD:PLAUSIBLE_POSTGRES_PASSWORD
@@ -202,7 +201,7 @@ accessories:
       - data:/var/lib/postgresql/data
   plausible-events-db:
     image: clickhouse/clickhouse-server:24.12-alpine
-    host: 91.98.64.68
+    host: 89.167.26.150
     env:
       clear:
         CLICKHOUSE_SKIP_USER_SETUP: "1"
@@ -218,7 +217,7 @@ accessories:
       - config/plausible/clickhouse/default-profile-low-resources-overrides.xml:/etc/clickhouse-server/users.d/default-profile-low-resources-overrides.xml
   plausible:
     image: ghcr.io/plausible/community-edition:v3.2.0
-    host: 91.98.64.68
+    host: 89.167.26.150
     proxy:
       host: analytics.micelio.dev
       app_port: 8000

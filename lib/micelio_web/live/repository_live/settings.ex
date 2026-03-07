@@ -120,7 +120,7 @@ defmodule MicelioWeb.RepositoryLive.Settings do
 
           <.form
             for={@form}
-            id="project-settings-form"
+            id="repository-settings-form"
             phx-change="validate"
             phx-submit="save"
             class="repository-form"
@@ -130,7 +130,7 @@ defmodule MicelioWeb.RepositoryLive.Settings do
                 field={@form[:name]}
                 type="text"
                 label="Repository name"
-                placeholder="My Project"
+                placeholder="My Repository"
                 class="repository-input"
                 error_class="repository-input repository-input-error"
               />
@@ -160,13 +160,13 @@ defmodule MicelioWeb.RepositoryLive.Settings do
             </div>
 
             <div class="repository-form-actions">
-              <button type="submit" class="repository-button" id="project-settings-submit">
+              <button type="submit" class="repository-button" id="repository-settings-submit">
                 Save changes
               </button>
               <.link
                 navigate={@base_path}
                 class="repository-button repository-button-secondary"
-                id="project-settings-cancel"
+                id="repository-settings-cancel"
               >
                 Cancel
               </.link>

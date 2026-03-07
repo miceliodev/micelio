@@ -2,17 +2,79 @@ defmodule Micelio.Repo.Migrations.AddForgePrFieldsToPlans do
   use Ecto.Migration
 
   def change do
-    alter table(:plans) do
-      add :forge_branch_name, :string, size: 255
-      add :forge_pr_provider, :string, size: 32
-      add :forge_pr_number, :integer
-      add :forge_pr_url, :string, size: 1024
-      add :forge_pr_state, :string, size: 32
-      add :forge_pr_draft, :boolean, default: true, null: false
-      add :forge_pr_synced_at, :utc_datetime
-      add :forge_pr_metadata, :map, default: %{}, null: false
-    end
+    execute("""
+    DO $$
+    BEGIN
+      IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_schema = 'public'
+          AND table_name = 'plans'
+          AND column_name = 'forge_branch_name'
+      ) THEN
+        ALTER TABLE plans ADD COLUMN forge_branch_name varchar(255);
+      END IF;
+      IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_schema = 'public'
+          AND table_name = 'plans'
+          AND column_name = 'forge_pr_provider'
+      ) THEN
+        ALTER TABLE plans ADD COLUMN forge_pr_provider varchar(32);
+      END IF;
+      IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_schema = 'public'
+          AND table_name = 'plans'
+          AND column_name = 'forge_pr_number'
+      ) THEN
+        ALTER TABLE plans ADD COLUMN forge_pr_number integer;
+      END IF;
+      IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_schema = 'public'
+          AND table_name = 'plans'
+          AND column_name = 'forge_pr_url'
+      ) THEN
+        ALTER TABLE plans ADD COLUMN forge_pr_url varchar(1024);
+      END IF;
+      IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_schema = 'public'
+          AND table_name = 'plans'
+          AND column_name = 'forge_pr_state'
+      ) THEN
+        ALTER TABLE plans ADD COLUMN forge_pr_state varchar(32);
+      END IF;
+      IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_schema = 'public'
+          AND table_name = 'plans'
+          AND column_name = 'forge_pr_draft'
+      ) THEN
+        ALTER TABLE plans ADD COLUMN forge_pr_draft boolean DEFAULT true NOT NULL;
+      END IF;
+      IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_schema = 'public'
+          AND table_name = 'plans'
+          AND column_name = 'forge_pr_synced_at'
+      ) THEN
+        ALTER TABLE plans ADD COLUMN forge_pr_synced_at timestamp;
+      END IF;
+      IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_schema = 'public'
+          AND table_name = 'plans'
+          AND column_name = 'forge_pr_metadata'
+      ) THEN
+        ALTER TABLE plans ADD COLUMN forge_pr_metadata jsonb DEFAULT '{}'::jsonb NOT NULL;
+      END IF;
+    END
+    $$;
+    """)
 
-    create index(:plans, [:forge_pr_provider, :forge_pr_number])
+    execute(
+      "CREATE INDEX IF NOT EXISTS plans_forge_pr_provider_forge_pr_number_index ON plans (forge_pr_provider, forge_pr_number);"
+    )
   end
 end

@@ -131,6 +131,65 @@ defmodule Micelio.RepositoriesTest do
 
       assert "is invalid" in errors_on(changeset).visibility
     end
+
+    test "requires all push config fields when partially configured", %{
+      organization: organization
+    } do
+      changeset =
+        Repository.changeset(%Repository{}, %{
+          organization_id: organization.id,
+          handle: "push-project",
+          name: "Push Project",
+          push_protocol: "https",
+          push_host: "github.com"
+        })
+
+      assert "can't be blank" in errors_on(changeset).push_namespace
+      assert "can't be blank" in errors_on(changeset).push_repository
+    end
+
+    test "validates ssh push host cannot include a port", %{organization: organization} do
+      changeset =
+        Repository.changeset(%Repository{}, %{
+          organization_id: organization.id,
+          handle: "push-ssh",
+          name: "Push SSH",
+          push_protocol: "ssh",
+          push_host: "example.com:22",
+          push_namespace: "org",
+          push_repository: "repo"
+        })
+
+      assert "is invalid" in errors_on(changeset).push_host
+    end
+
+    test "builds push_url for repository transport", %{organization: organization} do
+      changeset =
+        Repository.changeset(%Repository{}, %{
+          organization_id: organization.id,
+          handle: "push-url",
+          name: "Push URL",
+          push_protocol: "https",
+          push_host: "example.com",
+          push_namespace: "org",
+          push_repository: "repo"
+        })
+
+      repository = Ecto.Changeset.apply_changes(changeset)
+      assert Repository.push_url(repository) == "https://example.com/org/repo.git"
+    end
+
+    test "requires storage backend and key prefix together", %{organization: organization} do
+      changeset =
+        Repository.changeset(%Repository{}, %{
+          organization_id: organization.id,
+          handle: "storage-project",
+          name: "Storage Project",
+          storage_backend: "s3"
+        })
+
+      assert "can't be blank" in errors_on(changeset).storage_key_prefix
+    end
   end
 
   describe "create_repository/1" do

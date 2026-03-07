@@ -64,6 +64,19 @@ defmodule MicelioWeb.Browser.RepositoryControllerTest do
     assert elem(lib_index, 0) < elem(readme_index, 0)
   end
 
+  test "uses account handle for repository breadcrumb identity", %{
+    conn: conn,
+    organization: organization,
+    repository: repository
+  } do
+    conn = get(conn, ~p"/#{organization.account.handle}/#{repository.handle}")
+    html = html_response(conn, 200)
+
+    assert html =~ organization.account.handle
+    assert html =~ repository.handle
+    refute html =~ "M12 2a10 10"
+  end
+
   test "shows agent progress link on repository page", %{
     conn: conn,
     organization: organization,

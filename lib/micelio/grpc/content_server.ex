@@ -72,7 +72,7 @@ defmodule Micelio.GRPC.Content.V1.ContentService.Server do
   end
 
   defp load_tree_at_position(repository_id, position) do
-    landing_key = "projects/#{repository_id}/landing/#{pad_position(position)}.bin"
+    landing_key = "repositories/#{repository_id}/landing/#{pad_position(position)}.bin"
 
     case Storage.get(landing_key) do
       {:ok, content} ->
@@ -214,18 +214,18 @@ defmodule Micelio.GRPC.Content.V1.ContentService.Server do
     |> Enum.map(fn {path, hash} -> %TreeEntry{path: path, hash: hash} end)
   end
 
-  defp head_key(repository_id), do: "projects/#{repository_id}/head"
+  defp head_key(repository_id), do: "repositories/#{repository_id}/head"
 
   defp tree_key(repository_id, tree_hash) do
     hash_hex = Base.encode16(tree_hash, case: :lower)
     prefix = String.slice(hash_hex, 0, 2)
-    "projects/#{repository_id}/trees/#{prefix}/#{hash_hex}.bin"
+    "repositories/#{repository_id}/trees/#{prefix}/#{hash_hex}.bin"
   end
 
   defp blob_key(repository_id, blob_hash) do
     hash_hex = Base.encode16(blob_hash, case: :lower)
     prefix = String.slice(hash_hex, 0, 2)
-    "projects/#{repository_id}/blobs/#{prefix}/#{hash_hex}.bin"
+    "repositories/#{repository_id}/blobs/#{prefix}/#{hash_hex}.bin"
   end
 
   defp fetch_user(user_id, stream) do

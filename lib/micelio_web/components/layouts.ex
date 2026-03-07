@@ -108,6 +108,32 @@ defmodule MicelioWeb.Layouts do
           <div class="navbar-breadcrumb">
             {render_slot(@breadcrumb)}
           </div>
+        <% else %>
+          <%= if @repository_nav do %>
+            <% repository_base_path =
+              @repository_nav[:base_path] ||
+                "/#{@repository_nav.account_handle}/#{@repository_nav.repository_handle}" %>
+            <% active_label =
+              case @repository_nav[:active] do
+                :prompt_requests -> gettext("Prompt requests")
+                :sessions -> gettext("Sessions")
+                :settings -> gettext("Settings")
+                _ -> nil
+              end %>
+            <div class="navbar-breadcrumb">
+              <a href={~p"/#{@repository_nav.account_handle}"} class="navbar-breadcrumb-link">
+                {@repository_nav.account_handle}
+              </a>
+              <span class="navbar-breadcrumb-sep">/</span>
+              <a href={repository_base_path} class="navbar-breadcrumb-link">
+                {@repository_nav.repository_handle}
+              </a>
+              <%= if active_label do %>
+                <span class="navbar-breadcrumb-sep">/</span>
+                <span class="navbar-breadcrumb-current">{active_label}</span>
+              <% end %>
+            </div>
+          <% end %>
         <% end %>
 
         <div class="navbar-end">
@@ -177,8 +203,8 @@ defmodule MicelioWeb.Layouts do
                 else
                   sidebar_active?(@current_path, settings_path)
                 end %>
-              <a
-                href={repository_base_path}
+              <.link
+                navigate={repository_base_path}
                 class={[
                   "sidebar-link",
                   home_active && "sidebar-link-active"
@@ -202,9 +228,9 @@ defmodule MicelioWeb.Layouts do
                   </svg>
                 </span>
                 {gettext("Home")}
-              </a>
-              <a
-                href={prompt_requests_path}
+              </.link>
+              <.link
+                navigate={prompt_requests_path}
                 class={[
                   "sidebar-link",
                   prompt_requests_active && "sidebar-link-active"
@@ -228,9 +254,9 @@ defmodule MicelioWeb.Layouts do
                   </svg>
                 </span>
                 {gettext("Prompt requests")}
-              </a>
-              <a
-                href={sessions_path}
+              </.link>
+              <.link
+                navigate={sessions_path}
                 class={[
                   "sidebar-link",
                   sessions_active && "sidebar-link-active"
@@ -253,10 +279,10 @@ defmodule MicelioWeb.Layouts do
                   </svg>
                 </span>
                 {gettext("Sessions")}
-              </a>
-              <a
+              </.link>
+              <.link
                 :if={@repository_nav[:show_settings?]}
-                href={settings_path}
+                navigate={settings_path}
                 class={[
                   "sidebar-link",
                   settings_active && "sidebar-link-active"
@@ -279,7 +305,7 @@ defmodule MicelioWeb.Layouts do
                   </svg>
                 </span>
                 {gettext("Settings")}
-              </a>
+              </.link>
             <% else %>
               <%= if assigns[:current_user] do %>
                 <a
@@ -548,12 +574,14 @@ defmodule MicelioWeb.Layouts do
 
         <footer class="site-footer" id="site-footer">
           <div class="site-footer-content">
-            <nav class="site-footer-nav" aria-label={gettext("Legal")}>
-              <a href={locale_path(assigns, "/terms")}>{gettext("terms")}</a>
-              <a href={locale_path(assigns, "/privacy")}>{gettext("privacy")}</a>
-              <a href={locale_path(assigns, "/cookies")}>{gettext("cookies")}</a>
-              <a href={locale_path(assigns, "/impressum")}>{gettext("impressum")}</a>
-            </nav>
+            <%= if marketing_footer?(assigns) do %>
+              <nav class="site-footer-nav" aria-label={gettext("Legal")}>
+                <a href={locale_path(assigns, "/terms")}>{gettext("terms")}</a>
+                <a href={locale_path(assigns, "/privacy")}>{gettext("privacy")}</a>
+                <a href={locale_path(assigns, "/cookies")}>{gettext("cookies")}</a>
+                <a href={locale_path(assigns, "/impressum")}>{gettext("impressum")}</a>
+              </nav>
+            <% end %>
 
             <div class="site-footer-meta-group">
               <div class="site-footer-locale">
@@ -572,6 +600,21 @@ defmodule MicelioWeb.Layouts do
       </div>
     </div>
     """
+  end
+
+  defp marketing_footer?(assigns) when is_map(assigns) do
+    current_path = Map.get(assigns, :current_path, "/")
+
+    marketing_root?(current_path) ||
+      String.starts_with?(current_path, "/blog") ||
+      String.starts_with?(current_path, "/docs") ||
+      String.starts_with?(current_path, "/changelog")
+  end
+
+  defp marketing_footer?(assigns), do: marketing_footer?(Map.new(assigns))
+
+  defp marketing_root?(path) do
+    path in ["/", "/privacy", "/terms", "/cookies", "/impressum"]
   end
 
   # Using imported gravatar_url from CoreComponents

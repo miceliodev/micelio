@@ -361,7 +361,7 @@ defmodule MicelioWeb.Browser.ApiTryController do
   @zero_hash <<0::size(256)>>
 
   defp load_head_tree(repository_id) do
-    case Storage.get("projects/#{repository_id}/head") do
+    case Storage.get("repositories/#{repository_id}/head") do
       {:ok, content} ->
         with {:ok, head} <- Binary.decode_head(content),
              {:ok, tree} <- load_tree(repository_id, head.tree_hash) do
@@ -385,7 +385,7 @@ defmodule MicelioWeb.Browser.ApiTryController do
     hash_hex = Base.encode16(tree_hash, case: :lower)
     prefix = String.slice(hash_hex, 0, 2)
 
-    case Storage.get("projects/#{repository_id}/trees/#{prefix}/#{hash_hex}.bin") do
+    case Storage.get("repositories/#{repository_id}/trees/#{prefix}/#{hash_hex}.bin") do
       {:ok, content} ->
         case MicTree.decode(content) do
           {:ok, tree} -> {:ok, tree}
@@ -400,15 +400,15 @@ defmodule MicelioWeb.Browser.ApiTryController do
   defp load_blob(repository_id, blob_hash) do
     hash_hex = Base.encode16(blob_hash, case: :lower)
     prefix = String.slice(hash_hex, 0, 2)
-    key = "projects/#{repository_id}/blobs/#{prefix}/#{hash_hex}.bin"
+    key = "repositories/#{repository_id}/blobs/#{prefix}/#{hash_hex}.bin"
 
     case Storage.get(key) do
       {:ok, content} ->
         case DeltaCompression.decode(content, fn hash ->
                inner_hex = Base.encode16(hash, case: :lower)
                inner_prefix = String.slice(inner_hex, 0, 2)
-               Storage.get("projects/#{repository_id}/blobs/#{inner_prefix}/#{inner_hex}.bin")
-             end) do
+               Storage.get("repositories/#{repository_id}/blobs/#{inner_prefix}/#{inner_hex}.bin")
+            end) do
           {:ok, decoded} -> {:ok, decoded}
           _ -> {:error, :not_found}
         end

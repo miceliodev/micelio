@@ -249,17 +249,17 @@ defmodule MicelioWeb.Api.V1.ContentController do
     Enum.filter(entries, fn {path, _hash} -> String.starts_with?(path, prefix) end)
   end
 
-  defp head_key(repository_id), do: "projects/#{repository_id}/head"
+  defp head_key(repository_id), do: "repositories/#{repository_id}/head"
 
   defp tree_key(repository_id, tree_hash) do
     hash_hex = Base.encode16(tree_hash, case: :lower)
     prefix = String.slice(hash_hex, 0, 2)
-    "projects/#{repository_id}/trees/#{prefix}/#{hash_hex}.bin"
+    "repositories/#{repository_id}/trees/#{prefix}/#{hash_hex}.bin"
   end
 
   defp blob_key(repository_id, blob_hash) do
     hash_hex = Base.encode16(blob_hash, case: :lower)
     prefix = String.slice(hash_hex, 0, 2)
-    "projects/#{repository_id}/blobs/#{prefix}/#{hash_hex}.bin"
+    "repositories/#{repository_id}/blobs/#{prefix}/#{hash_hex}.bin"
   end
 end

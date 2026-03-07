@@ -202,18 +202,18 @@ defmodule Micelio.Mic.ConflictIndex do
   end
 
   defp landing_key(repository_id, position),
-    do: "projects/#{repository_id}/landing/#{pad_position(position)}.bin"
+    do: "repositories/#{repository_id}/landing/#{pad_position(position)}.bin"
 
   defp rollup_key(repository_id, level, start_position) do
-    "projects/#{repository_id}/landing/bloom/level-#{level}/#{pad_position(start_position)}.bin"
+    "repositories/#{repository_id}/landing/bloom/level-#{level}/#{pad_position(start_position)}.bin"
   end
 
   defp path_index_key(repository_id, position) do
-    "projects/#{repository_id}/landing/paths/#{pad_position(position)}.bin"
+    "repositories/#{repository_id}/landing/paths/#{pad_position(position)}.bin"
   end
 
   defp checkpoint_key(repository_id, level) do
-    "projects/#{repository_id}/landing/bloom/checkpoint/level-#{level}.bin"
+    "repositories/#{repository_id}/landing/bloom/checkpoint/level-#{level}.bin"
   end
 
   defp pad_position(position) do

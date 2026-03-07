@@ -16,6 +16,7 @@ defmodule Micelio.Storage do
 
   alias Micelio.Audit
   alias Micelio.Repo
+  alias Micelio.Repositories.Repository
   alias Micelio.Storage.S3Config
   alias Micelio.Storage.S3Validator
 
@@ -36,7 +37,8 @@ defmodule Micelio.Storage do
   end
 
   def put(key, content, opts) when is_binary(key) and is_list(opts) do
-    call_backend(:put, [key, content], opts)
+    {scoped_key, scoped_opts} = scope_repository_storage(key, opts)
+    call_backend(:put, [scoped_key, content], scoped_opts)
   end
 
   @doc """
@@ -58,7 +60,8 @@ defmodule Micelio.Storage do
   end
 
   def get(key, opts) when is_binary(key) and is_list(opts) do
-    call_backend(:get, [key], opts)
+    {scoped_key, scoped_opts} = scope_repository_storage(key, opts)
+    call_backend(:get, [scoped_key], scoped_opts)
   end
 
   @doc """
@@ -80,7 +83,8 @@ defmodule Micelio.Storage do
   end
 
   def get_with_metadata(key, opts) do
-    call_backend(:get_with_metadata, [key], opts)
+    {scoped_key, scoped_opts} = scope_repository_storage(key, opts)
+    call_backend(:get_with_metadata, [scoped_key], scoped_opts)
   end
 
   @doc """
@@ -91,7 +95,8 @@ defmodule Micelio.Storage do
   end
 
   def delete(key, opts) when is_binary(key) and is_list(opts) do
-    call_backend(:delete, [key], opts)
+    {scoped_key, scoped_opts} = scope_repository_storage(key, opts)
+    call_backend(:delete, [scoped_key], scoped_opts)
   end
 
   @doc """
@@ -113,7 +118,8 @@ defmodule Micelio.Storage do
   end
 
   def list(prefix, opts) do
-    call_backend(:list, [prefix], opts)
+    {scoped_prefix, scoped_opts} = scope_repository_storage(prefix, opts)
+    call_backend(:list, [scoped_prefix], scoped_opts)
   end
 
   @doc """
@@ -124,7 +130,8 @@ defmodule Micelio.Storage do
   end
 
   def exists?(key, opts) do
-    call_backend(:exists?, [key], opts)
+    {scoped_key, scoped_opts} = scope_repository_storage(key, opts)
+    call_backend(:exists?, [scoped_key], scoped_opts)
   end
 
   @doc """
@@ -137,12 +144,13 @@ defmodule Micelio.Storage do
   end
 
   def cdn_url(key, opts) when is_binary(key) do
-    config = storage_config(opts)
+    {scoped_key, scoped_opts} = scope_repository_storage(key, opts)
+    config = storage_config(scoped_opts)
 
     case Keyword.get(config, :cdn_base_url) do
       base when is_binary(base) and base != "" ->
         base = String.trim_trailing(base, "/")
-        "#{base}/#{encode_cdn_key(key)}"
+        "#{base}/#{encode_cdn_key(scoped_key)}"
 
       _ ->
         nil
@@ -157,7 +165,8 @@ defmodule Micelio.Storage do
   end
 
   def head(key, opts) do
-    call_backend(:head, [key], opts)
+    {scoped_key, scoped_opts} = scope_repository_storage(key, opts)
+    call_backend(:head, [scoped_key], scoped_opts)
   end
 
   @doc """
@@ -168,7 +177,8 @@ defmodule Micelio.Storage do
   end
 
   def put_if_match(key, content, etag, opts) do
-    call_backend(:put_if_match, [key, content, etag], opts)
+    {scoped_key, scoped_opts} = scope_repository_storage(key, opts)
+    call_backend(:put_if_match, [scoped_key, content, etag], scoped_opts)
   end
 
   @doc """
@@ -179,7 +189,8 @@ defmodule Micelio.Storage do
   end
 
   def put_if_none_match(key, content, opts) do
-    call_backend(:put_if_none_match, [key, content], opts)
+    {scoped_key, scoped_opts} = scope_repository_storage(key, opts)
+    call_backend(:put_if_none_match, [scoped_key, content], scoped_opts)
   end
 
   @doc """
@@ -335,8 +346,97 @@ defmodule Micelio.Storage do
   end
 
   defp storage_config(opts) do
-    Keyword.get(opts, :storage_config, Application.get_env(:micelio, __MODULE__, []))
+    resolve_storage_config(opts)
   end
+
+  defp resolve_storage_config(opts) do
+    explicit_config = Keyword.get(opts, :storage_config)
+
+    if explicit_config do
+      explicit_config
+    else
+      default_config = Application.get_env(:micelio, __MODULE__, [])
+      repository_from_opts(opts) |> maybe_override_storage_backend(default_config)
+    end
+  end
+
+  defp maybe_override_storage_backend(nil, config), do: config
+
+  defp maybe_override_storage_backend(%Repository{} = repository, config) when is_list(config) do
+    case repository.storage_backend do
+      "local" -> Keyword.put(config, :backend, :local)
+      "s3" -> Keyword.put(config, :backend, :s3)
+      "tiered" -> Keyword.put(config, :backend, :tiered)
+      _ -> config
+    end
+  end
+
+  defp repository_from_opts(opts) do
+    opts
+    |> Keyword.get(:repository, Keyword.get(opts, :repository_id))
+    |> maybe_load_repository()
+  end
+
+  defp maybe_load_repository(%Repository{} = repository), do: repository
+
+  defp maybe_load_repository(repository_id) when is_binary(repository_id) do
+    case Ecto.UUID.cast(repository_id) do
+      {:ok, uuid} -> Repo.get(Repository, uuid)
+      _ -> nil
+    end
+  end
+
+  defp maybe_load_repository(_), do: nil
+
+  defp scope_repository_storage(key, opts) when is_binary(key) and is_list(opts) do
+    repository = repository_for_key(key, opts)
+    scoped_key = apply_repository_key_prefix(key, repository)
+
+    scoped_opts =
+      if Keyword.has_key?(opts, :repository) or Keyword.has_key?(opts, :repository_id) do
+        opts
+      else
+        if repository do
+          Keyword.put_new(opts, :repository, repository)
+        else
+          opts
+        end
+      end
+
+    {scoped_key, scoped_opts}
+  end
+
+  defp apply_repository_key_prefix(key, %Repository{storage_key_prefix: prefix})
+       when is_binary(prefix) and prefix != "" do
+    Path.join([String.trim(prefix, "/"), String.trim_leading(key, "/")])
+  end
+
+  defp apply_repository_key_prefix(key, _), do: key
+
+  defp repository_for_key(key, opts) when is_binary(key) and is_list(opts) do
+    opts
+    |> Keyword.get(:repository, Keyword.get(opts, :repository_id))
+    |> maybe_load_repository()
+    |> case do
+      nil -> parse_repository_from_key(key)
+      repository -> repository
+    end
+  end
+
+  defp parse_repository_from_key(key) when is_binary(key) do
+    trimmed_key = String.trim_leading(key, "/")
+
+    with [prefix, repository_id | _] <- String.split(trimmed_key, "/"),
+         true <- prefix in ["projects", "repositories"],
+         {:ok, uuid} <- Ecto.UUID.cast(repository_id),
+         %Repository{} = repository <- Repo.get(Repository, uuid) do
+      repository
+    else
+      _ -> nil
+    end
+  end
+
+  defp parse_repository_from_key(_), do: nil
 
   defp default_local_path do
     Path.join([System.tmp_dir!(), "micelio", "storage"])

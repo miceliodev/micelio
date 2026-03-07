@@ -83,6 +83,8 @@ defmodule MicelioWeb.Browser.AccountControllerTest do
     assert html =~ "account-repository-#{public_repository.id}"
     assert html =~ "/#{organization.account.handle}/#{public_repository.handle}"
     refute html =~ "/#{organization.account.handle}/#{private_repository.handle}"
+    assert html =~ "@#{user.account.handle}"
     assert html =~ "aria-label=\"1 contributions\""
+    refute html =~ "M12 2a10 10"
   end
 end

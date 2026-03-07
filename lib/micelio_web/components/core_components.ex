@@ -397,47 +397,8 @@ defmodule MicelioWeb.CoreComponents do
   slot :inner_block, required: true
 
   def repository_header(assigns) do
-    assigns =
-      assign(
-        assigns,
-        :resolved_base_path,
-        assigns.base_path || "/#{assigns.account_handle}/#{assigns.repository_handle}"
-      )
-
     ~H"""
     <div class="repository-page">
-      <div class="repository-header" id="repository-header">
-        <div class="repository-header-info">
-          <h1 class="repository-header-name">
-            <svg
-              class="repository-header-icon"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.5"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              aria-hidden="true"
-            >
-              <path d="M3 19a9 9 0 0 1 9 0a9 9 0 0 1 9 0" />
-              <path d="M3 6a9 9 0 0 1 9 0a9 9 0 0 1 9 0" />
-              <path d="M3 6v13" />
-              <path d="M12 6v13" />
-              <path d="M21 6v13" />
-            </svg>
-            <.link navigate={"/#{@account_handle}"} class="repository-header-owner">
-              {@account_handle}
-            </.link>
-            <span class="repository-header-sep">/</span>
-            <.link
-              navigate={@resolved_base_path}
-              class="repository-header-repo"
-            >
-              {@repository_handle}
-            </.link>
-          </h1>
-        </div>
-      </div>
       {render_slot(@inner_block)}
     </div>
     """

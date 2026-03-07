@@ -14,53 +14,15 @@ defmodule MicelioWeb.Browser.AccountHTML do
   def plan_origin_value(origin) when is_binary(origin), do: origin
   def plan_origin_value(_), do: "unknown"
 
-  def account_display_name(account, organization, forge_namespace) do
-    cond do
-      is_map(forge_namespace) and is_binary(forge_namespace.owner) and forge_namespace.owner != "" ->
-        forge_namespace.owner
-
-      organization && is_binary(organization.name) && String.trim(organization.name) != "" ->
-        organization.name
-
-      true ->
-        account.handle
-    end
+  def account_display_name(account) do
+    account.handle
   end
 
-  def account_reference_label(account, forge_namespace) do
-    if is_map(forge_namespace) and is_binary(forge_namespace.host) and
-         is_binary(forge_namespace.owner) and forge_namespace.host != "" and
-         forge_namespace.owner != "" do
-      "#{forge_namespace.host}/#{forge_namespace.owner}"
-    else
-      "@#{account.handle}"
-    end
+  def account_reference_label(account) do
+    "@#{account.handle}"
   end
 
   def repository_reference_label(repository) do
-    host = normalize_forge_value(repository.forge_host)
-    owner = normalize_forge_value(repository.forge_owner)
-    repo = normalize_forge_value(repository.forge_repo) || repository.handle
-
-    if host && owner && repo do
-      "#{host}/#{owner}/#{repo}"
-    else
-      "#{repository.organization.account.handle}/#{repository.handle}"
-    end
+    "#{repository.organization.account.handle}/#{repository.handle}"
   end
-
-  def github_forge?(forge_namespace) do
-    is_map(forge_namespace) and forge_namespace.provider == "github"
-  end
-
-  defp normalize_forge_value(value) when is_binary(value) do
-    value
-    |> String.trim()
-    |> case do
-      "" -> nil
-      trimmed -> trimmed
-    end
-  end
-
-  defp normalize_forge_value(_), do: nil
 end

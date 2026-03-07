@@ -413,7 +413,7 @@ defmodule Micelio.GRPC.Sessions.V1.SessionService.Server do
     end
   end
 
-  defp head_key(repository_id), do: "projects/#{repository_id}/head"
+  defp head_key(repository_id), do: "repositories/#{repository_id}/head"
 
   defp fetch_user(user_id, stream) do
     if require_auth_token?(stream) do

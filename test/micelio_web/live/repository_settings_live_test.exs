@@ -45,10 +45,10 @@ defmodule MicelioWeb.RepositorySettingsLiveTest do
     {:ok, view, _html} =
       live(conn, ~p"/#{organization.account.handle}/#{repository.handle}/settings")
 
-    assert has_element?(view, "#project-settings-form")
+    assert has_element?(view, "#repository-settings-form")
 
     form =
-      form(view, "#project-settings-form",
+      form(view, "#repository-settings-form",
         repository: %{
           name: "Updated Repo",
           description: "Updated description",
@@ -91,7 +91,7 @@ defmodule MicelioWeb.RepositorySettingsLiveTest do
       live(conn, ~p"/#{organization.account.handle}/#{repository.handle}/settings")
 
     form =
-      form(view, "#project-settings-form",
+      form(view, "#repository-settings-form",
         repository: %{
           name: "Handle Settings Repo Updated",
           visibility: "public"
@@ -190,10 +190,10 @@ defmodule MicelioWeb.RepositorySettingsLiveTest do
     {:ok, view, _html} =
       live(conn, ~p"/#{organization.account.handle}/#{repository.handle}/settings")
 
-    refute has_element?(view, "#project-settings-form .form-error")
+    refute has_element?(view, "#repository-settings-form .form-error")
 
     form =
-      form(view, "#project-settings-form",
+      form(view, "#repository-settings-form",
         repository: %{
           name: ""
         }
@@ -201,7 +201,7 @@ defmodule MicelioWeb.RepositorySettingsLiveTest do
 
     render_change(form)
 
-    assert has_element?(view, "#project-settings-form .form-error")
+    assert has_element?(view, "#repository-settings-form .form-error")
   end
 
   test "keeps repository param names after submit errors", %{conn: conn} do
@@ -228,7 +228,7 @@ defmodule MicelioWeb.RepositorySettingsLiveTest do
       live(conn, ~p"/#{organization.account.handle}/#{repository.handle}/settings")
 
     form =
-      form(view, "#project-settings-form",
+    form(view, "#repository-settings-form",
         repository: %{
           name: ""
         }

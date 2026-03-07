@@ -24,9 +24,9 @@ defmodule MicelioWeb.RepositoryLive.New do
 
     socket =
       socket
-      |> assign(:page_title, "New Project")
+      |> assign(:page_title, "New Repository")
       |> PageMeta.assign(
-        description: "Create a new project.",
+        description: "Create a new repository.",
         canonical_url: url(~p"/repositories/new")
       )
       |> assign(:organizations, organizations)
@@ -72,7 +72,7 @@ defmodule MicelioWeb.RepositoryLive.New do
             {:ok, repository} ->
               {:noreply,
                socket
-               |> put_flash(:info, "Project created successfully!")
+               |> put_flash(:info, "Repository created successfully!")
                |> push_navigate(to: ~p"/#{organization.account.handle}/#{repository.handle}")}
 
             {:error, changeset} ->
@@ -94,7 +94,7 @@ defmodule MicelioWeb.RepositoryLive.New do
     >
       <div class="repository-form-container">
         <.header>
-          New project
+          New repository
           <:subtitle>
             <p>Create a repository under one of your organizations.</p>
           </:subtitle>
@@ -103,11 +103,11 @@ defmodule MicelioWeb.RepositoryLive.New do
         <%= if Enum.empty?(@organizations) do %>
           <div class="projects-empty">
             <h2>No organizations available</h2>
-            <p>You need to own an organization before you can create projects.</p>
+            <p>You need to own an organization before you can create repositories.</p>
             <.link
               navigate={~p"/organizations/new"}
               class="repository-button"
-              id="create-organization-from-projects"
+              id="create-organization-from-repositories"
             >
               Create an organization
             </.link>
@@ -135,8 +135,8 @@ defmodule MicelioWeb.RepositoryLive.New do
               <.input
                 field={@form[:name]}
                 type="text"
-                label="Project name"
-                placeholder="My Awesome Project"
+                label="Repository name"
+                placeholder="My Awesome Repository"
                 class="repository-input"
                 error_class="repository-input repository-input-error"
               />
@@ -146,12 +146,12 @@ defmodule MicelioWeb.RepositoryLive.New do
               <.input
                 field={@form[:handle]}
                 type="text"
-                label="Project handle"
-                placeholder="awesome-project"
+                label="Repository handle"
+                placeholder="awesome-repository"
                 class="repository-input"
                 error_class="repository-input repository-input-error"
               />
-              <p class="repository-form-hint">Handles appear in project URLs.</p>
+              <p class="repository-form-hint">Handles appear in repository URLs.</p>
             </div>
 
             <div class="repository-form-group">
@@ -186,7 +186,76 @@ defmodule MicelioWeb.RepositoryLive.New do
                 class="repository-input"
                 error_class="repository-input repository-input-error"
               />
-              <p class="repository-form-hint">Optional homepage or project URL.</p>
+              <p class="repository-form-hint">Optional homepage or repository URL.</p>
+            </div>
+
+            <div class="repository-form-group">
+              <h3>{gettext("Push Transport")}</h3>
+              <.input
+                field={@form[:push_protocol]}
+                type="select"
+                label={gettext("Push protocol")}
+                options={[{gettext("Use platform default"), ""} | Repository.push_protocol_options()]}
+                class="repository-input"
+                error_class="repository-input repository-input-error"
+              />
+              <p class="repository-form-hint">
+                {gettext("Leave all fields blank for private, auto-managed storage.")}
+              </p>
+            </div>
+
+            <div class="repository-form-group">
+              <.input
+                field={@form[:push_host]}
+                type="text"
+                label={gettext("Push host")}
+                placeholder={gettext("github.com")}
+                class="repository-input"
+                error_class="repository-input repository-input-error"
+              />
+              <.input
+                field={@form[:push_namespace]}
+                type="text"
+                label={gettext("Push namespace")}
+                placeholder={gettext("organization")}
+                class="repository-input"
+                error_class="repository-input repository-input-error"
+              />
+              <.input
+                field={@form[:push_repository]}
+                type="text"
+                label={gettext("Push repository")}
+                placeholder={@form[:handle].value || gettext("repository-name")}
+                class="repository-input"
+                error_class="repository-input repository-input-error"
+              />
+            </div>
+
+            <div class="repository-form-group">
+              <h3>{gettext("Storage")}</h3>
+              <.input
+                field={@form[:storage_backend]}
+                type="select"
+                label={gettext("Storage backend")}
+                options={[
+                  {gettext("Use platform default"), ""} | Repository.storage_backend_options()
+                ]}
+                class="repository-input"
+                error_class="repository-input repository-input-error"
+              />
+              <.input
+                field={@form[:storage_key_prefix]}
+                type="text"
+                label={gettext("Storage key prefix")}
+                placeholder={gettext("Optional repository storage prefix")}
+                class="repository-input"
+                error_class="repository-input repository-input-error"
+              />
+              <p class="repository-form-hint">
+                {gettext(
+                  "Set a backend and key prefix for large-scale deployments (S3, JuiceFS-backed S3, tiered cache)."
+                )}
+              </p>
             </div>
 
             <div class="repository-form-actions">

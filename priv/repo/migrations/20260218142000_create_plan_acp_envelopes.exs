@@ -2,18 +2,27 @@ defmodule Micelio.Repo.Migrations.CreatePlanAcpEnvelopes do
   use Ecto.Migration
 
   def change do
-    create table(:plan_acp_envelopes, primary_key: false) do
-      add :id, :binary_id, primary_key: true
-      add :plan_id, references(:plans, type: :binary_id, on_delete: :delete_all), null: false
-      add :direction, :string, size: 32, null: false
-      add :event_type, :string, size: 120, null: false
-      add :payload, :map, null: false, default: %{}
-      add :sequence, :integer, null: false
+    execute("""
+    CREATE TABLE IF NOT EXISTS plan_acp_envelopes (
+      id uuid PRIMARY KEY NOT NULL,
+      plan_id uuid NOT NULL REFERENCES plans(id) ON DELETE CASCADE,
+      direction text NOT NULL,
+      event_type text NOT NULL,
+      payload jsonb NOT NULL DEFAULT '{}'::jsonb,
+      sequence integer NOT NULL,
+      inserted_at timestamp(0) NOT NULL,
+      updated_at timestamp(0) NOT NULL
+    );
+    """)
 
-      timestamps(type: :utc_datetime)
-    end
+    execute("""
+    CREATE INDEX IF NOT EXISTS plan_acp_envelopes_plan_id_index
+      ON plan_acp_envelopes (plan_id);
+    """)
 
-    create index(:plan_acp_envelopes, [:plan_id])
-    create index(:plan_acp_envelopes, [:plan_id, :sequence])
+    execute("""
+    CREATE INDEX IF NOT EXISTS plan_acp_envelopes_plan_id_sequence_index
+      ON plan_acp_envelopes (plan_id, sequence);
+    """)
   end
 end

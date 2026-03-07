@@ -82,10 +82,6 @@ defmodule MicelioWeb.Router do
     plug(MicelioWeb.ResourcePlug, :load_repository)
   end
 
-  pipeline :forge_resources do
-    plug(MicelioWeb.Plugs.ForgeResourcePlug)
-  end
-
   pipeline :og_image do
     plug(:put_secure_browser_headers)
   end
@@ -105,6 +101,10 @@ defmodule MicelioWeb.Router do
       live_dashboard("/dashboard", metrics: MicelioWeb.Telemetry)
       forward("/mailbox", Plug.Swoosh.MailboxPreview)
     end
+
+    # Plug.Debugger actions are handled via POST only; guard against browser GETs
+    # against the internal debugger action endpoint.
+    get "/__plug__/debugger/action", MicelioWeb.Browser.DebuggerController, :method_not_allowed
   end
 
   # Sandbox module serving (authenticated via per-sandbox tokens)
@@ -224,6 +224,8 @@ defmodule MicelioWeb.Router do
     post("/orgs/:org/repositories/:repo/sessions", SessionController, :create)
     get("/sessions/:session_id", SessionController, :show)
     post("/sessions/:session_id/land", SessionController, :land)
+
+    post("/orgs/:org/repositories/:repository/push", RepositoryController, :push)
 
     # Plans
     get("/orgs/:org/repositories/:repo/plans", PlanController, :index)
@@ -396,64 +398,6 @@ defmodule MicelioWeb.Router do
   end
 
   # Forge per-repository routes
-  for forge <- ["github.com", "gitlab.com"] do
-    scope "/", MicelioWeb do
-      pipe_through([:browser, :require_auth, :forge_resources])
-
-      live_session :"forge_#{String.replace(forge, ".", "_")}_management",
-        on_mount: [
-          {MicelioWeb.ForgeMount, forge},
-          {MicelioWeb.LiveAuth, :require_auth},
-          MicelioWeb.LiveOpenGraphCacheBuster
-        ] do
-        live("/#{forge}/:owner/:repo/edit", RepositoryLive.Edit, :edit)
-        live("/#{forge}/:owner/:repo/sessions", SessionLive.Index, :index)
-        live("/#{forge}/:owner/:repo/sessions/:id", SessionLive.Show, :show)
-        live("/#{forge}/:owner/:repo/prompt-requests/new", PlanLive.New, :new)
-        live("/#{forge}/:owner/:repo/prompt-requests/:number/edit", PlanLive.Edit, :edit)
-      end
-    end
-
-    scope "/", MicelioWeb do
-      pipe_through([:browser, :require_auth, :forge_resources])
-
-      live_session :"forge_#{String.replace(forge, ".", "_")}_settings",
-        on_mount: [
-          {MicelioWeb.ForgeMount, forge},
-          {MicelioWeb.LiveAuth, :require_auth},
-          MicelioWeb.LiveOpenGraphCacheBuster
-        ] do
-        live("/#{forge}/:owner/:repo/settings", RepositoryLive.Settings, :edit)
-        live("/#{forge}/:owner/:repo/settings/webhooks", RepositoryLive.Webhooks, :index)
-      end
-    end
-
-    scope "/", MicelioWeb do
-      pipe_through([:browser, :forge_resources])
-
-      live_session :"forge_#{String.replace(forge, ".", "_")}_public",
-        on_mount: [
-          {MicelioWeb.ForgeMount, forge},
-          {MicelioWeb.LiveAuth, :current_user},
-          MicelioWeb.LiveOpenGraphCacheBuster
-        ] do
-        live("/#{forge}/:owner/:repo/agents", AgentLive.Index, :index)
-        live("/#{forge}/:owner/:repo/prompt-requests", PlanLive.Index, :index)
-        live("/#{forge}/:owner/:repo/prompt-requests/:number", PlanLive.Show, :show)
-      end
-    end
-
-    scope "/", MicelioWeb.Browser do
-      pipe_through([:browser, :require_auth, :forge_resources])
-
-      post(
-        "/#{forge}/:owner/:repo/token-contributions",
-        RepositoryController,
-        :contribute_tokens
-      )
-    end
-  end
-
   # Per-repository routes (require authentication)
   scope "/", MicelioWeb do
     pipe_through([:browser, :require_auth, :load_resources])
@@ -588,21 +532,6 @@ defmodule MicelioWeb.Router do
     get("/cookies", LegalController, :cookies)
     get("/impressum", LegalController, :impressum)
     get("/search", SearchController, :index)
-  end
-
-  # Forge URLs served directly (controller routes)
-  scope "/", MicelioWeb.Browser do
-    pipe_through([:browser, :forge_resources])
-
-    get("/github.com/:owner/:repo", RepositoryController, :show)
-    get("/github.com/:owner/:repo/tree/*path", RepositoryController, :tree)
-    get("/github.com/:owner/:repo/blob/*path", RepositoryController, :blob)
-    get("/github.com/:owner/:repo/blame/*path", RepositoryController, :blame)
-
-    get("/gitlab.com/:owner/:repo", RepositoryController, :show)
-    get("/gitlab.com/:owner/:repo/tree/*path", RepositoryController, :tree)
-    get("/gitlab.com/:owner/:repo/blob/*path", RepositoryController, :blob)
-    get("/gitlab.com/:owner/:repo/blame/*path", RepositoryController, :blame)
   end
 
   scope "/", MicelioWeb.Browser do

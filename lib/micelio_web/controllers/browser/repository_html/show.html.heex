@@ -27,24 +27,21 @@
           aria-haspopup="true"
         >
           <span class="navbar-breadcrumb-forge-label">
-            <%= if github_repository?(@repository) do %>
-              <svg
-                class="navbar-breadcrumb-forge-icon"
-                xmlns="http://www.w3.org/2000/svg"
-                width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="1.8"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                aria-hidden="true"
-              >
-                <path d="M9 19c-5 1.5-5-2.5-7-3" />
-                <path d="M14 22v-3.87a3.37 3.37 0 0 0 -.94-2.61c3.14 -.35 6.44 -1.54 6.44 -7A5.44 5.44 0 0 0 18 4.77A5.07 5.07 0 0 0 17.91 1S16.73 .65 14 2.48a13.38 13.38 0 0 0 -5 0C6.27 .65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0 -1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22" />
-              </svg>
-            <% end %>
+            <svg
+              class="navbar-breadcrumb-forge-icon"
+              xmlns="http://www.w3.org/2000/svg"
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <circle cx="12" cy="12" r="10" fill="none" />
+            </svg>
             <span>{account_breadcrumb_owner_label(@repository, @account)}</span>
           </span>
           <svg
@@ -81,40 +78,21 @@
                 ]}
               >
                 <span class="navbar-breadcrumb-menu-label">
-                  <%= if github_account?(acct) do %>
-                    <svg
-                      class="navbar-breadcrumb-menu-icon"
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="14"
-                      height="14"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="1.8"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      aria-hidden="true"
-                    >
-                      <path d="M9 19c-5 1.5-5-2.5-7-3" />
-                      <path d="M14 22v-3.87a3.37 3.37 0 0 0 -.94-2.61c3.14 -.35 6.44 -1.54 6.44 -7A5.44 5.44 0 0 0 18 4.77A5.07 5.07 0 0 0 17.91 1S16.73 .65 14 2.48a13.38 13.38 0 0 0 -5 0C6.27 .65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0 -1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22" />
-                    </svg>
-                  <% else %>
-                    <svg
-                      class="navbar-breadcrumb-menu-icon"
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="14"
-                      height="14"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      aria-hidden="true"
-                    >
-                      <circle cx="12" cy="7" r="4" /><path d="M6 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2" />
-                    </svg>
-                  <% end %>
+                  <svg
+                    class="navbar-breadcrumb-menu-icon"
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                  >
+                    <circle cx="12" cy="7" r="4" /><path d="M6 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2" />
+                  </svg>
                   {account_switcher_label(acct)}
                 </span>
                 <%= if acct.handle == @account.handle do %>
@@ -141,24 +119,21 @@
       <% else %>
         <a href={~p"/#{@account.handle}"} class="navbar-breadcrumb-link">
           <span class="navbar-breadcrumb-forge-label">
-            <%= if github_repository?(@repository) do %>
-              <svg
-                class="navbar-breadcrumb-forge-icon"
-                xmlns="http://www.w3.org/2000/svg"
-                width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="1.8"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                aria-hidden="true"
-              >
-                <path d="M9 19c-5 1.5-5-2.5-7-3" />
-                <path d="M14 22v-3.87a3.37 3.37 0 0 0 -.94-2.61c3.14 -.35 6.44 -1.54 6.44 -7A5.44 5.44 0 0 0 18 4.77A5.07 5.07 0 0 0 17.91 1S16.73 .65 14 2.48a13.38 13.38 0 0 0 -5 0C6.27 .65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0 -1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22" />
-              </svg>
-            <% end %>
+            <svg
+              class="navbar-breadcrumb-forge-icon"
+              xmlns="http://www.w3.org/2000/svg"
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <circle cx="12" cy="12" r="10" fill="none" />
+            </svg>
             <span>{account_breadcrumb_owner_label(@repository, @account)}</span>
           </span>
         </a>

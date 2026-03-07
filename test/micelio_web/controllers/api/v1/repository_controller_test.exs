@@ -120,6 +120,33 @@ defmodule MicelioWeb.Api.V1.RepositoryControllerTest do
       assert body["data"]["handle"] == "new-repo-#{unique}"
       assert body["data"]["name"] == "New Repository"
     end
+
+    test "creates a repository with push and storage configuration", %{
+      conn: conn,
+      token: token,
+      org_handle: org_handle,
+      unique: unique
+    } do
+      conn =
+        conn
+        |> put_req_header("accept", "application/json")
+        |> put_req_header("authorization", "Bearer #{token}")
+        |> post(~p"/api/orgs/#{org_handle}/repositories", %{
+          handle: "remote-repo-#{unique}",
+          name: "Remote Repository",
+          push_protocol: "https",
+          push_host: "github.com",
+          push_namespace: "org",
+          push_repository: "remote",
+          storage_backend: "s3",
+          storage_key_prefix: "repos/remote"
+        })
+
+      body = json_response(conn, 201)
+      assert body["data"]["handle"] == "remote-repo-#{unique}"
+      assert body["data"]["push_protocol"] == "https"
+      assert body["data"]["storage_backend"] == "s3"
+    end
   end
 
   describe "PATCH /api/orgs/:org/repositories/:handle" do
@@ -139,6 +166,141 @@ defmodule MicelioWeb.Api.V1.RepositoryControllerTest do
 
       body = json_response(conn, 200)
       assert body["data"]["name"] == "Updated Name"
+    end
+
+    test "updates repository push and storage configuration", %{
+      conn: conn,
+      token: token,
+      org_handle: org_handle,
+      repository: repository
+    } do
+      conn =
+        conn
+        |> put_req_header("accept", "application/json")
+        |> put_req_header("authorization", "Bearer #{token}")
+        |> patch(~p"/api/orgs/#{org_handle}/repositories/#{repository.handle}", %{
+          push_protocol: "ssh",
+          push_host: "example.com",
+          push_namespace: "org",
+          push_repository: "new-name",
+          storage_backend: "local",
+          storage_key_prefix: "repos/#{repository.handle}"
+        })
+
+      body = json_response(conn, 200)
+      assert body["data"]["push_protocol"] == "ssh"
+      assert body["data"]["storage_backend"] == "local"
+    end
+  end
+
+  describe "POST /api/orgs/:org/repositories/:repository/push" do
+    test "pushes changes to a repository", %{
+      conn: conn,
+      token: token,
+      org_handle: org_handle,
+      repository: repository
+    } do
+      conn =
+        conn
+        |> put_req_header("accept", "application/json")
+        |> put_req_header("authorization", "Bearer #{token}")
+        |> post(~p"/api/orgs/#{org_handle}/repositories/#{repository.handle}/push", %{
+          goal: "Add initial files",
+          changes: [
+            %{"path" => "README.md", "change_type" => "added", "content" => "# Hello repository"}
+          ]
+        })
+
+      body = json_response(conn, 200)
+      assert body["data"]["session"]["goal"] == "Add initial files"
+      assert body["data"]["session"]["status"] == "landed"
+      assert body["data"]["landing_position"] == 1
+      assert body["data"]["stats"]["added"] == 1
+      assert body["data"]["stats"]["modified"] == 0
+      assert body["data"]["stats"]["deleted"] == 0
+      assert body["data"]["stats"]["total"] == 1
+    end
+
+    test "returns validation errors for empty goal", %{
+      conn: conn,
+      token: token,
+      org_handle: org_handle,
+      repository: repository
+    } do
+      conn =
+        conn
+        |> put_req_header("accept", "application/json")
+        |> put_req_header("authorization", "Bearer #{token}")
+        |> post(~p"/api/orgs/#{org_handle}/repositories/#{repository.handle}/push", %{
+          goal: "   ",
+          changes: [
+            %{"path" => "README.md", "change_type" => "added", "content" => "# Empty goal test"}
+          ]
+        })
+
+      body = json_response(conn, 422)
+      assert body["error"] == "validation_error"
+    end
+
+    test "returns validation errors for missing path or content", %{
+      conn: conn,
+      token: token,
+      org_handle: org_handle,
+      repository: repository
+    } do
+      base_conn = conn
+
+      conn =
+        base_conn
+        |> put_req_header("accept", "application/json")
+        |> put_req_header("authorization", "Bearer #{token}")
+        |> post(~p"/api/orgs/#{org_handle}/repositories/#{repository.handle}/push", %{
+          goal: "Fix file",
+          changes: [
+            %{"path" => "", "change_type" => "modified"}
+          ]
+        })
+
+      body = json_response(conn, 422)
+      assert body["error"] == "validation_error"
+      assert body["error_description"] =~ "path must be"
+
+      conn =
+        base_conn
+        |> put_req_header("accept", "application/json")
+        |> put_req_header("authorization", "Bearer #{token}")
+        |> post(~p"/api/orgs/#{org_handle}/repositories/#{repository.handle}/push", %{
+          goal: "Fix file",
+          changes: [
+            %{"path" => "README.md", "change_type" => "modified"}
+          ]
+        })
+
+      body = json_response(conn, 422)
+      assert body["error"] == "validation_error"
+      assert body["error_description"] =~ "requires content"
+    end
+
+    test "returns validation error for invalid change type", %{
+      conn: conn,
+      token: token,
+      org_handle: org_handle,
+      repository: repository
+    } do
+      conn =
+        conn
+        |> put_req_header("accept", "application/json")
+        |> put_req_header("authorization", "Bearer #{token}")
+        |> post(~p"/api/orgs/#{org_handle}/repositories/#{repository.handle}/push", %{
+          goal: "Update file",
+          changes: [
+            %{"path" => "README.md", "change_type" => "rename", "content" => "x"}
+          ]
+        })
+
+      body = json_response(conn, 422)
+      assert body["error"] == "validation_error"
+      assert body["error_description"] =~ "change_type must be"
     end
   end
 
