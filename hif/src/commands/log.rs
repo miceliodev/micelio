@@ -1,6 +1,6 @@
 //! Log command - list landed sessions.
 
-use crate::cli::{parse_project_ref, LogCommand};
+use crate::cli::{parse_repository_ref, LogCommand};
 use crate::config::{self, Config};
 use crate::error::{MicError, Result};
 use crate::grpc::hif_v1::{call, pb, repository_ref, user_id_from_token};
@@ -9,10 +9,10 @@ use crate::grpc::{Endpoint, GrpcClient};
 /// Run the log command.
 pub async fn run(cmd: LogCommand) -> Result<()> {
     // Parse repository reference
-    let (org, repository) = parse_project_ref(&cmd.project).ok_or_else(|| {
-        MicError::InvalidProjectRef(format!(
-            "Invalid repository reference '{}'. Use format: org/project",
-            cmd.project
+    let (org, repository) = parse_repository_ref(&cmd.repository).ok_or_else(|| {
+        MicError::InvalidRepositoryRef(format!(
+            "Invalid repository reference '{}'. Use format: org/repository",
+            cmd.repository
         ))
     })?;
 

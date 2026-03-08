@@ -1,9 +1,9 @@
-//! Mount command - mount project as virtual filesystem.
+//! Mount command - mount repository as virtual filesystem.
 //!
 //! This command currently creates a local mirror from forge content.
 #![allow(dead_code)]
 
-use crate::cli::{parse_project_ref, MountCommand};
+use crate::cli::{parse_repository_ref, MountCommand};
 use crate::config::{self, Config};
 use crate::error::{MicError, Result};
 use crate::grpc::hif_v1::{call, pb, repository_ref, user_id_from_token};
@@ -16,10 +16,10 @@ pub const DEFAULT_PORT: u16 = 20490;
 
 /// Run the mount command.
 pub async fn run(cmd: MountCommand) -> Result<()> {
-    let (organization, project) = parse_project_ref(&cmd.project).ok_or_else(|| {
-        MicError::InvalidProjectRef(format!(
-            "Invalid project reference '{}'. Use format: org/project",
-            cmd.project
+    let (organization, repository) = parse_repository_ref(&cmd.repository).ok_or_else(|| {
+        MicError::InvalidRepositoryRef(format!(
+            "Invalid repository reference '{}'. Use format: org/repository",
+            cmd.repository
         ))
     })?;
 
@@ -30,13 +30,13 @@ pub async fn run(cmd: MountCommand) -> Result<()> {
     let client = GrpcClient::new(endpoint);
     let user_id = user_id_from_token(&tokens.access_token);
 
-    let mount_path = cmd.path.clone().unwrap_or_else(|| project.to_string());
+    let mount_path = cmd.path.clone().unwrap_or_else(|| repository.to_string());
     let mount_path = PathBuf::from(&mount_path);
 
     println!(
         "Mounting {}/{} to {}...",
         organization,
-        project,
+        repository,
         mount_path.display()
     );
 
@@ -49,7 +49,7 @@ pub async fn run(cmd: MountCommand) -> Result<()> {
         &tokens.access_token,
         &user_id,
         organization,
-        project,
+        repository,
     )
     .await?;
     let file_count = sync_tree(
@@ -57,14 +57,14 @@ pub async fn run(cmd: MountCommand) -> Result<()> {
         &tokens.access_token,
         &user_id,
         organization,
-        project,
+        repository,
         &revision_hash,
         &tree,
         &mount_path,
     )
     .await?;
 
-    write_mount_metadata(&mount_path, &server, organization, project)?;
+    write_mount_metadata(&mount_path, &server, organization, repository)?;
 
     println!("Synced {} files to {}", file_count, mount_path.display());
     println!();
@@ -86,9 +86,9 @@ async fn fetch_tree(
     access_token: &str,
     user_id: &str,
     organization: &str,
-    project: &str,
+    repository: &str,
 ) -> Result<(Vec<MountEntry>, Vec<u8>)> {
-    let repository = repository_ref(organization, project);
+    let repository = repository_ref(organization, repository);
     let head: pb::RepositoryHeadResponse = call(
         client,
         access_token,
@@ -135,7 +135,7 @@ async fn sync_tree(
     access_token: &str,
     user_id: &str,
     organization: &str,
-    project: &str,
+    repository: &str,
     revision_hash: &[u8],
     tree: &[MountEntry],
     mount_path: &PathBuf,
@@ -155,7 +155,7 @@ async fn sync_tree(
             access_token,
             user_id,
             organization,
-            project,
+            repository,
             &entry.path,
             revision_hash,
         )
@@ -182,7 +182,7 @@ async fn fetch_file(
     access_token: &str,
     user_id: &str,
     organization: &str,
-    project: &str,
+    repository: &str,
     path: &str,
     revision_hash: &[u8],
 ) -> Result<Vec<u8>> {
@@ -192,7 +192,7 @@ async fn fetch_file(
         "/hif.v1.ContentService/GetPath",
         &pb::GetPathRequest {
             user_id: user_id.to_string(),
-            repository: Some(repository_ref(organization, project)),
+            repository: Some(repository_ref(organization, repository)),
             revision_hash: revision_hash.to_vec(),
             path: path.to_string(),
         },
@@ -202,12 +202,12 @@ async fn fetch_file(
     Ok(response.content)
 }
 
-/// Create a .hif directory in the mount path with project metadata.
+/// Create a .hif directory in the mount path with repository metadata.
 fn write_mount_metadata(
     mount_path: &PathBuf,
     server: &str,
     organization: &str,
-    project: &str,
+    repository: &str,
 ) -> Result<()> {
     use crate::workspace::{WorkspaceManifest, HIF_DIR, MANIFEST_FILE};
 
@@ -216,7 +216,7 @@ fn write_mount_metadata(
         fs::create_dir_all(&hif_dir)?;
     }
 
-    let manifest = WorkspaceManifest::new(server, organization, project);
+    let manifest = WorkspaceManifest::new(server, organization, repository);
     let manifest_path = hif_dir.join(MANIFEST_FILE);
     manifest.save_to(&manifest_path)?;
 

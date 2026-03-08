@@ -26,7 +26,7 @@ Introduce an explicit **workspace linking** step so a local workspace can be map
 - No GitHub issue templates in `.github/ISSUE_TEMPLATE/`.
 
 ### Documentation Insights
-- User docs describe session workflows (`mic session start` → `mic session land`). (`docs/users/mic-workflows.md`)
+- User docs describe session workflows (`mic session start` → `mic session land`). (`docs/users/hif-workflows.md`)
 - Design docs outline landing as merging session diff into base and updating project head. (`priv/docs/shapers/design.md`)
 
 ### Templates Found
@@ -95,7 +95,7 @@ Add an explicit **workspace linking** command that maps a local workspace to a r
   - Write `.mic/workspace.json` (manifest-only) with `server`, `account`, `project`, empty `entries`, and remote `tree_hash` if available.
 - **Landing flow**: `mic land` requires `.mic/workspace.json`. If missing, error: “No workspace link. Run `mic link <org/project>` or `mic link <url>`.”
 - **Server handling**: Infer gRPC endpoint from web URL (e.g., `https://micelio.dev/...` → `https://api.micelio.dev:443`). This is an explicit convention for now; future config can override.
-- **Docs**: Update `docs/users/mic-workflows.md` to include “Link existing local project” and the URL/ref examples.
+- **Docs**: Update `docs/users/hif-workflows.md` to include “Link existing local project” and the URL/ref examples.
 
 ## Technical Considerations
 
@@ -127,7 +127,7 @@ Add an explicit **workspace linking** command that maps a local workspace to a r
 
 - Create a helper: `workspace.linkManifest(account, project, server, path)` that only writes `.mic/workspace.json` and captures remote tree hash.
 - Add command-line parsing and usage text in `mic/src/main.zig` for `mic link`.
-- Update `docs/users/mic-workflows.md` with a new “Link existing local project” section.
+- Update `docs/users/hif-workflows.md` with a new “Link existing local project” section.
 - Add or update CLI tests in `mic/tests/integration.zig` for the link flow and failure modes.
   - `test "link with url writes manifest"`
   - `test "link with org/project uses default server"`
@@ -145,7 +145,7 @@ Add an explicit **workspace linking** command that maps a local workspace to a r
 - `mic/src/workspace.zig` (landing flow, gRPC calls, change detection)
 - `mic/src/workspace/manifest.zig` (workspace metadata format)
 - `mic/src/config.zig` (default server config for micelio.dev)
-- `docs/users/mic-workflows.md` (user workflows)
+- `docs/users/hif-workflows.md` (user workflows)
 - `priv/docs/shapers/design.md` (landing semantics)
 
 ### Related Work

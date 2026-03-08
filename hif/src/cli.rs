@@ -17,7 +17,7 @@ use clap::{Parser, Subcommand};
 #[command(after_help = "\
 QUICK START:
     hif auth login
-    hif checkout <org/project>
+    hif checkout <org/repository>
     hif session start \"<goal>\"
     hif session land
 ")]
@@ -84,7 +84,7 @@ NOTES:
     Auth(AuthCommand),
 
     // =========================================================================
-    // Organization & Project Management
+    // Organization & Repository Management
     // =========================================================================
     /// Manage organizations
     #[command(after_help = "\
@@ -94,23 +94,23 @@ EXAMPLES:
 ")]
     Org(OrgCommand),
 
-    /// Manage projects
+    /// Manage repositories
     #[command(after_help = "\
 EXAMPLES:
-    $ hif project list acme                        # List projects in org
-    $ hif project create acme/myapp \"My App\"       # Create new project
-    $ hif project info acme/myapp                  # Get project details
-    $ hif project delete acme/myapp                # Delete project
+    $ hif repository list acme                        # List repositories in org
+    $ hif repository create acme/myapp \"My App\"       # Create new repository
+    $ hif repository info acme/myapp                  # Get repository details
+    $ hif repository delete acme/myapp                # Delete repository
 
 NOTES:
-    Projects are always referenced as org/project (e.g., 'acme/myapp').
+    Repositories are always referenced as org/repository (e.g., 'acme/myapp').
 ")]
-    Project(ProjectCommand),
+    Repository(RepositoryCommand),
 
     // =========================================================================
     // Workspace Commands
     // =========================================================================
-    /// Create a local workspace from a project
+    /// Create a local workspace from a repository
     #[command(after_help = "\
 EXAMPLES:
     $ hif checkout acme/myapp              # Creates ./myapp directory
@@ -123,11 +123,11 @@ NEXT STEPS:
 ")]
     Checkout(CheckoutCommand),
 
-    /// Link current directory to a project
+    /// Link current directory to a repository
     #[command(after_help = "\
 EXAMPLES:
     $ cd my-existing-code
-    $ hif link acme/myapp    # Link this directory to the project
+    $ hif link acme/myapp    # Link this directory to the repository
 
 NOTES:
     Use this when you have existing code to track.
@@ -166,7 +166,7 @@ EXAMPLES:
     /// Manage work sessions
     #[command(after_help = "\
 WORKFLOW:
-    $ hif session start \"Add feature\"    # Start (project inferred from workspace)
+    $ hif session start \"Add feature\"    # Start (repository inferred from workspace)
     $ # ... make changes ...
     $ hif session note \"Decided X\"       # Document decisions
     $ hif session land                    # Push to forge
@@ -223,7 +223,7 @@ NOTES:
     /// List directory contents from the forge
     #[command(after_help = "\
 EXAMPLES:
-    $ hif tree acme/myapp                # List project root
+    $ hif tree acme/myapp                # List repository root
     $ hif tree acme/myapp src            # List src/ directory
     $ hif tree acme/myapp --ref @0123456789abcdef...  # At revision hash
 
@@ -249,7 +249,7 @@ NOTES:
     // =========================================================================
     // History Commands
     // =========================================================================
-    /// Show session history for a project
+    /// Show session history for a repository
     #[command(after_help = "\
 EXAMPLES:
     $ hif log acme/myapp              # Recent sessions
@@ -279,11 +279,11 @@ EXAMPLES:
     // =========================================================================
     // Experimental
     // =========================================================================
-    /// Mount project as virtual filesystem (experimental)
+    /// Mount repository as virtual filesystem (experimental)
     #[command(hide = true)]
     Mount(MountCommand),
 
-    /// Unmount a mounted project
+    /// Unmount a mounted repository
     #[command(hide = true)]
     Unmount(UnmountCommand),
 }
@@ -330,44 +330,44 @@ pub enum OrgSubcommand {
 }
 
 // =============================================================================
-// Project Commands
+// Repository Commands
 // =============================================================================
 
 #[derive(Parser, Debug)]
-pub struct ProjectCommand {
+pub struct RepositoryCommand {
     #[command(subcommand)]
-    pub command: ProjectSubcommand,
+    pub command: RepositorySubcommand,
 }
 
 #[derive(Subcommand, Debug)]
-pub enum ProjectSubcommand {
-    /// List projects in an organization
+pub enum RepositorySubcommand {
+    /// List repositories in an organization
     List {
         /// Organization handle
         org: String,
     },
-    /// Create a new project
+    /// Create a new repository
     Create {
-        /// Project reference (org/project)
-        #[arg(value_name = "ORG/PROJECT")]
-        project: String,
-        /// Project display name
+        /// Repository reference (org/repository)
+        #[arg(value_name = "ORG/REPOSITORY")]
+        repository: String,
+        /// Repository display name
         name: String,
-        /// Project description
+        /// Repository description
         #[arg(short, long)]
         description: Option<String>,
     },
-    /// Get project details
+    /// Get repository details
     Info {
-        /// Project reference (org/project)
-        #[arg(value_name = "ORG/PROJECT")]
-        project: String,
+        /// Repository reference (org/repository)
+        #[arg(value_name = "ORG/REPOSITORY")]
+        repository: String,
     },
-    /// Update a project
+    /// Update a repository
     Update {
-        /// Project reference (org/project)
-        #[arg(value_name = "ORG/PROJECT")]
-        project: String,
+        /// Repository reference (org/repository)
+        #[arg(value_name = "ORG/REPOSITORY")]
+        repository: String,
         /// New display name
         #[arg(short, long)]
         name: Option<String>,
@@ -375,11 +375,11 @@ pub enum ProjectSubcommand {
         #[arg(short, long)]
         description: Option<String>,
     },
-    /// Delete a project (cannot be undone)
+    /// Delete a repository (cannot be undone)
     Delete {
-        /// Project reference (org/project)
-        #[arg(value_name = "ORG/PROJECT")]
-        project: String,
+        /// Repository reference (org/repository)
+        #[arg(value_name = "ORG/REPOSITORY")]
+        repository: String,
     },
 }
 
@@ -389,20 +389,20 @@ pub enum ProjectSubcommand {
 
 #[derive(Parser, Debug)]
 pub struct CheckoutCommand {
-    /// Project reference (org/project)
-    #[arg(value_name = "ORG/PROJECT")]
-    pub project: String,
+    /// Repository reference (org/repository)
+    #[arg(value_name = "ORG/REPOSITORY")]
+    pub repository: String,
 
-    /// Local directory path (defaults to project name)
+    /// Local directory path (defaults to repository name)
     #[arg(short, long)]
     pub path: Option<String>,
 }
 
 #[derive(Parser, Debug)]
 pub struct LinkCommand {
-    /// Project reference (org/project)
-    #[arg(value_name = "ORG/PROJECT")]
-    pub project: String,
+    /// Repository reference (org/repository)
+    #[arg(value_name = "ORG/REPOSITORY")]
+    pub repository: String,
 }
 
 #[derive(Parser, Debug)]
@@ -427,10 +427,10 @@ pub struct SessionCommand {
 pub enum SessionSubcommand {
     /// Start a new session
     Start {
-        /// Session goal, or org/project + goal if outside workspace
-        #[arg(value_name = "GOAL or ORG/PROJECT")]
+        /// Session goal, or org/repository + goal if outside workspace
+        #[arg(value_name = "GOAL or ORG/REPOSITORY")]
         first: String,
-        /// Session goal (when first arg is org/project)
+        /// Session goal (when first arg is org/repository)
         second: Option<String>,
     },
     /// Show current session status
@@ -457,10 +457,10 @@ pub enum SessionSubcommand {
 
 #[derive(Parser, Debug)]
 pub struct LandCommand {
-    /// Session goal, or org/project + goal if outside workspace
-    #[arg(value_name = "GOAL or ORG/PROJECT")]
+    /// Session goal, or org/repository + goal if outside workspace
+    #[arg(value_name = "GOAL or ORG/REPOSITORY")]
     pub first: String,
-    /// Session goal (when first arg is org/project)
+    /// Session goal (when first arg is org/repository)
     pub second: Option<String>,
 }
 
@@ -470,9 +470,9 @@ pub struct LandCommand {
 
 #[derive(Parser, Debug)]
 pub struct ShowCommand {
-    /// Project reference (org/project)
-    #[arg(value_name = "ORG/PROJECT")]
-    pub project: String,
+    /// Repository reference (org/repository)
+    #[arg(value_name = "ORG/REPOSITORY")]
+    pub repository: String,
     /// File path
     pub path: String,
     /// Revision reference (64-hex hash, @latest, or HEAD)
@@ -482,9 +482,9 @@ pub struct ShowCommand {
 
 #[derive(Parser, Debug)]
 pub struct TreeCommand {
-    /// Project reference (org/project)
-    #[arg(value_name = "ORG/PROJECT")]
-    pub project: String,
+    /// Repository reference (org/repository)
+    #[arg(value_name = "ORG/REPOSITORY")]
+    pub repository: String,
     /// Directory path (defaults to root)
     pub path: Option<String>,
     /// Revision reference (64-hex hash, @latest, or HEAD)
@@ -494,9 +494,9 @@ pub struct TreeCommand {
 
 #[derive(Parser, Debug)]
 pub struct GrepCommand {
-    /// Project reference (org/project)
-    #[arg(value_name = "ORG/PROJECT")]
-    pub project: String,
+    /// Repository reference (org/repository)
+    #[arg(value_name = "ORG/REPOSITORY")]
+    pub repository: String,
     /// Query string or pattern
     pub query: String,
     /// Revision reference (64-hex hash, @latest, or HEAD)
@@ -525,9 +525,9 @@ pub struct GrepCommand {
 
 #[derive(Parser, Debug)]
 pub struct LogCommand {
-    /// Project reference (org/project)
-    #[arg(value_name = "ORG/PROJECT")]
-    pub project: String,
+    /// Repository reference (org/repository)
+    #[arg(value_name = "ORG/REPOSITORY")]
+    pub repository: String,
     /// Filter by file path
     #[arg(short, long)]
     pub path: Option<String>,
@@ -538,18 +538,18 @@ pub struct LogCommand {
 
 #[derive(Parser, Debug)]
 pub struct BlameCommand {
-    /// Project reference (org/project)
-    #[arg(value_name = "ORG/PROJECT")]
-    pub project: String,
+    /// Repository reference (org/repository)
+    #[arg(value_name = "ORG/REPOSITORY")]
+    pub repository: String,
     /// File path
     pub path: String,
 }
 
 #[derive(Parser, Debug)]
 pub struct DiffCommand {
-    /// Project reference (org/project)
-    #[arg(value_name = "ORG/PROJECT")]
-    pub project: String,
+    /// Repository reference (org/repository)
+    #[arg(value_name = "ORG/REPOSITORY")]
+    pub repository: String,
     /// Starting revision hash (e.g., @0123...abcd)
     pub from: String,
     /// Ending revision hash (default: HEAD)
@@ -562,9 +562,9 @@ pub struct DiffCommand {
 
 #[derive(Parser, Debug)]
 pub struct MountCommand {
-    /// Project reference (org/project)
-    #[arg(value_name = "ORG/PROJECT")]
-    pub project: String,
+    /// Repository reference (org/repository)
+    #[arg(value_name = "ORG/REPOSITORY")]
+    pub repository: String,
     /// Mount point directory
     #[arg(short, long)]
     pub path: Option<String>,
@@ -583,8 +583,8 @@ pub struct UnmountCommand {
 // Utilities
 // =============================================================================
 
-/// Parse a project reference (org/project) into (org, project).
-pub fn parse_project_ref(s: &str) -> Option<(&str, &str)> {
+/// Parse a repository reference (org/repository) into (org, repository).
+pub fn parse_repository_ref(s: &str) -> Option<(&str, &str)> {
     let parts: Vec<&str> = s.splitn(2, '/').collect();
     if parts.len() == 2 && !parts[0].is_empty() && !parts[1].is_empty() {
         Some((parts[0], parts[1]))
@@ -593,9 +593,9 @@ pub fn parse_project_ref(s: &str) -> Option<(&str, &str)> {
     }
 }
 
-/// Check if a string looks like a project reference (contains '/').
-pub fn looks_like_project_ref(s: &str) -> bool {
-    s.contains('/') && parse_project_ref(s).is_some()
+/// Check if a string looks like a repository reference (contains '/').
+pub fn looks_like_repository_ref(s: &str) -> bool {
+    s.contains('/') && parse_repository_ref(s).is_some()
 }
 
 // =============================================================================
@@ -611,16 +611,16 @@ pub fn generate_help_json() -> serde_json::Value {
 
         "concepts": {
             "session": "A unit of work with a goal, conversation, and changes (replaces Git commits)",
-            "workspace": "A local directory linked to a project on the forge",
-            "forge": "The server that stores all project data (source of truth)",
+            "workspace": "A local directory linked to a repository on the forge",
+            "forge": "The server that stores all repository data (source of truth)",
             "landing": "Pushing session changes to the forge",
-            "revision": "A point in project history identified by a content hash (like Git commit SHA)"
+            "revision": "A point in repository history identified by a content hash (like Git commit SHA)"
         },
 
         "workflow": [
             {"step": 1, "command": "hif auth login", "description": "Authenticate with the forge"},
-            {"step": 2, "command": "hif checkout <org/project>", "description": "Create local workspace"},
-            {"step": 3, "command": "hif session start \"<goal>\"", "description": "Start a session (project inferred)"},
+            {"step": 2, "command": "hif checkout <org/repository>", "description": "Create local workspace"},
+            {"step": 3, "command": "hif session start \"<goal>\"", "description": "Start a session (repository inferred)"},
             {"step": 4, "action": "Edit files normally", "description": "Make your changes"},
             {"step": 5, "command": "hif session land", "description": "Push changes to forge"}
         ],
@@ -641,25 +641,25 @@ pub fn generate_help_json() -> serde_json::Value {
                     "info": {"description": "Get org details", "args": ["org"], "requires_auth": true}
                 }
             },
-            "project": {
-                "description": "Project management",
+            "repository": {
+                "description": "Repository management",
                 "subcommands": {
-                    "list": {"description": "List projects in org", "args": ["org"], "requires_auth": true},
-                    "create": {"description": "Create project", "args": ["org/project", "name"], "requires_auth": true},
-                    "info": {"description": "Get project details", "args": ["org/project"], "requires_auth": true},
-                    "update": {"description": "Update project", "args": ["org/project"], "requires_auth": true},
-                    "delete": {"description": "Delete project", "args": ["org/project"], "requires_auth": true}
+                    "list": {"description": "List repositories in org", "args": ["org"], "requires_auth": true},
+                    "create": {"description": "Create repository", "args": ["org/repository", "name"], "requires_auth": true},
+                    "info": {"description": "Get repository details", "args": ["org/repository"], "requires_auth": true},
+                    "update": {"description": "Update repository", "args": ["org/repository"], "requires_auth": true},
+                    "delete": {"description": "Delete repository", "args": ["org/repository"], "requires_auth": true}
                 }
             },
             "checkout": {
-                "description": "Create local workspace from project",
-                "args": ["org/project"],
+                "description": "Create local workspace from repository",
+                "args": ["org/repository"],
                 "options": {"--path": "Local directory path"},
                 "requires_auth": true
             },
             "link": {
-                "description": "Link current directory to project",
-                "args": ["org/project"],
+                "description": "Link current directory to repository",
+                "args": ["org/repository"],
                 "requires_auth": true
             },
             "status": {
@@ -679,7 +679,7 @@ pub fn generate_help_json() -> serde_json::Value {
                     "start": {
                         "description": "Start new session",
                         "args": ["goal"],
-                        "args_outside_workspace": ["org/project", "goal"],
+                        "args_outside_workspace": ["org/repository", "goal"],
                         "requires_workspace": "optional"
                     },
                     "status": {"description": "Show session status"},
@@ -692,25 +692,25 @@ pub fn generate_help_json() -> serde_json::Value {
             "land": {
                 "description": "Quick land (start + land in one step)",
                 "args": ["goal"],
-                "args_outside_workspace": ["org/project", "goal"],
+                "args_outside_workspace": ["org/repository", "goal"],
                 "requires_auth": true,
                 "requires_workspace": "optional"
             },
             "show": {
                 "description": "Show file contents from forge",
-                "args": ["org/project", "path"],
+                "args": ["org/repository", "path"],
                 "options": {"--ref": "Revision hash (e.g., @012345...abcd)"},
                 "requires_auth": true
             },
             "tree": {
                 "description": "List directory from forge",
-                "args": ["org/project"],
+                "args": ["org/repository"],
                 "options": {"path": "Directory path", "--ref": "Revision hash"},
                 "requires_auth": true
             },
             "grep": {
                 "description": "Search repository text",
-                "args": ["org/project", "query"],
+                "args": ["org/repository", "query"],
                 "options": {
                     "--position": "Revision hash (e.g., @012345...abcd)",
                     "--path": "Path prefix filter",
@@ -723,18 +723,18 @@ pub fn generate_help_json() -> serde_json::Value {
             },
             "log": {
                 "description": "Show session history",
-                "args": ["org/project"],
+                "args": ["org/repository"],
                 "options": {"--path": "Filter by path", "-n": "Limit"},
                 "requires_auth": true
             },
             "blame": {
                 "description": "Show line attribution",
-                "args": ["org/project", "path"],
+                "args": ["org/repository", "path"],
                 "requires_auth": true
             },
             "diff": {
                 "description": "Show changes between revisions",
-                "args": ["org/project", "from", "[to]"],
+                "args": ["org/repository", "from", "[to]"],
                 "requires_auth": true
             }
         },
@@ -750,20 +750,20 @@ pub fn generate_help_json() -> serde_json::Value {
         "error_codes": {
             "not_authenticated": "Run 'hif auth login'",
             "token_expired": "Run 'hif auth login' again",
-            "not_in_workspace": "Run 'hif checkout <org/project>' first, or specify org/project explicitly",
+            "not_in_workspace": "Run 'hif checkout <org/repository>' first, or specify org/repository explicitly",
             "no_active_session": "Run 'hif session start \"<goal>\"' first",
             "session_already_active": "Run 'hif session land' or 'hif session abandon' first",
-            "invalid_project_ref": "Use format: org/project (e.g., 'acme/myapp')",
+            "invalid_repository_ref": "Use format: org/repository (e.g., 'acme/myapp')",
             "conflicts_detected": "Run 'hif session resolve' or 'hif sync'",
             "no_web_url": "Set web_url in config.json for the server",
             "no_grpc_url": "Set grpc_url in config.json or enable discovery via /.well-known/micelio.json",
             "discovery_failed": "Check /.well-known/micelio.json or set grpc_url manually"
         },
 
-        "project_ref_format": {
-            "pattern": "org/project",
+        "repository_ref_format": {
+            "pattern": "org/repository",
             "examples": ["acme/webapp", "myorg/api-server"],
-            "description": "Always use org/project format for project references"
+            "description": "Always use org/repository format for repository references"
         }
     })
 }
@@ -820,12 +820,12 @@ pub fn generate_docs() -> serde_json::Value {
             },
             {
                 "name": "Workspace",
-                "description": "A local directory linked to a project on the forge. Created with `hif checkout`.",
+                "description": "A local directory linked to a repository on the forge. Created with `hif checkout`.",
                 "example": "hif checkout acme/myapp"
             },
             {
                 "name": "Forge",
-                "description": "The Micelio server that stores all project data. Unlike Git, the forge is the source of truth.",
+                "description": "The Micelio server that stores all repository data. Unlike Git, the forge is the source of truth.",
                 "example": "https://micelio.dev"
             },
             {
@@ -835,7 +835,7 @@ pub fn generate_docs() -> serde_json::Value {
             },
             {
                 "name": "Revision",
-                "description": "A point in project history, referenced by hash (e.g., @012345...abcd).",
+                "description": "A point in repository history, referenced by hash (e.g., @012345...abcd).",
                 "example": "hif show acme/myapp README.md --ref @012345...abcd"
             }
         ],
@@ -844,7 +844,7 @@ pub fn generate_docs() -> serde_json::Value {
             "title": "Quick Start",
             "steps": [
                 {"step": 1, "title": "Authenticate", "command": "hif auth login", "description": "Opens browser for OAuth authentication"},
-                {"step": 2, "title": "Create workspace", "command": "hif checkout acme/myapp", "description": "Downloads project and creates local workspace"},
+                {"step": 2, "title": "Create workspace", "command": "hif checkout acme/myapp", "description": "Downloads repository and creates local workspace"},
                 {"step": 3, "title": "Start session", "command": "hif session start \"Add feature\"", "description": "Begin tracking your work with a goal"},
                 {"step": 4, "title": "Make changes", "command": "# Edit files normally", "description": "Use your favorite editor, no staging needed"},
                 {"step": 5, "title": "Land changes", "command": "hif session land", "description": "Push your session to the forge"}
@@ -924,90 +924,90 @@ pub fn generate_docs() -> serde_json::Value {
                 ]
             },
             {
-                "name": "project",
-                "category": "Projects",
-                "description": "Manage projects",
+                "name": "repository",
+                "category": "Repositories",
+                "description": "Manage repositories",
                 "subcommands": [
                     {
                         "name": "list",
-                        "description": "List projects in an organization",
-                        "usage": "hif project list <ORG>",
+                        "description": "List repositories in an organization",
+                        "usage": "hif repository list <ORG>",
                         "args": [
                             {"name": "org", "description": "Organization handle", "required": true}
                         ],
                         "options": [],
                         "examples": [
-                            {"command": "hif project list acme", "description": "List all projects in 'acme'"}
+                            {"command": "hif repository list acme", "description": "List all repositories in 'acme'"}
                         ]
                     },
                     {
                         "name": "create",
-                        "description": "Create a new project",
-                        "usage": "hif project create <ORG/PROJECT> <NAME>",
+                        "description": "Create a new repository",
+                        "usage": "hif repository create <ORG/REPOSITORY> <NAME>",
                         "args": [
-                            {"name": "org/project", "description": "Project reference (e.g., acme/myapp)", "required": true},
-                            {"name": "name", "description": "Display name for the project", "required": true}
+                            {"name": "org/repository", "description": "Repository reference (e.g., acme/myapp)", "required": true},
+                            {"name": "name", "description": "Display name for the repository", "required": true}
                         ],
                         "options": [
-                            {"name": "--description, -d", "description": "Project description", "required": false}
+                            {"name": "--description, -d", "description": "Repository description", "required": false}
                         ],
                         "examples": [
-                            {"command": "hif project create acme/api \"API Server\"", "description": "Create new project"},
-                            {"command": "hif project create acme/api \"API Server\" -d \"REST API for mobile app\"", "description": "Create with description"}
+                            {"command": "hif repository create acme/api \"API Server\"", "description": "Create new repository"},
+                            {"command": "hif repository create acme/api \"API Server\" -d \"REST API for mobile app\"", "description": "Create with description"}
                         ]
                     },
                     {
                         "name": "info",
-                        "description": "Get project details",
-                        "usage": "hif project info <ORG/PROJECT>",
+                        "description": "Get repository details",
+                        "usage": "hif repository info <ORG/REPOSITORY>",
                         "args": [
-                            {"name": "org/project", "description": "Project reference", "required": true}
+                            {"name": "org/repository", "description": "Repository reference", "required": true}
                         ],
                         "options": [],
                         "examples": [
-                            {"command": "hif project info acme/myapp", "description": "Show project details"}
+                            {"command": "hif repository info acme/myapp", "description": "Show repository details"}
                         ]
                     },
                     {
                         "name": "update",
-                        "description": "Update project settings",
-                        "usage": "hif project update <ORG/PROJECT>",
+                        "description": "Update repository settings",
+                        "usage": "hif repository update <ORG/REPOSITORY>",
                         "args": [
-                            {"name": "org/project", "description": "Project reference", "required": true}
+                            {"name": "org/repository", "description": "Repository reference", "required": true}
                         ],
                         "options": [
                             {"name": "--name, -n", "description": "New display name", "required": false},
                             {"name": "--description, -d", "description": "New description", "required": false}
                         ],
                         "examples": [
-                            {"command": "hif project update acme/myapp --name \"My App v2\"", "description": "Rename project"}
+                            {"command": "hif repository update acme/myapp --name \"My App v2\"", "description": "Rename repository"}
                         ]
                     },
                     {
                         "name": "delete",
-                        "description": "Delete a project (cannot be undone)",
-                        "usage": "hif project delete <ORG/PROJECT>",
+                        "description": "Delete a repository (cannot be undone)",
+                        "usage": "hif repository delete <ORG/REPOSITORY>",
                         "args": [
-                            {"name": "org/project", "description": "Project reference", "required": true}
+                            {"name": "org/repository", "description": "Repository reference", "required": true}
                         ],
                         "options": [],
                         "examples": [
-                            {"command": "hif project delete acme/old-project", "description": "Permanently delete project"}
+                            {"command": "hif repository delete acme/old-repository", "description": "Permanently delete repository"}
                         ],
-                        "warning": "This action cannot be undone. All project data will be permanently deleted."
+                        "warning": "This action cannot be undone. All repository data will be permanently deleted."
                     }
                 ]
             },
             {
                 "name": "checkout",
                 "category": "Workspace",
-                "description": "Create a local workspace from a project",
-                "usage": "hif checkout <ORG/PROJECT>",
+                "description": "Create a local workspace from a repository",
+                "usage": "hif checkout <ORG/REPOSITORY>",
                 "args": [
-                    {"name": "org/project", "description": "Project reference (e.g., acme/myapp)", "required": true}
+                    {"name": "org/repository", "description": "Repository reference (e.g., acme/myapp)", "required": true}
                 ],
                 "options": [
-                    {"name": "--path, -p", "description": "Local directory path (defaults to project name)", "required": false}
+                    {"name": "--path, -p", "description": "Local directory path (defaults to repository name)", "required": false}
                 ],
                 "examples": [
                     {"command": "hif checkout acme/myapp", "description": "Checkout to ./myapp"},
@@ -1018,14 +1018,14 @@ pub fn generate_docs() -> serde_json::Value {
             {
                 "name": "link",
                 "category": "Workspace",
-                "description": "Link current directory to an existing project",
-                "usage": "hif link <ORG/PROJECT>",
+                "description": "Link current directory to an existing repository",
+                "usage": "hif link <ORG/REPOSITORY>",
                 "args": [
-                    {"name": "org/project", "description": "Project reference", "required": true}
+                    {"name": "org/repository", "description": "Repository reference", "required": true}
                 ],
                 "options": [],
                 "examples": [
-                    {"command": "cd my-existing-code && hif link acme/myapp", "description": "Link existing directory to project"}
+                    {"command": "cd my-existing-code && hif link acme/myapp", "description": "Link existing directory to repository"}
                 ],
                 "notes": "Use this when you have existing code you want to track. Unlike checkout, link doesn't download files."
             },
@@ -1071,7 +1071,7 @@ pub fn generate_docs() -> serde_json::Value {
                         "name": "start",
                         "description": "Start a new session",
                         "usage": "hif session start <GOAL>",
-                        "usage_outside_workspace": "hif session start <ORG/PROJECT> <GOAL>",
+                        "usage_outside_workspace": "hif session start <ORG/REPOSITORY> <GOAL>",
                         "args": [
                             {"name": "goal", "description": "What you're trying to accomplish", "required": true}
                         ],
@@ -1080,7 +1080,7 @@ pub fn generate_docs() -> serde_json::Value {
                             {"command": "hif session start \"Add user authentication\"", "description": "Start session (in workspace)"},
                             {"command": "hif session start acme/myapp \"Fix login bug\"", "description": "Start session (outside workspace)"}
                         ],
-                        "notes": "When run inside a workspace, the project is inferred automatically."
+                        "notes": "When run inside a workspace, the repository is inferred automatically."
                     },
                     {
                         "name": "status",
@@ -1149,7 +1149,7 @@ pub fn generate_docs() -> serde_json::Value {
                 "category": "Sessions",
                 "description": "Quick land: start session + land in one step",
                 "usage": "hif land <GOAL>",
-                "usage_outside_workspace": "hif land <ORG/PROJECT> <GOAL>",
+                "usage_outside_workspace": "hif land <ORG/REPOSITORY> <GOAL>",
                 "args": [
                     {"name": "goal", "description": "What you accomplished", "required": true}
                 ],
@@ -1164,9 +1164,9 @@ pub fn generate_docs() -> serde_json::Value {
                 "name": "show",
                 "category": "Content",
                 "description": "Show file contents from the forge (no checkout needed)",
-                "usage": "hif show <ORG/PROJECT> <PATH>",
+                "usage": "hif show <ORG/REPOSITORY> <PATH>",
                 "args": [
-                    {"name": "org/project", "description": "Project reference", "required": true},
+                    {"name": "org/repository", "description": "Repository reference", "required": true},
                     {"name": "path", "description": "File path", "required": true}
                 ],
                 "options": [
@@ -1182,16 +1182,16 @@ pub fn generate_docs() -> serde_json::Value {
                 "name": "tree",
                 "category": "Content",
                 "description": "List directory contents from the forge",
-                "usage": "hif tree <ORG/PROJECT> [PATH]",
+                "usage": "hif tree <ORG/REPOSITORY> [PATH]",
                 "args": [
-                    {"name": "org/project", "description": "Project reference", "required": true},
+                    {"name": "org/repository", "description": "Repository reference", "required": true},
                     {"name": "path", "description": "Directory path (defaults to root)", "required": false}
                 ],
                 "options": [
                     {"name": "--ref, -r", "description": "Revision hash reference", "required": false}
                 ],
                 "examples": [
-                    {"command": "hif tree acme/myapp", "description": "List project root"},
+                    {"command": "hif tree acme/myapp", "description": "List repository root"},
                     {"command": "hif tree acme/myapp src", "description": "List src/ directory"},
                     {"command": "hif tree acme/myapp --ref @012345...abcd", "description": "List at a specific revision"}
                 ]
@@ -1200,9 +1200,9 @@ pub fn generate_docs() -> serde_json::Value {
                 "name": "grep",
                 "category": "Content",
                 "description": "Search repository content",
-                "usage": "hif grep <ORG/PROJECT> <QUERY>",
+                "usage": "hif grep <ORG/REPOSITORY> <QUERY>",
                 "args": [
-                    {"name": "org/project", "description": "Project reference", "required": true},
+                    {"name": "org/repository", "description": "Repository reference", "required": true},
                     {"name": "query", "description": "Search query or regex pattern", "required": true}
                 ],
                 "options": [
@@ -1224,10 +1224,10 @@ pub fn generate_docs() -> serde_json::Value {
             {
                 "name": "log",
                 "category": "History",
-                "description": "Show session history for a project",
-                "usage": "hif log <ORG/PROJECT>",
+                "description": "Show session history for a repository",
+                "usage": "hif log <ORG/REPOSITORY>",
                 "args": [
-                    {"name": "org/project", "description": "Project reference", "required": true}
+                    {"name": "org/repository", "description": "Repository reference", "required": true}
                 ],
                 "options": [
                     {"name": "--path, -p", "description": "Filter by file path", "required": false},
@@ -1243,9 +1243,9 @@ pub fn generate_docs() -> serde_json::Value {
                 "name": "blame",
                 "category": "History",
                 "description": "Show who changed each line (session attribution)",
-                "usage": "hif blame <ORG/PROJECT> <PATH>",
+                "usage": "hif blame <ORG/REPOSITORY> <PATH>",
                 "args": [
-                    {"name": "org/project", "description": "Project reference", "required": true},
+                    {"name": "org/repository", "description": "Repository reference", "required": true},
                     {"name": "path", "description": "File path", "required": true}
                 ],
                 "options": [],
@@ -1258,9 +1258,9 @@ pub fn generate_docs() -> serde_json::Value {
                 "name": "diff",
                 "category": "History",
                 "description": "Show changes between two revisions",
-                "usage": "hif diff <ORG/PROJECT> <FROM> [TO]",
+                "usage": "hif diff <ORG/REPOSITORY> <FROM> [TO]",
                 "args": [
-                    {"name": "org/project", "description": "Project reference", "required": true},
+                    {"name": "org/repository", "description": "Repository reference", "required": true},
                     {"name": "from", "description": "Starting revision hash (e.g., @0123...abcd)", "required": true},
                     {"name": "to", "description": "Ending revision hash (defaults to HEAD)", "required": false}
                 ],
@@ -1289,10 +1289,10 @@ pub fn generate_docs() -> serde_json::Value {
         "error_codes": [
             {"code": "not_authenticated", "message": "Not logged in", "resolution": "Run `hif auth login`"},
             {"code": "token_expired", "message": "Authentication token expired", "resolution": "Run `hif auth login` again"},
-            {"code": "not_in_workspace", "message": "Not in a workspace directory", "resolution": "Run `hif checkout <org/project>` first, or specify project explicitly"},
+            {"code": "not_in_workspace", "message": "Not in a workspace directory", "resolution": "Run `hif checkout <org/repository>` first, or specify repository explicitly"},
             {"code": "no_active_session", "message": "No active session", "resolution": "Run `hif session start \"<goal>\"` first"},
             {"code": "session_already_active", "message": "A session is already active", "resolution": "Run `hif session land` or `hif session abandon` first"},
-            {"code": "invalid_project_ref", "message": "Invalid project reference format", "resolution": "Use format: org/project (e.g., 'acme/myapp')"},
+            {"code": "invalid_repository_ref", "message": "Invalid repository reference format", "resolution": "Use format: org/repository (e.g., 'acme/myapp')"},
             {"code": "conflicts_detected", "message": "Conflicts with upstream changes", "resolution": "Run `hif session resolve` or `hif sync`"}
         ],
 
@@ -1309,25 +1309,28 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_parse_project_ref_valid() {
-        assert_eq!(parse_project_ref("acme/myapp"), Some(("acme", "myapp")));
-        assert_eq!(parse_project_ref("org/project"), Some(("org", "project")));
-        assert_eq!(parse_project_ref("a/b"), Some(("a", "b")));
+    fn test_parse_repository_ref_valid() {
+        assert_eq!(parse_repository_ref("acme/myapp"), Some(("acme", "myapp")));
+        assert_eq!(
+            parse_repository_ref("org/repository"),
+            Some(("org", "repository"))
+        );
+        assert_eq!(parse_repository_ref("a/b"), Some(("a", "b")));
     }
 
     #[test]
-    fn test_parse_project_ref_invalid() {
-        assert_eq!(parse_project_ref("noslash"), None);
-        assert_eq!(parse_project_ref("/project"), None);
-        assert_eq!(parse_project_ref("org/"), None);
-        assert_eq!(parse_project_ref(""), None);
-        assert_eq!(parse_project_ref("/"), None);
+    fn test_parse_repository_ref_invalid() {
+        assert_eq!(parse_repository_ref("noslash"), None);
+        assert_eq!(parse_repository_ref("/repository"), None);
+        assert_eq!(parse_repository_ref("org/"), None);
+        assert_eq!(parse_repository_ref(""), None);
+        assert_eq!(parse_repository_ref("/"), None);
     }
 
     #[test]
-    fn test_looks_like_project_ref() {
-        assert!(looks_like_project_ref("acme/myapp"));
-        assert!(!looks_like_project_ref("just-a-goal"));
-        assert!(!looks_like_project_ref("Fix the bug"));
+    fn test_looks_like_repository_ref() {
+        assert!(looks_like_repository_ref("acme/myapp"));
+        assert!(!looks_like_repository_ref("just-a-goal"));
+        assert!(!looks_like_repository_ref("Fix the bug"));
     }
 }

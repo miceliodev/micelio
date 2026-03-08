@@ -1,55 +1,55 @@
-//! Project management commands.
+//! Repository management commands.
 
-use crate::cli::{parse_project_ref, ProjectCommand, ProjectSubcommand};
+use crate::cli::{parse_repository_ref, RepositoryCommand, RepositorySubcommand};
 use crate::config::{self, Config};
 use crate::error::{MicError, Result};
 use crate::grpc::client::{read_field, read_string, write_length_delimited};
 use crate::grpc::{Endpoint, GrpcClient};
 
-/// Run the project command.
-pub async fn run(cmd: ProjectCommand) -> Result<()> {
+/// Run the repository command.
+pub async fn run(cmd: RepositoryCommand) -> Result<()> {
     match cmd.command {
-        ProjectSubcommand::List { org } => list(&org).await,
-        ProjectSubcommand::Create {
-            project,
+        RepositorySubcommand::List { org } => list(&org).await,
+        RepositorySubcommand::Create {
+            repository,
             name,
             description,
         } => {
-            let (org, handle) = parse_project_ref(&project).ok_or_else(|| {
-                MicError::InvalidProjectRef(format!(
-                    "Invalid project reference '{}'. Use format: org/project",
-                    project
+            let (org, handle) = parse_repository_ref(&repository).ok_or_else(|| {
+                MicError::InvalidRepositoryRef(format!(
+                    "Invalid repository reference '{}'. Use format: org/repository",
+                    repository
                 ))
             })?;
             create(org, handle, &name, description.as_deref()).await
         }
-        ProjectSubcommand::Info { project } => {
-            let (org, handle) = parse_project_ref(&project).ok_or_else(|| {
-                MicError::InvalidProjectRef(format!(
-                    "Invalid project reference '{}'. Use format: org/project",
-                    project
+        RepositorySubcommand::Info { repository } => {
+            let (org, handle) = parse_repository_ref(&repository).ok_or_else(|| {
+                MicError::InvalidRepositoryRef(format!(
+                    "Invalid repository reference '{}'. Use format: org/repository",
+                    repository
                 ))
             })?;
             info(org, handle).await
         }
-        ProjectSubcommand::Update {
-            project,
+        RepositorySubcommand::Update {
+            repository,
             name,
             description,
         } => {
-            let (org, handle) = parse_project_ref(&project).ok_or_else(|| {
-                MicError::InvalidProjectRef(format!(
-                    "Invalid project reference '{}'. Use format: org/project",
-                    project
+            let (org, handle) = parse_repository_ref(&repository).ok_or_else(|| {
+                MicError::InvalidRepositoryRef(format!(
+                    "Invalid repository reference '{}'. Use format: org/repository",
+                    repository
                 ))
             })?;
             update(org, handle, name.as_deref(), description.as_deref()).await
         }
-        ProjectSubcommand::Delete { project } => {
-            let (org, handle) = parse_project_ref(&project).ok_or_else(|| {
-                MicError::InvalidProjectRef(format!(
-                    "Invalid project reference '{}'. Use format: org/project",
-                    project
+        RepositorySubcommand::Delete { repository } => {
+            let (org, handle) = parse_repository_ref(&repository).ok_or_else(|| {
+                MicError::InvalidRepositoryRef(format!(
+                    "Invalid repository reference '{}'. Use format: org/repository",
+                    repository
                 ))
             })?;
             delete(org, handle).await
@@ -57,7 +57,7 @@ pub async fn run(cmd: ProjectCommand) -> Result<()> {
     }
 }
 
-/// List projects in an organization.
+/// List repositories in an organization.
 async fn list(organization: &str) -> Result<()> {
     let mut config = Config::load()?;
     let server = config.resolve_default_grpc_url().await?;
@@ -70,7 +70,7 @@ async fn list(organization: &str) -> Result<()> {
 
     let response = client
         .unary_call(
-            "/micelio.projects.v1.ProjectService/ListProjects",
+            "/micelio.repositories.v1.RepositoryService/ListRepositories",
             &request,
             Some(&tokens.access_token),
         )
@@ -80,7 +80,7 @@ async fn list(organization: &str) -> Result<()> {
     while pos < response.len() {
         if let Some((field_number, _, data)) = read_field(&response, &mut pos) {
             if field_number == 1 {
-                let (name, handle) = parse_project(data);
+                let (name, handle) = parse_repository(data);
                 println!("{}/{} - {}", organization, handle, name);
             }
         }
@@ -89,7 +89,7 @@ async fn list(organization: &str) -> Result<()> {
     Ok(())
 }
 
-/// Create a new project.
+/// Create a new repository.
 async fn create(
     organization: &str,
     handle: &str,
@@ -112,17 +112,17 @@ async fn create(
 
     let _ = client
         .unary_call(
-            "/micelio.projects.v1.ProjectService/CreateProject",
+            "/micelio.repositories.v1.RepositoryService/CreateRepository",
             &request,
             Some(&tokens.access_token),
         )
         .await?;
 
-    println!("Project created: {}/{}", organization, handle);
+    println!("Repository created: {}/{}", organization, handle);
     Ok(())
 }
 
-/// Get project details.
+/// Get repository details.
 async fn info(organization: &str, handle: &str) -> Result<()> {
     let mut config = Config::load()?;
     let server = config.resolve_default_grpc_url().await?;
@@ -136,15 +136,15 @@ async fn info(organization: &str, handle: &str) -> Result<()> {
 
     let response = client
         .unary_call(
-            "/micelio.projects.v1.ProjectService/GetProject",
+            "/micelio.repositories.v1.RepositoryService/GetRepository",
             &request,
             Some(&tokens.access_token),
         )
         .await?;
 
-    let (name, handle, description) = parse_project_details(&response);
+    let (name, handle, description) = parse_repository_details(&response);
 
-    println!("Project: {}", name);
+    println!("Repository: {}", name);
     println!("Handle: {}/{}", organization, handle);
     if !description.is_empty() {
         println!("Description: {}", description);
@@ -153,7 +153,7 @@ async fn info(organization: &str, handle: &str) -> Result<()> {
     Ok(())
 }
 
-/// Update a project.
+/// Update a repository.
 async fn update(
     organization: &str,
     handle: &str,
@@ -178,17 +178,17 @@ async fn update(
 
     let _ = client
         .unary_call(
-            "/micelio.projects.v1.ProjectService/UpdateProject",
+            "/micelio.repositories.v1.RepositoryService/UpdateRepository",
             &request,
             Some(&tokens.access_token),
         )
         .await?;
 
-    println!("Project updated.");
+    println!("Repository updated.");
     Ok(())
 }
 
-/// Delete a project.
+/// Delete a repository.
 async fn delete(organization: &str, handle: &str) -> Result<()> {
     let mut config = Config::load()?;
     let server = config.resolve_default_grpc_url().await?;
@@ -202,18 +202,18 @@ async fn delete(organization: &str, handle: &str) -> Result<()> {
 
     let _ = client
         .unary_call(
-            "/micelio.projects.v1.ProjectService/DeleteProject",
+            "/micelio.repositories.v1.RepositoryService/DeleteRepository",
             &request,
             Some(&tokens.access_token),
         )
         .await?;
 
-    println!("Project deleted: {}/{}", organization, handle);
+    println!("Repository deleted: {}/{}", organization, handle);
     Ok(())
 }
 
-/// Parse project from protobuf.
-fn parse_project(data: &[u8]) -> (String, String) {
+/// Parse repository from protobuf.
+fn parse_repository(data: &[u8]) -> (String, String) {
     let mut pos = 0;
     let mut name = String::new();
     let mut handle = String::new();
@@ -231,8 +231,8 @@ fn parse_project(data: &[u8]) -> (String, String) {
     (name, handle)
 }
 
-/// Parse project details from protobuf.
-fn parse_project_details(data: &[u8]) -> (String, String, String) {
+/// Parse repository details from protobuf.
+fn parse_repository_details(data: &[u8]) -> (String, String, String) {
     let mut pos = 0;
     let mut name = String::new();
     let mut handle = String::new();

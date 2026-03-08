@@ -53,7 +53,7 @@ pub async fn run(cmd: SyncCommand) -> Result<()> {
 
     println!(
         "Syncing {}/{} from {}...",
-        manifest.account, manifest.project, manifest.server
+        manifest.account, manifest.repository, manifest.server
     );
 
     let result = sync_workspace(&mut manifest, strategy).await?;
@@ -103,7 +103,7 @@ async fn sync_workspace(
         &tokens.access_token,
         &user_id,
         &manifest.account,
-        &manifest.project,
+        &manifest.repository,
     )
     .await?;
 
@@ -152,7 +152,7 @@ async fn sync_workspace(
                         &tokens.access_token,
                         &user_id,
                         &manifest.account,
-                        &manifest.project,
+                        &manifest.repository,
                         path,
                         Some(revision_hash.as_slice()),
                     )
@@ -174,7 +174,7 @@ async fn sync_workspace(
                                 &tokens.access_token,
                                 &user_id,
                                 &manifest.account,
-                                &manifest.project,
+                                &manifest.repository,
                                 path,
                                 Some(revision_hash.as_slice()),
                             )
@@ -196,7 +196,7 @@ async fn sync_workspace(
                 &tokens.access_token,
                 &user_id,
                 &manifest.account,
-                &manifest.project,
+                &manifest.repository,
                 path,
                 Some(revision_hash.as_slice()),
             )
@@ -297,9 +297,9 @@ async fn fetch_upstream_tree(
     access_token: &str,
     user_id: &str,
     organization: &str,
-    project: &str,
+    repository: &str,
 ) -> Result<(HashMap<String, String>, Vec<u8>)> {
-    let repository = repository_ref(organization, project);
+    let repository = repository_ref(organization, repository);
     let head: pb::RepositoryHeadResponse = call(
         client,
         access_token,
@@ -344,7 +344,7 @@ async fn fetch_file_content(
     access_token: &str,
     user_id: &str,
     organization: &str,
-    project: &str,
+    repository: &str,
     path: &str,
     revision_hash: Option<&[u8]>,
 ) -> Result<String> {
@@ -354,7 +354,7 @@ async fn fetch_file_content(
         "/hif.v1.ContentService/GetPath",
         &pb::GetPathRequest {
             user_id: user_id.to_string(),
-            repository: Some(repository_ref(organization, project)),
+            repository: Some(repository_ref(organization, repository)),
             revision_hash: revision_hash.map(|hash| hash.to_vec()).unwrap_or_default(),
             path: path.to_string(),
         },

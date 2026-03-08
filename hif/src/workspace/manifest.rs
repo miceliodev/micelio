@@ -1,6 +1,6 @@
 //! Workspace manifest management.
 //!
-//! The manifest stores the workspace state including server, project,
+//! The manifest stores the workspace state including server, repository,
 //! and file entries.
 #![allow(dead_code)]
 
@@ -10,24 +10,24 @@ use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::Path;
 
-/// Simplified manifest for reading project info.
+/// Simplified manifest for reading repository info.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Manifest {
     /// Server URL.
     pub server: String,
     /// Organization handle.
     pub organization: String,
-    /// Project handle.
-    pub project: String,
+    /// Repository handle.
+    pub repository: String,
 }
 
 impl Manifest {
     /// Create a new manifest.
-    pub fn new(server: &str, organization: &str, project: &str) -> Self {
+    pub fn new(server: &str, organization: &str, repository: &str) -> Self {
         Self {
             server: server.to_string(),
             organization: organization.to_string(),
-            project: project.to_string(),
+            repository: repository.to_string(),
         }
     }
 
@@ -46,7 +46,7 @@ impl Manifest {
                 return Ok(Self {
                     server: workspace.server,
                     organization: workspace.account,
-                    project: workspace.project,
+                    repository: workspace.repository,
                 });
             }
 
@@ -59,17 +59,17 @@ impl Manifest {
 
     /// Save the manifest to the current directory.
     pub fn save(&self) -> Result<()> {
-        let workspace = WorkspaceManifest::new(&self.server, &self.organization, &self.project);
+        let workspace = WorkspaceManifest::new(&self.server, &self.organization, &self.repository);
         workspace.save()
     }
 
-    /// Get the full project reference (org/project).
-    pub fn project_ref(&self) -> String {
-        format!("{}/{}", self.organization, self.project)
+    /// Get the full repository reference (org/repository).
+    pub fn repository_ref(&self) -> String {
+        format!("{}/{}", self.organization, self.repository)
     }
 }
 
-/// Workspace manifest containing project link and state.
+/// Workspace manifest containing repository link and state.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct WorkspaceManifest {
     /// Manifest version.
@@ -78,8 +78,8 @@ pub struct WorkspaceManifest {
     pub server: String,
     /// Account/organization handle.
     pub account: String,
-    /// Project handle.
-    pub project: String,
+    /// Repository handle.
+    pub repository: String,
     /// Current tree hash.
     pub tree_hash: String,
     /// File entries.
@@ -102,12 +102,12 @@ pub struct WorkspaceEntry {
 
 impl WorkspaceManifest {
     /// Create a new workspace manifest.
-    pub fn new(server: &str, account: &str, project: &str) -> Self {
+    pub fn new(server: &str, account: &str, repository: &str) -> Self {
         Self {
             version: 1,
             server: server.to_string(),
             account: account.to_string(),
-            project: project.to_string(),
+            repository: repository.to_string(),
             tree_hash: String::new(),
             entries: Vec::new(),
         }
@@ -155,9 +155,9 @@ impl WorkspaceManifest {
         Ok(())
     }
 
-    /// Get the full project reference (account/project).
-    pub fn project_ref(&self) -> String {
-        format!("{}/{}", self.account, self.project)
+    /// Get the full repository reference (account/repository).
+    pub fn repository_ref(&self) -> String {
+        format!("{}/{}", self.account, self.repository)
     }
 
     /// Find an entry by path.
@@ -194,7 +194,7 @@ mod tests {
         assert_eq!(manifest.version, 1);
         assert_eq!(manifest.server, "http://localhost:50051");
         assert_eq!(manifest.account, "acme");
-        assert_eq!(manifest.project, "app");
+        assert_eq!(manifest.repository, "app");
         assert!(manifest.entries.is_empty());
     }
 
@@ -218,17 +218,17 @@ mod tests {
 
         assert_eq!(loaded.server, manifest.server);
         assert_eq!(loaded.account, manifest.account);
-        assert_eq!(loaded.project, manifest.project);
+        assert_eq!(loaded.repository, manifest.repository);
         assert_eq!(loaded.tree_hash, manifest.tree_hash);
         assert_eq!(loaded.entries.len(), 1);
         assert_eq!(loaded.entries[0].path, "README.md");
     }
 
     #[test]
-    fn manifest_project_ref() {
+    fn manifest_repository_ref() {
         let manifest = WorkspaceManifest::new("http://localhost:50051", "acme", "app");
 
-        assert_eq!(manifest.project_ref(), "acme/app");
+        assert_eq!(manifest.repository_ref(), "acme/app");
     }
 
     #[test]

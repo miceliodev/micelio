@@ -1,6 +1,6 @@
-//! Checkout command - create local workspace from a project.
+//! Checkout command - create local workspace from a repository.
 
-use crate::cli::{parse_project_ref, CheckoutCommand};
+use crate::cli::{parse_repository_ref, CheckoutCommand};
 use crate::config::{self, Config};
 use crate::error::{MicError, Result};
 use crate::workspace::WorkspaceManifest;
@@ -8,11 +8,11 @@ use std::fs;
 
 /// Run the checkout command.
 pub async fn run(cmd: CheckoutCommand) -> Result<()> {
-    // Parse project reference
-    let (org, project) = parse_project_ref(&cmd.project).ok_or_else(|| {
-        MicError::InvalidProjectRef(format!(
-            "Invalid project reference '{}'. Use format: org/project",
-            cmd.project
+    // Parse repository reference
+    let (org, repository) = parse_repository_ref(&cmd.repository).ok_or_else(|| {
+        MicError::InvalidRepositoryRef(format!(
+            "Invalid repository reference '{}'. Use format: org/repository",
+            cmd.repository
         ))
     })?;
 
@@ -21,7 +21,7 @@ pub async fn run(cmd: CheckoutCommand) -> Result<()> {
     let _tokens = config::require_tokens()?;
 
     // Determine target directory
-    let target_path = cmd.path.unwrap_or_else(|| project.to_string());
+    let target_path = cmd.path.unwrap_or_else(|| repository.to_string());
 
     // Create directory if it doesn't exist
     if !std::path::Path::new(&target_path).exists() {
@@ -32,10 +32,10 @@ pub async fn run(cmd: CheckoutCommand) -> Result<()> {
     std::env::set_current_dir(&target_path)?;
 
     // Create workspace manifest
-    let manifest = WorkspaceManifest::new(&server, org, project);
+    let manifest = WorkspaceManifest::new(&server, org, repository);
     manifest.save()?;
 
-    println!("Checked out {}/{} to {}", org, project, target_path);
+    println!("Checked out {}/{} to {}", org, repository, target_path);
     println!();
     println!("Start working:");
     println!("  cd {}", target_path);

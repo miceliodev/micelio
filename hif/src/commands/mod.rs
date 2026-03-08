@@ -10,7 +10,7 @@ pub mod link;
 pub mod log;
 pub mod mount;
 pub mod org;
-pub mod project;
+pub mod repository;
 pub mod session;
 pub mod show;
 pub mod status;

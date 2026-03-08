@@ -1,4 +1,4 @@
-//! Unmount command - unmount project virtual filesystem.
+//! Unmount command - unmount repository virtual filesystem.
 
 use crate::cli::UnmountCommand;
 use crate::error::{MicError, Result};
@@ -26,7 +26,7 @@ pub async fn run(cmd: UnmountCommand) -> Result<()> {
         )));
     }
 
-    // Load manifest to get project info
+    // Load manifest to get repository info
     let manifest_path = hif_dir.join("manifest.json");
     let manifest =
         WorkspaceManifest::load_from(&manifest_path)?.ok_or_else(|| MicError::NoWorkspace)?;
@@ -34,7 +34,7 @@ pub async fn run(cmd: UnmountCommand) -> Result<()> {
     println!(
         "Unmounting {}/{} from {}...",
         manifest.account,
-        manifest.project,
+        manifest.repository,
         mount_path.display()
     );
 

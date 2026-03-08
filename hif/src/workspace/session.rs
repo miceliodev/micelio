@@ -22,10 +22,10 @@ pub struct SessionState {
     pub id: String,
     /// Session goal.
     pub goal: String,
-    /// Project organization.
-    pub project_org: String,
-    /// Project handle.
-    pub project_handle: String,
+    /// Repository organization.
+    pub repository_org: String,
+    /// Repository handle.
+    pub repository_handle: String,
     /// Session start timestamp.
     pub started_at: String,
     /// Conversation messages.
@@ -129,15 +129,15 @@ impl Session {
     }
 
     /// Start a new session.
-    pub fn start(org: &str, project: &str, goal: &str) -> Result<SessionState> {
+    pub fn start(org: &str, repository: &str, goal: &str) -> Result<SessionState> {
         let session_id = generate_session_id();
-        Self::start_with_id(org, project, goal, &session_id)
+        Self::start_with_id(org, repository, goal, &session_id)
     }
 
     /// Start a new session with an explicit session id.
     pub fn start_with_id(
         org: &str,
-        project: &str,
+        repository: &str,
         goal: &str,
         session_id: &str,
     ) -> Result<SessionState> {
@@ -154,8 +154,8 @@ impl Session {
         let state = SessionState {
             id: session_id.to_string(),
             goal: goal.to_string(),
-            project_org: org.to_string(),
-            project_handle: project.to_string(),
+            repository_org: org.to_string(),
+            repository_handle: repository.to_string(),
             started_at: now,
             conversation: Vec::new(),
             decisions: Vec::new(),
@@ -339,8 +339,8 @@ mod tests {
         let state = SessionState {
             id: "test-id".to_string(),
             goal: "Test goal".to_string(),
-            project_org: "acme".to_string(),
-            project_handle: "app".to_string(),
+            repository_org: "acme".to_string(),
+            repository_handle: "app".to_string(),
             started_at: "1234567890".to_string(),
             conversation: vec![Conversation {
                 role: "human".to_string(),
@@ -358,7 +358,7 @@ mod tests {
 
         assert_eq!(loaded.id, state.id);
         assert_eq!(loaded.goal, state.goal);
-        assert_eq!(loaded.project_org, state.project_org);
+        assert_eq!(loaded.repository_org, state.repository_org);
         assert_eq!(loaded.conversation.len(), 1);
     }
 }

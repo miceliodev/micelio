@@ -1,6 +1,8 @@
 //! Session management commands.
 
-use crate::cli::{looks_like_project_ref, parse_project_ref, SessionCommand, SessionSubcommand};
+use crate::cli::{
+    looks_like_repository_ref, parse_repository_ref, SessionCommand, SessionSubcommand,
+};
 use crate::config::{self, Config};
 use crate::error::{MicError, Result};
 use crate::grpc::hif_v1::{call, pb, repository_ref, user_id_from_token};
@@ -14,8 +16,8 @@ use std::fs;
 pub async fn run(cmd: SessionCommand) -> Result<()> {
     match cmd.command {
         SessionSubcommand::Start { first, second } => {
-            let (org, project, goal) = parse_start_args(&first, second.as_deref())?;
-            start(&org, &project, &goal).await
+            let (org, repository, goal) = parse_start_args(&first, second.as_deref())?;
+            start(&org, &repository, &goal).await
         }
         SessionSubcommand::Status => status().await,
         SessionSubcommand::Note { message, role } => note(&role, &message),
@@ -28,23 +30,24 @@ pub async fn run(cmd: SessionCommand) -> Result<()> {
 /// Parse session start arguments.
 ///
 /// Supports two forms:
-/// - In workspace: `hif session start "goal"` - project inferred from workspace
-/// - Outside workspace: `hif session start org/project "goal"` - project explicit
+/// - In workspace: `hif session start "goal"` - repository inferred from workspace
+/// - Outside workspace: `hif session start org/repository "goal"` - repository explicit
 fn parse_start_args(first: &str, second: Option<&str>) -> Result<(String, String, String)> {
     match second {
         Some(goal) => {
-            let (org, project) = parse_project_ref(first).ok_or_else(|| {
-                MicError::InvalidProjectRef(format!(
-                    "Invalid project reference '{}'. Use format: org/project",
+            let (org, repository) = parse_repository_ref(first).ok_or_else(|| {
+                MicError::InvalidRepositoryRef(format!(
+                    "Invalid repository reference '{}'. Use format: org/repository",
                     first
                 ))
             })?;
-            Ok((org.to_string(), project.to_string(), goal.to_string()))
+            Ok((org.to_string(), repository.to_string(), goal.to_string()))
         }
         None => {
-            if looks_like_project_ref(first) {
+            if looks_like_repository_ref(first) {
                 return Err(MicError::Other(
-                    "Missing goal. Usage: hif session start <org/project> \"<goal>\"".to_string(),
+                    "Missing goal. Usage: hif session start <org/repository> \"<goal>\""
+                        .to_string(),
                 ));
             }
 
@@ -52,14 +55,14 @@ fn parse_start_args(first: &str, second: Option<&str>) -> Result<(String, String
                 MicError::NotInWorkspace(
                     "Not in a workspace. Either:\n  \
                      1. Run from inside a workspace (created with 'hif checkout'), or\n  \
-                     2. Specify the project: hif session start <org/project> \"<goal>\""
+                     2. Specify the repository: hif session start <org/repository> \"<goal>\""
                         .to_string(),
                 )
             })?;
 
             Ok((
                 manifest.organization.clone(),
-                manifest.project.clone(),
+                manifest.repository.clone(),
                 first.to_string(),
             ))
         }
@@ -67,7 +70,7 @@ fn parse_start_args(first: &str, second: Option<&str>) -> Result<(String, String
 }
 
 /// Start a new session.
-async fn start(organization: &str, project: &str, goal: &str) -> Result<()> {
+async fn start(organization: &str, repository: &str, goal: &str) -> Result<()> {
     if Session::exists()? {
         return Err(MicError::SessionAlreadyActive);
     }
@@ -80,7 +83,7 @@ async fn start(organization: &str, project: &str, goal: &str) -> Result<()> {
 
     let session_id = generate_session_id();
     let user_id = user_id_from_token(&tokens.access_token);
-    let repo = repository_ref(organization, project);
+    let repo = repository_ref(organization, repository);
 
     let _session_info: pb::SessionInfo = call(
         &client,
@@ -99,11 +102,11 @@ async fn start(organization: &str, project: &str, goal: &str) -> Result<()> {
     )
     .await?;
 
-    let state = Session::start_with_id(organization, project, goal, &session_id)?;
+    let state = Session::start_with_id(organization, repository, goal, &session_id)?;
 
     println!("Session started: {}", state.id);
     println!("Goal: {}", goal);
-    println!("Project: {}/{}", organization, project);
+    println!("Repository: {}/{}", organization, repository);
     println!();
     println!("Make your changes, then run 'hif session land' to push to the forge.");
 
@@ -117,12 +120,15 @@ async fn status() -> Result<()> {
     match state {
         None => {
             println!("No active session.");
-            println!("Start one with: hif session start <organization>/<project> <goal>");
+            println!("Start one with: hif session start <organization>/<repository> <goal>");
         }
         Some(state) => {
             println!("Active session: {}", state.id);
             println!("Goal: {}", state.goal);
-            println!("Project: {}/{}", state.project_org, state.project_handle);
+            println!(
+                "Repository: {}/{}",
+                state.repository_org, state.repository_handle
+            );
             println!("Started: {}", state.started_at);
 
             if !state.conversation.is_empty() {

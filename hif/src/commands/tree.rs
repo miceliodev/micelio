@@ -1,6 +1,6 @@
 //! Tree command - list directory contents from the forge.
 
-use crate::cli::{parse_project_ref, TreeCommand};
+use crate::cli::{parse_repository_ref, TreeCommand};
 use crate::config::{self, Config};
 use crate::error::{MicError, Result};
 use crate::grpc::hif_v1::{call, pb, repository_ref, user_id_from_token};
@@ -10,10 +10,10 @@ use std::collections::BTreeSet;
 
 /// Run the tree command.
 pub async fn run(cmd: TreeCommand) -> Result<()> {
-    let (org, project) = parse_project_ref(&cmd.project).ok_or_else(|| {
-        MicError::InvalidProjectRef(format!(
-            "Invalid project reference '{}'. Use format: org/project",
-            cmd.project
+    let (org, repository) = parse_repository_ref(&cmd.repository).ok_or_else(|| {
+        MicError::InvalidRepositoryRef(format!(
+            "Invalid repository reference '{}'. Use format: org/repository",
+            cmd.repository
         ))
     })?;
 
@@ -40,7 +40,7 @@ pub async fn run(cmd: TreeCommand) -> Result<()> {
         "/hif.v1.ContentService/GetTree",
         &pb::GetTreeRequest {
             user_id,
-            repository: Some(repository_ref(org, project)),
+            repository: Some(repository_ref(org, repository)),
             revision_hash: position.unwrap_or_default(),
         },
     )

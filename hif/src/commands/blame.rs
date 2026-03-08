@@ -1,6 +1,6 @@
 //! Blame command - show session attribution for file lines.
 
-use crate::cli::{parse_project_ref, BlameCommand};
+use crate::cli::{parse_repository_ref, BlameCommand};
 use crate::config::{self, Config};
 use crate::error::{MicError, Result};
 use crate::grpc::hif_v1::{call, pb, repository_ref, user_id_from_token};
@@ -8,10 +8,10 @@ use crate::grpc::{Endpoint, GrpcClient};
 
 /// Run the blame command.
 pub async fn run(cmd: BlameCommand) -> Result<()> {
-    let (org, project) = parse_project_ref(&cmd.project).ok_or_else(|| {
-        MicError::InvalidProjectRef(format!(
-            "Invalid project reference '{}'. Use format: org/project",
-            cmd.project
+    let (org, repository) = parse_repository_ref(&cmd.repository).ok_or_else(|| {
+        MicError::InvalidRepositoryRef(format!(
+            "Invalid repository reference '{}'. Use format: org/repository",
+            cmd.repository
         ))
     })?;
 
@@ -21,7 +21,7 @@ pub async fn run(cmd: BlameCommand) -> Result<()> {
     let endpoint = Endpoint::parse(&server)?;
     let client = GrpcClient::new(endpoint);
     let user_id = user_id_from_token(&tokens.access_token);
-    let repo = repository_ref(org, project);
+    let repo = repository_ref(org, repository);
 
     let head: pb::RepositoryHeadResponse = call(
         &client,

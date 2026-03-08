@@ -81,7 +81,7 @@ pub enum MicError {
     InvalidPath(String),
 
     #[error("{0}")]
-    InvalidProjectRef(String),
+    InvalidRepositoryRef(String),
 
     /// Path not found in repository.
     #[allow(dead_code)]
@@ -149,7 +149,7 @@ impl MicError {
             MicError::NoWorkspace => "no_workspace",
             MicError::NotInWorkspace(_) => "not_in_workspace",
             MicError::InvalidPath(_) => "invalid_path",
-            MicError::InvalidProjectRef(_) => "invalid_project_ref",
+            MicError::InvalidRepositoryRef(_) => "invalid_repository_ref",
             MicError::PathNotFound(_) => "path_not_found",
 
             // Network
@@ -212,7 +212,7 @@ mod tests {
             MicError::InvalidTokens,
             MicError::NoDefaultServer,
             MicError::NoWorkspace,
-            MicError::InvalidProjectRef("test".into()),
+            MicError::InvalidRepositoryRef("test".into()),
             MicError::ConfigError("test".into()),
             MicError::GrpcError("test".into()),
             MicError::DiscoveryFailed("test".into()),
@@ -234,7 +234,7 @@ mod tests {
         assert!(MicError::GrpcError("timeout".into()).is_retryable());
         assert!(MicError::HttpError("503".into()).is_retryable());
         assert!(!MicError::NotAuthenticated.is_retryable());
-        assert!(!MicError::InvalidProjectRef("test".into()).is_retryable());
+        assert!(!MicError::InvalidRepositoryRef("test".into()).is_retryable());
     }
 
     #[test]

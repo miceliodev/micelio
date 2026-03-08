@@ -13,7 +13,7 @@ pub async fn run() -> Result<()> {
 
     println!(
         "{}",
-        format!("On project {}/{}", manifest.account, manifest.project).bold()
+        format!("On repository {}/{}", manifest.account, manifest.repository).bold()
     );
     println!("Server: {}", manifest.server.dimmed());
 
@@ -86,7 +86,7 @@ pub async fn run() -> Result<()> {
                 "Start a session with: {} {} {} \"goal\"",
                 "hif session start".cyan(),
                 manifest.account,
-                manifest.project
+                manifest.repository
             );
         } else {
             println!();
@@ -96,7 +96,7 @@ pub async fn run() -> Result<()> {
                 "Start a session with: {} {} {} \"goal\"",
                 "hif session start".cyan(),
                 manifest.account,
-                manifest.project
+                manifest.repository
             );
         }
     }

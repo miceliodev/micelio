@@ -15,7 +15,7 @@
 //!     }
 //!   },
 //!   "aliases": {
-//!     "mp": "myorg/myproject"
+//!     "mp": "myorg/myrepository"
 //!   }
 //! }
 //! ```
@@ -42,7 +42,7 @@ pub struct Config {
     #[serde(default)]
     pub servers: HashMap<String, ServerConfig>,
 
-    /// Project aliases (short name -> org/project).
+    /// Repository aliases (short name -> org/repository).
     #[serde(default)]
     pub aliases: HashMap<String, String>,
 
@@ -242,28 +242,28 @@ impl Config {
         self.servers.insert(name.to_string(), server);
     }
 
-    /// Get a project alias.
+    /// Get a repository alias.
     #[allow(dead_code)]
     pub fn get_alias(&self, alias: &str) -> Option<&str> {
         self.aliases.get(alias).map(|s| s.as_str())
     }
 
-    /// Set a project alias.
+    /// Set a repository alias.
     #[allow(dead_code)]
-    pub fn set_alias(&mut self, alias: &str, project_ref: &str) {
+    pub fn set_alias(&mut self, alias: &str, repository_ref: &str) {
         self.aliases
-            .insert(alias.to_string(), project_ref.to_string());
+            .insert(alias.to_string(), repository_ref.to_string());
     }
 
-    /// Remove a project alias.
+    /// Remove a repository alias.
     #[allow(dead_code)]
     pub fn remove_alias(&mut self, alias: &str) -> bool {
         self.aliases.remove(alias).is_some()
     }
 
-    /// Resolve a project reference, expanding aliases if needed.
+    /// Resolve a repository reference, expanding aliases if needed.
     #[allow(dead_code)]
-    pub fn resolve_project<'a>(&'a self, ref_str: &'a str) -> &'a str {
+    pub fn resolve_repository<'a>(&'a self, ref_str: &'a str) -> &'a str {
         self.aliases
             .get(ref_str)
             .map(|s| s.as_str())
@@ -650,12 +650,15 @@ mod tests {
         let mut config = Config::default();
 
         // Set alias
-        config.set_alias("mp", "myorg/myproject");
-        assert_eq!(config.get_alias("mp"), Some("myorg/myproject"));
+        config.set_alias("mp", "myorg/myrepository");
+        assert_eq!(config.get_alias("mp"), Some("myorg/myrepository"));
 
         // Resolve with alias
-        assert_eq!(config.resolve_project("mp"), "myorg/myproject");
-        assert_eq!(config.resolve_project("other/project"), "other/project");
+        assert_eq!(config.resolve_repository("mp"), "myorg/myrepository");
+        assert_eq!(
+            config.resolve_repository("other/repository"),
+            "other/repository"
+        );
 
         // Remove alias
         assert!(config.remove_alias("mp"));

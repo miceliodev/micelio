@@ -23,7 +23,7 @@ fn cli_shows_help() {
         .stdout(predicate::str::contains("hif CLI"))
         .stdout(predicate::str::contains("Usage:"))
         .stdout(predicate::str::contains("auth"))
-        .stdout(predicate::str::contains("project"))
+        .stdout(predicate::str::contains("repository"))
         .stdout(predicate::str::contains("session"));
 }
 
@@ -192,11 +192,11 @@ fn help_json_has_all_commands() {
 }
 
 // =============================================================================
-// Project Reference Parsing Tests
+// Repository Reference Parsing Tests
 // =============================================================================
 
 #[test]
-fn invalid_project_ref_in_checkout() {
+fn invalid_repository_ref_in_checkout() {
     let temp_dir = tempfile::tempdir().unwrap();
 
     // Missing slash
@@ -206,7 +206,7 @@ fn invalid_project_ref_in_checkout() {
         .args(["checkout", "invalid"])
         .assert()
         .failure()
-        .stderr(predicate::str::contains("Invalid project"));
+        .stderr(predicate::str::contains("Invalid repository"));
 }
 
 // =============================================================================
@@ -226,12 +226,12 @@ fn org_list_requires_auth() {
 }
 
 #[test]
-fn project_list_requires_auth() {
+fn repository_list_requires_auth() {
     let temp_dir = tempfile::tempdir().unwrap();
 
     hif()
         .env("HIF_HOME", temp_dir.path())
-        .args(["project", "list", "myorg"])
+        .args(["repository", "list", "myorg"])
         .assert()
         .failure()
         .stderr(predicate::str::contains("Not authenticated"));

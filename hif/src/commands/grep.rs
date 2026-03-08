@@ -1,6 +1,6 @@
 //! Grep command - search repository content with remote index and local fallback.
 
-use crate::cli::{parse_project_ref, GrepCommand};
+use crate::cli::{parse_repository_ref, GrepCommand};
 use crate::config::{self, Config};
 use crate::error::{MicError, Result};
 use crate::grpc::hif_v1::{call, pb, repository_ref, user_id_from_token};
@@ -12,10 +12,10 @@ use std::path::{Path, PathBuf};
 
 /// Run the grep command.
 pub async fn run(cmd: GrepCommand) -> Result<()> {
-    let (org, project) = parse_project_ref(&cmd.project).ok_or_else(|| {
-        MicError::InvalidProjectRef(format!(
-            "Invalid project reference '{}'. Use format: org/project",
-            cmd.project
+    let (org, repository) = parse_repository_ref(&cmd.repository).ok_or_else(|| {
+        MicError::InvalidRepositoryRef(format!(
+            "Invalid repository reference '{}'. Use format: org/repository",
+            cmd.repository
         ))
     })?;
 
@@ -42,7 +42,7 @@ pub async fn run(cmd: GrepCommand) -> Result<()> {
 
     let request = pb::TextQueryRequest {
         user_id,
-        repository: Some(repository_ref(org, project)),
+        repository: Some(repository_ref(org, repository)),
         query: cmd.query.clone(),
         at_revision_hash: position.unwrap_or_default(),
         path_prefix: cmd.path.clone().unwrap_or_default(),

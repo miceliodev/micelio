@@ -180,8 +180,8 @@ hif auth login              # Device flow auth
 hif auth status             # Check auth status
 
 # Repositories
-hif project create <org/repository> "<name>"
-hif project list <org>
+hif repository create <org/repository> "<name>"
+hif repository list <org>
 
 # Working with content (no checkout needed)
 hif show <org/repository> <path>       # Read file

@@ -1,7 +1,7 @@
 //! Land command - quick land (start session + land in one step).
 
 use crate::cli::{
-    looks_like_project_ref, parse_project_ref, LandCommand, SessionCommand, SessionSubcommand,
+    looks_like_repository_ref, parse_repository_ref, LandCommand, SessionCommand, SessionSubcommand,
 };
 use crate::commands::session;
 use crate::error::{MicError, Result};
@@ -12,11 +12,11 @@ use crate::workspace::session::Session;
 ///
 /// This is a convenience command that combines session start + land.
 /// It supports two forms:
-/// - In workspace: `hif land "goal"` - project inferred from workspace
-/// - Outside workspace: `hif land org/project "goal"` - project explicit
+/// - In workspace: `hif land "goal"` - repository inferred from workspace
+/// - Outside workspace: `hif land org/repository "goal"` - repository explicit
 pub async fn run(cmd: LandCommand) -> Result<()> {
     // Parse arguments (same logic as session start)
-    let (org, project, goal) = parse_land_args(&cmd.first, cmd.second.as_deref())?;
+    let (org, repository, goal) = parse_land_args(&cmd.first, cmd.second.as_deref())?;
 
     // Check for active session
     if Session::exists()? {
@@ -33,7 +33,7 @@ pub async fn run(cmd: LandCommand) -> Result<()> {
 
     let start_cmd = SessionCommand {
         command: SessionSubcommand::Start {
-            first: format!("{}/{}", org, project),
+            first: format!("{}/{}", org, repository),
             second: Some(goal),
         },
     };
@@ -49,42 +49,42 @@ pub async fn run(cmd: LandCommand) -> Result<()> {
 /// Parse land arguments.
 ///
 /// Supports two forms:
-/// - In workspace: `hif land "goal"` - project inferred from workspace
-/// - Outside workspace: `hif land org/project "goal"` - project explicit
+/// - In workspace: `hif land "goal"` - repository inferred from workspace
+/// - Outside workspace: `hif land org/repository "goal"` - repository explicit
 fn parse_land_args(first: &str, second: Option<&str>) -> Result<(String, String, String)> {
     match second {
-        // Two args: first is org/project, second is goal
+        // Two args: first is org/repository, second is goal
         Some(goal) => {
-            let (org, project) = parse_project_ref(first).ok_or_else(|| {
-                MicError::InvalidProjectRef(format!(
-                    "Invalid project reference '{}'. Use format: org/project",
+            let (org, repository) = parse_repository_ref(first).ok_or_else(|| {
+                MicError::InvalidRepositoryRef(format!(
+                    "Invalid repository reference '{}'. Use format: org/repository",
                     first
                 ))
             })?;
-            Ok((org.to_string(), project.to_string(), goal.to_string()))
+            Ok((org.to_string(), repository.to_string(), goal.to_string()))
         }
         // One arg: could be just goal (in workspace) or error
         None => {
-            // Check if first arg looks like a project reference
-            if looks_like_project_ref(first) {
+            // Check if first arg looks like a repository reference
+            if looks_like_repository_ref(first) {
                 return Err(MicError::Other(
-                    "Missing goal. Usage: hif land <org/project> \"<goal>\"".to_string(),
+                    "Missing goal. Usage: hif land <org/repository> \"<goal>\"".to_string(),
                 ));
             }
 
-            // Try to infer project from workspace
+            // Try to infer repository from workspace
             let manifest = Manifest::find_and_load().map_err(|_| {
                 MicError::NotInWorkspace(
                     "Not in a workspace. Either:\n  \
                      1. Run from inside a workspace (created with 'hif checkout'), or\n  \
-                     2. Specify the project: hif land <org/project> \"<goal>\""
+                     2. Specify the repository: hif land <org/repository> \"<goal>\""
                         .to_string(),
                 )
             })?;
 
             Ok((
                 manifest.organization.clone(),
-                manifest.project.clone(),
+                manifest.repository.clone(),
                 first.to_string(),
             ))
         }

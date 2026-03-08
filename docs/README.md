@@ -6,7 +6,7 @@ This directory contains documentation for users, contributors, and hosters of Mi
 
 For people using hif and Micelio day-to-day:
 
-- [hif Workflows](./users/mic-workflows.md)
+- [hif Workflows](./users/hif-workflows.md)
 - [Storage Security and IAM Policies](./users/storage-security.md)
 
 ## Hosters

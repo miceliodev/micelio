@@ -14,8 +14,8 @@ use crate::http_client;
 pub struct BlobFetchOptions {
     /// CDN base URL
     pub cdn_base_url: Option<String>,
-    /// Project ID (for CDN path construction)
-    pub project_id: Option<String>,
+    /// Repository ID (for CDN path construction)
+    pub repository_id: Option<String>,
     /// Access token
     pub access_token: Option<String>,
 }
@@ -39,7 +39,7 @@ impl BlobFetchOptions {
 
     /// Check if CDN fetching is available.
     pub fn has_cdn(&self) -> bool {
-        self.cdn_base_url.is_some() && self.project_id.is_some()
+        self.cdn_base_url.is_some() && self.repository_id.is_some()
     }
 }
 
@@ -47,13 +47,13 @@ impl BlobFetchOptions {
 pub async fn fetch_blob(
     server: &str,
     account: &str,
-    project: &str,
+    repository: &str,
     blob_hash: &str,
     options: &BlobFetchOptions,
 ) -> Result<Vec<u8>> {
     // Try CDN first if available
-    if let (Some(cdn_url), Some(project_id)) = (&options.cdn_base_url, &options.project_id) {
-        match fetch_from_cdn(cdn_url, project_id, blob_hash).await {
+    if let (Some(cdn_url), Some(repository_id)) = (&options.cdn_base_url, &options.repository_id) {
+        match fetch_from_cdn(cdn_url, repository_id, blob_hash).await {
             Ok(content) => return Ok(content),
             Err(_) => {
                 // Fall through to gRPC
@@ -65,7 +65,7 @@ pub async fn fetch_blob(
     fetch_from_grpc(
         server,
         account,
-        project,
+        repository,
         blob_hash,
         options.access_token.as_deref(),
     )
@@ -73,8 +73,12 @@ pub async fn fetch_blob(
 }
 
 /// Fetch a blob from the CDN.
-async fn fetch_from_cdn(cdn_base_url: &str, project_id: &str, blob_hash: &str) -> Result<Vec<u8>> {
-    let url = cdn_url_for_blob(cdn_base_url, project_id, blob_hash);
+async fn fetch_from_cdn(
+    cdn_base_url: &str,
+    repository_id: &str,
+    blob_hash: &str,
+) -> Result<Vec<u8>> {
+    let url = cdn_url_for_blob(cdn_base_url, repository_id, blob_hash);
 
     let client = http_client::create_client();
     let response = http_client::get(&client, &url).await?;
@@ -93,7 +97,7 @@ async fn fetch_from_cdn(cdn_base_url: &str, project_id: &str, blob_hash: &str) -
 async fn fetch_from_grpc(
     server: &str,
     _account: &str,
-    _project: &str,
+    _repository: &str,
     blob_hash: &str,
     access_token: Option<&str>,
 ) -> Result<Vec<u8>> {
@@ -126,12 +130,12 @@ async fn fetch_from_grpc(
 }
 
 /// Build the CDN URL for a blob.
-fn cdn_url_for_blob(cdn_base_url: &str, project_id: &str, blob_hash: &str) -> String {
+fn cdn_url_for_blob(cdn_base_url: &str, repository_id: &str, blob_hash: &str) -> String {
     let base = cdn_base_url.trim_end_matches('/');
     let prefix = &blob_hash[..2.min(blob_hash.len())];
     format!(
-        "{}/projects/{}/blobs/{}/{}.bin",
-        base, project_id, prefix, blob_hash
+        "{}/repositories/{}/blobs/{}/{}.bin",
+        base, repository_id, prefix, blob_hash
     )
 }
 
@@ -158,19 +162,19 @@ mod tests {
 
     #[test]
     fn cdn_url_construction() {
-        let url = cdn_url_for_blob("https://cdn.example.com/", "project-123", "aabbccdd");
+        let url = cdn_url_for_blob("https://cdn.example.com/", "repository-123", "aabbccdd");
         assert_eq!(
             url,
-            "https://cdn.example.com/projects/project-123/blobs/aa/aabbccdd.bin"
+            "https://cdn.example.com/repositories/repository-123/blobs/aa/aabbccdd.bin"
         );
     }
 
     #[test]
     fn cdn_url_without_trailing_slash() {
-        let url = cdn_url_for_blob("https://cdn.example.com", "project-123", "aabbccdd");
+        let url = cdn_url_for_blob("https://cdn.example.com", "repository-123", "aabbccdd");
         assert_eq!(
             url,
-            "https://cdn.example.com/projects/project-123/blobs/aa/aabbccdd.bin"
+            "https://cdn.example.com/repositories/repository-123/blobs/aa/aabbccdd.bin"
         );
     }
 

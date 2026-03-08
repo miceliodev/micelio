@@ -1,6 +1,6 @@
 //! Workspace management for hif.
 //!
-//! A workspace is a local directory linked to a Micelio project.
+//! A workspace is a local directory linked to a Micelio repository.
 //! It contains a `.hif` directory with metadata and overlay files.
 
 pub mod changes;
@@ -85,9 +85,9 @@ pub fn is_safe_path(path: &str) -> bool {
     true
 }
 
-/// Parse a project reference (account/project).
+/// Parse a repository reference (account/repository).
 #[allow(dead_code)]
-pub fn parse_project_ref(value: &str) -> Option<(String, String)> {
+pub fn parse_repository_ref(value: &str) -> Option<(String, String)> {
     let slash_index = value.find('/')?;
 
     if slash_index == 0 || slash_index + 1 >= value.len() {
@@ -100,9 +100,9 @@ pub fn parse_project_ref(value: &str) -> Option<(String, String)> {
     }
 
     let account = &value[..slash_index];
-    let project = &value[slash_index + 1..];
+    let repository = &value[slash_index + 1..];
 
-    Some((account.to_string(), project.to_string()))
+    Some((account.to_string(), repository.to_string()))
 }
 
 /// Parse a revision reference like "@<hex-hash>", "<hex-hash>", "@latest", or "HEAD".
@@ -157,20 +157,20 @@ mod tests {
     }
 
     #[test]
-    fn test_parse_project_ref() {
+    fn test_parse_repository_ref() {
         assert_eq!(
-            parse_project_ref("acme/app"),
+            parse_repository_ref("acme/app"),
             Some(("acme".to_string(), "app".to_string()))
         );
         assert_eq!(
-            parse_project_ref("org/project-name"),
-            Some(("org".to_string(), "project-name".to_string()))
+            parse_repository_ref("org/repository-name"),
+            Some(("org".to_string(), "repository-name".to_string()))
         );
 
-        assert_eq!(parse_project_ref("noSlash"), None);
-        assert_eq!(parse_project_ref("/project"), None);
-        assert_eq!(parse_project_ref("account/"), None);
-        assert_eq!(parse_project_ref("a/b/c"), None);
+        assert_eq!(parse_repository_ref("noSlash"), None);
+        assert_eq!(parse_repository_ref("/repository"), None);
+        assert_eq!(parse_repository_ref("account/"), None);
+        assert_eq!(parse_repository_ref("a/b/c"), None);
     }
 
     #[test]

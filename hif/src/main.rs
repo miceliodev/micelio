@@ -21,10 +21,10 @@
 //! hif auth login
 //!
 //! # Create a workspace
-//! hif checkout myorg/myproject
+//! hif checkout myorg/myrepository
 //!
 //! # Start a session
-//! hif session start myorg/myproject "Add feature X"
+//! hif session start myorg/myrepository "Add feature X"
 //!
 //! # Make changes and land
 //! hif session land
@@ -224,9 +224,9 @@ async fn run(command: Commands) -> Result<()> {
         // Auth
         Commands::Auth(cmd) => commands::auth::run(cmd).await,
 
-        // Organization & Project
+        // Organization & Repository
         Commands::Org(cmd) => commands::org::run(cmd).await,
-        Commands::Project(cmd) => commands::project::run(cmd).await,
+        Commands::Repository(cmd) => commands::repository::run(cmd).await,
 
         // Workspace
         Commands::Checkout(cmd) => commands::checkout::run(cmd).await,

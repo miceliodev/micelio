@@ -19,10 +19,10 @@ hif auth status
 
 ```bash
 # List repositories in an org
-hif project list <organization>
+hif repository list <organization>
 
 # Create a new repository
-hif project create <organization>/<repository> "<name>" [--description <desc>]
+hif repository create <organization>/<repository> "<name>" [--description <desc>]
 
 # Checkout a repository into a local workspace
 hif checkout <organization>/<repository> [--path dir]
