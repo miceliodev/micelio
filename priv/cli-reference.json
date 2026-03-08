@@ -1,0 +1,915 @@
+{
+  "commands": [
+    {
+      "category": "Authentication",
+      "description": "Authenticate with a Micelio forge",
+      "name": "auth",
+      "subcommands": [
+        {
+          "args": [],
+          "description": "Authenticate via OAuth device flow",
+          "examples": [
+            {
+              "command": "hif auth login",
+              "description": "Start authentication flow"
+            }
+          ],
+          "name": "login",
+          "notes": "Opens your browser to complete authentication. The CLI will wait for you to authorize.",
+          "options": [],
+          "usage": "hif auth login"
+        },
+        {
+          "args": [],
+          "description": "Check current authentication status",
+          "examples": [
+            {
+              "command": "hif auth status",
+              "description": "Show if logged in and token expiry"
+            }
+          ],
+          "name": "status",
+          "options": [],
+          "usage": "hif auth status"
+        },
+        {
+          "args": [],
+          "description": "Remove stored credentials",
+          "examples": [
+            {
+              "command": "hif auth logout",
+              "description": "Clear all stored tokens"
+            }
+          ],
+          "name": "logout",
+          "options": [],
+          "usage": "hif auth logout"
+        }
+      ]
+    },
+    {
+      "category": "Organizations",
+      "description": "Manage organizations",
+      "name": "org",
+      "subcommands": [
+        {
+          "args": [],
+          "description": "List organizations you belong to",
+          "examples": [
+            {
+              "command": "hif org list",
+              "description": "Show all your organizations"
+            }
+          ],
+          "name": "list",
+          "options": [],
+          "usage": "hif org list"
+        },
+        {
+          "args": [
+            {
+              "description": "Organization handle",
+              "name": "org",
+              "required": true
+            }
+          ],
+          "description": "Get organization details",
+          "examples": [
+            {
+              "command": "hif org info acme",
+              "description": "Show details for 'acme' organization"
+            }
+          ],
+          "name": "info",
+          "options": [],
+          "usage": "hif org info <ORG>"
+        }
+      ]
+    },
+    {
+      "category": "Projects",
+      "description": "Manage projects",
+      "name": "project",
+      "subcommands": [
+        {
+          "args": [
+            {
+              "description": "Organization handle",
+              "name": "org",
+              "required": true
+            }
+          ],
+          "description": "List projects in an organization",
+          "examples": [
+            {
+              "command": "hif project list acme",
+              "description": "List all projects in 'acme'"
+            }
+          ],
+          "name": "list",
+          "options": [],
+          "usage": "hif project list <ORG>"
+        },
+        {
+          "args": [
+            {
+              "description": "Project reference (e.g., acme/myapp)",
+              "name": "org/project",
+              "required": true
+            },
+            {
+              "description": "Display name for the project",
+              "name": "name",
+              "required": true
+            }
+          ],
+          "description": "Create a new project",
+          "examples": [
+            {
+              "command": "hif project create acme/api \"API Server\"",
+              "description": "Create new project"
+            },
+            {
+              "command": "hif project create acme/api \"API Server\" -d \"REST API for mobile app\"",
+              "description": "Create with description"
+            }
+          ],
+          "name": "create",
+          "options": [
+            {
+              "description": "Project description",
+              "name": "--description, -d",
+              "required": false
+            }
+          ],
+          "usage": "hif project create <ORG/PROJECT> <NAME>"
+        },
+        {
+          "args": [
+            {
+              "description": "Project reference",
+              "name": "org/project",
+              "required": true
+            }
+          ],
+          "description": "Get project details",
+          "examples": [
+            {
+              "command": "hif project info acme/myapp",
+              "description": "Show project details"
+            }
+          ],
+          "name": "info",
+          "options": [],
+          "usage": "hif project info <ORG/PROJECT>"
+        },
+        {
+          "args": [
+            {
+              "description": "Project reference",
+              "name": "org/project",
+              "required": true
+            }
+          ],
+          "description": "Update project settings",
+          "examples": [
+            {
+              "command": "hif project update acme/myapp --name \"My App v2\"",
+              "description": "Rename project"
+            }
+          ],
+          "name": "update",
+          "options": [
+            {
+              "description": "New display name",
+              "name": "--name, -n",
+              "required": false
+            },
+            {
+              "description": "New description",
+              "name": "--description, -d",
+              "required": false
+            }
+          ],
+          "usage": "hif project update <ORG/PROJECT>"
+        },
+        {
+          "args": [
+            {
+              "description": "Project reference",
+              "name": "org/project",
+              "required": true
+            }
+          ],
+          "description": "Delete a project (cannot be undone)",
+          "examples": [
+            {
+              "command": "hif project delete acme/old-project",
+              "description": "Permanently delete project"
+            }
+          ],
+          "name": "delete",
+          "options": [],
+          "usage": "hif project delete <ORG/PROJECT>",
+          "warning": "This action cannot be undone. All project data will be permanently deleted."
+        }
+      ]
+    },
+    {
+      "args": [
+        {
+          "description": "Project reference (e.g., acme/myapp)",
+          "name": "org/project",
+          "required": true
+        }
+      ],
+      "category": "Workspace",
+      "description": "Create a local workspace from a project",
+      "examples": [
+        {
+          "command": "hif checkout acme/myapp",
+          "description": "Checkout to ./myapp"
+        },
+        {
+          "command": "hif checkout acme/myapp --path ./code",
+          "description": "Checkout to ./code"
+        }
+      ],
+      "name": "checkout",
+      "notes": "After checkout, cd into the directory and start a session to begin working.",
+      "options": [
+        {
+          "description": "Local directory path (defaults to project name)",
+          "name": "--path, -p",
+          "required": false
+        }
+      ],
+      "usage": "hif checkout <ORG/PROJECT>"
+    },
+    {
+      "args": [
+        {
+          "description": "Project reference",
+          "name": "org/project",
+          "required": true
+        }
+      ],
+      "category": "Workspace",
+      "description": "Link current directory to an existing project",
+      "examples": [
+        {
+          "command": "cd my-existing-code && hif link acme/myapp",
+          "description": "Link existing directory to project"
+        }
+      ],
+      "name": "link",
+      "notes": "Use this when you have existing code you want to track. Unlike checkout, link doesn't download files.",
+      "options": [],
+      "usage": "hif link <ORG/PROJECT>"
+    },
+    {
+      "args": [],
+      "category": "Workspace",
+      "description": "Show workspace status and local changes",
+      "examples": [
+        {
+          "command": "hif status",
+          "description": "Show all local changes"
+        },
+        {
+          "command": "hif status --json",
+          "description": "Output as JSON"
+        }
+      ],
+      "name": "status",
+      "notes": "Must be run from within a workspace (created by checkout or link).",
+      "options": [],
+      "output_format": {
+        "A": "Added - new file",
+        "D": "Deleted - removed file",
+        "M": "Modified - changed file"
+      },
+      "usage": "hif status"
+    },
+    {
+      "args": [],
+      "category": "Workspace",
+      "description": "Sync workspace with latest changes from forge",
+      "examples": [
+        {
+          "command": "hif sync",
+          "description": "Sync with interactive conflict resolution"
+        },
+        {
+          "command": "hif sync --strategy ours",
+          "description": "Keep local changes on conflict"
+        },
+        {
+          "command": "hif sync --strategy theirs",
+          "description": "Use remote changes on conflict"
+        }
+      ],
+      "name": "sync",
+      "options": [
+        {
+          "default": "interactive",
+          "description": "Conflict resolution strategy: ours, theirs, or interactive (default)",
+          "name": "--strategy, -s",
+          "required": false
+        }
+      ],
+      "usage": "hif sync"
+    },
+    {
+      "category": "Sessions",
+      "description": "Manage work sessions",
+      "name": "session",
+      "subcommands": [
+        {
+          "args": [
+            {
+              "description": "What you're trying to accomplish",
+              "name": "goal",
+              "required": true
+            }
+          ],
+          "description": "Start a new session",
+          "examples": [
+            {
+              "command": "hif session start \"Add user authentication\"",
+              "description": "Start session (in workspace)"
+            },
+            {
+              "command": "hif session start acme/myapp \"Fix login bug\"",
+              "description": "Start session (outside workspace)"
+            }
+          ],
+          "name": "start",
+          "notes": "When run inside a workspace, the project is inferred automatically.",
+          "options": [],
+          "usage": "hif session start <GOAL>",
+          "usage_outside_workspace": "hif session start <ORG/PROJECT> <GOAL>"
+        },
+        {
+          "args": [],
+          "description": "Show current session status",
+          "examples": [
+            {
+              "command": "hif session status",
+              "description": "Show active session details"
+            }
+          ],
+          "name": "status",
+          "options": [],
+          "usage": "hif session status"
+        },
+        {
+          "args": [
+            {
+              "description": "Note content",
+              "name": "message",
+              "required": true
+            }
+          ],
+          "description": "Add a note to the current session",
+          "examples": [
+            {
+              "command": "hif session note \"Decided to use JWT for auth\"",
+              "description": "Add a decision note"
+            },
+            {
+              "command": "hif session note \"Found the root cause\" --role agent",
+              "description": "Add note from AI agent"
+            }
+          ],
+          "name": "note",
+          "notes": "Notes help capture context and decisions that will help future developers understand the code.",
+          "options": [
+            {
+              "default": "human",
+              "description": "Who is adding the note: human or agent",
+              "name": "--role, -r",
+              "required": false
+            }
+          ],
+          "usage": "hif session note <MESSAGE>"
+        },
+        {
+          "args": [],
+          "description": "Land the session (push changes to forge)",
+          "examples": [
+            {
+              "command": "hif session land",
+              "description": "Push all changes to forge"
+            }
+          ],
+          "name": "land",
+          "notes": "If conflicts are detected, you'll be prompted to resolve them.",
+          "options": [],
+          "usage": "hif session land"
+        },
+        {
+          "args": [],
+          "description": "Abandon the session (discard all changes)",
+          "examples": [
+            {
+              "command": "hif session abandon",
+              "description": "Discard current session"
+            }
+          ],
+          "name": "abandon",
+          "options": [],
+          "usage": "hif session abandon",
+          "warning": "This will discard all uncommitted changes in the session."
+        },
+        {
+          "args": [],
+          "description": "Resolve conflicts interactively",
+          "examples": [
+            {
+              "command": "hif session resolve",
+              "description": "Interactively resolve conflicts"
+            }
+          ],
+          "name": "resolve",
+          "options": [
+            {
+              "default": "interactive",
+              "description": "Resolution strategy",
+              "name": "--strategy, -s",
+              "required": false
+            }
+          ],
+          "usage": "hif session resolve"
+        }
+      ]
+    },
+    {
+      "args": [
+        {
+          "description": "What you accomplished",
+          "name": "goal",
+          "required": true
+        }
+      ],
+      "category": "Sessions",
+      "description": "Quick land: start session + land in one step",
+      "examples": [
+        {
+          "command": "hif land \"Fix typo in README\"",
+          "description": "Quick land (in workspace)"
+        },
+        {
+          "command": "hif land acme/myapp \"Update dependencies\"",
+          "description": "Quick land (outside workspace)"
+        }
+      ],
+      "name": "land",
+      "notes": "Use for small, self-explanatory changes. For larger work, use `hif session start` to add notes along the way.",
+      "options": [],
+      "usage": "hif land <GOAL>",
+      "usage_outside_workspace": "hif land <ORG/PROJECT> <GOAL>"
+    },
+    {
+      "args": [
+        {
+          "description": "Project reference",
+          "name": "org/project",
+          "required": true
+        },
+        {
+          "description": "File path",
+          "name": "path",
+          "required": true
+        }
+      ],
+      "category": "Content",
+      "description": "Show file contents from the forge (no checkout needed)",
+      "examples": [
+        {
+          "command": "hif show acme/myapp README.md",
+          "description": "Show current README"
+        },
+        {
+          "command": "hif show acme/myapp src/main.rs --ref @10",
+          "description": "Show file at position 10"
+        }
+      ],
+      "name": "show",
+      "notes": "Reads directly from the forge without creating a local workspace.",
+      "options": [
+        {
+          "description": "Position reference (e.g., @10, @latest)",
+          "name": "--ref, -r",
+          "required": false
+        }
+      ],
+      "usage": "hif show <ORG/PROJECT> <PATH>"
+    },
+    {
+      "args": [
+        {
+          "description": "Project reference",
+          "name": "org/project",
+          "required": true
+        },
+        {
+          "description": "Directory path (defaults to root)",
+          "name": "path",
+          "required": false
+        }
+      ],
+      "category": "Content",
+      "description": "List directory contents from the forge",
+      "examples": [
+        {
+          "command": "hif tree acme/myapp",
+          "description": "List project root"
+        },
+        {
+          "command": "hif tree acme/myapp src",
+          "description": "List src/ directory"
+        },
+        {
+          "command": "hif tree acme/myapp --ref @5",
+          "description": "List at position 5"
+        }
+      ],
+      "name": "tree",
+      "options": [
+        {
+          "description": "Position reference",
+          "name": "--ref, -r",
+          "required": false
+        }
+      ],
+      "usage": "hif tree <ORG/PROJECT> [PATH]"
+    },
+    {
+      "args": [
+        {
+          "description": "Project reference",
+          "name": "org/project",
+          "required": true
+        },
+        {
+          "description": "Search query or regex pattern",
+          "name": "query",
+          "required": true
+        }
+      ],
+      "category": "Content",
+      "description": "Search repository content",
+      "examples": [
+        {
+          "command": "hif grep acme/myapp \"TODO\"",
+          "description": "Search indexed content"
+        },
+        {
+          "command": "hif grep acme/myapp \"panic!\" --path src/",
+          "description": "Restrict to src/"
+        },
+        {
+          "command": "hif grep acme/myapp \"fn\\\\s+main\" --regex",
+          "description": "Regex search"
+        },
+        {
+          "command": "hif grep acme/myapp \"TODO\" --local",
+          "description": "Use local fallback on remote failure"
+        }
+      ],
+      "name": "grep",
+      "notes": "Uses forge search index by default and supports local fallback with --local.",
+      "options": [
+        {
+          "description": "Position reference (e.g., @10, @latest)",
+          "name": "--position",
+          "required": false
+        },
+        {
+          "description": "Restrict to path prefix",
+          "name": "--path",
+          "required": false
+        },
+        {
+          "description": "Treat query as regex",
+          "name": "--regex",
+          "required": false
+        },
+        {
+          "description": "Case-sensitive matching",
+          "name": "--case-sensitive",
+          "required": false
+        },
+        {
+          "description": "Use local fallback when remote search fails",
+          "name": "--local",
+          "required": false
+        },
+        {
+          "default": "20",
+          "description": "Maximum number of matches",
+          "name": "-n, --limit",
+          "required": false
+        }
+      ],
+      "usage": "hif grep <ORG/PROJECT> <QUERY>"
+    },
+    {
+      "args": [
+        {
+          "description": "Project reference",
+          "name": "org/project",
+          "required": true
+        }
+      ],
+      "category": "History",
+      "description": "Show session history for a project",
+      "examples": [
+        {
+          "command": "hif log acme/myapp",
+          "description": "Show recent sessions"
+        },
+        {
+          "command": "hif log acme/myapp -n 50",
+          "description": "Show last 50 sessions"
+        },
+        {
+          "command": "hif log acme/myapp --path src/",
+          "description": "Sessions that touched src/"
+        }
+      ],
+      "name": "log",
+      "options": [
+        {
+          "description": "Filter by file path",
+          "name": "--path, -p",
+          "required": false
+        },
+        {
+          "default": "20",
+          "description": "Maximum number of sessions to show",
+          "name": "-n",
+          "required": false
+        }
+      ],
+      "usage": "hif log <ORG/PROJECT>"
+    },
+    {
+      "args": [
+        {
+          "description": "Project reference",
+          "name": "org/project",
+          "required": true
+        },
+        {
+          "description": "File path",
+          "name": "path",
+          "required": true
+        }
+      ],
+      "category": "History",
+      "description": "Show who changed each line (session attribution)",
+      "examples": [
+        {
+          "command": "hif blame acme/myapp src/main.rs",
+          "description": "Show line-by-line attribution"
+        }
+      ],
+      "name": "blame",
+      "notes": "Shows which session last modified each line, along with the session goal.",
+      "options": [],
+      "usage": "hif blame <ORG/PROJECT> <PATH>"
+    },
+    {
+      "args": [
+        {
+          "description": "Project reference",
+          "name": "org/project",
+          "required": true
+        },
+        {
+          "description": "Starting position (e.g., @5)",
+          "name": "from",
+          "required": true
+        },
+        {
+          "description": "Ending position (defaults to HEAD)",
+          "name": "to",
+          "required": false
+        }
+      ],
+      "category": "History",
+      "description": "Show changes between two positions",
+      "examples": [
+        {
+          "command": "hif diff acme/myapp @5 @10",
+          "description": "Changes from position 5 to 10"
+        },
+        {
+          "command": "hif diff acme/myapp @5",
+          "description": "Changes from position 5 to HEAD"
+        }
+      ],
+      "name": "diff",
+      "options": [],
+      "usage": "hif diff <ORG/PROJECT> <FROM> [TO]"
+    }
+  ],
+  "concepts": [
+    {
+      "description": "A unit of work with a goal, conversation, and file changes. Sessions replace Git commits but capture much more context.",
+      "example": "hif session start \"Add user authentication\"",
+      "name": "Session"
+    },
+    {
+      "description": "A local directory linked to a project on the forge. Created with `hif checkout`.",
+      "example": "hif checkout acme/myapp",
+      "name": "Workspace"
+    },
+    {
+      "description": "The Micelio server that stores all project data. Unlike Git, the forge is the source of truth.",
+      "example": "https://micelio.dev",
+      "name": "Forge"
+    },
+    {
+      "description": "Pushing your session changes to the forge. Similar to Git push, but includes all session context.",
+      "example": "hif session land",
+      "name": "Landing"
+    },
+    {
+      "description": "A point in project history, referenced as @N (e.g., @10). Similar to Git commit SHA but sequential.",
+      "example": "hif show acme/myapp README.md --ref @5",
+      "name": "Position"
+    }
+  ],
+  "description": "The hif CLI - a forge-first version control system for the agent era",
+  "environment_variables": [
+    {
+      "default": "~/.hif",
+      "description": "Override config directory",
+      "name": "HIF_HOME"
+    },
+    {
+      "default": "",
+      "description": "Disable colored output",
+      "name": "NO_COLOR"
+    }
+  ],
+  "error_codes": [
+    {
+      "code": "not_authenticated",
+      "message": "Not logged in",
+      "resolution": "Run `hif auth login`"
+    },
+    {
+      "code": "token_expired",
+      "message": "Authentication token expired",
+      "resolution": "Run `hif auth login` again"
+    },
+    {
+      "code": "not_in_workspace",
+      "message": "Not in a workspace directory",
+      "resolution": "Run `hif checkout <org/project>` first, or specify project explicitly"
+    },
+    {
+      "code": "no_active_session",
+      "message": "No active session",
+      "resolution": "Run `hif session start \"<goal>\"` first"
+    },
+    {
+      "code": "session_already_active",
+      "message": "A session is already active",
+      "resolution": "Run `hif session land` or `hif session abandon` first"
+    },
+    {
+      "code": "invalid_project_ref",
+      "message": "Invalid project reference format",
+      "resolution": "Use format: org/project (e.g., 'acme/myapp')"
+    },
+    {
+      "code": "conflicts_detected",
+      "message": "Conflicts with upstream changes",
+      "resolution": "Run `hif session resolve` or `hif sync`"
+    }
+  ],
+  "global_options": [
+    {
+      "description": "Output in JSON format (for scripting and agents)",
+      "name": "--json"
+    },
+    {
+      "description": "Show additional details",
+      "name": "--verbose, -v"
+    },
+    {
+      "description": "Disable colored output",
+      "name": "--no-color"
+    },
+    {
+      "description": "Run as if started in <PATH> instead of current directory",
+      "name": "--cwd, -C"
+    },
+    {
+      "description": "Show help information",
+      "name": "--help, -h"
+    },
+    {
+      "description": "Show version information",
+      "name": "--version, -V"
+    }
+  ],
+  "installation": {
+    "methods": [
+      {
+        "name": "Download binary",
+        "platforms": [
+          "macOS",
+          "Linux",
+          "Windows"
+        ]
+      },
+      {
+        "command": "cargo install hif",
+        "name": "Build from source"
+      }
+    ],
+    "requirements": [
+      "Micelio account (sign up at micelio.dev)"
+    ]
+  },
+  "introduction": {
+    "key_differences_from_git": {
+      "conflicts": {
+        "git": "3-way merge",
+        "hif": "Bloom filter detection + explicit resolution"
+      },
+      "history": {
+        "git": "DAG of commits",
+        "hif": "Append-only log of landing positions"
+      },
+      "storage": {
+        "git": "Distributed (.git folder)",
+        "hif": "Forge-first (server is source of truth)"
+      },
+      "unit_of_work": {
+        "git": "Commit (snapshot)",
+        "hif": "Session (goal + context + changes)"
+      }
+    },
+    "what": "hif is an alternative to Git designed for the agent era. Instead of commits, you work in sessions that capture not just what changed, but why.",
+    "why": [
+      "Sessions capture goals, conversations, and decisions alongside code changes",
+      "Forge-first design means the server is the source of truth",
+      "Built for AI agents to understand and contribute to codebases",
+      "Simpler mental model: no staging area, no rebasing, no merge commits"
+    ]
+  },
+  "name": "hif",
+  "quick_start": {
+    "quick_land": {
+      "command": "hif land \"Fix typo in README\"",
+      "description": "For small changes, combine session start and land:"
+    },
+    "steps": [
+      {
+        "command": "hif auth login",
+        "description": "Opens browser for OAuth authentication",
+        "step": 1,
+        "title": "Authenticate"
+      },
+      {
+        "command": "hif checkout acme/myapp",
+        "description": "Downloads project and creates local workspace",
+        "step": 2,
+        "title": "Create workspace"
+      },
+      {
+        "command": "hif session start \"Add feature\"",
+        "description": "Begin tracking your work with a goal",
+        "step": 3,
+        "title": "Start session"
+      },
+      {
+        "command": "# Edit files normally",
+        "description": "Use your favorite editor, no staging needed",
+        "step": 4,
+        "title": "Make changes"
+      },
+      {
+        "command": "hif session land",
+        "description": "Push your session to the forge",
+        "step": 5,
+        "title": "Land changes"
+      }
+    ],
+    "title": "Quick Start"
+  },
+  "see_also": {
+    "api": "https://micelio.dev/docs/api",
+    "docs": "https://micelio.dev/docs",
+    "website": "https://micelio.dev"
+  },
+  "tagline": "Version control designed for AI-assisted development",
+  "version": "0.1.0"
+}
