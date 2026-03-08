@@ -5,7 +5,6 @@ pub mod endpoint;
 pub mod hif_v1;
 pub mod proto;
 pub mod retry;
-pub mod hif_v1;
 
 pub use client::GrpcClient;
 pub use endpoint::Endpoint;

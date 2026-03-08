@@ -147,6 +147,24 @@ message ListSessionsResponse {
   repeated SessionSummary sessions = 1; // OPTIONAL
 }
 
+message SessionSummary {
+  string id = 1;       // REQUIRED
+  string goal = 2;     // REQUIRED
+  string author = 3;   // REQUIRED
+  uint64 position = 4; // REQUIRED
+}
+
+message ListSessionsRequest {
+  string user_id = 1;       // REQUIRED
+  RepositoryRef repository = 2; // REQUIRED
+  string path = 3;          // OPTIONAL
+  uint32 limit = 4;         // OPTIONAL
+}
+
+message ListSessionsResponse {
+  repeated SessionSummary sessions = 1; // OPTIONAL
+}
+
 message SessionEventAppendRequest {
   string session_id = 1;  // REQUIRED
   SessionEvent event = 2; // REQUIRED
