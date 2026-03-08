@@ -4,9 +4,9 @@ This directory contains documentation for users, contributors, and hosters of Mi
 
 ## Users
 
-For people using mic and Micelio day-to-day:
+For people using hif and Micelio day-to-day:
 
-- [mic Workflows](./users/mic-workflows.md)
+- [hif Workflows](./users/mic-workflows.md)
 - [Storage Security and IAM Policies](./users/storage-security.md)
 
 ## Hosters

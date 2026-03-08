@@ -14,7 +14,7 @@ defmodule MicelioWeb.Browser.DocsController do
     |> PageMeta.put(
       title_parts: [gettext("CLI Reference"), gettext("Docs")],
       description:
-        gettext("Complete reference documentation for the mic command-line interface."),
+        gettext("Complete reference documentation for the hif command-line interface."),
       canonical_url: url(~p"/docs/cli-reference")
     )
     |> render(:cli_reference,

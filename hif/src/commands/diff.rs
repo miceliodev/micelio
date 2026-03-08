@@ -1,0 +1,114 @@
+//! Diff command - show changes between two positions.
+
+use crate::cli::{parse_project_ref, DiffCommand};
+use crate::config::{self, Config};
+use crate::error::{MicError, Result};
+use crate::grpc::hif_v1::{call, pb, repository_ref, user_id_from_token};
+use crate::grpc::{Endpoint, GrpcClient};
+use crate::workspace::{parse_position, PositionOrLatest};
+use colored::Colorize;
+use std::collections::BTreeMap;
+
+/// Run the diff command.
+pub async fn run(cmd: DiffCommand) -> Result<()> {
+    let (org, project) = parse_project_ref(&cmd.project).ok_or_else(|| {
+        MicError::InvalidProjectRef(format!(
+            "Invalid project reference '{}'. Use format: org/project",
+            cmd.project
+        ))
+    })?;
+
+    let mut config = Config::load()?;
+    let server = config.resolve_default_grpc_url().await?;
+    let tokens = config::require_tokens()?;
+    let endpoint = Endpoint::parse(&server)?;
+    let client = GrpcClient::new(endpoint);
+    let user_id = user_id_from_token(&tokens.access_token);
+
+    let from_position = match parse_position(&cmd.from) {
+        Some(PositionOrLatest::Position(position)) => position,
+        Some(PositionOrLatest::Latest) => {
+            return Err(MicError::Other(
+                "The FROM position must be explicit (e.g., @5).".to_string(),
+            ))
+        }
+        None => return Err(MicError::Other("Invalid FROM position".to_string())),
+    };
+
+    let to_position = if let Some(ref to) = cmd.to {
+        match parse_position(to) {
+            Some(PositionOrLatest::Position(position)) => Some(position),
+            Some(PositionOrLatest::Latest) => None,
+            None => return Err(MicError::Other("Invalid TO position".to_string())),
+        }
+    } else {
+        None
+    };
+
+    let response: pb::DiffResponse = call(
+        &client,
+        &tokens.access_token,
+        "/hif.v1.ContentService/Diff",
+        &pb::DiffRequest {
+            user_id,
+            repository: Some(repository_ref(org, project)),
+            from_position,
+            to_position: to_position.unwrap_or(0),
+            path_prefix: String::new(),
+        },
+    )
+    .await?;
+
+    let changes = summarize_changes(&response.hunks);
+    for (path, change_type) in changes {
+        match change_type {
+            ChangeType::Added => println!("{} {}", "A".green(), path.green()),
+            ChangeType::Deleted => println!("{} {}", "D".red(), path.red()),
+            ChangeType::Modified => println!("{} {}", "M".yellow(), path.yellow()),
+        }
+    }
+
+    Ok(())
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum ChangeType {
+    Added,
+    Deleted,
+    Modified,
+}
+
+fn summarize_changes(hunks: &[pb::DiffHunk]) -> BTreeMap<String, ChangeType> {
+    let mut changes = BTreeMap::new();
+
+    for hunk in hunks {
+        let next = classify_hunk(hunk);
+        changes
+            .entry(hunk.path.clone())
+            .and_modify(|existing| *existing = merge_change_types(*existing, next))
+            .or_insert(next);
+    }
+
+    changes
+}
+
+fn classify_hunk(hunk: &pb::DiffHunk) -> ChangeType {
+    let has_old = !hunk.old_line.is_empty();
+    let has_new = !hunk.new_line.is_empty();
+
+    match (has_old, has_new) {
+        (false, true) => ChangeType::Added,
+        (true, false) => ChangeType::Deleted,
+        _ => ChangeType::Modified,
+    }
+}
+
+fn merge_change_types(existing: ChangeType, next: ChangeType) -> ChangeType {
+    if existing == ChangeType::Modified || next == ChangeType::Modified {
+        ChangeType::Modified
+    } else if existing != next {
+        ChangeType::Modified
+    } else {
+        existing
+    }
+}

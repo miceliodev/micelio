@@ -263,12 +263,6 @@ msgstr "ドキュメント"
 msgid "Documentation for Micelio users and hosters."
 msgstr "Micelioユーザーとホスター向けのドキュメント。"
 
-#: lib/micelio_web/controllers/browser/docs_html/index.html.heex:12
-#: lib/micelio_web/live/docs_live/index.ex:158
-#, elixir-autogen, elixir-format
-msgid "Learn how to use mic and Micelio, or how to host your own instance."
-msgstr "micとMicelioの使い方、または自分のインスタンスをホストする方法を学びましょう。"
-
 #: lib/micelio_web/controllers/browser/docs_controller.ex:35
 #: lib/micelio_web/controllers/browser/docs_controller.ex:63
 #: lib/micelio_web/live/docs_live/index.ex:29
@@ -367,16 +361,6 @@ msgstr ""
 #: lib/micelio_web/controllers/browser/docs_html/cli_reference.html.heex:304
 #, elixir-autogen, elixir-format
 msgid "Code"
-msgstr ""
-
-#: lib/micelio_web/controllers/browser/docs_controller.ex:17
-#, elixir-autogen, elixir-format
-msgid "Complete reference documentation for the mic command-line interface."
-msgstr ""
-
-#: lib/micelio_web/live/docs_live/index.ex:296
-#, elixir-autogen, elixir-format
-msgid "Complete reference for the mic command-line interface."
 msgstr ""
 
 #: lib/micelio_web/controllers/browser/docs_html/cli_reference.html.heex:13
@@ -499,11 +483,6 @@ msgstr ""
 #: lib/micelio_web/controllers/browser/docs_html/cli_reference.html.heex:255
 #, elixir-autogen, elixir-format
 msgid "Warning:"
-msgstr ""
-
-#: lib/micelio_web/controllers/browser/docs_html/cli_reference.html.heex:297
-#, elixir-autogen, elixir-format
-msgid "When an error occurs, mic returns a JSON error with a code. Here's how to resolve common errors:"
 msgstr ""
 
 #: lib/micelio_web/controllers/browser/docs_html/cli_reference.html.heex:120
@@ -1707,4 +1686,25 @@ msgstr ""
 #: lib/micelio_web/live/repository_live/new.ex:228
 #, elixir-autogen, elixir-format
 msgid "repository-name"
+msgstr ""
+
+#: lib/micelio_web/controllers/browser/docs_controller.ex:17
+#, elixir-autogen, elixir-format, fuzzy
+msgid "Complete reference documentation for the hif command-line interface."
+msgstr ""
+
+#: lib/micelio_web/live/docs_live/index.ex:296
+#, elixir-autogen, elixir-format, fuzzy
+msgid "Complete reference for the hif command-line interface."
+msgstr ""
+
+#: lib/micelio_web/controllers/browser/docs_html/index.html.heex:12
+#: lib/micelio_web/live/docs_live/index.ex:158
+#, elixir-autogen, elixir-format, fuzzy
+msgid "Learn how to use hif and Micelio, or how to host your own instance."
+msgstr "micとMicelioの使い方、または自分のインスタンスをホストする方法を学びましょう。"
+
+#: lib/micelio_web/controllers/browser/docs_html/cli_reference.html.heex:297
+#, elixir-autogen, elixir-format, fuzzy
+msgid "When an error occurs, hif returns a JSON error with a code. Here's how to resolve common errors:"
 msgstr ""

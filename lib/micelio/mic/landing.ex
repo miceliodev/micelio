@@ -8,6 +8,7 @@ defmodule Micelio.Mic.Landing do
     ConflictIndex,
     DeltaCompression,
     RollupWorker,
+    SearchIndex,
     Tree
   }
 
@@ -60,6 +61,7 @@ defmodule Micelio.Mic.Landing do
              list_change_paths(session),
              opts
            ),
+         :ok <- index_search(repository.id, next_position, session, opts),
          :ok <- RollupWorker.enqueue(repository.id, next_position, change_filter, opts),
          {:ok, _} <- store_session_summary(session, repository.id, landed_at_ms, opts) do
       {:ok, %{position: next_position, landed_at: landed_at}}
@@ -102,6 +104,7 @@ defmodule Micelio.Mic.Landing do
                  list_change_paths(session),
                  opts
                ),
+             :ok <- index_search(repository_id, position, session, opts),
              :ok <- RollupWorker.enqueue(repository_id, position, change_filter, opts),
              {:ok, _} <- store_session_summary(session, repository_id, landed_at_ms, opts) do
           {:ok, %{position: position, landed_at: landed_at}}
@@ -397,6 +400,11 @@ defmodule Micelio.Mic.Landing do
     |> Sessions.list_session_changes()
     |> Enum.map(& &1.file_path)
     |> Enum.uniq()
+  end
+
+  defp index_search(repository_id, position, session, opts) do
+    changes = Sessions.list_session_changes(session)
+    SearchIndex.index_session_changes(repository_id, position, session, changes, opts)
   end
 
   defp load_change_content(%SessionChange{content: content}, _opts) when is_binary(content) do

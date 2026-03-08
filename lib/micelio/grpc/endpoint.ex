@@ -9,4 +9,7 @@ defmodule Micelio.GRPC.Endpoint do
   run(Micelio.GRPC.Repositories.V1.ProjectService.Server)
   run(Micelio.GRPC.Content.V1.ContentService.Server)
   run(Micelio.GRPC.Sessions.V1.SessionService.Server)
+  run(Micelio.GRPC.Hif.V1.VersioningService.Server)
+  run(Micelio.GRPC.Hif.V1.ContentService.Server)
+  run(Micelio.GRPC.Hif.V1.SearchService.Server)
 end

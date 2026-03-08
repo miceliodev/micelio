@@ -77,8 +77,8 @@ landing records. Search and file reads are index-driven, never full-object scans
 ### 6) Protocol compatibility
 
 - Legacy service behavior remains available during rollout.
-- Mapping between existing gRPC surfaces and `micelio.virtual.v1` is documented in
-  `../protocols/micelio_virtual_vcs_v1.compatibility.md`.
+- Mapping between existing gRPC surfaces and `hif.v1` is documented in
+  `../protocols/hif_v1.compatibility.md`.
 
 ### 5) Conflict model
 

@@ -1,6 +1,6 @@
 # Micelio for AI Agents
 
-Micelio is a forge platform built with Elixir/Phoenix, Rust for CLI (`mic`), Zig for NIFs, and vanilla CSS for web UI.
+Micelio is a forge platform built with Elixir/Phoenix, Rust for CLI (`hif`), Zig for NIFs, and vanilla CSS for web UI.
 
 ## IMPORTANT: Terminology
 
@@ -27,13 +27,13 @@ When adding new user interactions that should influence "recent repositories", a
 
 ## IMPORTANT: CLI Design for Agents
 
-**The `mic` CLI must be self-documenting for AI agents.** Agents should be able to learn how to use the CLI just from help output, without needing separate documentation files.
+**The `hif` CLI must be self-documenting for AI agents.** Agents should be able to learn how to use the CLI just from help output, without needing separate documentation files.
 
 Design principles:
 1. **Rich help with examples**: Every command includes `after_help` with EXAMPLES, WORKFLOW, and NOTES sections
 2. **Main help has quick start**: The root `--help` shows a complete workflow from auth to landing
 3. **`--help --json` for agents**: Machine-readable help that agents can parse programmatically
-4. **Actionable error messages**: Errors should suggest next steps (e.g., "Run 'mic auth login' first")
+4. **Actionable error messages**: Errors should suggest next steps (e.g., "Run 'hif auth login' first")
 
 The `--help --json` output includes:
 - `concepts`: Definitions of Session, Workspace, Forge, Landing, Position
@@ -43,7 +43,7 @@ The `--help --json` output includes:
 
 When adding new commands:
 1. Add `after_help` with examples
-2. Update `generate_help_json()` in `mic/src/cli.rs`
+2. Update `generate_help_json()` in `hif/src/cli.rs`
 3. Include `requires_auth`, `requires_workspace`, `requires_session` metadata
 4. Add error recovery guidance to `error_codes`
 
@@ -69,32 +69,32 @@ If a translation is not available for a locale, the English version is used as f
 Micelio is a monorepo containing:
 
 - **Forge** (Elixir/Phoenix) - The web application and gRPC server
-- **mic** (Rust) - The `mic` command-line interface
+- **hif** (Rust) - The `hif` command-line interface
 
 ### Tech Stack
 
 | Component | Technology | Location |
 |-----------|------------|----------|
 | Web App | Elixir/Phoenix 1.8 | `/` (root) |
-| CLI | Rust | `/mic` |
+| CLI | Rust | `/hif` |
 | Database | PostgreSQL + Ecto | - |
 | Frontend | LiveView + vanilla CSS | - |
 
 ### Key Modules
 
-#### mic (Rust CLI)
+#### hif (Rust CLI)
 
-Located in `mic/`, organized as:
+Located in `hif/`, organized as:
 
-- `mic/src/core/hash.rs` - Blake3 hashing for content-addressed storage
-- `mic/src/core/bloom.rs` - Bloom filters for conflict detection
-- `mic/src/core/hlc.rs` - Hybrid Logical Clocks for distributed timestamps
-- `mic/src/core/tree.rs` - B+ tree for directory structures
-- `mic/src/main.rs` - CLI entry point
-- `mic/src/cli.rs` - Command definitions (clap)
-- `mic/src/grpc/` - gRPC client for forge communication
-- `mic/src/workspace/` - Local workspace management
-- `mic/src/commands/` - Command implementations
+- `hif/src/core/hash.rs` - Blake3 hashing for content-addressed storage
+- `hif/src/core/bloom.rs` - Bloom filters for conflict detection
+- `hif/src/core/hlc.rs` - Hybrid Logical Clocks for distributed timestamps
+- `hif/src/core/tree.rs` - B+ tree for directory structures
+- `hif/src/main.rs` - CLI entry point
+- `hif/src/cli.rs` - Command definitions (clap)
+- `hif/src/grpc/` - gRPC client for forge communication
+- `hif/src/workspace/` - Local workspace management
+- `hif/src/commands/` - Command implementations
 
 #### Zig NIFs
 
@@ -119,11 +119,11 @@ See [docs/contributors/next.md](./docs/contributors/next.md) for upcoming featur
 
 ---
 
-## Architecture: mic is NOT Git
+## Architecture: hif is NOT Git
 
-**mic is an alternative to Git, not a wrapper around it.** It uses a completely different model:
+**hif is an alternative to Git, not a wrapper around it.** It uses a completely different model:
 
-| Aspect | Git | mic + Micelio |
+| Aspect | Git | hif + Micelio |
 |--------|-----|---------------|
 | **Unit of work** | Commit (snapshot) | Session (goal + context + changes) |
 | **Storage model** | Distributed (.git folder) | Forge-first (S3 is source of truth) |
@@ -141,7 +141,7 @@ Every unit of work is a **session** containing:
 
 ### CLI to Forge Communication
 
-mic CLI communicates with Micelio via **gRPC** (not HTTP REST, not Git protocol):
+hif CLI communicates with Micelio via **gRPC** (not HTTP REST, not Git protocol):
 
 - `micelio.auth.v1.AuthService` - Device flow login
 - `micelio.repositories.v1.RepositoryService` - Repository CRUD
@@ -172,40 +172,40 @@ repositories/{repository_id}/
 └── blobs/{hash}.bin        # File content (zstd compressed)
 ```
 
-### mic CLI Commands
+### hif CLI Commands
 
 ```bash
 # Authentication
-mic auth login              # Device flow auth
-mic auth status             # Check auth status
+hif auth login              # Device flow auth
+hif auth status             # Check auth status
 
 # Repositories
-mic repo create <org> <handle> <name>
-mic repo list <org>
+hif project create <org/repository> "<name>"
+hif project list <org>
 
 # Working with content (no checkout needed)
-mic cat <org> <repository> <path>      # Read file
-mic ls <org> <repository>              # List directory
-mic log <org/repository>               # List sessions
-mic blame <org> <repository> <path>    # Session attribution
+hif show <org/repository> <path>       # Read file
+hif tree <org/repository> [path]       # List directory
+hif grep <org/repository> "<query>"    # Search repository text
+hif log <org/repository>               # List sessions
+hif blame <org/repository> <path>      # Session attribution
 
 # Local workspace
-mic checkout <org/repository>          # Create local workspace
-mic status                             # Show workspace changes
-mic write <path>                       # Stage file (reads from stdin)
-mic land "goal"                        # Quick land
+hif checkout <org/repository>          # Create local workspace
+hif status                             # Show workspace changes
+hif land "goal"                        # Quick land
 
 # Sessions (explicit workflow)
-mic session start <org> <repository> "goal"
-mic session note "message"             # Add conversation entry
-mic session land                       # Push to forge
-mic session abandon                    # Discard session
+hif session start <org/repository> "goal"
+hif session note "message"             # Add conversation entry
+hif session land                       # Push to forge
+hif session abandon                    # Discard session
 
 # Sync
-mic sync                               # Pull latest from forge
+hif sync                               # Pull latest from forge
 ```
 
-### mic CLI Global Options
+### hif CLI Global Options
 
 - `--json` - Output in JSON format (for scripts/agents)
 - `--verbose` / `-v` - Show additional details
@@ -243,7 +243,7 @@ mix deps.get
 mix ecto.setup
 
 # Build Rust CLI
-cd mic && cargo build --release && cd ..
+cd hif && cargo build --release && cd ..
 
 # Start development server
 mix phx.server
@@ -254,7 +254,7 @@ mix phx.server
 ```bash
 # Run all tests
 mix test
-cd mic && cargo test
+cd hif && cargo test
 ```
 
 ### Important Files
@@ -263,7 +263,7 @@ cd mic && cargo test
 |------|---------|
 | `AGENTS.md` | This guide (root hub) |
 | `priv/static/skill.md` | Agent guide served at `/skill.md` - keep in sync with AGENTS.md |
-| `priv/static/SKILL.md` | mic CLI docs served at `/SKILL.md` |
+| `priv/static/SKILL.md` | hif CLI docs served at `/SKILL.md` |
 
 ---
 
@@ -280,19 +280,19 @@ Before making changes:
 ```bash
 # Build
 mix compile --warnings-as-errors
-cd mic && cargo build --release
+cd hif && cargo build --release
 
 # Test
 mix test
-cd mic && cargo test
+cd hif && cargo test
 
 # Format
 mix format --check-formatted
-cd mic && cargo fmt --check
+cd hif && cargo fmt --check
 
 # Pre-commit (run before pushing)
 mix compile --warnings-as-errors && mix format --check-formatted && mix test
-cd mic && cargo build --release && cargo fmt --check && cargo test
+cd hif && cargo build --release && cargo fmt --check && cargo test
 ```
 
 ### Shortcut
@@ -323,7 +323,7 @@ mix precommit
 | `mix help task_name` | Get task docs |
 | `mix precommit` | Run all pre-commit checks |
 
-### Rust (mic CLI)
+### Rust (hif CLI)
 
 | Command | Purpose |
 |---------|---------|
@@ -338,7 +338,7 @@ mix precommit
 
 | File | Served At | Purpose |
 |------|-----------|---------|
-| `priv/static/SKILL.md` | `/SKILL.md` | mic CLI documentation |
+| `priv/static/SKILL.md` | `/SKILL.md` | hif CLI documentation |
 | `priv/static/skill.md` | `/skill.md` | Agent guide (keep aligned with AGENTS.md) |
 
 ### HTTP Requests
@@ -353,7 +353,7 @@ Use `:req` (`Req`) for HTTP requests. It's included by default.
 
 When making changes to CLI commands or agent capabilities, update the corresponding static files:
 
-- **SKILL.md** (`priv/static/SKILL.md`) - Documentation for the mic CLI served at `/SKILL.md`
+- **SKILL.md** (`priv/static/SKILL.md`) - Documentation for the hif CLI served at `/SKILL.md`
 - **skill.md** (`priv/static/skill.md`) - Agent guide served at `/skill.md`, keep aligned with `AGENTS.md`
 
 When you update `AGENTS.md`, also update `priv/static/skill.md` so `/skill.md` stays in sync.
@@ -576,7 +576,7 @@ _ = :sys.get_state(pid)
 ### Zig Tests
 
 ```bash
-cd mic && zig build test
+zig build test
 ```
 
 Tests are organized by module. Each core module includes comprehensive unit tests covering normal operation, edge cases, and error conditions.

@@ -1,0 +1,276 @@
+syntax = "proto3";
+
+package hif.v1;
+
+// Service for repository-level versioning primitives.
+service VersioningService {
+  rpc GetRepositoryHead(GetRepositoryHeadRequest) returns (RepositoryHeadResponse);
+  rpc GetHeadAt(GetHeadAtRequest) returns (RepositoryHeadResponse);
+  rpc OpenSession(SessionOpenRequest) returns (SessionInfo);
+  rpc AppendSessionConversation(SessionEventAppendRequest) returns (SessionInfo);
+  rpc AppendSessionChange(SessionChangeAppendRequest) returns (SessionInfo);
+  rpc LandSession(LandSessionRequest) returns (SessionInfo);
+  rpc AbandonSession(AbandonSessionRequest) returns (SessionInfo);
+  rpc GetSession(SessionRequest) returns (SessionInfo);
+}
+
+// Service for content reads and path operations.
+service ContentService {
+  rpc GetTree(GetTreeRequest) returns (TreeResponse);
+  rpc GetPath(GetPathRequest) returns (PathResponse);
+  rpc GetBlob(GetBlobRequest) returns (BlobResponse);
+  rpc Diff(DiffRequest) returns (DiffResponse);
+  rpc Blame(BlameRequest) returns (BlameResponse);
+}
+
+// Service for remote grep/search at scale.
+service SearchService {
+  rpc QueryText(TextQueryRequest) returns (TextQueryResponse);
+}
+
+message RepositoryRef {
+  string organization_handle = 1; // REQUIRED
+  string repository_handle = 2;  // REQUIRED
+}
+
+message Position {
+  uint64 id = 1;      // REQUIRED
+  bytes tree_hash = 2; // REQUIRED
+  string at = 3;
+}
+
+message RepositoryHeadResponse {
+  RepositoryRef repository = 1;   // REQUIRED
+  Position head = 2;              // REQUIRED
+  string head_etag = 3;           // REQUIRED
+}
+
+message GetRepositoryHeadRequest {
+  string user_id = 1;      // REQUIRED
+  RepositoryRef repository = 2; // REQUIRED
+}
+
+message GetHeadAtRequest {
+  string user_id = 1;      // REQUIRED
+  RepositoryRef repository = 2; // REQUIRED
+  uint64 position = 3;     // REQUIRED
+}
+
+message AgentAttribution {
+  string actor_kind = 1; // user|agent
+  string actor_id = 2;
+  string model_id = 3;
+  string tool_name = 4;
+  string tool_version = 5;
+}
+
+message SessionEvent {
+  string role = 1;     // REQUIRED. human|agent
+  string kind = 2;     // REQUIRED. note|decision|command|output
+  string text = 3;     // REQUIRED
+  bytes metadata = 4;  // OPTIONAL
+  uint64 at_ms = 5;    // REQUIRED
+}
+
+message FileOperation {
+  enum Action {
+    ACTION_UNSPECIFIED = 0;
+    ACTION_CREATE = 1;
+    ACTION_UPDATE = 2;
+    ACTION_DELETE = 3;
+    ACTION_RENAME = 4;
+  }
+  Action action = 1;      // REQUIRED
+  string path = 2;        // REQUIRED
+  bytes content = 3;      // OPTIONAL (required for create/update)
+  string old_path = 4;    // REQUIRED for rename
+  string content_hash = 5; // REQUIRED for rename/update/delete verification
+}
+
+message SessionOpen {
+  string session_id = 1;        // REQUIRED
+  string goal = 2;              // REQUIRED
+  Position base_position = 3;    // REQUIRED
+  string requested_workspace = 4; // OPTIONAL
+}
+
+message SessionInfo {
+  string session_id = 1;        // REQUIRED
+  RepositoryRef repository = 2; // REQUIRED
+  string goal = 3;             // REQUIRED
+  string status = 4; // REQUIRED: draft|active|landed|conflict|abandoned
+  Position base_position = 5;   // REQUIRED
+  Position current_position = 6; // REQUIRED
+  repeated SessionEvent conversation = 7; // OPTIONAL
+  repeated SessionEvent decisions = 8; // OPTIONAL
+  repeated FileOperation changes = 9; // OPTIONAL
+  AgentAttribution attribution = 10; // OPTIONAL
+  uint64 created_at_ms = 11; // REQUIRED
+  uint64 updated_at_ms = 12; // REQUIRED
+  SessionConflict conflict = 13; // OPTIONAL: present when status=conflict
+}
+
+message SessionConflict {
+  uint64 position = 1;  // REQUIRED
+  string session_id = 2; // REQUIRED
+  string reason = 3;     // REQUIRED summary
+  repeated string paths = 4; // OPTIONAL
+}
+
+message SessionOpenRequest {
+  string user_id = 1;      // REQUIRED
+  RepositoryRef repository = 2; // REQUIRED
+  SessionOpen open = 3;    // REQUIRED
+}
+
+message SessionRequest {
+  string user_id = 1;   // REQUIRED
+  string session_id = 2; // REQUIRED
+}
+
+message SessionEventAppendRequest {
+  string user_id = 1;     // REQUIRED
+  string session_id = 2;  // REQUIRED
+  SessionEvent event = 3; // REQUIRED
+}
+
+message SessionChangeAppendRequest {
+  string user_id = 1;        // REQUIRED
+  string session_id = 2;     // REQUIRED
+  FileOperation operation = 3; // REQUIRED
+}
+
+message LandSessionRequest {
+  string user_id = 1;       // REQUIRED
+  string session_id = 2;    // REQUIRED
+  repeated SessionEvent decision = 3; // OPTIONAL
+  bool finalize = 4;        // REQUIRED
+  uint32 epoch = 5;         // OPTIONAL
+  bool force = 6;           // OPTIONAL
+}
+
+message AbandonSessionRequest {
+  string user_id = 1;   // REQUIRED
+  string session_id = 2; // REQUIRED
+}
+
+message TreeEntry {
+  string path = 1;
+  string hash = 2;
+}
+
+message TreeRequest {
+  string user_id = 1;
+  RepositoryRef repository = 2;
+  bytes tree_hash = 3;
+  string prefix = 4;
+}
+
+message TreeResponse {
+  RepositoryRef repository = 1;
+  bytes tree_hash = 2;
+  repeated TreeEntry entries = 3;
+}
+
+message GetTreeRequest {
+  string user_id = 1;      // REQUIRED
+  RepositoryRef repository = 2; // REQUIRED
+  uint64 position = 3;     // OPTIONAL when tree_hash is present
+  bytes tree_hash = 4;     // OPTIONAL when position is present
+}
+
+message GetPathRequest {
+  string user_id = 1;      // REQUIRED
+  RepositoryRef repository = 2; // REQUIRED
+  uint64 position = 3;     // OPTIONAL when tree_hash is present
+  bytes tree_hash = 4;     // OPTIONAL when position is present
+  string path = 5;         // REQUIRED
+}
+
+message PathResponse {
+  bytes content = 1;       // REQUIRED
+  bytes content_hash = 2;  // REQUIRED
+  uint32 mode = 3;         // REQUIRED
+  uint64 size = 4;         // REQUIRED
+}
+
+message GetBlobRequest {
+  string user_id = 1;      // REQUIRED
+  bytes content_hash = 2;  // REQUIRED
+}
+
+message BlobResponse {
+  bytes content = 1; // REQUIRED
+}
+
+message DiffRequest {
+  string user_id = 1;      // REQUIRED
+  RepositoryRef repository = 2; // REQUIRED
+  uint64 from_position = 3; // REQUIRED
+  uint64 to_position = 4;   // REQUIRED
+  string path_prefix = 5;   // OPTIONAL
+}
+
+message DiffHunk {
+  string path = 1;
+  uint32 line = 2;
+  string old_line = 3;
+  string new_line = 4;
+}
+
+message DiffResponse {
+  repeated DiffHunk hunks = 1; // OPTIONAL
+}
+
+message BlameLine {
+  string path = 1;
+  uint32 line = 2;
+  string text = 3;
+  string session_id = 4;
+  string actor_handle = 5;
+  uint64 position = 6;
+  uint64 at_ms = 7;
+}
+
+message BlameRequest {
+  string user_id = 1;   // REQUIRED
+  RepositoryRef repository = 2; // REQUIRED
+  uint64 position = 3;  // REQUIRED
+  string path = 4;      // REQUIRED
+}
+
+message BlameResponse {
+  repeated BlameLine lines = 1; // OPTIONAL
+}
+
+message TextQueryRequest {
+  string user_id = 1;      // REQUIRED
+  RepositoryRef repository = 2; // REQUIRED
+  string query = 3;        // REQUIRED
+  uint64 at_position = 4;  // OPTIONAL
+  string path_prefix = 5;  // OPTIONAL
+  string path_glob = 6;    // OPTIONAL
+  bool regex = 7;          // OPTIONAL
+  bool case_sensitive = 8; // OPTIONAL
+  string language_hint = 9; // OPTIONAL
+  uint32 limit = 10;       // REQUIRED for bounded response
+  uint32 offset = 11;      // OPTIONAL
+  bytes page_token = 12;   // OPTIONAL
+}
+
+message TextQueryMatch {
+  string path = 1;
+  uint32 line = 2;
+  uint32 column = 3;
+  string snippet = 4;
+  string session_id = 5;
+  string actor_handle = 6;
+  uint64 position = 7;
+  string position_etag = 8;
+}
+
+message TextQueryResponse {
+  uint64 total = 1;             // REQUIRED
+  repeated TextQueryMatch matches = 2; // REQUIRED
+  bytes next_page_token = 3;    // OPTIONAL
+}

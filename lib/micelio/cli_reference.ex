@@ -1,9 +1,9 @@
 defmodule Micelio.CliReference do
   @moduledoc """
-  Provides CLI reference documentation generated from `mic --docs`.
+  Provides CLI reference documentation generated from `hif --docs`.
 
   The documentation is loaded from `priv/cli-reference.json` at compile time.
-  To update, run: `mic --docs > priv/cli-reference.json`
+  To update, run: `hif --docs > priv/cli-reference.json`
   """
 
   @external_resource "priv/cli-reference.json"
