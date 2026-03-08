@@ -161,6 +161,27 @@ defmodule Micelio.GRPC.Hif.V1.VersioningService.Server do
     end
   end
 
+  def list_sessions(%V1.ListSessionsRequest{} = request, stream) do
+    with :ok <- require_repository_ref(request.repository),
+         {:ok, user} <- fetch_user(request.user_id, stream),
+         {:ok, organization, repository} <- load_repository(request.repository),
+         true <- Accounts.user_in_organization?(user, organization.id) do
+      sessions =
+        repository
+        |> Sessions.list_sessions_for_repository_with_details(status: "landed")
+        |> maybe_filter_sessions_by_path(repository.id, empty_to_nil(request.path))
+        |> Enum.take(normalize_limit(request.limit))
+
+      %V1.ListSessionsResponse{
+        sessions: Enum.map(sessions, &session_summary/1)
+      }
+    else
+      false -> {:error, forbidden_status("You do not have access to this organization.")}
+      nil -> {:error, not_found_status("Repository not found.")}
+      {:error, status} -> {:error, status}
+    end
+  end
+
   defp do_land_session(%Session{} = session, repository) do
     case Landing.land_session(session) do
       {:ok, landing} ->
@@ -741,6 +762,64 @@ defmodule Micelio.GRPC.Hif.V1.VersioningService.Server do
   end
 
   defp parse_integer(_), do: 0
+
+  defp normalize_limit(limit) when is_integer(limit) and limit > 0 and limit <= 500, do: limit
+  defp normalize_limit(_limit), do: 20
+
+  defp session_summary(%Session{} = session) do
+    %V1.SessionSummary{
+      id: session.session_id,
+      goal: session.goal || "",
+      author: session_author_handle(session),
+      position: landing_position_from_session(session)
+    }
+  end
+
+  defp session_author_handle(%Session{} = session) do
+    case session do
+      %{user: %{account: %{handle: handle}}} when is_binary(handle) and handle != "" -> handle
+      %{user_id: user_id} when is_binary(user_id) -> user_id
+      _ -> ""
+    end
+  end
+
+  defp maybe_filter_sessions_by_path(sessions, _repository_id, nil), do: sessions
+
+  defp maybe_filter_sessions_by_path(sessions, repository_id, path) do
+    alias Micelio.Mic.ConflictIndex
+
+    matching_positions =
+      sessions
+      |> Enum.map(&landing_position_from_session/1)
+      |> Enum.reject(&(&1 <= 0))
+      |> Enum.filter(fn position ->
+        case ConflictIndex.load_path_index(repository_id, position) do
+          {:ok, nil} -> false
+          {:ok, paths} -> path in paths or path_matches_prefix?(path, paths)
+          {:error, _} -> false
+        end
+      end)
+      |> MapSet.new()
+
+    Enum.filter(sessions, fn session ->
+      position = landing_position_from_session(session)
+      position > 0 and MapSet.member?(matching_positions, position)
+    end)
+  end
+
+  defp path_matches_prefix?(query_path, indexed_paths) do
+    Enum.any?(indexed_paths, fn indexed_path ->
+      String.starts_with?(indexed_path, query_path <> "/") or
+        String.starts_with?(query_path, indexed_path <> "/")
+    end)
+  end
+
+  defp landing_position_from_session(%Session{} = session) do
+    case normalize_metadata(session.metadata) do
+      %{"landing_position" => value} -> parse_integer(value)
+      _ -> 0
+    end
+  end
 
   defp datetime_ms(nil), do: 0
 

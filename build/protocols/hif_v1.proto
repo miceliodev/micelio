@@ -6,6 +6,7 @@ package hif.v1;
 service VersioningService {
   rpc GetRepositoryHead(GetRepositoryHeadRequest) returns (RepositoryHeadResponse);
   rpc GetHeadAt(GetHeadAtRequest) returns (RepositoryHeadResponse);
+  rpc ListSessions(ListSessionsRequest) returns (ListSessionsResponse);
   rpc OpenSession(SessionOpenRequest) returns (SessionInfo);
   rpc AppendSessionConversation(SessionEventAppendRequest) returns (SessionInfo);
   rpc AppendSessionChange(SessionChangeAppendRequest) returns (SessionInfo);
@@ -126,6 +127,24 @@ message SessionOpenRequest {
 message SessionRequest {
   string user_id = 1;   // REQUIRED
   string session_id = 2; // REQUIRED
+}
+
+message SessionSummary {
+  string id = 1;       // REQUIRED
+  string goal = 2;     // REQUIRED
+  string author = 3;   // REQUIRED
+  uint64 position = 4; // REQUIRED
+}
+
+message ListSessionsRequest {
+  string user_id = 1;       // REQUIRED
+  RepositoryRef repository = 2; // REQUIRED
+  string path = 3;          // OPTIONAL
+  uint32 limit = 4;         // OPTIONAL
+}
+
+message ListSessionsResponse {
+  repeated SessionSummary sessions = 1; // OPTIONAL
 }
 
 message SessionEventAppendRequest {

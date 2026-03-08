@@ -73,7 +73,7 @@ Proceed with Option 1. Create an explicit protocol freeze by:
 Affected files:
 - `build/adr/0005-session-native-repo-protocol.md`
 - `build/protocols/hif_v1.proto`
-- `build/protocols/hif_v1.compatibility.md` (new)
+- Compatibility mapping artifact was later removed after hard-cutting to `hif.v1` only.
 - `test/micelio/protocol/virtual_vcs_contract_test.exs` (new)
 
 Related components:
@@ -111,8 +111,7 @@ Related components:
 **By:** Claude Code
 
 **Actions:**
-- Added `build/protocols/hif_v1.compatibility.md` and updated
-  `build/protocols/README.md` with the mapping.
+- Added compatibility mapping during initial migration planning (later removed after hard cut).
 - Moved ADR status to Accepted in `build/adr/0005-session-native-repo-protocol.md`
   and added a compatibility subsection.
 - Added required/optional field annotations plus `SessionConflict` payload in

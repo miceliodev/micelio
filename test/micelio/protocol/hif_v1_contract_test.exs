@@ -4,10 +4,6 @@ defmodule Micelio.Protocol.HifV1ContractTest do
   alias Micelio.Docs.ProtoParser
 
   @proto_path Path.expand("../../../build/protocols/hif_v1.proto", __DIR__)
-  @compatibility_path Path.expand(
-    "../../../build/protocols/hif_v1.compatibility.md",
-    __DIR__
-  )
 
   describe "hif_v1 protocol contract" do
     test "services and RPC names are frozen" do
@@ -23,6 +19,7 @@ defmodule Micelio.Protocol.HifV1ContractTest do
                MapSet.new([
                  "GetRepositoryHead",
                  "GetHeadAt",
+                 "ListSessions",
                  "OpenSession",
                  "AppendSessionConversation",
                  "AppendSessionChange",
@@ -31,9 +28,10 @@ defmodule Micelio.Protocol.HifV1ContractTest do
                  "GetSession"
                ])
 
-      assert MapSet.new(content_rpcs) == MapSet.new(["GetTree", "GetPath", "GetBlob", "Diff", "Blame"])
+      assert MapSet.new(content_rpcs) ==
+               MapSet.new(["GetTree", "GetPath", "GetBlob", "Diff", "Blame"])
+
       assert MapSet.new(search_rpcs) == MapSet.new(["QueryText"])
-      assert String.contains?(File.read!(@compatibility_path), "Legacy RPC")
     end
 
     test "required and optional field annotations are present" do

@@ -3,9 +3,7 @@
 use crate::cli::{parse_project_ref, LogCommand};
 use crate::config::{self, Config};
 use crate::error::{MicError, Result};
-use crate::grpc::client::{
-    read_field, read_string, read_varint_value, write_length_delimited, write_varint_field,
-};
+use crate::grpc::hif_v1::{call, pb, repository_ref, user_id_from_token};
 use crate::grpc::{Endpoint, GrpcClient};
 
 /// Run the log command.
@@ -23,28 +21,22 @@ pub async fn run(cmd: LogCommand) -> Result<()> {
     let tokens = config::require_tokens()?;
     let endpoint = Endpoint::parse(&server)?;
     let client = GrpcClient::new(endpoint);
+    let user_id = user_id_from_token(&tokens.access_token);
 
-    // Build request
-    let mut request = Vec::new();
-    write_length_delimited(&mut request, 1, org.as_bytes());
-    write_length_delimited(&mut request, 2, project.as_bytes());
-    if let Some(ref path) = cmd.path {
-        write_length_delimited(&mut request, 3, path.as_bytes());
-    }
-    write_varint_field(&mut request, 4, cmd.limit as u64);
+    let response: pb::ListSessionsResponse = call(
+        &client,
+        &tokens.access_token,
+        "/hif.v1.VersioningService/ListSessions",
+        &pb::ListSessionsRequest {
+            user_id,
+            repository: Some(repository_ref(org, project)),
+            path: cmd.path.clone().unwrap_or_default(),
+            limit: cmd.limit,
+        },
+    )
+    .await?;
 
-    let response = client
-        .unary_call(
-            "/micelio.sessions.v1.SessionService/ListSessions",
-            &request,
-            Some(&tokens.access_token),
-        )
-        .await?;
-
-    // Parse response
-    let sessions = parse_log_response(&response);
-
-    for session in sessions {
+    for session in response.sessions {
         println!("@{} {}", session.position, session.id);
         println!("  Goal: {}", session.goal);
         println!("  Author: {}", session.author);
@@ -52,57 +44,4 @@ pub async fn run(cmd: LogCommand) -> Result<()> {
     }
 
     Ok(())
-}
-
-/// Session info.
-struct SessionInfo {
-    id: String,
-    goal: String,
-    author: String,
-    position: u64,
-}
-
-/// Parse log response.
-fn parse_log_response(data: &[u8]) -> Vec<SessionInfo> {
-    let mut sessions = Vec::new();
-    let mut pos = 0;
-
-    while pos < data.len() {
-        if let Some((field_number, _, field_data)) = read_field(data, &mut pos) {
-            if field_number == 1 {
-                let session = parse_session_info(field_data);
-                sessions.push(session);
-            }
-        }
-    }
-
-    sessions
-}
-
-/// Parse session info.
-fn parse_session_info(data: &[u8]) -> SessionInfo {
-    let mut pos = 0;
-    let mut id = String::new();
-    let mut goal = String::new();
-    let mut author = String::new();
-    let mut position = 0u64;
-
-    while pos < data.len() {
-        if let Some((field_number, _, field_data)) = read_field(data, &mut pos) {
-            match field_number {
-                1 => id = read_string(field_data),
-                2 => goal = read_string(field_data),
-                3 => author = read_string(field_data),
-                4 => position = read_varint_value(field_data),
-                _ => {}
-            }
-        }
-    }
-
-    SessionInfo {
-        id,
-        goal,
-        author,
-        position,
-    }
 }
