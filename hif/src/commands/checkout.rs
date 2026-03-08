@@ -11,7 +11,7 @@ pub async fn run(cmd: CheckoutCommand) -> Result<()> {
     // Parse repository reference
     let (org, repository) = parse_repository_ref(&cmd.repository).ok_or_else(|| {
         MicError::InvalidRepositoryRef(format!(
-            "Invalid repository reference '{}'. Use format: org/repository",
+            "Invalid repository reference '{}'. Use format: account/repository",
             cmd.repository
         ))
     })?;

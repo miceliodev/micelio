@@ -31,13 +31,13 @@ pub async fn run(cmd: SessionCommand) -> Result<()> {
 ///
 /// Supports two forms:
 /// - In workspace: `hif session start "goal"` - repository inferred from workspace
-/// - Outside workspace: `hif session start org/repository "goal"` - repository explicit
+/// - Outside workspace: `hif session start account/repository "goal"` - repository explicit
 fn parse_start_args(first: &str, second: Option<&str>) -> Result<(String, String, String)> {
     match second {
         Some(goal) => {
             let (org, repository) = parse_repository_ref(first).ok_or_else(|| {
                 MicError::InvalidRepositoryRef(format!(
-                    "Invalid repository reference '{}'. Use format: org/repository",
+                    "Invalid repository reference '{}'. Use format: account/repository",
                     first
                 ))
             })?;
@@ -46,7 +46,7 @@ fn parse_start_args(first: &str, second: Option<&str>) -> Result<(String, String
         None => {
             if looks_like_repository_ref(first) {
                 return Err(MicError::Other(
-                    "Missing goal. Usage: hif session start <org/repository> \"<goal>\""
+                    "Missing goal. Usage: hif session start <account/repository> \"<goal>\""
                         .to_string(),
                 ));
             }
@@ -55,7 +55,7 @@ fn parse_start_args(first: &str, second: Option<&str>) -> Result<(String, String
                 MicError::NotInWorkspace(
                     "Not in a workspace. Either:\n  \
                      1. Run from inside a workspace (created with 'hif checkout'), or\n  \
-                     2. Specify the repository: hif session start <org/repository> \"<goal>\""
+                     2. Specify the repository: hif session start <account/repository> \"<goal>\""
                         .to_string(),
                 )
             })?;
@@ -120,7 +120,7 @@ async fn status() -> Result<()> {
     match state {
         None => {
             println!("No active session.");
-            println!("Start one with: hif session start <organization>/<repository> <goal>");
+            println!("Start one with: hif session start <account>/<repository> <goal>");
         }
         Some(state) => {
             println!("Active session: {}", state.id);

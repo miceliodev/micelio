@@ -17,7 +17,7 @@ use clap::{Parser, Subcommand};
 #[command(after_help = "\
 QUICK START:
     hif auth login
-    hif checkout <org/repository>
+    hif checkout <account/repository>
     hif session start \"<goal>\"
     hif session land
 ")]
@@ -97,13 +97,13 @@ EXAMPLES:
     /// Manage repositories
     #[command(after_help = "\
 EXAMPLES:
-    $ hif repository list acme                        # List repositories in org
+    $ hif repository list acme                        # List repositories in account
     $ hif repository create acme/myapp \"My App\"       # Create new repository
     $ hif repository info acme/myapp                  # Get repository details
     $ hif repository delete acme/myapp                # Delete repository
 
 NOTES:
-    Repositories are always referenced as org/repository (e.g., 'acme/myapp').
+    Repositories are always referenced as account/repository (e.g., 'acme/myapp').
 ")]
     Repository(RepositoryCommand),
 
@@ -341,15 +341,16 @@ pub struct RepositoryCommand {
 
 #[derive(Subcommand, Debug)]
 pub enum RepositorySubcommand {
-    /// List repositories in an organization
+    /// List repositories in an account
     List {
-        /// Organization handle
-        org: String,
+        /// Account handle (personal or organization)
+        #[arg(value_name = "ACCOUNT")]
+        account: String,
     },
     /// Create a new repository
     Create {
-        /// Repository reference (org/repository)
-        #[arg(value_name = "ORG/REPOSITORY")]
+        /// Repository reference (account/repository)
+        #[arg(value_name = "ACCOUNT/REPOSITORY")]
         repository: String,
         /// Repository display name
         name: String,
@@ -359,14 +360,14 @@ pub enum RepositorySubcommand {
     },
     /// Get repository details
     Info {
-        /// Repository reference (org/repository)
-        #[arg(value_name = "ORG/REPOSITORY")]
+        /// Repository reference (account/repository)
+        #[arg(value_name = "ACCOUNT/REPOSITORY")]
         repository: String,
     },
     /// Update a repository
     Update {
-        /// Repository reference (org/repository)
-        #[arg(value_name = "ORG/REPOSITORY")]
+        /// Repository reference (account/repository)
+        #[arg(value_name = "ACCOUNT/REPOSITORY")]
         repository: String,
         /// New display name
         #[arg(short, long)]
@@ -377,8 +378,8 @@ pub enum RepositorySubcommand {
     },
     /// Delete a repository (cannot be undone)
     Delete {
-        /// Repository reference (org/repository)
-        #[arg(value_name = "ORG/REPOSITORY")]
+        /// Repository reference (account/repository)
+        #[arg(value_name = "ACCOUNT/REPOSITORY")]
         repository: String,
     },
 }
@@ -389,8 +390,8 @@ pub enum RepositorySubcommand {
 
 #[derive(Parser, Debug)]
 pub struct CheckoutCommand {
-    /// Repository reference (org/repository)
-    #[arg(value_name = "ORG/REPOSITORY")]
+    /// Repository reference (account/repository)
+    #[arg(value_name = "ACCOUNT/REPOSITORY")]
     pub repository: String,
 
     /// Local directory path (defaults to repository name)
@@ -400,8 +401,8 @@ pub struct CheckoutCommand {
 
 #[derive(Parser, Debug)]
 pub struct LinkCommand {
-    /// Repository reference (org/repository)
-    #[arg(value_name = "ORG/REPOSITORY")]
+    /// Repository reference (account/repository)
+    #[arg(value_name = "ACCOUNT/REPOSITORY")]
     pub repository: String,
 }
 
@@ -427,10 +428,10 @@ pub struct SessionCommand {
 pub enum SessionSubcommand {
     /// Start a new session
     Start {
-        /// Session goal, or org/repository + goal if outside workspace
-        #[arg(value_name = "GOAL or ORG/REPOSITORY")]
+        /// Session goal, or account/repository + goal if outside workspace
+        #[arg(value_name = "GOAL or ACCOUNT/REPOSITORY")]
         first: String,
-        /// Session goal (when first arg is org/repository)
+        /// Session goal (when first arg is account/repository)
         second: Option<String>,
     },
     /// Show current session status
@@ -457,10 +458,10 @@ pub enum SessionSubcommand {
 
 #[derive(Parser, Debug)]
 pub struct LandCommand {
-    /// Session goal, or org/repository + goal if outside workspace
-    #[arg(value_name = "GOAL or ORG/REPOSITORY")]
+    /// Session goal, or account/repository + goal if outside workspace
+    #[arg(value_name = "GOAL or ACCOUNT/REPOSITORY")]
     pub first: String,
-    /// Session goal (when first arg is org/repository)
+    /// Session goal (when first arg is account/repository)
     pub second: Option<String>,
 }
 
@@ -470,8 +471,8 @@ pub struct LandCommand {
 
 #[derive(Parser, Debug)]
 pub struct ShowCommand {
-    /// Repository reference (org/repository)
-    #[arg(value_name = "ORG/REPOSITORY")]
+    /// Repository reference (account/repository)
+    #[arg(value_name = "ACCOUNT/REPOSITORY")]
     pub repository: String,
     /// File path
     pub path: String,
@@ -482,8 +483,8 @@ pub struct ShowCommand {
 
 #[derive(Parser, Debug)]
 pub struct TreeCommand {
-    /// Repository reference (org/repository)
-    #[arg(value_name = "ORG/REPOSITORY")]
+    /// Repository reference (account/repository)
+    #[arg(value_name = "ACCOUNT/REPOSITORY")]
     pub repository: String,
     /// Directory path (defaults to root)
     pub path: Option<String>,
@@ -494,8 +495,8 @@ pub struct TreeCommand {
 
 #[derive(Parser, Debug)]
 pub struct GrepCommand {
-    /// Repository reference (org/repository)
-    #[arg(value_name = "ORG/REPOSITORY")]
+    /// Repository reference (account/repository)
+    #[arg(value_name = "ACCOUNT/REPOSITORY")]
     pub repository: String,
     /// Query string or pattern
     pub query: String,
@@ -525,8 +526,8 @@ pub struct GrepCommand {
 
 #[derive(Parser, Debug)]
 pub struct LogCommand {
-    /// Repository reference (org/repository)
-    #[arg(value_name = "ORG/REPOSITORY")]
+    /// Repository reference (account/repository)
+    #[arg(value_name = "ACCOUNT/REPOSITORY")]
     pub repository: String,
     /// Filter by file path
     #[arg(short, long)]
@@ -538,8 +539,8 @@ pub struct LogCommand {
 
 #[derive(Parser, Debug)]
 pub struct BlameCommand {
-    /// Repository reference (org/repository)
-    #[arg(value_name = "ORG/REPOSITORY")]
+    /// Repository reference (account/repository)
+    #[arg(value_name = "ACCOUNT/REPOSITORY")]
     pub repository: String,
     /// File path
     pub path: String,
@@ -547,8 +548,8 @@ pub struct BlameCommand {
 
 #[derive(Parser, Debug)]
 pub struct DiffCommand {
-    /// Repository reference (org/repository)
-    #[arg(value_name = "ORG/REPOSITORY")]
+    /// Repository reference (account/repository)
+    #[arg(value_name = "ACCOUNT/REPOSITORY")]
     pub repository: String,
     /// Starting revision hash (e.g., @0123...abcd)
     pub from: String,
@@ -562,8 +563,8 @@ pub struct DiffCommand {
 
 #[derive(Parser, Debug)]
 pub struct MountCommand {
-    /// Repository reference (org/repository)
-    #[arg(value_name = "ORG/REPOSITORY")]
+    /// Repository reference (account/repository)
+    #[arg(value_name = "ACCOUNT/REPOSITORY")]
     pub repository: String,
     /// Mount point directory
     #[arg(short, long)]
@@ -583,7 +584,7 @@ pub struct UnmountCommand {
 // Utilities
 // =============================================================================
 
-/// Parse a repository reference (org/repository) into (org, repository).
+/// Parse a repository reference (account/repository) into (account, repository).
 pub fn parse_repository_ref(s: &str) -> Option<(&str, &str)> {
     let parts: Vec<&str> = s.splitn(2, '/').collect();
     if parts.len() == 2 && !parts[0].is_empty() && !parts[1].is_empty() {
@@ -619,7 +620,7 @@ pub fn generate_help_json() -> serde_json::Value {
 
         "workflow": [
             {"step": 1, "command": "hif auth login", "description": "Authenticate with the forge"},
-            {"step": 2, "command": "hif checkout <org/repository>", "description": "Create local workspace"},
+            {"step": 2, "command": "hif checkout <account/repository>", "description": "Create local workspace"},
             {"step": 3, "command": "hif session start \"<goal>\"", "description": "Start a session (repository inferred)"},
             {"step": 4, "action": "Edit files normally", "description": "Make your changes"},
             {"step": 5, "command": "hif session land", "description": "Push changes to forge"}
@@ -644,22 +645,22 @@ pub fn generate_help_json() -> serde_json::Value {
             "repository": {
                 "description": "Repository management",
                 "subcommands": {
-                    "list": {"description": "List repositories in org", "args": ["org"], "requires_auth": true},
-                    "create": {"description": "Create repository", "args": ["org/repository", "name"], "requires_auth": true},
-                    "info": {"description": "Get repository details", "args": ["org/repository"], "requires_auth": true},
-                    "update": {"description": "Update repository", "args": ["org/repository"], "requires_auth": true},
-                    "delete": {"description": "Delete repository", "args": ["org/repository"], "requires_auth": true}
+                    "list": {"description": "List repositories in account", "args": ["account"], "requires_auth": true},
+                    "create": {"description": "Create repository", "args": ["account/repository", "name"], "requires_auth": true},
+                    "info": {"description": "Get repository details", "args": ["account/repository"], "requires_auth": true},
+                    "update": {"description": "Update repository", "args": ["account/repository"], "requires_auth": true},
+                    "delete": {"description": "Delete repository", "args": ["account/repository"], "requires_auth": true}
                 }
             },
             "checkout": {
                 "description": "Create local workspace from repository",
-                "args": ["org/repository"],
+                "args": ["account/repository"],
                 "options": {"--path": "Local directory path"},
                 "requires_auth": true
             },
             "link": {
                 "description": "Link current directory to repository",
-                "args": ["org/repository"],
+                "args": ["account/repository"],
                 "requires_auth": true
             },
             "status": {
@@ -679,7 +680,7 @@ pub fn generate_help_json() -> serde_json::Value {
                     "start": {
                         "description": "Start new session",
                         "args": ["goal"],
-                        "args_outside_workspace": ["org/repository", "goal"],
+                        "args_outside_workspace": ["account/repository", "goal"],
                         "requires_workspace": "optional"
                     },
                     "status": {"description": "Show session status"},
@@ -692,25 +693,25 @@ pub fn generate_help_json() -> serde_json::Value {
             "land": {
                 "description": "Quick land (start + land in one step)",
                 "args": ["goal"],
-                "args_outside_workspace": ["org/repository", "goal"],
+                "args_outside_workspace": ["account/repository", "goal"],
                 "requires_auth": true,
                 "requires_workspace": "optional"
             },
             "show": {
                 "description": "Show file contents from forge",
-                "args": ["org/repository", "path"],
+                "args": ["account/repository", "path"],
                 "options": {"--ref": "Revision hash (e.g., @012345...abcd)"},
                 "requires_auth": true
             },
             "tree": {
                 "description": "List directory from forge",
-                "args": ["org/repository"],
+                "args": ["account/repository"],
                 "options": {"path": "Directory path", "--ref": "Revision hash"},
                 "requires_auth": true
             },
             "grep": {
                 "description": "Search repository text",
-                "args": ["org/repository", "query"],
+                "args": ["account/repository", "query"],
                 "options": {
                     "--position": "Revision hash (e.g., @012345...abcd)",
                     "--path": "Path prefix filter",
@@ -723,18 +724,18 @@ pub fn generate_help_json() -> serde_json::Value {
             },
             "log": {
                 "description": "Show session history",
-                "args": ["org/repository"],
+                "args": ["account/repository"],
                 "options": {"--path": "Filter by path", "-n": "Limit"},
                 "requires_auth": true
             },
             "blame": {
                 "description": "Show line attribution",
-                "args": ["org/repository", "path"],
+                "args": ["account/repository", "path"],
                 "requires_auth": true
             },
             "diff": {
                 "description": "Show changes between revisions",
-                "args": ["org/repository", "from", "[to]"],
+                "args": ["account/repository", "from", "[to]"],
                 "requires_auth": true
             }
         },
@@ -750,10 +751,10 @@ pub fn generate_help_json() -> serde_json::Value {
         "error_codes": {
             "not_authenticated": "Run 'hif auth login'",
             "token_expired": "Run 'hif auth login' again",
-            "not_in_workspace": "Run 'hif checkout <org/repository>' first, or specify org/repository explicitly",
+            "not_in_workspace": "Run 'hif checkout <account/repository>' first, or specify account/repository explicitly",
             "no_active_session": "Run 'hif session start \"<goal>\"' first",
             "session_already_active": "Run 'hif session land' or 'hif session abandon' first",
-            "invalid_repository_ref": "Use format: org/repository (e.g., 'acme/myapp')",
+            "invalid_repository_ref": "Use format: account/repository (e.g., 'acme/myapp')",
             "conflicts_detected": "Run 'hif session resolve' or 'hif sync'",
             "no_web_url": "Set web_url in config.json for the server",
             "no_grpc_url": "Set grpc_url in config.json or enable discovery via /.well-known/micelio.json",
@@ -761,9 +762,9 @@ pub fn generate_help_json() -> serde_json::Value {
         },
 
         "repository_ref_format": {
-            "pattern": "org/repository",
+            "pattern": "account/repository",
             "examples": ["acme/webapp", "myorg/api-server"],
-            "description": "Always use org/repository format for repository references"
+            "description": "Always use account/repository format for repository references"
         }
     })
 }
@@ -930,10 +931,10 @@ pub fn generate_docs() -> serde_json::Value {
                 "subcommands": [
                     {
                         "name": "list",
-                        "description": "List repositories in an organization",
-                        "usage": "hif repository list <ORG>",
+                        "description": "List repositories in an account",
+                        "usage": "hif repository list <ACCOUNT>",
                         "args": [
-                            {"name": "org", "description": "Organization handle", "required": true}
+                            {"name": "account", "description": "Account handle (personal or organization)", "required": true}
                         ],
                         "options": [],
                         "examples": [
@@ -943,9 +944,9 @@ pub fn generate_docs() -> serde_json::Value {
                     {
                         "name": "create",
                         "description": "Create a new repository",
-                        "usage": "hif repository create <ORG/REPOSITORY> <NAME>",
+                        "usage": "hif repository create <ACCOUNT/REPOSITORY> <NAME>",
                         "args": [
-                            {"name": "org/repository", "description": "Repository reference (e.g., acme/myapp)", "required": true},
+                            {"name": "account/repository", "description": "Repository reference (e.g., acme/myapp)", "required": true},
                             {"name": "name", "description": "Display name for the repository", "required": true}
                         ],
                         "options": [
@@ -959,9 +960,9 @@ pub fn generate_docs() -> serde_json::Value {
                     {
                         "name": "info",
                         "description": "Get repository details",
-                        "usage": "hif repository info <ORG/REPOSITORY>",
+                        "usage": "hif repository info <ACCOUNT/REPOSITORY>",
                         "args": [
-                            {"name": "org/repository", "description": "Repository reference", "required": true}
+                            {"name": "account/repository", "description": "Repository reference", "required": true}
                         ],
                         "options": [],
                         "examples": [
@@ -971,9 +972,9 @@ pub fn generate_docs() -> serde_json::Value {
                     {
                         "name": "update",
                         "description": "Update repository settings",
-                        "usage": "hif repository update <ORG/REPOSITORY>",
+                        "usage": "hif repository update <ACCOUNT/REPOSITORY>",
                         "args": [
-                            {"name": "org/repository", "description": "Repository reference", "required": true}
+                            {"name": "account/repository", "description": "Repository reference", "required": true}
                         ],
                         "options": [
                             {"name": "--name, -n", "description": "New display name", "required": false},
@@ -986,9 +987,9 @@ pub fn generate_docs() -> serde_json::Value {
                     {
                         "name": "delete",
                         "description": "Delete a repository (cannot be undone)",
-                        "usage": "hif repository delete <ORG/REPOSITORY>",
+                        "usage": "hif repository delete <ACCOUNT/REPOSITORY>",
                         "args": [
-                            {"name": "org/repository", "description": "Repository reference", "required": true}
+                            {"name": "account/repository", "description": "Repository reference", "required": true}
                         ],
                         "options": [],
                         "examples": [
@@ -1002,9 +1003,9 @@ pub fn generate_docs() -> serde_json::Value {
                 "name": "checkout",
                 "category": "Workspace",
                 "description": "Create a local workspace from a repository",
-                "usage": "hif checkout <ORG/REPOSITORY>",
+                "usage": "hif checkout <ACCOUNT/REPOSITORY>",
                 "args": [
-                    {"name": "org/repository", "description": "Repository reference (e.g., acme/myapp)", "required": true}
+                    {"name": "account/repository", "description": "Repository reference (e.g., acme/myapp)", "required": true}
                 ],
                 "options": [
                     {"name": "--path, -p", "description": "Local directory path (defaults to repository name)", "required": false}
@@ -1019,9 +1020,9 @@ pub fn generate_docs() -> serde_json::Value {
                 "name": "link",
                 "category": "Workspace",
                 "description": "Link current directory to an existing repository",
-                "usage": "hif link <ORG/REPOSITORY>",
+                "usage": "hif link <ACCOUNT/REPOSITORY>",
                 "args": [
-                    {"name": "org/repository", "description": "Repository reference", "required": true}
+                    {"name": "account/repository", "description": "Repository reference", "required": true}
                 ],
                 "options": [],
                 "examples": [
@@ -1071,7 +1072,7 @@ pub fn generate_docs() -> serde_json::Value {
                         "name": "start",
                         "description": "Start a new session",
                         "usage": "hif session start <GOAL>",
-                        "usage_outside_workspace": "hif session start <ORG/REPOSITORY> <GOAL>",
+                        "usage_outside_workspace": "hif session start <ACCOUNT/REPOSITORY> <GOAL>",
                         "args": [
                             {"name": "goal", "description": "What you're trying to accomplish", "required": true}
                         ],
@@ -1149,7 +1150,7 @@ pub fn generate_docs() -> serde_json::Value {
                 "category": "Sessions",
                 "description": "Quick land: start session + land in one step",
                 "usage": "hif land <GOAL>",
-                "usage_outside_workspace": "hif land <ORG/REPOSITORY> <GOAL>",
+                "usage_outside_workspace": "hif land <ACCOUNT/REPOSITORY> <GOAL>",
                 "args": [
                     {"name": "goal", "description": "What you accomplished", "required": true}
                 ],
@@ -1164,9 +1165,9 @@ pub fn generate_docs() -> serde_json::Value {
                 "name": "show",
                 "category": "Content",
                 "description": "Show file contents from the forge (no checkout needed)",
-                "usage": "hif show <ORG/REPOSITORY> <PATH>",
+                "usage": "hif show <ACCOUNT/REPOSITORY> <PATH>",
                 "args": [
-                    {"name": "org/repository", "description": "Repository reference", "required": true},
+                    {"name": "account/repository", "description": "Repository reference", "required": true},
                     {"name": "path", "description": "File path", "required": true}
                 ],
                 "options": [
@@ -1182,9 +1183,9 @@ pub fn generate_docs() -> serde_json::Value {
                 "name": "tree",
                 "category": "Content",
                 "description": "List directory contents from the forge",
-                "usage": "hif tree <ORG/REPOSITORY> [PATH]",
+                "usage": "hif tree <ACCOUNT/REPOSITORY> [PATH]",
                 "args": [
-                    {"name": "org/repository", "description": "Repository reference", "required": true},
+                    {"name": "account/repository", "description": "Repository reference", "required": true},
                     {"name": "path", "description": "Directory path (defaults to root)", "required": false}
                 ],
                 "options": [
@@ -1200,9 +1201,9 @@ pub fn generate_docs() -> serde_json::Value {
                 "name": "grep",
                 "category": "Content",
                 "description": "Search repository content",
-                "usage": "hif grep <ORG/REPOSITORY> <QUERY>",
+                "usage": "hif grep <ACCOUNT/REPOSITORY> <QUERY>",
                 "args": [
-                    {"name": "org/repository", "description": "Repository reference", "required": true},
+                    {"name": "account/repository", "description": "Repository reference", "required": true},
                     {"name": "query", "description": "Search query or regex pattern", "required": true}
                 ],
                 "options": [
@@ -1225,9 +1226,9 @@ pub fn generate_docs() -> serde_json::Value {
                 "name": "log",
                 "category": "History",
                 "description": "Show session history for a repository",
-                "usage": "hif log <ORG/REPOSITORY>",
+                "usage": "hif log <ACCOUNT/REPOSITORY>",
                 "args": [
-                    {"name": "org/repository", "description": "Repository reference", "required": true}
+                    {"name": "account/repository", "description": "Repository reference", "required": true}
                 ],
                 "options": [
                     {"name": "--path, -p", "description": "Filter by file path", "required": false},
@@ -1243,9 +1244,9 @@ pub fn generate_docs() -> serde_json::Value {
                 "name": "blame",
                 "category": "History",
                 "description": "Show who changed each line (session attribution)",
-                "usage": "hif blame <ORG/REPOSITORY> <PATH>",
+                "usage": "hif blame <ACCOUNT/REPOSITORY> <PATH>",
                 "args": [
-                    {"name": "org/repository", "description": "Repository reference", "required": true},
+                    {"name": "account/repository", "description": "Repository reference", "required": true},
                     {"name": "path", "description": "File path", "required": true}
                 ],
                 "options": [],
@@ -1258,9 +1259,9 @@ pub fn generate_docs() -> serde_json::Value {
                 "name": "diff",
                 "category": "History",
                 "description": "Show changes between two revisions",
-                "usage": "hif diff <ORG/REPOSITORY> <FROM> [TO]",
+                "usage": "hif diff <ACCOUNT/REPOSITORY> <FROM> [TO]",
                 "args": [
-                    {"name": "org/repository", "description": "Repository reference", "required": true},
+                    {"name": "account/repository", "description": "Repository reference", "required": true},
                     {"name": "from", "description": "Starting revision hash (e.g., @0123...abcd)", "required": true},
                     {"name": "to", "description": "Ending revision hash (defaults to HEAD)", "required": false}
                 ],
@@ -1289,10 +1290,10 @@ pub fn generate_docs() -> serde_json::Value {
         "error_codes": [
             {"code": "not_authenticated", "message": "Not logged in", "resolution": "Run `hif auth login`"},
             {"code": "token_expired", "message": "Authentication token expired", "resolution": "Run `hif auth login` again"},
-            {"code": "not_in_workspace", "message": "Not in a workspace directory", "resolution": "Run `hif checkout <org/repository>` first, or specify repository explicitly"},
+            {"code": "not_in_workspace", "message": "Not in a workspace directory", "resolution": "Run `hif checkout <account/repository>` first, or specify repository explicitly"},
             {"code": "no_active_session", "message": "No active session", "resolution": "Run `hif session start \"<goal>\"` first"},
             {"code": "session_already_active", "message": "A session is already active", "resolution": "Run `hif session land` or `hif session abandon` first"},
-            {"code": "invalid_repository_ref", "message": "Invalid repository reference format", "resolution": "Use format: org/repository (e.g., 'acme/myapp')"},
+            {"code": "invalid_repository_ref", "message": "Invalid repository reference format", "resolution": "Use format: account/repository (e.g., 'acme/myapp')"},
             {"code": "conflicts_detected", "message": "Conflicts with upstream changes", "resolution": "Run `hif session resolve` or `hif sync`"}
         ],
 
@@ -1312,8 +1313,8 @@ mod tests {
     fn test_parse_repository_ref_valid() {
         assert_eq!(parse_repository_ref("acme/myapp"), Some(("acme", "myapp")));
         assert_eq!(
-            parse_repository_ref("org/repository"),
-            Some(("org", "repository"))
+            parse_repository_ref("account/repository"),
+            Some(("account", "repository"))
         );
         assert_eq!(parse_repository_ref("a/b"), Some(("a", "b")));
     }

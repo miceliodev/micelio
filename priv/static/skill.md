@@ -180,23 +180,23 @@ hif auth login              # Device flow auth
 hif auth status             # Check auth status
 
 # Repositories
-hif repository create <org/repository> "<name>"
-hif repository list <org>
+hif repository create <account/repository> "<name>"
+hif repository list <account>
 
 # Working with content (no checkout needed)
-hif show <org/repository> <path>       # Read file
-hif tree <org/repository> [path]       # List directory
-hif grep <org/repository> "<query>"    # Search repository text
-hif log <org/repository>               # List sessions
-hif blame <org/repository> <path>      # Session attribution
+hif show <account/repository> <path>       # Read file
+hif tree <account/repository> [path]       # List directory
+hif grep <account/repository> "<query>"    # Search repository text
+hif log <account/repository>               # List sessions
+hif blame <account/repository> <path>      # Session attribution
 
 # Local workspace
-hif checkout <org/repository>          # Create local workspace
+hif checkout <account/repository>          # Create local workspace
 hif status                             # Show workspace changes
 hif land "goal"                        # Quick land
 
 # Sessions (explicit workflow)
-hif session start <org/repository> "goal"
+hif session start <account/repository> "goal"
 hif session note "message"             # Add conversation entry
 hif session land                       # Push to forge
 hif session abandon                    # Discard session

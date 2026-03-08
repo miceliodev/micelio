@@ -15,9 +15,9 @@ pub fn user_id_from_token(access_token: &str) -> String {
 }
 
 /// Build a repository reference message.
-pub fn repository_ref(org: &str, repository: &str) -> pb::RepositoryRef {
+pub fn repository_ref(account: &str, repository: &str) -> pb::RepositoryRef {
     pb::RepositoryRef {
-        organization_handle: org.to_string(),
+        account_handle: account.to_string(),
         repository_handle: repository.to_string(),
     }
 }

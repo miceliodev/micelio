@@ -163,8 +163,8 @@ mod tests {
             Some(("acme".to_string(), "app".to_string()))
         );
         assert_eq!(
-            parse_repository_ref("org/repository-name"),
-            Some(("org".to_string(), "repository-name".to_string()))
+            parse_repository_ref("account/repository-name"),
+            Some(("account".to_string(), "repository-name".to_string()))
         );
 
         assert_eq!(parse_repository_ref("noSlash"), None);

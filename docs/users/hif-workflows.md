@@ -2,12 +2,9 @@
 
 This guide covers the most common `hif` workflows for daily use.
 
-## Install and authenticate
+## Authenticate
 
 ```bash
-# Build from source
-cd hif && cargo build --release
-
 # Login via device flow
 hif auth login
 
@@ -18,14 +15,14 @@ hif auth status
 ## Create a repository and checkout a workspace
 
 ```bash
-# List repositories in an org
-hif repository list <organization>
+# List repositories in an account
+hif repository list <account>
 
 # Create a new repository
-hif repository create <organization>/<repository> "<name>" [--description <desc>]
+hif repository create <account>/<repository> "<name>" [--description <desc>]
 
 # Checkout a repository into a local workspace
-hif checkout <organization>/<repository> [--path dir]
+hif checkout <account>/<repository> [--path dir]
 ```
 
 ## Link an existing local repository
@@ -35,7 +32,7 @@ to a Micelio repository without running checkout.
 
 ```bash
 # Link by repository ref (uses default server)
-hif link <organization>/<repository>
+hif link <account>/<repository>
 
 # Land your changes
 hif land "Describe the goal"
@@ -45,7 +42,7 @@ hif land "Describe the goal"
 
 ```bash
 # Start a new session with a goal
-hif session start <organization>/<repository> "Describe the goal"
+hif session start <account>/<repository> "Describe the goal"
 
 # Inspect local changes
 hif status
@@ -67,20 +64,20 @@ hif sync [--strategy ours|theirs|interactive]
 
 ```bash
 # List files at the repository root
-hif tree <organization>/<repository>
+hif tree <account>/<repository>
 
 # Read a file at a specific path
-hif show <organization>/<repository> <path>
+hif show <account>/<repository> <path>
 
 # Search indexed repository content
-hif grep <organization>/<repository> "<query>"
+hif grep <account>/<repository> "<query>"
 ```
 
 ## Mount a read-only filesystem
 
 ```bash
 # Mount a repository via local mirror
-hif mount <organization>/<repository> [--path dir] [--port 20490]
+hif mount <account>/<repository> [--path dir] [--port 20490]
 
 # Unmount when done
 hif unmount <mount-path>
@@ -90,11 +87,11 @@ hif unmount <mount-path>
 
 ```bash
 # List landed sessions
-hif log <organization>/<repository>
+hif log <account>/<repository>
 
 # Diff two refs
-hif diff <organization>/<repository> <from-ref> [to-ref]
+hif diff <account>/<repository> <from-ref> [to-ref]
 
 # Show line attribution
-hif blame <organization>/<repository> <path>
+hif blame <account>/<repository> <path>
 ```

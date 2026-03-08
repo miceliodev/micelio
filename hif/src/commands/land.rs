@@ -13,7 +13,7 @@ use crate::workspace::session::Session;
 /// This is a convenience command that combines session start + land.
 /// It supports two forms:
 /// - In workspace: `hif land "goal"` - repository inferred from workspace
-/// - Outside workspace: `hif land org/repository "goal"` - repository explicit
+/// - Outside workspace: `hif land account/repository "goal"` - repository explicit
 pub async fn run(cmd: LandCommand) -> Result<()> {
     // Parse arguments (same logic as session start)
     let (org, repository, goal) = parse_land_args(&cmd.first, cmd.second.as_deref())?;
@@ -50,14 +50,14 @@ pub async fn run(cmd: LandCommand) -> Result<()> {
 ///
 /// Supports two forms:
 /// - In workspace: `hif land "goal"` - repository inferred from workspace
-/// - Outside workspace: `hif land org/repository "goal"` - repository explicit
+/// - Outside workspace: `hif land account/repository "goal"` - repository explicit
 fn parse_land_args(first: &str, second: Option<&str>) -> Result<(String, String, String)> {
     match second {
-        // Two args: first is org/repository, second is goal
+        // Two args: first is account/repository, second is goal
         Some(goal) => {
             let (org, repository) = parse_repository_ref(first).ok_or_else(|| {
                 MicError::InvalidRepositoryRef(format!(
-                    "Invalid repository reference '{}'. Use format: org/repository",
+                    "Invalid repository reference '{}'. Use format: account/repository",
                     first
                 ))
             })?;
@@ -68,7 +68,7 @@ fn parse_land_args(first: &str, second: Option<&str>) -> Result<(String, String,
             // Check if first arg looks like a repository reference
             if looks_like_repository_ref(first) {
                 return Err(MicError::Other(
-                    "Missing goal. Usage: hif land <org/repository> \"<goal>\"".to_string(),
+                    "Missing goal. Usage: hif land <account/repository> \"<goal>\"".to_string(),
                 ));
             }
 
@@ -77,7 +77,7 @@ fn parse_land_args(first: &str, second: Option<&str>) -> Result<(String, String,
                 MicError::NotInWorkspace(
                     "Not in a workspace. Either:\n  \
                      1. Run from inside a workspace (created with 'hif checkout'), or\n  \
-                     2. Specify the repository: hif land <org/repository> \"<goal>\""
+                     2. Specify the repository: hif land <account/repository> \"<goal>\""
                         .to_string(),
                 )
             })?;

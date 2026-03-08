@@ -18,7 +18,7 @@ pub const DEFAULT_PORT: u16 = 20490;
 pub async fn run(cmd: MountCommand) -> Result<()> {
     let (organization, repository) = parse_repository_ref(&cmd.repository).ok_or_else(|| {
         MicError::InvalidRepositoryRef(format!(
-            "Invalid repository reference '{}'. Use format: org/repository",
+            "Invalid repository reference '{}'. Use format: account/repository",
             cmd.repository
         ))
     })?;

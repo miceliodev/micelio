@@ -11,7 +11,7 @@ use crate::workspace::{parse_position, PositionOrLatest};
 pub async fn run(cmd: ShowCommand) -> Result<()> {
     let (org, repository) = parse_repository_ref(&cmd.repository).ok_or_else(|| {
         MicError::InvalidRepositoryRef(format!(
-            "Invalid repository reference '{}'. Use format: org/repository",
+            "Invalid repository reference '{}'. Use format: account/repository",
             cmd.repository
         ))
     })?;

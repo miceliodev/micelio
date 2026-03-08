@@ -9,7 +9,7 @@ use crate::grpc::{Endpoint, GrpcClient};
 /// Run the repository command.
 pub async fn run(cmd: RepositoryCommand) -> Result<()> {
     match cmd.command {
-        RepositorySubcommand::List { org } => list(&org).await,
+        RepositorySubcommand::List { account } => list(&account).await,
         RepositorySubcommand::Create {
             repository,
             name,
@@ -17,7 +17,7 @@ pub async fn run(cmd: RepositoryCommand) -> Result<()> {
         } => {
             let (org, handle) = parse_repository_ref(&repository).ok_or_else(|| {
                 MicError::InvalidRepositoryRef(format!(
-                    "Invalid repository reference '{}'. Use format: org/repository",
+                    "Invalid repository reference '{}'. Use format: account/repository",
                     repository
                 ))
             })?;
@@ -26,7 +26,7 @@ pub async fn run(cmd: RepositoryCommand) -> Result<()> {
         RepositorySubcommand::Info { repository } => {
             let (org, handle) = parse_repository_ref(&repository).ok_or_else(|| {
                 MicError::InvalidRepositoryRef(format!(
-                    "Invalid repository reference '{}'. Use format: org/repository",
+                    "Invalid repository reference '{}'. Use format: account/repository",
                     repository
                 ))
             })?;
@@ -39,7 +39,7 @@ pub async fn run(cmd: RepositoryCommand) -> Result<()> {
         } => {
             let (org, handle) = parse_repository_ref(&repository).ok_or_else(|| {
                 MicError::InvalidRepositoryRef(format!(
-                    "Invalid repository reference '{}'. Use format: org/repository",
+                    "Invalid repository reference '{}'. Use format: account/repository",
                     repository
                 ))
             })?;
@@ -48,7 +48,7 @@ pub async fn run(cmd: RepositoryCommand) -> Result<()> {
         RepositorySubcommand::Delete { repository } => {
             let (org, handle) = parse_repository_ref(&repository).ok_or_else(|| {
                 MicError::InvalidRepositoryRef(format!(
-                    "Invalid repository reference '{}'. Use format: org/repository",
+                    "Invalid repository reference '{}'. Use format: account/repository",
                     repository
                 ))
             })?;
@@ -57,8 +57,8 @@ pub async fn run(cmd: RepositoryCommand) -> Result<()> {
     }
 }
 
-/// List repositories in an organization.
-async fn list(organization: &str) -> Result<()> {
+/// List repositories in an account.
+async fn list(account: &str) -> Result<()> {
     let mut config = Config::load()?;
     let server = config.resolve_default_grpc_url().await?;
     let tokens = config::require_tokens()?;
@@ -66,7 +66,7 @@ async fn list(organization: &str) -> Result<()> {
     let client = GrpcClient::new(endpoint);
 
     let mut request = Vec::new();
-    write_length_delimited(&mut request, 1, organization.as_bytes());
+    write_length_delimited(&mut request, 1, account.as_bytes());
 
     let response = client
         .unary_call(
@@ -81,7 +81,7 @@ async fn list(organization: &str) -> Result<()> {
         if let Some((field_number, _, data)) = read_field(&response, &mut pos) {
             if field_number == 1 {
                 let (name, handle) = parse_repository(data);
-                println!("{}/{} - {}", organization, handle, name);
+                println!("{}/{} - {}", account, handle, name);
             }
         }
     }
@@ -90,12 +90,7 @@ async fn list(organization: &str) -> Result<()> {
 }
 
 /// Create a new repository.
-async fn create(
-    organization: &str,
-    handle: &str,
-    name: &str,
-    description: Option<&str>,
-) -> Result<()> {
+async fn create(account: &str, handle: &str, name: &str, description: Option<&str>) -> Result<()> {
     let mut config = Config::load()?;
     let server = config.resolve_default_grpc_url().await?;
     let tokens = config::require_tokens()?;
@@ -103,7 +98,7 @@ async fn create(
     let client = GrpcClient::new(endpoint);
 
     let mut request = Vec::new();
-    write_length_delimited(&mut request, 1, organization.as_bytes());
+    write_length_delimited(&mut request, 1, account.as_bytes());
     write_length_delimited(&mut request, 2, handle.as_bytes());
     write_length_delimited(&mut request, 3, name.as_bytes());
     if let Some(desc) = description {
@@ -118,12 +113,12 @@ async fn create(
         )
         .await?;
 
-    println!("Repository created: {}/{}", organization, handle);
+    println!("Repository created: {}/{}", account, handle);
     Ok(())
 }
 
 /// Get repository details.
-async fn info(organization: &str, handle: &str) -> Result<()> {
+async fn info(account: &str, handle: &str) -> Result<()> {
     let mut config = Config::load()?;
     let server = config.resolve_default_grpc_url().await?;
     let tokens = config::require_tokens()?;
@@ -131,7 +126,7 @@ async fn info(organization: &str, handle: &str) -> Result<()> {
     let client = GrpcClient::new(endpoint);
 
     let mut request = Vec::new();
-    write_length_delimited(&mut request, 1, organization.as_bytes());
+    write_length_delimited(&mut request, 1, account.as_bytes());
     write_length_delimited(&mut request, 2, handle.as_bytes());
 
     let response = client
@@ -145,7 +140,7 @@ async fn info(organization: &str, handle: &str) -> Result<()> {
     let (name, handle, description) = parse_repository_details(&response);
 
     println!("Repository: {}", name);
-    println!("Handle: {}/{}", organization, handle);
+    println!("Handle: {}/{}", account, handle);
     if !description.is_empty() {
         println!("Description: {}", description);
     }
@@ -155,7 +150,7 @@ async fn info(organization: &str, handle: &str) -> Result<()> {
 
 /// Update a repository.
 async fn update(
-    organization: &str,
+    account: &str,
     handle: &str,
     name: Option<&str>,
     description: Option<&str>,
@@ -167,7 +162,7 @@ async fn update(
     let client = GrpcClient::new(endpoint);
 
     let mut request = Vec::new();
-    write_length_delimited(&mut request, 1, organization.as_bytes());
+    write_length_delimited(&mut request, 1, account.as_bytes());
     write_length_delimited(&mut request, 2, handle.as_bytes());
     if let Some(n) = name {
         write_length_delimited(&mut request, 3, n.as_bytes());
@@ -189,7 +184,7 @@ async fn update(
 }
 
 /// Delete a repository.
-async fn delete(organization: &str, handle: &str) -> Result<()> {
+async fn delete(account: &str, handle: &str) -> Result<()> {
     let mut config = Config::load()?;
     let server = config.resolve_default_grpc_url().await?;
     let tokens = config::require_tokens()?;
@@ -197,7 +192,7 @@ async fn delete(organization: &str, handle: &str) -> Result<()> {
     let client = GrpcClient::new(endpoint);
 
     let mut request = Vec::new();
-    write_length_delimited(&mut request, 1, organization.as_bytes());
+    write_length_delimited(&mut request, 1, account.as_bytes());
     write_length_delimited(&mut request, 2, handle.as_bytes());
 
     let _ = client
@@ -208,7 +203,7 @@ async fn delete(organization: &str, handle: &str) -> Result<()> {
         )
         .await?;
 
-    println!("Repository deleted: {}/{}", organization, handle);
+    println!("Repository deleted: {}/{}", account, handle);
     Ok(())
 }
 

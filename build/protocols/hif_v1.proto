@@ -30,7 +30,7 @@ service SearchService {
 }
 
 message RepositoryRef {
-  string organization_handle = 1; // REQUIRED
+  string account_handle = 1; // REQUIRED
   string repository_handle = 2;  // REQUIRED
 }
 

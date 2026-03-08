@@ -63,7 +63,7 @@ impl Manifest {
         workspace.save()
     }
 
-    /// Get the full repository reference (org/repository).
+    /// Get the full repository reference (account/repository).
     pub fn repository_ref(&self) -> String {
         format!("{}/{}", self.organization, self.repository)
     }

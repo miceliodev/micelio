@@ -42,7 +42,7 @@ pub struct Config {
     #[serde(default)]
     pub servers: HashMap<String, ServerConfig>,
 
-    /// Repository aliases (short name -> org/repository).
+    /// Repository aliases (short name -> account/repository).
     #[serde(default)]
     pub aliases: HashMap<String, String>,
 
