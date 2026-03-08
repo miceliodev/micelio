@@ -159,30 +159,6 @@ defmodule Micelio.GRPC.Hif.V1.ListSessionsResponse do
   field :sessions, 1, repeated: true, type: Micelio.GRPC.Hif.V1.SessionSummary
 end
 
-defmodule Micelio.GRPC.Hif.V1.SessionSummary do
-  use Protobuf, syntax: :proto3
-
-  field :id, 1, type: :string
-  field :goal, 2, type: :string
-  field :author, 3, type: :string
-  field :position, 4, type: :uint64
-end
-
-defmodule Micelio.GRPC.Hif.V1.ListSessionsRequest do
-  use Protobuf, syntax: :proto3
-
-  field :user_id, 1, type: :string, json_name: "userId"
-  field :repository, 2, type: Micelio.GRPC.Hif.V1.RepositoryRef
-  field :path, 3, type: :string
-  field :limit, 4, type: :uint32
-end
-
-defmodule Micelio.GRPC.Hif.V1.ListSessionsResponse do
-  use Protobuf, syntax: :proto3
-
-  field :sessions, 1, repeated: true, type: Micelio.GRPC.Hif.V1.SessionSummary
-end
-
 defmodule Micelio.GRPC.Hif.V1.SessionEventAppendRequest do
   use Protobuf, syntax: :proto3
 
