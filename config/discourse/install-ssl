@@ -1,0 +1,2 @@
+#!/bin/bash
+echo "Skipping SSL setup (handled by kamal-proxy)"

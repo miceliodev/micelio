@@ -42,10 +42,13 @@ proxy:
 registry:
   server: localhost:5555
 
+deploy_timeout: 600
+
 
 builder:
   arch: arm64
   remote: ssh://root@89.167.26.150
+  local: false
   context: .
 
 env:
@@ -92,7 +95,6 @@ accessories:
   postgres:
     image: postgres:17
     host: 89.167.26.150
-    port: 5432
     env:
       clear:
         POSTGRES_USER: micelio
@@ -241,3 +243,63 @@ accessories:
         - DATABASE_URL:PLAUSIBLE_DATABASE_URL
     directories:
       - data:/var/lib/plausible
+  discourse-postgres:
+    image: pgvector/pgvector:pg17
+    host: 89.167.26.150
+    env:
+      clear:
+        POSTGRES_USER: discourse
+        POSTGRES_DB: discourse
+      secret:
+        - POSTGRES_PASSWORD:DISCOURSE_POSTGRES_PASSWORD
+    directories:
+      - data:/var/lib/postgresql/data
+  discourse-redis:
+    image: redis:7-alpine
+    host: 89.167.26.150
+    directories:
+      - data:/data
+  discourse:
+    image: discourse/discourse:latest
+    host: 89.167.26.150
+    proxy:
+      host: community.micelio.dev
+      app_port: 80
+      ssl:
+        certificate_pem: TLS_CERT_PEM
+        private_key_pem: TLS_KEY_PEM
+      forward_headers: true
+      healthcheck:
+        path: /srv/status
+      response_timeout: 600
+    env:
+      clear:
+        DISCOURSE_FORCE_HTTPS: "true"
+        DISCOURSE_HOSTNAME: community.micelio.dev
+        DISCOURSE_SMTP_ENABLE_START_TLS: "true"
+        DISCOURSE_USE_S3: "true"
+        DISCOURSE_DB_HOST: micelio-discourse-postgres
+        DISCOURSE_DB_NAME: discourse
+        DISCOURSE_DB_USERNAME: discourse
+        DISCOURSE_REDIS_HOST: micelio-discourse-redis
+        DISCOURSE_SERVE_S3: "true"
+        UNICORN_WORKERS: "2"
+        DISCOURSE_SIDEKIQ_WORKERS: "3"
+      secret:
+        - DISCOURSE_DB_PASSWORD:DISCOURSE_POSTGRES_PASSWORD
+        - DISCOURSE_DEVELOPER_EMAILS:SMTP_FROM_EMAIL
+        - DISCOURSE_NOTIFICATION_EMAIL:SMTP_FROM_EMAIL
+        - DISCOURSE_SMTP_ADDRESS:SMTP_HOST
+        - DISCOURSE_SMTP_PORT:SMTP_PORT
+        - DISCOURSE_SMTP_USER_NAME:SMTP_USERNAME
+        - DISCOURSE_SMTP_PASSWORD:SMTP_PASSWORD
+        - DISCOURSE_S3_BUCKET
+        - DISCOURSE_S3_REGION
+        - DISCOURSE_S3_ENDPOINT
+        - DISCOURSE_S3_ACCESS_KEY_ID
+        - DISCOURSE_S3_SECRET_ACCESS_KEY
+    files:
+      - config/discourse/install-ssl:/etc/runit/1.d/install-ssl
+    directories:
+      - data:/shared
+      - log:/var/log
