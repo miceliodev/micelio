@@ -8,10 +8,10 @@ use crate::grpc::{Endpoint, GrpcClient};
 
 /// Run the log command.
 pub async fn run(cmd: LogCommand) -> Result<()> {
-    // Parse project reference
-    let (org, project) = parse_project_ref(&cmd.project).ok_or_else(|| {
+    // Parse repository reference
+    let (org, repository) = parse_project_ref(&cmd.project).ok_or_else(|| {
         MicError::InvalidProjectRef(format!(
-            "Invalid project reference '{}'. Use format: org/project",
+            "Invalid repository reference '{}'. Use format: org/project",
             cmd.project
         ))
     })?;
@@ -29,7 +29,7 @@ pub async fn run(cmd: LogCommand) -> Result<()> {
         "/hif.v1.VersioningService/ListSessions",
         &pb::ListSessionsRequest {
             user_id,
-            repository: Some(repository_ref(org, project)),
+            repository: Some(repository_ref(org, repository)),
             path: cmd.path.clone().unwrap_or_default(),
             limit: cmd.limit,
         },

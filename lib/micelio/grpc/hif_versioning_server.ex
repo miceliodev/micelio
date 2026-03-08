@@ -778,7 +778,6 @@ defmodule Micelio.GRPC.Hif.V1.VersioningService.Server do
   defp session_author_handle(%Session{} = session) do
     case session do
       %{user: %{account: %{handle: handle}}} when is_binary(handle) and handle != "" -> handle
-      %{user_id: user_id} when is_binary(user_id) -> user_id
       _ -> ""
     end
   end
