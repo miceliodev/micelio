@@ -3,7 +3,6 @@ defmodule Micelio.Mic.LandingWorkflowTest do
 
   alias Micelio.Accounts
   alias Micelio.Mic.{Binary, ConflictIndex, Landing, Project}
-  alias Micelio.Repositories
   alias Micelio.Sessions
   alias Micelio.Sessions.ChangeStore
   alias Micelio.Storage
@@ -109,11 +108,11 @@ defmodule Micelio.Mic.LandingWorkflowTest do
   end
 
   defp landing_key(repository_id, position) do
-    "projects/#{repository_id}/landing/#{pad_position(position)}.bin"
+    "repositories/#{repository_id}/landing/#{pad_position(position)}.bin"
   end
 
   defp session_summary_key(repository_id, session_id) do
-    "projects/#{repository_id}/sessions/#{session_id}.bin"
+    "repositories/#{repository_id}/sessions/#{session_id}.bin"
   end
 
   defp pad_position(position) do
