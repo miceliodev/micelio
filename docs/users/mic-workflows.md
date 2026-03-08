@@ -15,27 +15,27 @@ hif auth login
 hif auth status
 ```
 
-## Create a project and checkout a workspace
+## Create a repository and checkout a workspace
 
 ```bash
-# List projects in an org
+# List repositories in an org
 hif project list <organization>
 
-# Create a new project
-hif project create <organization>/<project> "<name>" [--description <desc>]
+# Create a new repository
+hif project create <organization>/<repository> "<name>" [--description <desc>]
 
-# Checkout a project into a local workspace
-hif checkout <organization>/<project> [--path dir]
+# Checkout a repository into a local workspace
+hif checkout <organization>/<repository> [--path dir]
 ```
 
-## Link an existing local project
+## Link an existing local repository
 
-Use this when you already have a local project directory and want to land it
-to a Micelio project without running checkout.
+Use this when you already have a local repository directory and want to land it
+to a Micelio repository without running checkout.
 
 ```bash
-# Link by project ref (uses default server)
-hif link <organization>/<project>
+# Link by repository ref (uses default server)
+hif link <organization>/<repository>
 
 # Land your changes
 hif land "Describe the goal"
@@ -45,7 +45,7 @@ hif land "Describe the goal"
 
 ```bash
 # Start a new session with a goal
-hif session start <organization>/<project> "Describe the goal"
+hif session start <organization>/<repository> "Describe the goal"
 
 # Inspect local changes
 hif status
@@ -63,24 +63,24 @@ hif session land
 hif sync [--strategy ours|theirs|interactive]
 ```
 
-## Browse project content without checkout
+## Browse repository content without checkout
 
 ```bash
-# List files at the project root
-hif tree <organization>/<project>
+# List files at the repository root
+hif tree <organization>/<repository>
 
 # Read a file at a specific path
-hif show <organization>/<project> <path>
+hif show <organization>/<repository> <path>
 
 # Search indexed repository content
-hif grep <organization>/<project> "<query>"
+hif grep <organization>/<repository> "<query>"
 ```
 
 ## Mount a read-only filesystem
 
 ```bash
-# Mount a project via local mirror
-hif mount <organization>/<project> [--path dir] [--port 20490]
+# Mount a repository via local mirror
+hif mount <organization>/<repository> [--path dir] [--port 20490]
 
 # Unmount when done
 hif unmount <mount-path>
@@ -90,11 +90,11 @@ hif unmount <mount-path>
 
 ```bash
 # List landed sessions
-hif log <organization>/<project>
+hif log <organization>/<repository>
 
 # Diff two refs
-hif diff <organization>/<project> <from-ref> [to-ref]
+hif diff <organization>/<repository> <from-ref> [to-ref]
 
 # Show line attribution
-hif blame <organization>/<project> <path>
+hif blame <organization>/<repository> <path>
 ```
