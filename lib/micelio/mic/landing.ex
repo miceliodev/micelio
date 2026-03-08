@@ -61,10 +61,10 @@ defmodule Micelio.Mic.Landing do
              list_change_paths(session),
              opts
            ),
-         :ok <- index_search(repository.id, next_position, session, opts),
+         :ok <- index_search(repository.id, computed_tree_hash, landed_at_ms, session, opts),
          :ok <- RollupWorker.enqueue(repository.id, next_position, change_filter, opts),
          {:ok, _} <- store_session_summary(session, repository.id, landed_at_ms, opts) do
-      {:ok, %{position: next_position, landed_at: landed_at}}
+      {:ok, %{position: next_position, tree_hash: computed_tree_hash, landed_at: landed_at}}
     else
       {:error, :not_found} ->
         create_first_head(session, repository.id, tree_hash, change_filter, attempt, opts)
@@ -104,10 +104,10 @@ defmodule Micelio.Mic.Landing do
                  list_change_paths(session),
                  opts
                ),
-             :ok <- index_search(repository_id, position, session, opts),
+             :ok <- index_search(repository_id, computed_tree_hash, landed_at_ms, session, opts),
              :ok <- RollupWorker.enqueue(repository_id, position, change_filter, opts),
              {:ok, _} <- store_session_summary(session, repository_id, landed_at_ms, opts) do
-          {:ok, %{position: position, landed_at: landed_at}}
+          {:ok, %{position: position, tree_hash: computed_tree_hash, landed_at: landed_at}}
         end
 
       {:error, :precondition_failed} ->
@@ -402,9 +402,20 @@ defmodule Micelio.Mic.Landing do
     |> Enum.uniq()
   end
 
-  defp index_search(repository_id, position, session, opts) do
+  defp index_search(repository_id, revision_hash, landed_at_ms, session, opts) do
     changes = Sessions.list_session_changes(session)
-    SearchIndex.index_session_changes(repository_id, position, session, changes, opts)
+
+    :ok =
+      SearchIndex.index_session_changes(
+        repository_id,
+        revision_hash,
+        landed_at_ms,
+        session,
+        changes,
+        opts
+      )
+
+    SearchIndex.store_revision_metadata(repository_id, revision_hash, landed_at_ms, opts)
   end
 
   defp load_change_content(%SessionChange{content: content}, _opts) when is_binary(content) do

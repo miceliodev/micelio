@@ -212,7 +212,7 @@ WHEN TO USE:
     #[command(after_help = "\
 EXAMPLES:
     $ hif show acme/myapp README.md           # Current version
-    $ hif show acme/myapp src/main.rs -r @10  # At position 10
+    $ hif show acme/myapp src/main.rs -r @0123456789abcdef...  # At revision hash
     $ hif show acme/myapp config.json --json  # Output as JSON
 
 NOTES:
@@ -225,7 +225,7 @@ NOTES:
 EXAMPLES:
     $ hif tree acme/myapp                # List project root
     $ hif tree acme/myapp src            # List src/ directory
-    $ hif tree acme/myapp --ref @5       # At position 5
+    $ hif tree acme/myapp --ref @0123456789abcdef...  # At revision hash
 
 NOTES:
     Reads directly from forge - no local workspace needed.
@@ -238,7 +238,7 @@ EXAMPLES:
     $ hif grep acme/myapp \"TODO\"                     # Remote indexed search
     $ hif grep acme/myapp \"panic!\" --path src/       # Restrict to path prefix
     $ hif grep acme/myapp \"fn\\s+main\" --regex        # Regex search
-    $ hif grep acme/myapp \"hello\" --position @25      # Query at position 25
+    $ hif grep acme/myapp \"hello\" --position @0123456789abcdef...  # Query at revision
     $ hif grep acme/myapp \"TODO\" --local              # Fallback to local grep if remote fails
 
 NOTES:
@@ -268,11 +268,11 @@ OUTPUT:
 ")]
     Blame(BlameCommand),
 
-    /// Show changes between positions
+    /// Show changes between revisions
     #[command(after_help = "\
 EXAMPLES:
-    $ hif diff acme/myapp @5 @10    # Changes from position 5 to 10
-    $ hif diff acme/myapp @5        # Changes from position 5 to HEAD
+    $ hif diff acme/myapp @<from_hash> @<to_hash>  # Between two revisions
+    $ hif diff acme/myapp @<from_hash>              # From revision to HEAD
 ")]
     Diff(DiffCommand),
 
@@ -475,7 +475,7 @@ pub struct ShowCommand {
     pub project: String,
     /// File path
     pub path: String,
-    /// Position reference (e.g., @10, @latest)
+    /// Revision reference (64-hex hash, @latest, or HEAD)
     #[arg(short, long, value_name = "REF")]
     pub r#ref: Option<String>,
 }
@@ -487,7 +487,7 @@ pub struct TreeCommand {
     pub project: String,
     /// Directory path (defaults to root)
     pub path: Option<String>,
-    /// Position reference (e.g., @10, @latest)
+    /// Revision reference (64-hex hash, @latest, or HEAD)
     #[arg(short, long, value_name = "REF")]
     pub r#ref: Option<String>,
 }
@@ -499,7 +499,7 @@ pub struct GrepCommand {
     pub project: String,
     /// Query string or pattern
     pub query: String,
-    /// Position reference (e.g., @10, @latest)
+    /// Revision reference (64-hex hash, @latest, or HEAD)
     #[arg(long, value_name = "REF")]
     pub position: Option<String>,
     /// Restrict search to path prefix
@@ -550,9 +550,9 @@ pub struct DiffCommand {
     /// Project reference (org/project)
     #[arg(value_name = "ORG/PROJECT")]
     pub project: String,
-    /// Starting position (e.g., @5)
+    /// Starting revision hash (e.g., @0123...abcd)
     pub from: String,
-    /// Ending position (default: HEAD)
+    /// Ending revision hash (default: HEAD)
     pub to: Option<String>,
 }
 
@@ -614,7 +614,7 @@ pub fn generate_help_json() -> serde_json::Value {
             "workspace": "A local directory linked to a project on the forge",
             "forge": "The server that stores all project data (source of truth)",
             "landing": "Pushing session changes to the forge",
-            "position": "A point in project history (like Git commit SHA, but sequential)"
+            "revision": "A point in project history identified by a content hash (like Git commit SHA)"
         },
 
         "workflow": [
@@ -699,20 +699,20 @@ pub fn generate_help_json() -> serde_json::Value {
             "show": {
                 "description": "Show file contents from forge",
                 "args": ["org/project", "path"],
-                "options": {"--ref": "Position (e.g., @10)"},
+                "options": {"--ref": "Revision hash (e.g., @012345...abcd)"},
                 "requires_auth": true
             },
             "tree": {
                 "description": "List directory from forge",
                 "args": ["org/project"],
-                "options": {"path": "Directory path", "--ref": "Position"},
+                "options": {"path": "Directory path", "--ref": "Revision hash"},
                 "requires_auth": true
             },
             "grep": {
                 "description": "Search repository text",
                 "args": ["org/project", "query"],
                 "options": {
-                    "--position": "Position (e.g., @10)",
+                    "--position": "Revision hash (e.g., @012345...abcd)",
                     "--path": "Path prefix filter",
                     "--regex": "Interpret query as regex",
                     "--case-sensitive": "Case-sensitive matching",
@@ -733,7 +733,7 @@ pub fn generate_help_json() -> serde_json::Value {
                 "requires_auth": true
             },
             "diff": {
-                "description": "Show changes between positions",
+                "description": "Show changes between revisions",
                 "args": ["org/project", "from", "[to]"],
                 "requires_auth": true
             }
@@ -799,7 +799,7 @@ pub fn generate_docs() -> serde_json::Value {
             "key_differences_from_git": {
                 "unit_of_work": {"git": "Commit (snapshot)", "hif": "Session (goal + context + changes)"},
                 "storage": {"git": "Distributed (.git folder)", "hif": "Forge-first (server is source of truth)"},
-                "history": {"git": "DAG of commits", "hif": "Append-only log of landing positions"},
+                "history": {"git": "DAG of commits", "hif": "Hash-addressed revision history"},
                 "conflicts": {"git": "3-way merge", "hif": "Bloom filter detection + explicit resolution"}
             }
         },
@@ -834,9 +834,9 @@ pub fn generate_docs() -> serde_json::Value {
                 "example": "hif session land"
             },
             {
-                "name": "Position",
-                "description": "A point in project history, referenced as @N (e.g., @10). Similar to Git commit SHA but sequential.",
-                "example": "hif show acme/myapp README.md --ref @5"
+                "name": "Revision",
+                "description": "A point in project history, referenced by hash (e.g., @012345...abcd).",
+                "example": "hif show acme/myapp README.md --ref @012345...abcd"
             }
         ],
 
@@ -1170,11 +1170,11 @@ pub fn generate_docs() -> serde_json::Value {
                     {"name": "path", "description": "File path", "required": true}
                 ],
                 "options": [
-                    {"name": "--ref, -r", "description": "Position reference (e.g., @10, @latest)", "required": false}
+                    {"name": "--ref, -r", "description": "Revision reference (64-hex hash, @latest, or HEAD)", "required": false}
                 ],
                 "examples": [
                     {"command": "hif show acme/myapp README.md", "description": "Show current README"},
-                    {"command": "hif show acme/myapp src/main.rs --ref @10", "description": "Show file at position 10"}
+                    {"command": "hif show acme/myapp src/main.rs --ref @012345...abcd", "description": "Show file at a specific revision"}
                 ],
                 "notes": "Reads directly from the forge without creating a local workspace."
             },
@@ -1188,12 +1188,12 @@ pub fn generate_docs() -> serde_json::Value {
                     {"name": "path", "description": "Directory path (defaults to root)", "required": false}
                 ],
                 "options": [
-                    {"name": "--ref, -r", "description": "Position reference", "required": false}
+                    {"name": "--ref, -r", "description": "Revision hash reference", "required": false}
                 ],
                 "examples": [
                     {"command": "hif tree acme/myapp", "description": "List project root"},
                     {"command": "hif tree acme/myapp src", "description": "List src/ directory"},
-                    {"command": "hif tree acme/myapp --ref @5", "description": "List at position 5"}
+                    {"command": "hif tree acme/myapp --ref @012345...abcd", "description": "List at a specific revision"}
                 ]
             },
             {
@@ -1206,7 +1206,7 @@ pub fn generate_docs() -> serde_json::Value {
                     {"name": "query", "description": "Search query or regex pattern", "required": true}
                 ],
                 "options": [
-                    {"name": "--position", "description": "Position reference (e.g., @10, @latest)", "required": false},
+                    {"name": "--position", "description": "Revision reference (64-hex hash, @latest, or HEAD)", "required": false},
                     {"name": "--path", "description": "Restrict to path prefix", "required": false},
                     {"name": "--regex", "description": "Treat query as regex", "required": false},
                     {"name": "--case-sensitive", "description": "Case-sensitive matching", "required": false},
@@ -1257,17 +1257,17 @@ pub fn generate_docs() -> serde_json::Value {
             {
                 "name": "diff",
                 "category": "History",
-                "description": "Show changes between two positions",
+                "description": "Show changes between two revisions",
                 "usage": "hif diff <ORG/PROJECT> <FROM> [TO]",
                 "args": [
                     {"name": "org/project", "description": "Project reference", "required": true},
-                    {"name": "from", "description": "Starting position (e.g., @5)", "required": true},
-                    {"name": "to", "description": "Ending position (defaults to HEAD)", "required": false}
+                    {"name": "from", "description": "Starting revision hash (e.g., @0123...abcd)", "required": true},
+                    {"name": "to", "description": "Ending revision hash (defaults to HEAD)", "required": false}
                 ],
                 "options": [],
                 "examples": [
-                    {"command": "hif diff acme/myapp @5 @10", "description": "Changes from position 5 to 10"},
-                    {"command": "hif diff acme/myapp @5", "description": "Changes from position 5 to HEAD"}
+                    {"command": "hif diff acme/myapp @012345...abcd @89ab...cdef", "description": "Changes between two revisions"},
+                    {"command": "hif diff acme/myapp @012345...abcd", "description": "Changes from revision to HEAD"}
                 ]
             }
         ],

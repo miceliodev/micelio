@@ -154,7 +154,10 @@ async fn status() -> Result<()> {
                 println!();
                 println!("Remote status: {}", remote.status);
                 if let Some(conflict) = remote.conflict {
-                    println!("Conflict at position @{}", conflict.position);
+                    println!(
+                        "Conflict revision: {}",
+                        format_revision_hash(&conflict.revision_hash)
+                    );
                     if !conflict.paths.is_empty() {
                         for path in conflict.paths {
                             println!("  - {}", path);
@@ -219,7 +222,10 @@ async fn land() -> Result<()> {
         println!("Error: Conflicts detected with upstream changes.");
         if let Some(conflict) = response.conflict {
             println!();
-            println!("Conflict position: @{}", conflict.position);
+            println!(
+                "Conflict revision: {}",
+                format_revision_hash(&conflict.revision_hash)
+            );
             if !conflict.reason.is_empty() {
                 println!("Reason: {}", conflict.reason);
             }
@@ -238,16 +244,16 @@ async fn land() -> Result<()> {
         return Err(MicError::ConflictsDetected);
     }
 
-    let landing_position = response
+    let landing_revision = response
         .current_position
         .as_ref()
-        .map(|position| position.id)
-        .unwrap_or(0);
+        .map(|position| format_revision_hash(&position.hash))
+        .unwrap_or_else(|| String::new());
 
     println!("Session landed successfully!");
     println!("Session ID: {}", response.session_id);
-    if landing_position > 0 {
-        println!("Landing position: {}", landing_position);
+    if !landing_revision.is_empty() {
+        println!("Landing revision: {}", landing_revision);
     }
 
     Session::delete()?;
@@ -422,4 +428,14 @@ fn generate_session_id() -> String {
     use base64::Engine;
     let bytes: [u8; 16] = rand::random();
     base64::engine::general_purpose::URL_SAFE_NO_PAD.encode(bytes)
+}
+
+fn format_revision_hash(hash: &[u8]) -> String {
+    if hash.is_empty() {
+        return "0000000000000000000000000000000000000000000000000000000000000000".to_string();
+    }
+
+    hash.iter()
+        .map(|byte| format!("{:02x}", byte))
+        .collect::<String>()
 }

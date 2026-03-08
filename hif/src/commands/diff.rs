@@ -1,4 +1,4 @@
-//! Diff command - show changes between two positions.
+//! Diff command - show changes between two revisions.
 
 use crate::cli::{parse_project_ref, DiffCommand};
 use crate::config::{self, Config};
@@ -25,21 +25,21 @@ pub async fn run(cmd: DiffCommand) -> Result<()> {
     let client = GrpcClient::new(endpoint);
     let user_id = user_id_from_token(&tokens.access_token);
 
-    let from_position = match parse_position(&cmd.from) {
-        Some(PositionOrLatest::Position(position)) => position,
+    let from_revision_hash = match parse_position(&cmd.from) {
+        Some(PositionOrLatest::Revision(revision_hash)) => revision_hash,
         Some(PositionOrLatest::Latest) => {
             return Err(MicError::Other(
-                "The FROM position must be explicit (e.g., @5).".to_string(),
+                "The FROM revision must be explicit (hex hash).".to_string(),
             ))
         }
-        None => return Err(MicError::Other("Invalid FROM position".to_string())),
+        None => return Err(MicError::Other("Invalid FROM revision".to_string())),
     };
 
-    let to_position = if let Some(ref to) = cmd.to {
+    let to_revision_hash = if let Some(ref to) = cmd.to {
         match parse_position(to) {
-            Some(PositionOrLatest::Position(position)) => Some(position),
+            Some(PositionOrLatest::Revision(revision_hash)) => Some(revision_hash),
             Some(PositionOrLatest::Latest) => None,
-            None => return Err(MicError::Other("Invalid TO position".to_string())),
+            None => return Err(MicError::Other("Invalid TO revision".to_string())),
         }
     } else {
         None
@@ -52,8 +52,8 @@ pub async fn run(cmd: DiffCommand) -> Result<()> {
         &pb::DiffRequest {
             user_id,
             repository: Some(repository_ref(org, project)),
-            from_position,
-            to_position: to_position.unwrap_or(0),
+            from_revision_hash,
+            to_revision_hash: to_revision_hash.unwrap_or_default(),
             path_prefix: String::new(),
         },
     )

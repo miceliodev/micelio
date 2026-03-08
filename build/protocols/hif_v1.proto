@@ -35,9 +35,8 @@ message RepositoryRef {
 }
 
 message Position {
-  uint64 id = 1;      // REQUIRED
-  bytes tree_hash = 2; // REQUIRED
-  string at = 3;
+  bytes hash = 1;     // REQUIRED
+  string at = 2;
 }
 
 message RepositoryHeadResponse {
@@ -54,7 +53,7 @@ message GetRepositoryHeadRequest {
 message GetHeadAtRequest {
   string user_id = 1;      // REQUIRED
   RepositoryRef repository = 2; // REQUIRED
-  uint64 position = 3;     // REQUIRED
+  bytes revision_hash = 3; // REQUIRED
 }
 
 message AgentAttribution {
@@ -112,7 +111,7 @@ message SessionInfo {
 }
 
 message SessionConflict {
-  uint64 position = 1;  // REQUIRED
+  bytes revision_hash = 1; // REQUIRED
   string session_id = 2; // REQUIRED
   string reason = 3;     // REQUIRED summary
   repeated string paths = 4; // OPTIONAL
@@ -133,7 +132,7 @@ message SessionSummary {
   string id = 1;       // REQUIRED
   string goal = 2;     // REQUIRED
   string author = 3;   // REQUIRED
-  uint64 position = 4; // REQUIRED
+  bytes revision_hash = 4; // REQUIRED
 }
 
 message ListSessionsRequest {
@@ -194,16 +193,14 @@ message TreeResponse {
 message GetTreeRequest {
   string user_id = 1;      // REQUIRED
   RepositoryRef repository = 2; // REQUIRED
-  uint64 position = 3;     // OPTIONAL when tree_hash is present
-  bytes tree_hash = 4;     // OPTIONAL when position is present
+  bytes revision_hash = 3; // OPTIONAL (defaults to HEAD)
 }
 
 message GetPathRequest {
   string user_id = 1;      // REQUIRED
   RepositoryRef repository = 2; // REQUIRED
-  uint64 position = 3;     // OPTIONAL when tree_hash is present
-  bytes tree_hash = 4;     // OPTIONAL when position is present
-  string path = 5;         // REQUIRED
+  bytes revision_hash = 3; // OPTIONAL (defaults to HEAD)
+  string path = 4;         // REQUIRED
 }
 
 message PathResponse {
@@ -225,8 +222,8 @@ message BlobResponse {
 message DiffRequest {
   string user_id = 1;      // REQUIRED
   RepositoryRef repository = 2; // REQUIRED
-  uint64 from_position = 3; // REQUIRED
-  uint64 to_position = 4;   // REQUIRED
+  bytes from_revision_hash = 3; // REQUIRED
+  bytes to_revision_hash = 4;   // OPTIONAL (defaults to HEAD)
   string path_prefix = 5;   // OPTIONAL
 }
 
@@ -247,14 +244,14 @@ message BlameLine {
   string text = 3;
   string session_id = 4;
   string actor_handle = 5;
-  uint64 position = 6;
+  bytes revision_hash = 6;
   uint64 at_ms = 7;
 }
 
 message BlameRequest {
   string user_id = 1;   // REQUIRED
   RepositoryRef repository = 2; // REQUIRED
-  uint64 position = 3;  // REQUIRED
+  bytes revision_hash = 3; // REQUIRED
   string path = 4;      // REQUIRED
 }
 
@@ -266,7 +263,7 @@ message TextQueryRequest {
   string user_id = 1;      // REQUIRED
   RepositoryRef repository = 2; // REQUIRED
   string query = 3;        // REQUIRED
-  uint64 at_position = 4;  // OPTIONAL
+  bytes at_revision_hash = 4; // OPTIONAL
   string path_prefix = 5;  // OPTIONAL
   string path_glob = 6;    // OPTIONAL
   bool regex = 7;          // OPTIONAL
@@ -284,8 +281,8 @@ message TextQueryMatch {
   string snippet = 4;
   string session_id = 5;
   string actor_handle = 6;
-  uint64 position = 7;
-  string position_etag = 8;
+  bytes revision_hash = 7;
+  string revision_etag = 8;
 }
 
 message TextQueryResponse {

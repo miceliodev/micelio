@@ -37,7 +37,16 @@ pub async fn run(cmd: LogCommand) -> Result<()> {
     .await?;
 
     for session in response.sessions {
-        println!("@{} {}", session.position, session.id);
+        let revision = if session.revision_hash.is_empty() {
+            "0000000000000000000000000000000000000000000000000000000000000000".to_string()
+        } else {
+            session
+                .revision_hash
+                .iter()
+                .map(|byte| format!("{:02x}", byte))
+                .collect::<String>()
+        };
+        println!("{} {}", revision, session.id);
         println!("  Goal: {}", session.goal);
         println!("  Author: {}", session.author);
         println!();

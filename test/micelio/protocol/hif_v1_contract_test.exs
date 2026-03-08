@@ -87,7 +87,7 @@ defmodule Micelio.Protocol.HifV1ContractTest do
 
       assert has_message?(parsed, "SessionConflict")
       assert has_field?(parsed, "SessionInfo", "conflict")
-      assert has_field?(parsed, "SessionConflict", "position")
+      assert has_field?(parsed, "SessionConflict", "revision_hash")
       assert has_field?(parsed, "SessionConflict", "reason")
     end
   end

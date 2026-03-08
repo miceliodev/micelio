@@ -37,7 +37,7 @@ defmodule Micelio.GRPC.VirtualVersioningServerTest do
           open: %V1.SessionOpen{
             session_id: session_id,
             goal: "Validate virtual versioning workflow",
-            base_position: %V1.Position{id: 0, tree_hash: <<0::size(256)>>}
+            base_position: %V1.Position{hash: <<0::size(256)>>}
           }
         },
         nil

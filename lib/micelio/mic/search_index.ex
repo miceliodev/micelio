@@ -2,8 +2,8 @@ defmodule Micelio.Mic.SearchIndex do
   @moduledoc """
   Repository-scoped text search index used by `hif.v1.SearchService`.
 
-  The index is append-only per token and position. Query-time filtering handles
-  path/position constraints and deduplicates to the latest position.
+  The index is append-only per token and revision hash. Query-time filtering handles
+  path/revision constraints and deduplicates to the latest revision snapshot.
   """
 
   alias Micelio.Accounts
@@ -13,6 +13,7 @@ defmodule Micelio.Mic.SearchIndex do
   alias Micelio.Storage
 
   @token_regex ~r/[A-Za-z0-9_]{2,}/u
+  @zero_hash Binary.zero_hash()
 
   @type posting :: %{
           path: String.t(),
@@ -21,20 +22,44 @@ defmodule Micelio.Mic.SearchIndex do
           snippet: String.t(),
           session_id: String.t(),
           actor_handle: String.t(),
-          position: non_neg_integer()
+          revision_hash: binary(),
+          landed_at_ms: non_neg_integer()
         }
 
-  @spec index_session_changes(binary(), non_neg_integer(), map(), [SessionChange.t()], keyword()) ::
+  @spec index_session_changes(
+          binary(),
+          binary(),
+          non_neg_integer(),
+          map(),
+          [SessionChange.t()],
+          keyword()
+        ) ::
           :ok | {:error, term()}
-  def index_session_changes(repository_id, position, session, changes, opts \\ [])
-      when is_binary(repository_id) and is_integer(position) and position >= 0 and
+  def index_session_changes(
+        repository_id,
+        revision_hash,
+        landed_at_ms,
+        session,
+        changes,
+        opts \\ []
+      )
+      when is_binary(repository_id) and is_binary(revision_hash) and
+             byte_size(revision_hash) == 32 and is_integer(landed_at_ms) and landed_at_ms >= 0 and
              is_list(changes) do
     actor_handle = resolve_actor_handle(session)
 
     postings_by_token =
       changes
       |> Enum.reduce(%{}, fn change, acc ->
-        accumulate_change_postings(acc, change, session.session_id, actor_handle, position, opts)
+        accumulate_change_postings(
+          acc,
+          change,
+          session.session_id,
+          actor_handle,
+          revision_hash,
+          landed_at_ms,
+          opts
+        )
       end)
 
     with :ok <-
@@ -44,7 +69,7 @@ defmodule Micelio.Mic.SearchIndex do
                {:error, reason} -> {:halt, {:error, reason}}
              end
            end) do
-      update_index_metadata(repository_id, position, opts)
+      update_index_metadata(repository_id, revision_hash, opts)
     end
   end
 
@@ -52,7 +77,7 @@ defmodule Micelio.Mic.SearchIndex do
           {:ok,
            %{total: non_neg_integer(), matches: [posting()], next_offset: non_neg_integer() | nil}}
   def query(repository_id, params, opts \\ []) when is_binary(repository_id) and is_map(params) do
-    at_position = Map.get(params, :at_position)
+    at_revision_hash = Map.get(params, :at_revision_hash)
     path_prefix = normalize_blank(Map.get(params, :path_prefix))
     path_glob = normalize_blank(Map.get(params, :path_glob))
     regex? = Map.get(params, :regex, false)
@@ -61,19 +86,22 @@ defmodule Micelio.Mic.SearchIndex do
     offset = Map.get(params, :offset, 0) |> normalize_offset()
     query = Map.get(params, :query, "")
 
-    with {:ok, latest_position} <- resolve_position(repository_id, at_position, opts),
-         :ok <- ensure_index_fresh(repository_id, latest_position, opts),
-         {:ok, visible_paths} <- load_visible_paths(repository_id, latest_position, opts) do
+    with {:ok, query_revision_hash} <-
+           resolve_revision_hash(repository_id, at_revision_hash, opts),
+         :ok <- ensure_index_fresh(repository_id, query_revision_hash, opts),
+         {:ok, visible_paths} <- load_visible_paths(repository_id, query_revision_hash, opts) do
+      cutoff_ms = landing_cutoff_ms(repository_id, query_revision_hash, opts)
+
       postings =
         query
         |> load_candidate_postings(repository_id, opts)
-        |> Enum.filter(&(&1.position <= latest_position))
+        |> Enum.filter(&within_cutoff?(&1, cutoff_ms))
         |> Enum.filter(&visible?(visible_paths, &1.path))
         |> Enum.filter(&path_matches?(&1.path, path_prefix, path_glob))
         |> Enum.filter(&query_matches?(&1, query, regex?, case_sensitive?))
         |> latest_per_line()
         |> Enum.sort_by(fn posting ->
-          {-posting.position, posting.path, posting.line, posting.column}
+          {-posting.landed_at_ms, posting.path, posting.line, posting.column}
         end)
 
       total = length(postings)
@@ -84,13 +112,30 @@ defmodule Micelio.Mic.SearchIndex do
     end
   end
 
-  defp ensure_index_fresh(_repository_id, latest_position, _opts) when latest_position <= 0,
-    do: :ok
+  @spec store_revision_metadata(binary(), binary(), non_neg_integer(), keyword()) ::
+          :ok | {:error, term()}
+  def store_revision_metadata(repository_id, revision_hash, landed_at_ms, opts \\ [])
+      when is_binary(repository_id) and is_binary(revision_hash) and
+             byte_size(revision_hash) == 32 and is_integer(landed_at_ms) and landed_at_ms >= 0 do
+    payload =
+      Jason.encode!(%{
+        "landed_at_ms" => landed_at_ms,
+        "revision_hash" => Base.encode16(revision_hash, case: :lower)
+      })
 
-  defp ensure_index_fresh(repository_id, latest_position, opts) do
-    indexed_position = load_index_position(repository_id, opts)
+    case Storage.put(landing_metadata_key(repository_id, revision_hash), payload, opts) do
+      {:ok, _} -> :ok
+      {:error, reason} -> {:error, reason}
+    end
+  end
 
-    if indexed_position >= latest_position do
+  defp ensure_index_fresh(_repository_id, latest_revision_hash, _opts)
+       when is_binary(latest_revision_hash) and latest_revision_hash == @zero_hash, do: :ok
+
+  defp ensure_index_fresh(repository_id, latest_revision_hash, opts) do
+    indexed_revision_hash = load_index_revision_hash(repository_id, opts)
+
+    if indexed_revision_hash == latest_revision_hash do
       :ok
     else
       {:error, :stale_index}
@@ -102,7 +147,8 @@ defmodule Micelio.Mic.SearchIndex do
          %SessionChange{change_type: type},
          _session_id,
          _actor_handle,
-         _position,
+         _revision_hash,
+         _landed_at_ms,
          _opts
        )
        when type in ["deleted", "renamed"], do: acc
@@ -112,12 +158,20 @@ defmodule Micelio.Mic.SearchIndex do
          %SessionChange{} = change,
          session_id,
          actor_handle,
-         position,
+         revision_hash,
+         landed_at_ms,
          opts
        ) do
     case load_change_content(change, opts) do
       {:ok, content} ->
-        build_postings(change.file_path, content, session_id, actor_handle, position)
+        build_postings(
+          change.file_path,
+          content,
+          session_id,
+          actor_handle,
+          revision_hash,
+          landed_at_ms
+        )
         |> Enum.reduce(acc, fn {token, posting}, token_acc ->
           Map.update(token_acc, token, [posting], fn existing -> [posting | existing] end)
         end)
@@ -127,7 +181,7 @@ defmodule Micelio.Mic.SearchIndex do
     end
   end
 
-  defp build_postings(path, content, session_id, actor_handle, position)
+  defp build_postings(path, content, session_id, actor_handle, revision_hash, landed_at_ms)
        when is_binary(content) do
     content
     |> String.split("\n")
@@ -144,7 +198,8 @@ defmodule Micelio.Mic.SearchIndex do
           snippet: String.slice(line, 0, 400),
           session_id: session_id,
           actor_handle: actor_handle,
-          position: position
+          revision_hash: revision_hash,
+          landed_at_ms: landed_at_ms
         }
 
         {token, posting}
@@ -187,10 +242,10 @@ defmodule Micelio.Mic.SearchIndex do
     "repositories/#{repository_id}/index/search/meta.json"
   end
 
-  defp update_index_metadata(repository_id, position, opts) do
+  defp update_index_metadata(repository_id, revision_hash, opts) do
     payload =
       Jason.encode!(%{
-        "indexed_position" => position,
+        "indexed_revision_hash" => Base.encode16(revision_hash, case: :lower),
         "updated_at_ms" => System.system_time(:millisecond)
       })
 
@@ -200,17 +255,19 @@ defmodule Micelio.Mic.SearchIndex do
     end
   end
 
-  defp load_index_position(repository_id, opts) do
+  defp load_index_revision_hash(repository_id, opts) do
     case Storage.get(metadata_key(repository_id), opts) do
       {:ok, body} ->
         case Jason.decode(body) do
-          {:ok, %{"indexed_position" => value}} when is_integer(value) -> value
-          {:ok, %{"indexed_position" => value}} when is_binary(value) -> parse_integer(value)
-          _ -> 0
+          {:ok, %{"indexed_revision_hash" => value}} when is_binary(value) ->
+            decode_revision_hash(value)
+
+          _ ->
+            Binary.zero_hash()
         end
 
       _ ->
-        0
+        Binary.zero_hash()
     end
   end
 
@@ -235,44 +292,23 @@ defmodule Micelio.Mic.SearchIndex do
     end)
   end
 
-  defp resolve_position(repository_id, nil, opts) do
+  defp resolve_revision_hash(repository_id, nil, opts) do
     case Project.get_head(repository_id, opts) do
-      {:ok, nil} -> {:ok, 0}
-      {:ok, head} -> {:ok, head.position}
+      {:ok, nil} -> {:ok, Binary.zero_hash()}
+      {:ok, head} -> {:ok, head.tree_hash}
       {:error, reason} -> {:error, reason}
     end
   end
 
-  defp resolve_position(_repository_id, position, _opts)
-       when is_integer(position) and position >= 0, do: {:ok, position}
+  defp resolve_revision_hash(_repository_id, revision_hash, _opts)
+       when is_binary(revision_hash) and byte_size(revision_hash) == 32, do: {:ok, revision_hash}
 
-  defp load_visible_paths(_repository_id, 0, _opts), do: {:ok, MapSet.new()}
+  defp load_visible_paths(_repository_id, revision_hash, _opts)
+       when is_binary(revision_hash) and revision_hash == @zero_hash, do: {:ok, MapSet.new()}
 
-  defp load_visible_paths(repository_id, position, opts) do
-    with {:ok, tree_hash} <- tree_hash_for_position(repository_id, position, opts),
-         {:ok, tree} <- Project.get_tree(repository_id, tree_hash, opts) do
+  defp load_visible_paths(repository_id, revision_hash, opts) do
+    with {:ok, tree} <- Project.get_tree(repository_id, revision_hash, opts) do
       {:ok, MapSet.new(Map.keys(tree))}
-    end
-  end
-
-  defp tree_hash_for_position(repository_id, position, opts) do
-    case Project.get_head(repository_id, opts) do
-      {:ok, nil} ->
-        {:ok, Binary.zero_hash()}
-
-      {:ok, head} when head.position == position ->
-        {:ok, head.tree_hash}
-
-      {:ok, _head} ->
-        landing_key = "repositories/#{repository_id}/landing/#{pad_position(position)}.bin"
-
-        with {:ok, landing_raw} <- Storage.get(landing_key, opts),
-             {:ok, landing} <- Binary.decode_landing(landing_raw) do
-          {:ok, landing.tree_hash}
-        end
-
-      {:error, reason} ->
-        {:error, reason}
     end
   end
 
@@ -316,7 +352,7 @@ defmodule Micelio.Mic.SearchIndex do
   defp latest_per_line(postings) do
     postings
     |> Enum.group_by(fn p -> {p.path, p.line, p.column} end)
-    |> Enum.map(fn {_key, group} -> Enum.max_by(group, & &1.position) end)
+    |> Enum.map(fn {_key, group} -> Enum.max_by(group, & &1.landed_at_ms) end)
   end
 
   defp glob_match?(path, glob) do
@@ -338,7 +374,8 @@ defmodule Micelio.Mic.SearchIndex do
       snippet: Map.get(value, "snippet", ""),
       session_id: Map.get(value, "session_id", ""),
       actor_handle: Map.get(value, "actor_handle", ""),
-      position: Map.get(value, "position", 0)
+      revision_hash: Map.get(value, "revision_hash", "") |> decode_revision_hash(),
+      landed_at_ms: Map.get(value, "landed_at_ms", 0)
     }
   end
 
@@ -350,7 +387,8 @@ defmodule Micelio.Mic.SearchIndex do
       "snippet" => value.snippet,
       "session_id" => value.session_id,
       "actor_handle" => value.actor_handle,
-      "position" => value.position
+      "revision_hash" => Base.encode16(value.revision_hash, case: :lower),
+      "landed_at_ms" => value.landed_at_ms
     }
   end
 
@@ -367,22 +405,53 @@ defmodule Micelio.Mic.SearchIndex do
 
   defp normalize_blank(_), do: nil
 
-  defp parse_integer(value) when is_integer(value), do: value
+  defp within_cutoff?(posting, cutoff_ms) when is_integer(cutoff_ms) and cutoff_ms > 0 do
+    posting.landed_at_ms <= cutoff_ms
+  end
 
-  defp parse_integer(value) when is_binary(value) do
+  defp within_cutoff?(_posting, _cutoff_ms), do: true
+
+  defp landing_cutoff_ms(_repository_id, revision_hash, _opts)
+       when is_binary(revision_hash) and revision_hash == @zero_hash, do: 0
+
+  defp landing_cutoff_ms(repository_id, revision_hash, opts) do
+    case Storage.get(landing_metadata_key(repository_id, revision_hash), opts) do
+      {:ok, body} ->
+        case Jason.decode(body) do
+          {:ok, %{"landed_at_ms" => value}} when is_integer(value) -> value
+          {:ok, %{"landed_at_ms" => value}} when is_binary(value) -> parse_ms(value)
+          _ -> 0
+        end
+
+      _ ->
+        0
+    end
+  end
+
+  defp landing_metadata_key(repository_id, revision_hash) do
+    hash_hex = Base.encode16(revision_hash, case: :lower)
+    "repositories/#{repository_id}/index/search/revisions/#{hash_hex}.json"
+  end
+
+  defp parse_ms(value) when is_integer(value), do: value
+
+  defp parse_ms(value) when is_binary(value) do
     case Integer.parse(value) do
       {number, _} -> number
       _ -> 0
     end
   end
 
-  defp parse_integer(_), do: 0
+  defp parse_ms(_), do: 0
 
-  defp pad_position(position) do
-    position
-    |> Integer.to_string()
-    |> String.pad_leading(12, "0")
+  defp decode_revision_hash(value) when is_binary(value) do
+    case Base.decode16(value, case: :mixed) do
+      {:ok, decoded} when byte_size(decoded) == 32 -> decoded
+      _ -> Binary.zero_hash()
+    end
   end
+
+  defp decode_revision_hash(_), do: Binary.zero_hash()
 
   defp resolve_actor_handle(%{user_id: user_id}) when is_binary(user_id) do
     case Accounts.get_user_with_account(user_id) do

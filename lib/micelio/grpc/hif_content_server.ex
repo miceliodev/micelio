@@ -12,11 +12,13 @@ defmodule Micelio.GRPC.Hif.V1.ContentService.Server do
   alias Micelio.Sessions.Blame
   alias Micelio.Storage
 
+  @zero_hash Binary.zero_hash()
+
   def get_tree(%V1.GetTreeRequest{} = request, stream) do
     with :ok <- require_repository_ref(request.repository),
          {:ok, organization, repository} <- load_repository(request.repository),
          :ok <- authorize_repository_read(organization, repository, request.user_id, stream),
-         {:ok, tree_hash} <- resolve_tree_hash(repository.id, request.position, request.tree_hash),
+         {:ok, tree_hash} <- resolve_tree_hash(repository.id, request.revision_hash),
          {:ok, tree} <- Project.get_tree(repository.id, tree_hash) do
       %V1.TreeResponse{
         repository: repository_ref(organization, repository),
@@ -31,7 +33,7 @@ defmodule Micelio.GRPC.Hif.V1.ContentService.Server do
          :ok <- require_field(request.path, "path"),
          {:ok, organization, repository} <- load_repository(request.repository),
          :ok <- authorize_repository_read(organization, repository, request.user_id, stream),
-         {:ok, tree_hash} <- resolve_tree_hash(repository.id, request.position, request.tree_hash),
+         {:ok, tree_hash} <- resolve_tree_hash(repository.id, request.revision_hash),
          {:ok, tree} <- Project.get_tree(repository.id, tree_hash),
          blob_hash when is_binary(blob_hash) <- Map.get(tree, request.path),
          {:ok, content} <- Project.get_blob(repository.id, blob_hash) do
@@ -57,12 +59,14 @@ defmodule Micelio.GRPC.Hif.V1.ContentService.Server do
 
   def diff(%V1.DiffRequest{} = request, stream) do
     with :ok <- require_repository_ref(request.repository),
-         :ok <- require_position(request.from_position, "from_position"),
+         :ok <- require_hash(request.from_revision_hash, "from_revision_hash"),
          {:ok, organization, repository} <- load_repository(request.repository),
          :ok <- authorize_repository_read(organization, repository, request.user_id, stream),
-         {:ok, from_tree} <- load_tree_at_position(repository.id, request.from_position),
-         to_position = resolve_to_position(repository.id, request.to_position),
-         {:ok, to_tree} <- load_tree_at_position(repository.id, to_position) do
+         {:ok, from_tree} <-
+           load_tree_at_revision_hash(repository.id, request.from_revision_hash),
+         {:ok, to_revision_hash} <-
+           resolve_to_revision_hash(repository.id, request.to_revision_hash),
+         {:ok, to_tree} <- load_tree_at_revision_hash(repository.id, to_revision_hash) do
       path_prefix = empty_to_nil(request.path_prefix)
 
       hunks =
@@ -80,9 +84,10 @@ defmodule Micelio.GRPC.Hif.V1.ContentService.Server do
   def blame(%V1.BlameRequest{} = request, stream) do
     with :ok <- require_repository_ref(request.repository),
          :ok <- require_field(request.path, "path"),
+         :ok <- require_hash(request.revision_hash, "revision_hash"),
          {:ok, organization, repository} <- load_repository(request.repository),
          :ok <- authorize_repository_read(organization, repository, request.user_id, stream),
-         {:ok, tree} <- load_tree_at_position(repository.id, request.position),
+         {:ok, tree} <- load_tree_at_revision_hash(repository.id, request.revision_hash),
          blob_hash when is_binary(blob_hash) <- Map.get(tree, request.path),
          {:ok, content} <- Project.get_blob(repository.id, blob_hash),
          {:ok, text} <- ensure_text(content) do
@@ -101,7 +106,7 @@ defmodule Micelio.GRPC.Hif.V1.ContentService.Server do
             text: line.text,
             session_id: if(session, do: session.session_id, else: ""),
             actor_handle: actor_handle(session),
-            position: landing_position(session),
+            revision_hash: landing_revision_hash(session),
             at_ms: landed_at_ms(session)
           }
         end)
@@ -136,59 +141,27 @@ defmodule Micelio.GRPC.Hif.V1.ContentService.Server do
     end
   end
 
-  defp resolve_tree_hash(repository_id, position, tree_hash) do
-    cond do
-      is_binary(tree_hash) and byte_size(tree_hash) == 32 ->
-        {:ok, tree_hash}
-
-      is_integer(position) and position > 0 ->
-        load_tree_hash_at_position(repository_id, position)
-
-      true ->
-        with {:ok, head, _etag} <- fetch_head(repository_id) do
-          {:ok, head.tree_hash}
-        end
+  defp resolve_tree_hash(repository_id, revision_hash) do
+    if is_binary(revision_hash) and byte_size(revision_hash) == 32 do
+      {:ok, revision_hash}
+    else
+      with {:ok, head, _etag} <- fetch_head(repository_id) do
+        {:ok, head.tree_hash}
+      end
     end
   end
 
-  defp load_tree_at_position(_repository_id, 0), do: {:ok, %{}}
+  defp load_tree_at_revision_hash(_repository_id, revision_hash)
+       when is_binary(revision_hash) and byte_size(revision_hash) == 32 and
+              revision_hash == @zero_hash, do: {:ok, %{}}
 
-  defp load_tree_at_position(repository_id, position)
-       when is_integer(position) and position > 0 do
-    with {:ok, tree_hash} <- load_tree_hash_at_position(repository_id, position) do
-      Project.get_tree(repository_id, tree_hash)
-    end
-  end
+  defp load_tree_at_revision_hash(repository_id, revision_hash)
+       when is_binary(revision_hash) and byte_size(revision_hash) == 32,
+       do: Project.get_tree(repository_id, revision_hash)
 
-  defp load_tree_at_position(repository_id, _position) do
+  defp load_tree_at_revision_hash(repository_id, _revision_hash) do
     with {:ok, head, _etag} <- fetch_head(repository_id) do
       Project.get_tree(repository_id, head.tree_hash)
-    end
-  end
-
-  defp load_tree_hash_at_position(_repository_id, 0), do: {:ok, Binary.zero_hash()}
-
-  defp load_tree_hash_at_position(repository_id, position) do
-    with {:ok, head, _etag} <- fetch_head(repository_id) do
-      if head.position == position do
-        {:ok, head.tree_hash}
-      else
-        landing_key = "repositories/#{repository_id}/landing/#{pad_position(position)}.bin"
-
-        case Storage.get(landing_key) do
-          {:ok, encoded} ->
-            case Binary.decode_landing(encoded) do
-              {:ok, landing} -> {:ok, landing.tree_hash}
-              {:error, _} -> {:error, internal_status("Failed to decode landing record.")}
-            end
-
-          {:error, :not_found} ->
-            {:error, not_found_status("Position not found.")}
-
-          {:error, _reason} ->
-            {:error, internal_status("Failed to load landing record.")}
-        end
-      end
     end
   end
 
@@ -219,13 +192,13 @@ defmodule Micelio.GRPC.Hif.V1.ContentService.Server do
     end)
   end
 
-  defp resolve_to_position(_repository_id, position) when is_integer(position) and position > 0,
-    do: position
+  defp resolve_to_revision_hash(_repository_id, revision_hash)
+       when is_binary(revision_hash) and byte_size(revision_hash) == 32, do: {:ok, revision_hash}
 
-  defp resolve_to_position(repository_id, _position) do
+  defp resolve_to_revision_hash(repository_id, _revision_hash) do
     case fetch_head(repository_id) do
-      {:ok, head, _etag} -> head.position
-      _ -> 0
+      {:ok, head, _etag} -> {:ok, head.tree_hash}
+      _ -> {:ok, Binary.zero_hash()}
     end
   end
 
@@ -303,15 +276,20 @@ defmodule Micelio.GRPC.Hif.V1.ContentService.Server do
     get_in(session, [:user, :account, :handle]) || ""
   end
 
-  defp landing_position(nil), do: 0
+  defp landing_revision_hash(nil), do: <<>>
 
-  defp landing_position(session) do
+  defp landing_revision_hash(session) do
     metadata = Map.get(session, :metadata) || %{}
 
-    case Map.get(metadata, "landing_position") do
-      value when is_integer(value) -> value
-      value when is_binary(value) -> parse_integer(value)
-      _ -> 0
+    case Map.get(metadata, "landing_revision_hash") do
+      value when is_binary(value) ->
+        case Base.decode64(value) do
+          {:ok, decoded} when byte_size(decoded) == 32 -> decoded
+          _ -> <<>>
+        end
+
+      _ ->
+        <<>>
     end
   end
 
@@ -422,11 +400,6 @@ defmodule Micelio.GRPC.Hif.V1.ContentService.Server do
 
   defp require_repository_ref(_), do: {:error, invalid_status("repository is required.")}
 
-  defp require_position(value, _field_name) when is_integer(value) and value > 0, do: :ok
-
-  defp require_position(_value, field_name),
-    do: {:error, invalid_status("#{field_name} is required.")}
-
   defp require_field(value, field_name) when is_binary(value) do
     if String.trim(value) == "" do
       {:error, invalid_status("#{field_name} is required.")}
@@ -455,22 +428,6 @@ defmodule Micelio.GRPC.Hif.V1.ContentService.Server do
   end
 
   defp empty_to_nil(_value), do: nil
-
-  defp parse_integer(value) when is_binary(value) do
-    case Integer.parse(value) do
-      {number, _} -> number
-      _ -> 0
-    end
-  end
-
-  defp parse_integer(value) when is_integer(value), do: value
-  defp parse_integer(_value), do: 0
-
-  defp pad_position(position) do
-    position
-    |> Integer.to_string()
-    |> String.pad_leading(12, "0")
-  end
 
   defp invalid_status(message) do
     %RPCError{status: Status.invalid_argument(), message: message}

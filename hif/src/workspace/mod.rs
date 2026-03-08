@@ -105,21 +105,15 @@ pub fn parse_project_ref(value: &str) -> Option<(String, String)> {
     Some((account.to_string(), project.to_string()))
 }
 
-/// Parse a position string like "@10", "10", "@latest", or "HEAD".
+/// Parse a revision reference like "@<hex-hash>", "<hex-hash>", "@latest", or "HEAD".
 #[derive(Debug, Clone, PartialEq)]
 pub enum PositionOrLatest {
-    Position(u64),
+    Revision(Vec<u8>),
     Latest,
 }
 
 pub fn parse_position(value: &str) -> Option<PositionOrLatest> {
-    // Handle @position:N format
-    if let Some(rest) = value.strip_prefix("@position:") {
-        let pos = rest.parse().ok()?;
-        return Some(PositionOrLatest::Position(pos));
-    }
-
-    // Handle @N or N format
+    // Handle @<hash> or <hash> format.
     let trimmed = value.strip_prefix('@').unwrap_or(value);
 
     if trimmed.is_empty() {
@@ -132,9 +126,18 @@ pub fn parse_position(value: &str) -> Option<PositionOrLatest> {
         return Some(PositionOrLatest::Latest);
     }
 
-    // Try to parse as number
-    let pos = trimmed.parse().ok()?;
-    Some(PositionOrLatest::Position(pos))
+    // Hash-only references: 64 hex chars (32 bytes).
+    if trimmed.len() != 64 || !trimmed.chars().all(|ch| ch.is_ascii_hexdigit()) {
+        return None;
+    }
+
+    let mut hash = Vec::with_capacity(32);
+    for idx in (0..trimmed.len()).step_by(2) {
+        let byte = u8::from_str_radix(&trimmed[idx..idx + 2], 16).ok()?;
+        hash.push(byte);
+    }
+
+    Some(PositionOrLatest::Revision(hash))
 }
 
 #[cfg(test)]
@@ -172,11 +175,14 @@ mod tests {
 
     #[test]
     fn test_parse_position() {
-        assert_eq!(parse_position("@10"), Some(PositionOrLatest::Position(10)));
-        assert_eq!(parse_position("10"), Some(PositionOrLatest::Position(10)));
+        let hash = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
         assert_eq!(
-            parse_position("@position:42"),
-            Some(PositionOrLatest::Position(42))
+            parse_position(hash),
+            Some(PositionOrLatest::Revision(vec![
+                0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef, 0x01, 0x23, 0x45, 0x67, 0x89, 0xab,
+                0xcd, 0xef, 0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef, 0x01, 0x23, 0x45, 0x67,
+                0x89, 0xab, 0xcd, 0xef
+            ]))
         );
         assert_eq!(parse_position("@latest"), Some(PositionOrLatest::Latest));
         assert_eq!(parse_position("latest"), Some(PositionOrLatest::Latest));
@@ -185,6 +191,7 @@ mod tests {
 
         assert_eq!(parse_position(""), None);
         assert_eq!(parse_position("@"), None);
+        assert_eq!(parse_position("10"), None);
         assert_eq!(parse_position("invalid"), None);
     }
 }

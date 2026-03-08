@@ -28,9 +28,13 @@ pub async fn run(cmd: GrepCommand) -> Result<()> {
 
     let position = if let Some(ref raw) = cmd.position {
         match parse_position(raw) {
-            Some(PositionOrLatest::Position(value)) => Some(value),
+            Some(PositionOrLatest::Revision(value)) => Some(value),
             Some(PositionOrLatest::Latest) => None,
-            None => return Err(MicError::Other("Invalid --position value".to_string())),
+            None => {
+                return Err(MicError::Other(
+                    "Invalid --position value; expected revision hash".to_string(),
+                ))
+            }
         }
     } else {
         None
@@ -40,7 +44,7 @@ pub async fn run(cmd: GrepCommand) -> Result<()> {
         user_id,
         repository: Some(repository_ref(org, project)),
         query: cmd.query.clone(),
-        at_position: position.unwrap_or(0),
+        at_revision_hash: position.unwrap_or_default(),
         path_prefix: cmd.path.clone().unwrap_or_default(),
         path_glob: String::new(),
         regex: cmd.regex,

@@ -44,7 +44,7 @@ pub async fn run(cmd: MountCommand) -> Result<()> {
         fs::create_dir_all(&mount_path)?;
     }
 
-    let (tree, position) = fetch_tree(
+    let (tree, revision_hash) = fetch_tree(
         &client,
         &tokens.access_token,
         &user_id,
@@ -58,7 +58,7 @@ pub async fn run(cmd: MountCommand) -> Result<()> {
         &user_id,
         organization,
         project,
-        position,
+        &revision_hash,
         &tree,
         &mount_path,
     )
@@ -87,7 +87,7 @@ async fn fetch_tree(
     user_id: &str,
     organization: &str,
     project: &str,
-) -> Result<(Vec<MountEntry>, u64)> {
+) -> Result<(Vec<MountEntry>, Vec<u8>)> {
     let repository = repository_ref(organization, project);
     let head: pb::RepositoryHeadResponse = call(
         client,
@@ -100,7 +100,11 @@ async fn fetch_tree(
     )
     .await?;
 
-    let position = head.head.as_ref().map(|value| value.id).unwrap_or(0);
+    let revision_hash = head
+        .head
+        .as_ref()
+        .map(|value| value.hash.clone())
+        .unwrap_or_default();
     let tree: pb::TreeResponse = call(
         client,
         access_token,
@@ -108,8 +112,7 @@ async fn fetch_tree(
         &pb::GetTreeRequest {
             user_id: user_id.to_string(),
             repository: Some(repository),
-            position,
-            tree_hash: Vec::new(),
+            revision_hash: revision_hash.clone(),
         },
     )
     .await?;
@@ -122,7 +125,7 @@ async fn fetch_tree(
                 hash: entry.hash,
             })
             .collect::<Vec<_>>(),
-        position,
+        revision_hash,
     ))
 }
 
@@ -133,7 +136,7 @@ async fn sync_tree(
     user_id: &str,
     organization: &str,
     project: &str,
-    position: u64,
+    revision_hash: &[u8],
     tree: &[MountEntry],
     mount_path: &PathBuf,
 ) -> Result<usize> {
@@ -154,7 +157,7 @@ async fn sync_tree(
             organization,
             project,
             &entry.path,
-            position,
+            revision_hash,
         )
         .await?;
 
@@ -181,7 +184,7 @@ async fn fetch_file(
     organization: &str,
     project: &str,
     path: &str,
-    position: u64,
+    revision_hash: &[u8],
 ) -> Result<Vec<u8>> {
     let response: pb::PathResponse = call(
         client,
@@ -190,8 +193,7 @@ async fn fetch_file(
         &pb::GetPathRequest {
             user_id: user_id.to_string(),
             repository: Some(repository_ref(organization, project)),
-            position,
-            tree_hash: Vec::new(),
+            revision_hash: revision_hash.to_vec(),
             path: path.to_string(),
         },
     )

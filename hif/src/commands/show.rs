@@ -25,9 +25,9 @@ pub async fn run(cmd: ShowCommand) -> Result<()> {
 
     let position = if let Some(ref pos_str) = cmd.r#ref {
         match parse_position(pos_str) {
-            Some(PositionOrLatest::Position(value)) => Some(value),
+            Some(PositionOrLatest::Revision(value)) => Some(value),
             Some(PositionOrLatest::Latest) => None,
-            None => return Err(MicError::Other("Invalid position format".to_string())),
+            None => return Err(MicError::Other("Invalid revision format".to_string())),
         }
     } else {
         None
@@ -40,8 +40,7 @@ pub async fn run(cmd: ShowCommand) -> Result<()> {
         &pb::GetPathRequest {
             user_id,
             repository: Some(repository_ref(org, project)),
-            position: position.unwrap_or(0),
-            tree_hash: Vec::new(),
+            revision_hash: position.unwrap_or_default(),
             path: cmd.path.trim_start_matches('/').to_string(),
         },
     )

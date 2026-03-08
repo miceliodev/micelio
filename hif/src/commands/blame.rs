@@ -34,10 +34,10 @@ pub async fn run(cmd: BlameCommand) -> Result<()> {
     )
     .await?;
 
-    let head_position = head.head.map(|position| position.id).unwrap_or(0);
-    if head_position == 0 {
+    let head_revision_hash = head.head.map(|position| position.hash).unwrap_or_default();
+    if head_revision_hash.is_empty() {
         return Err(MicError::Other(
-            "Failed to resolve repository head position".to_string(),
+            "Failed to resolve repository head revision".to_string(),
         ));
     }
 
@@ -48,7 +48,7 @@ pub async fn run(cmd: BlameCommand) -> Result<()> {
         &pb::BlameRequest {
             user_id,
             repository: Some(repo),
-            position: head_position,
+            revision_hash: head_revision_hash,
             path: cmd.path,
         },
     )

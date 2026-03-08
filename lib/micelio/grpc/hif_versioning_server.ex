@@ -14,6 +14,8 @@ defmodule Micelio.GRPC.Hif.V1.VersioningService.Server do
   alias Micelio.Sessions.Session
   alias Micelio.Storage
 
+  @zero_hash Binary.zero_hash()
+
   def get_repository_head(%V1.GetRepositoryHeadRequest{} = request, stream) do
     with :ok <- require_repository_ref(request.repository),
          {:ok, user} <- fetch_user(request.user_id, stream),
@@ -22,7 +24,7 @@ defmodule Micelio.GRPC.Hif.V1.VersioningService.Server do
          {:ok, head, etag} <- fetch_head(repository.id) do
       %V1.RepositoryHeadResponse{
         repository: repository_ref(organization, repository),
-        head: position_proto(head.position, head.tree_hash),
+        head: revision_proto(head.tree_hash),
         head_etag: etag
       }
     else
@@ -34,13 +36,14 @@ defmodule Micelio.GRPC.Hif.V1.VersioningService.Server do
 
   def get_head_at(%V1.GetHeadAtRequest{} = request, stream) do
     with :ok <- require_repository_ref(request.repository),
+         :ok <- require_hash(request.revision_hash, "revision_hash"),
          {:ok, user} <- fetch_user(request.user_id, stream),
          {:ok, organization, repository} <- load_repository(request.repository),
          true <- Accounts.user_in_organization?(user, organization.id),
-         {:ok, head, etag} <- fetch_head_at(repository.id, request.position) do
+         {:ok, head, etag} <- fetch_head_by_revision_hash(repository.id, request.revision_hash) do
       %V1.RepositoryHeadResponse{
         repository: repository_ref(organization, repository),
-        head: position_proto(head.position, head.tree_hash),
+        head: revision_proto(head.tree_hash),
         head_etag: etag
       }
     else
@@ -58,14 +61,13 @@ defmodule Micelio.GRPC.Hif.V1.VersioningService.Server do
          {:ok, organization, repository} <- load_repository(request.repository),
          true <- Accounts.user_in_organization?(user, organization.id),
          nil <- Sessions.get_session_by_session_id(request.open.session_id),
-         {:ok, base_position_id, base_tree_hash} <-
-           resolve_base_position(repository.id, request.open.base_position),
+         {:ok, base_revision_hash} <-
+           resolve_base_revision_hash(repository.id, request.open.base_position),
          metadata =
            %{
              "organization_handle" => organization.account.handle,
              "repository_handle" => repository.handle,
-             "base_position" => base_position_id,
-             "base_tree_hash" => Base.encode64(base_tree_hash),
+             "base_revision_hash" => Base.encode64(base_revision_hash),
              "requested_workspace" => empty_to_nil(request.open.requested_workspace),
              "contributor_type" => "human"
            }
@@ -185,10 +187,12 @@ defmodule Micelio.GRPC.Hif.V1.VersioningService.Server do
   defp do_land_session(%Session{} = session, repository) do
     case Landing.land_session(session) do
       {:ok, landing} ->
+        revision_hash = landing.tree_hash || current_head_revision_hash(repository.id)
+
         metadata =
           session.metadata
           |> normalize_metadata()
-          |> Map.put("landing_position", landing.position)
+          |> Map.put("landing_revision_hash", Base.encode64(revision_hash))
           |> Map.delete("virtual_conflict")
 
         case Sessions.land_session(session, %{landed_at: landing.landed_at, metadata: metadata}) do
@@ -201,7 +205,8 @@ defmodule Micelio.GRPC.Hif.V1.VersioningService.Server do
 
       {:error, {:conflicts, paths}} ->
         conflict = %{
-          "position" => current_head_position(repository.id),
+          "revision_hash" =>
+            current_head_revision_hash(repository.id) |> Base.encode16(case: :lower),
           "session_id" => session.session_id,
           "reason" => "Conflicts detected while landing session",
           "paths" => paths
@@ -252,32 +257,24 @@ defmodule Micelio.GRPC.Hif.V1.VersioningService.Server do
   end
 
   defp build_base_position(repository_id, metadata) do
-    base_position = parse_integer(Map.get(metadata, "base_position"))
-
     tree_hash =
-      case Map.get(metadata, "base_tree_hash") do
-        encoded when is_binary(encoded) ->
-          case Base.decode64(encoded) do
-            {:ok, decoded} when byte_size(decoded) == 32 -> decoded
-            _ -> tree_hash_for_position(repository_id, base_position)
-          end
+      decode_hash(Map.get(metadata, "base_revision_hash")) ||
+        current_head_revision_hash(repository_id)
 
-        _ ->
-          tree_hash_for_position(repository_id, base_position)
-      end
-
-    {:ok, position_proto(base_position, tree_hash)}
+    {:ok, revision_proto(tree_hash)}
   end
 
   defp build_current_position(repository_id, metadata, "landed") do
-    landing_position = parse_integer(Map.get(metadata, "landing_position"))
-    tree_hash = tree_hash_for_position(repository_id, landing_position)
-    {:ok, position_proto(landing_position, tree_hash)}
+    tree_hash =
+      decode_hash(Map.get(metadata, "landing_revision_hash")) ||
+        current_head_revision_hash(repository_id)
+
+    {:ok, revision_proto(tree_hash)}
   end
 
   defp build_current_position(repository_id, _metadata, _status) do
     with {:ok, head, _etag} <- fetch_head(repository_id) do
-      {:ok, position_proto(head.position, head.tree_hash)}
+      {:ok, revision_proto(head.tree_hash)}
     end
   end
 
@@ -288,10 +285,9 @@ defmodule Micelio.GRPC.Hif.V1.VersioningService.Server do
     }
   end
 
-  defp position_proto(position, tree_hash) do
+  defp revision_proto(tree_hash) do
     %V1.Position{
-      id: position,
-      tree_hash: tree_hash,
+      hash: tree_hash,
       at: DateTime.utc_now() |> DateTime.truncate(:second) |> DateTime.to_iso8601()
     }
   end
@@ -299,8 +295,20 @@ defmodule Micelio.GRPC.Hif.V1.VersioningService.Server do
   defp conflict_from_metadata(metadata) do
     case Map.get(metadata, "virtual_conflict") do
       %{} = conflict ->
+        revision_hash =
+          case Map.get(conflict, "revision_hash") do
+            value when is_binary(value) ->
+              case Base.decode16(value, case: :mixed) do
+                {:ok, decoded} when byte_size(decoded) == 32 -> decoded
+                _ -> <<>>
+              end
+
+            _ ->
+              <<>>
+          end
+
         %V1.SessionConflict{
-          position: parse_integer(Map.get(conflict, "position")),
+          revision_hash: revision_hash,
           session_id: Map.get(conflict, "session_id", ""),
           reason: Map.get(conflict, "reason", ""),
           paths: Map.get(conflict, "paths", [])
@@ -474,7 +482,7 @@ defmodule Micelio.GRPC.Hif.V1.VersioningService.Server do
 
   defp resolve_rename_content(nil, session, old_path) do
     metadata = normalize_metadata(session.metadata)
-    base_tree_hash = metadata["base_tree_hash"]
+    base_tree_hash = metadata["base_revision_hash"]
 
     with true <- is_binary(base_tree_hash),
          {:ok, decoded_hash} <- Base.decode64(base_tree_hash),
@@ -507,22 +515,17 @@ defmodule Micelio.GRPC.Hif.V1.VersioningService.Server do
     Sessions.update_session(session, %{metadata: metadata})
   end
 
-  defp resolve_base_position(repository_id, nil) do
+  defp resolve_base_revision_hash(repository_id, nil) do
     with {:ok, head, _etag} <- fetch_head(repository_id) do
-      {:ok, head.position, head.tree_hash}
+      {:ok, head.tree_hash}
     end
   end
 
-  defp resolve_base_position(repository_id, %V1.Position{} = position) do
-    cond do
-      position.id > 0 ->
-        {:ok, position.id, tree_hash_for_position(repository_id, position.id)}
-
-      byte_size(position.tree_hash) == 32 ->
-        {:ok, 0, position.tree_hash}
-
-      true ->
-        resolve_base_position(repository_id, nil)
+  defp resolve_base_revision_hash(repository_id, %V1.Position{} = position) do
+    if is_binary(position.hash) and byte_size(position.hash) == 32 do
+      {:ok, position.hash}
+    else
+      resolve_base_revision_hash(repository_id, nil)
     end
   end
 
@@ -590,52 +593,34 @@ defmodule Micelio.GRPC.Hif.V1.VersioningService.Server do
     end
   end
 
-  defp fetch_head_at(_repository_id, 0), do: {:ok, Binary.new_head(0, Binary.zero_hash()), ""}
+  defp fetch_head_by_revision_hash(repository_id, revision_hash)
+       when is_binary(revision_hash) and byte_size(revision_hash) == 32 do
+    case revision_hash do
+      hash when hash == @zero_hash ->
+        {:ok, Binary.new_head(0, @zero_hash), ""}
 
-  defp fetch_head_at(repository_id, position) when is_integer(position) and position > 0 do
-    with {:ok, head, etag} <- fetch_head(repository_id) do
-      if head.position == position do
-        {:ok, head, etag}
-      else
-        landing_key = "repositories/#{repository_id}/landing/#{pad_position(position)}.bin"
-
-        case Storage.get(landing_key) do
-          {:ok, encoded} ->
-            case Binary.decode_landing(encoded) do
-              {:ok, landing} ->
-                {:ok, Binary.new_head(position, landing.tree_hash), "position-#{position}"}
-
-              {:error, _} ->
-                {:error, internal_status("Failed to decode landing record.")}
-            end
+      _ ->
+        case Project.get_tree(repository_id, revision_hash) do
+          {:ok, _tree} ->
+            {:ok, Binary.new_head(0, revision_hash),
+             "revision-#{Base.encode16(revision_hash, case: :lower)}"}
 
           {:error, :not_found} ->
-            {:error, not_found_status("Position not found.")}
+            {:error, not_found_status("Revision not found.")}
 
           {:error, _reason} ->
-            {:error, internal_status("Failed to load landing record.")}
+            {:error, internal_status("Failed to load revision tree.")}
         end
-      end
     end
   end
 
-  defp fetch_head_at(_repository_id, _position),
-    do: {:error, invalid_status("position is required.")}
+  defp fetch_head_by_revision_hash(_repository_id, _revision_hash),
+    do: {:error, invalid_status("revision_hash is required.")}
 
-  defp tree_hash_for_position(_repository_id, 0), do: Binary.zero_hash()
-
-  defp tree_hash_for_position(repository_id, position)
-       when is_integer(position) and position > 0 do
-    case fetch_head_at(repository_id, position) do
+  defp current_head_revision_hash(repository_id) do
+    case fetch_head(repository_id) do
       {:ok, head, _etag} -> head.tree_hash
       _ -> Binary.zero_hash()
-    end
-  end
-
-  defp current_head_position(repository_id) do
-    case fetch_head(repository_id) do
-      {:ok, head, _etag} -> head.position
-      _ -> 0
     end
   end
 
@@ -718,6 +703,17 @@ defmodule Micelio.GRPC.Hif.V1.VersioningService.Server do
   defp require_field(_value, field_name),
     do: {:error, invalid_status("#{field_name} is required.")}
 
+  defp require_hash(value, field_name) when is_binary(value) do
+    if byte_size(value) == 32 do
+      :ok
+    else
+      {:error, invalid_status("#{field_name} must be 32 bytes.")}
+    end
+  end
+
+  defp require_hash(_value, field_name),
+    do: {:error, invalid_status("#{field_name} must be 32 bytes.")}
+
   defp normalize_metadata(%{} = metadata), do: metadata
   defp normalize_metadata(_), do: %{}
 
@@ -771,7 +767,7 @@ defmodule Micelio.GRPC.Hif.V1.VersioningService.Server do
       id: session.session_id,
       goal: session.goal || "",
       author: session_author_handle(session),
-      position: landing_position_from_session(session)
+      revision_hash: landing_revision_hash_from_session(session)
     }
   end
 
@@ -784,39 +780,30 @@ defmodule Micelio.GRPC.Hif.V1.VersioningService.Server do
 
   defp maybe_filter_sessions_by_path(sessions, _repository_id, nil), do: sessions
 
-  defp maybe_filter_sessions_by_path(sessions, repository_id, path) do
-    alias Micelio.Mic.ConflictIndex
-
-    matching_positions =
-      sessions
-      |> Enum.map(&landing_position_from_session/1)
-      |> Enum.reject(&(&1 <= 0))
-      |> Enum.filter(fn position ->
-        case ConflictIndex.load_path_index(repository_id, position) do
-          {:ok, nil} -> false
-          {:ok, paths} -> path in paths or path_matches_prefix?(path, paths)
-          {:error, _} -> false
-        end
-      end)
-      |> MapSet.new()
-
+  defp maybe_filter_sessions_by_path(sessions, _repository_id, path) do
     Enum.filter(sessions, fn session ->
-      position = landing_position_from_session(session)
-      position > 0 and MapSet.member?(matching_positions, position)
+      session
+      |> Sessions.list_session_changes()
+      |> Enum.map(& &1.file_path)
+      |> path_matches_any?(path)
     end)
   end
 
-  defp path_matches_prefix?(query_path, indexed_paths) do
+  defp path_matches_any?(indexed_paths, query_path) do
     Enum.any?(indexed_paths, fn indexed_path ->
-      String.starts_with?(indexed_path, query_path <> "/") or
+      indexed_path == query_path or
+        String.starts_with?(indexed_path, query_path <> "/") or
         String.starts_with?(query_path, indexed_path <> "/")
     end)
   end
 
-  defp landing_position_from_session(%Session{} = session) do
+  defp landing_revision_hash_from_session(%Session{} = session) do
     case normalize_metadata(session.metadata) do
-      %{"landing_position" => value} -> parse_integer(value)
-      _ -> 0
+      %{"landing_revision_hash" => value} ->
+        decode_hash(value) || Binary.zero_hash()
+
+      _ ->
+        Binary.zero_hash()
     end
   end
 
@@ -843,11 +830,14 @@ defmodule Micelio.GRPC.Hif.V1.VersioningService.Server do
     end
   end
 
-  defp pad_position(position) do
-    position
-    |> Integer.to_string()
-    |> String.pad_leading(12, "0")
+  defp decode_hash(value) when is_binary(value) do
+    case Base.decode64(value) do
+      {:ok, decoded} when byte_size(decoded) == 32 -> decoded
+      _ -> nil
+    end
   end
+
+  defp decode_hash(_), do: nil
 
   defp format_errors(changeset) do
     changeset

@@ -8,7 +8,7 @@ defmodule Micelio.GRPC.VirtualContentServerTest do
   alias Micelio.Repositories
   alias Micelio.Storage
 
-  test "get_tree and get_path resolve content at a position" do
+  test "get_tree and get_path resolve content at a revision hash" do
     unique = System.unique_integer([:positive])
 
     {:ok, user} = Accounts.get_or_create_user_by_email("virtual-content-#{unique}@example.com")
@@ -46,7 +46,7 @@ defmodule Micelio.GRPC.VirtualContentServerTest do
             organization_handle: organization.account.handle,
             repository_handle: repository.handle
           },
-          position: 1
+          revision_hash: tree_hash
         },
         nil
       )
@@ -63,7 +63,7 @@ defmodule Micelio.GRPC.VirtualContentServerTest do
             organization_handle: organization.account.handle,
             repository_handle: repository.handle
           },
-          position: 1,
+          revision_hash: tree_hash,
           path: "README.md"
         },
         nil

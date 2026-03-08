@@ -8,9 +8,8 @@ end
 defmodule Micelio.GRPC.Hif.V1.Position do
   use Protobuf, syntax: :proto3
 
-  field :id, 1, type: :uint64
-  field :tree_hash, 2, type: :bytes, json_name: "treeHash"
-  field :at, 3, type: :string
+  field :hash, 1, type: :bytes
+  field :at, 2, type: :string
 end
 
 defmodule Micelio.GRPC.Hif.V1.RepositoryHeadResponse do
@@ -33,7 +32,7 @@ defmodule Micelio.GRPC.Hif.V1.GetHeadAtRequest do
 
   field :user_id, 1, type: :string, json_name: "userId"
   field :repository, 2, type: Micelio.GRPC.Hif.V1.RepositoryRef
-  field :position, 3, type: :uint64
+  field :revision_hash, 3, type: :bytes, json_name: "revisionHash"
 end
 
 defmodule Micelio.GRPC.Hif.V1.AgentAttribution do
@@ -91,7 +90,7 @@ end
 defmodule Micelio.GRPC.Hif.V1.SessionConflict do
   use Protobuf, syntax: :proto3
 
-  field :position, 1, type: :uint64
+  field :revision_hash, 1, type: :bytes, json_name: "revisionHash"
   field :session_id, 2, type: :string, json_name: "sessionId"
   field :reason, 3, type: :string
   field :paths, 4, repeated: true, type: :string
@@ -140,7 +139,7 @@ defmodule Micelio.GRPC.Hif.V1.SessionSummary do
   field :id, 1, type: :string
   field :goal, 2, type: :string
   field :author, 3, type: :string
-  field :position, 4, type: :uint64
+  field :revision_hash, 4, type: :bytes, json_name: "revisionHash"
 end
 
 defmodule Micelio.GRPC.Hif.V1.ListSessionsRequest do
@@ -212,8 +211,7 @@ defmodule Micelio.GRPC.Hif.V1.GetTreeRequest do
 
   field :user_id, 1, type: :string, json_name: "userId"
   field :repository, 2, type: Micelio.GRPC.Hif.V1.RepositoryRef
-  field :position, 3, type: :uint64
-  field :tree_hash, 4, type: :bytes, json_name: "treeHash"
+  field :revision_hash, 3, type: :bytes, json_name: "revisionHash"
 end
 
 defmodule Micelio.GRPC.Hif.V1.GetPathRequest do
@@ -221,9 +219,8 @@ defmodule Micelio.GRPC.Hif.V1.GetPathRequest do
 
   field :user_id, 1, type: :string, json_name: "userId"
   field :repository, 2, type: Micelio.GRPC.Hif.V1.RepositoryRef
-  field :position, 3, type: :uint64
-  field :tree_hash, 4, type: :bytes, json_name: "treeHash"
-  field :path, 5, type: :string
+  field :revision_hash, 3, type: :bytes, json_name: "revisionHash"
+  field :path, 4, type: :string
 end
 
 defmodule Micelio.GRPC.Hif.V1.PathResponse do
@@ -253,8 +250,8 @@ defmodule Micelio.GRPC.Hif.V1.DiffRequest do
 
   field :user_id, 1, type: :string, json_name: "userId"
   field :repository, 2, type: Micelio.GRPC.Hif.V1.RepositoryRef
-  field :from_position, 3, type: :uint64, json_name: "fromPosition"
-  field :to_position, 4, type: :uint64, json_name: "toPosition"
+  field :from_revision_hash, 3, type: :bytes, json_name: "fromRevisionHash"
+  field :to_revision_hash, 4, type: :bytes, json_name: "toRevisionHash"
   field :path_prefix, 5, type: :string, json_name: "pathPrefix"
 end
 
@@ -281,7 +278,7 @@ defmodule Micelio.GRPC.Hif.V1.BlameLine do
   field :text, 3, type: :string
   field :session_id, 4, type: :string, json_name: "sessionId"
   field :actor_handle, 5, type: :string, json_name: "actorHandle"
-  field :position, 6, type: :uint64
+  field :revision_hash, 6, type: :bytes, json_name: "revisionHash"
   field :at_ms, 7, type: :uint64, json_name: "atMs"
 end
 
@@ -290,7 +287,7 @@ defmodule Micelio.GRPC.Hif.V1.BlameRequest do
 
   field :user_id, 1, type: :string, json_name: "userId"
   field :repository, 2, type: Micelio.GRPC.Hif.V1.RepositoryRef
-  field :position, 3, type: :uint64
+  field :revision_hash, 3, type: :bytes, json_name: "revisionHash"
   field :path, 4, type: :string
 end
 
@@ -306,7 +303,7 @@ defmodule Micelio.GRPC.Hif.V1.TextQueryRequest do
   field :user_id, 1, type: :string, json_name: "userId"
   field :repository, 2, type: Micelio.GRPC.Hif.V1.RepositoryRef
   field :query, 3, type: :string
-  field :at_position, 4, type: :uint64, json_name: "atPosition"
+  field :at_revision_hash, 4, type: :bytes, json_name: "atRevisionHash"
   field :path_prefix, 5, type: :string, json_name: "pathPrefix"
   field :path_glob, 6, type: :string, json_name: "pathGlob"
   field :regex, 7, type: :bool
@@ -326,8 +323,8 @@ defmodule Micelio.GRPC.Hif.V1.TextQueryMatch do
   field :snippet, 4, type: :string
   field :session_id, 5, type: :string, json_name: "sessionId"
   field :actor_handle, 6, type: :string, json_name: "actorHandle"
-  field :position, 7, type: :uint64
-  field :position_etag, 8, type: :string, json_name: "positionEtag"
+  field :revision_hash, 7, type: :bytes, json_name: "revisionHash"
+  field :revision_etag, 8, type: :string, json_name: "revisionEtag"
 end
 
 defmodule Micelio.GRPC.Hif.V1.TextQueryResponse do

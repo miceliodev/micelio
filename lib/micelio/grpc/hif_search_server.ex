@@ -17,7 +17,7 @@ defmodule Micelio.GRPC.Hif.V1.SearchService.Server do
          {:ok, offset} <- resolve_offset(request.offset, request.page_token),
          params = %{
            query: request.query,
-           at_position: normalize_position(request.at_position),
+           at_revision_hash: normalize_revision_hash(request.at_revision_hash),
            path_prefix: empty_to_nil(request.path_prefix),
            path_glob: empty_to_nil(request.path_glob),
            regex: request.regex,
@@ -53,8 +53,15 @@ defmodule Micelio.GRPC.Hif.V1.SearchService.Server do
       snippet: posting.snippet,
       session_id: posting.session_id,
       actor_handle: posting.actor_handle,
-      position: posting.position,
-      position_etag: "position-#{posting.position}"
+      revision_hash: Map.get(posting, :revision_hash, <<>>),
+      revision_etag:
+        case Map.get(posting, :revision_hash) do
+          hash when is_binary(hash) and byte_size(hash) == 32 ->
+            "revision-#{Base.encode16(hash, case: :lower)}"
+
+          _ ->
+            ""
+        end
     }
   end
 
@@ -77,8 +84,8 @@ defmodule Micelio.GRPC.Hif.V1.SearchService.Server do
 
   defp resolve_offset(offset, _page_token), do: {:ok, normalize_offset(offset)}
 
-  defp normalize_position(position) when is_integer(position) and position > 0, do: position
-  defp normalize_position(_position), do: nil
+  defp normalize_revision_hash(hash) when is_binary(hash) and byte_size(hash) == 32, do: hash
+  defp normalize_revision_hash(_hash), do: nil
 
   defp normalize_limit(limit) when is_integer(limit) and limit > 0 and limit <= 500, do: limit
   defp normalize_limit(_limit), do: 20

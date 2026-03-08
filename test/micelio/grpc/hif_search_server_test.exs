@@ -58,7 +58,14 @@ defmodule Micelio.GRPC.VirtualSearchServerTest do
         content: file_content
       })
 
-    assert :ok = SearchIndex.index_session_changes(repository.id, 1, session, [change])
+    assert :ok =
+             SearchIndex.index_session_changes(
+               repository.id,
+               tree_hash,
+               System.system_time(:millisecond),
+               session,
+               [change]
+             )
 
     request = %V1.TextQueryRequest{
       user_id: user.id,
@@ -76,11 +83,16 @@ defmodule Micelio.GRPC.VirtualSearchServerTest do
     assert length(response.matches) == 1
     assert hd(response.matches).path == "src/main.txt"
 
-    # Advance HEAD without indexing the new position to trigger stale index handling.
+    # Advance HEAD to a new revision hash without indexing it to trigger stale index handling.
+    second_tree = %{"src/second.txt" => blob_hash}
+    encoded_second_tree = Tree.encode(second_tree)
+    second_tree_hash = Tree.hash(encoded_second_tree)
+    {:ok, _} = Storage.put(Project.tree_key(repository.id, second_tree_hash), encoded_second_tree)
+
     {:ok, _} =
       Storage.put(
         Project.head_key(repository.id),
-        Binary.encode_head(Binary.new_head(2, tree_hash))
+        Binary.encode_head(Binary.new_head(2, second_tree_hash))
       )
 
     stale = SearchServer.query_text(request, nil)

@@ -39,8 +39,8 @@ pub struct SyncResult {
     pub updated: Vec<String>,
     /// Files with conflicts
     pub conflicts: Vec<String>,
-    /// New position after sync
-    pub position: u64,
+    /// New revision hash after sync
+    pub revision_hash: Vec<u8>,
 }
 
 /// Run the sync command.
@@ -78,7 +78,10 @@ pub async fn run(cmd: SyncCommand) -> Result<()> {
         }
     }
 
-    println!("\nSynced to position @{}", result.position);
+    println!(
+        "\nSynced to revision {}",
+        format_revision_hash(&result.revision_hash)
+    );
 
     Ok(())
 }
@@ -95,7 +98,7 @@ async fn sync_workspace(
     let user_id = user_id_from_token(&tokens.access_token);
 
     // Fetch latest tree from forge
-    let (upstream_tree, position) = fetch_upstream_tree(
+    let (upstream_tree, revision_hash) = fetch_upstream_tree(
         &client,
         &tokens.access_token,
         &user_id,
@@ -151,7 +154,7 @@ async fn sync_workspace(
                         &manifest.account,
                         &manifest.project,
                         path,
-                        Some(position),
+                        Some(revision_hash.as_slice()),
                     )
                     .await?;
 
@@ -173,7 +176,7 @@ async fn sync_workspace(
                                 &manifest.account,
                                 &manifest.project,
                                 path,
-                                Some(position),
+                                Some(revision_hash.as_slice()),
                             )
                             .await?;
 
@@ -195,7 +198,7 @@ async fn sync_workspace(
                 &manifest.account,
                 &manifest.project,
                 path,
-                Some(position),
+                Some(revision_hash.as_slice()),
             )
             .await?;
 
@@ -254,13 +257,13 @@ async fn sync_workspace(
             size: 0,
         });
     }
-    manifest.tree_hash = format!("position:{}", position);
+    manifest.tree_hash = format_revision_hash(&revision_hash);
     manifest.save()?;
 
     Ok(SyncResult {
         updated,
         conflicts,
-        position,
+        revision_hash,
     })
 }
 
@@ -295,7 +298,7 @@ async fn fetch_upstream_tree(
     user_id: &str,
     organization: &str,
     project: &str,
-) -> Result<(HashMap<String, String>, u64)> {
+) -> Result<(HashMap<String, String>, Vec<u8>)> {
     let repository = repository_ref(organization, project);
     let head: pb::RepositoryHeadResponse = call(
         client,
@@ -308,7 +311,11 @@ async fn fetch_upstream_tree(
     )
     .await?;
 
-    let position = head.head.as_ref().map(|value| value.id).unwrap_or(0);
+    let revision_hash = head
+        .head
+        .as_ref()
+        .map(|value| value.hash.clone())
+        .unwrap_or_default();
 
     let tree_response: pb::TreeResponse = call(
         client,
@@ -317,8 +324,7 @@ async fn fetch_upstream_tree(
         &pb::GetTreeRequest {
             user_id: user_id.to_string(),
             repository: Some(repository),
-            position,
-            tree_hash: Vec::new(),
+            revision_hash: revision_hash.clone(),
         },
     )
     .await?;
@@ -329,7 +335,7 @@ async fn fetch_upstream_tree(
         .map(|entry| (entry.path, entry.hash))
         .collect();
 
-    Ok((tree, position))
+    Ok((tree, revision_hash))
 }
 
 /// Fetch file content from the forge.
@@ -340,7 +346,7 @@ async fn fetch_file_content(
     organization: &str,
     project: &str,
     path: &str,
-    position: Option<u64>,
+    revision_hash: Option<&[u8]>,
 ) -> Result<String> {
     let response: pb::PathResponse = call(
         client,
@@ -349,8 +355,7 @@ async fn fetch_file_content(
         &pb::GetPathRequest {
             user_id: user_id.to_string(),
             repository: Some(repository_ref(organization, project)),
-            position: position.unwrap_or(0),
-            tree_hash: Vec::new(),
+            revision_hash: revision_hash.map(|hash| hash.to_vec()).unwrap_or_default(),
             path: path.to_string(),
         },
     )
@@ -378,4 +383,14 @@ fn delete_file(path: &str) -> Result<()> {
         fs::remove_file(path)?;
     }
     Ok(())
+}
+
+fn format_revision_hash(hash: &[u8]) -> String {
+    if hash.is_empty() {
+        return "0000000000000000000000000000000000000000000000000000000000000000".to_string();
+    }
+
+    hash.iter()
+        .map(|byte| format!("{:02x}", byte))
+        .collect::<String>()
 }
