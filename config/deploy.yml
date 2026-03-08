@@ -42,10 +42,13 @@ proxy:
 registry:
   server: localhost:5555
 
+deploy_timeout: 600
+
 
 builder:
   arch: arm64
   remote: ssh://root@89.167.26.150
+  local: false
   context: .
 
 env:
@@ -92,7 +95,6 @@ accessories:
   postgres:
     image: postgres:17
     host: 89.167.26.150
-    port: 5432
     env:
       clear:
         POSTGRES_USER: micelio
@@ -276,8 +278,6 @@ accessories:
         DISCOURSE_HOSTNAME: community.micelio.dev
         DISCOURSE_SMTP_ENABLE_START_TLS: "true"
         DISCOURSE_USE_S3: "true"
-        DISCOURSE_S3_REGION: auto
-        DISCOURSE_S3_BUCKET: micelio-community
         DISCOURSE_DB_HOST: micelio-discourse-postgres
         DISCOURSE_DB_NAME: discourse
         DISCOURSE_DB_USERNAME: discourse
@@ -293,9 +293,11 @@ accessories:
         - DISCOURSE_SMTP_PORT:SMTP_PORT
         - DISCOURSE_SMTP_USER_NAME:SMTP_USERNAME
         - DISCOURSE_SMTP_PASSWORD:SMTP_PASSWORD
-        - DISCOURSE_S3_ACCESS_KEY_ID:S3_ACCESS_KEY_ID
-        - DISCOURSE_S3_SECRET_ACCESS_KEY:S3_SECRET_ACCESS_KEY
-        - DISCOURSE_S3_ENDPOINT:S3_ENDPOINT
+        - DISCOURSE_S3_BUCKET
+        - DISCOURSE_S3_REGION
+        - DISCOURSE_S3_ENDPOINT
+        - DISCOURSE_S3_ACCESS_KEY_ID
+        - DISCOURSE_S3_SECRET_ACCESS_KEY
     files:
       - config/discourse/install-ssl:/etc/runit/1.d/install-ssl
     directories:
