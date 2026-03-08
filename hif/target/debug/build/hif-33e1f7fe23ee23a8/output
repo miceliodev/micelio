@@ -1,3 +1,0 @@
-cargo:rerun-if-changed=../build/protocols/micelio_virtual_vcs_v1.proto
-cargo:rerun-if-changed=../build/protocols/micelio_virtual_vcs_v1.proto
-cargo:rerun-if-changed=../build/protocols

@@ -1,3 +1,0 @@
-cargo:rerun-if-changed=../build/protocols/hif_v1.proto
-cargo:rerun-if-changed=../build/protocols/hif_v1.proto
-cargo:rerun-if-changed=../build/protocols
