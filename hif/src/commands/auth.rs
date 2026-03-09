@@ -109,7 +109,7 @@ async fn login() -> Result<()> {
             }),
         )?;
     } else {
-        println!("{} Authenticated with {}.", "✓".green(), server_name);
+        output::set_success_message(format!("Authenticated with {}.", server_name));
     }
     Ok(())
 }
@@ -126,8 +126,11 @@ fn status() -> Result<()> {
                     }),
                 )?;
             } else {
-                println!("Not logged in.");
-                println!("\nRun {} to authenticate.", "hif auth login".cyan());
+                output::warn("Not logged in.");
+                output::set_success_message(format!(
+                    "Run {} to authenticate.",
+                    "hif auth login".cyan()
+                ));
             }
         }
         Some(tokens) => {
@@ -143,8 +146,11 @@ fn status() -> Result<()> {
                         }),
                     )?;
                 } else {
-                    println!("{} Access token expired.", "✗".red());
-                    println!("\nRun {} to re-authenticate.", "hif auth login".cyan());
+                    output::warn("Access token expired.");
+                    output::set_success_message(format!(
+                        "Run {} to re-authenticate.",
+                        "hif auth login".cyan()
+                    ));
                 }
             } else {
                 if output::use_json() {
@@ -162,16 +168,18 @@ fn status() -> Result<()> {
                         }),
                     )?;
                 } else {
-                    println!("{} Authenticated with {}.", "✓".green(), tokens.server);
-
+                    let mut status_message = format!("Authenticated with {}.", tokens.server);
                     if let Some(expires_at) = tokens.expires_at {
                         let remaining = expires_at - chrono::Utc::now().timestamp();
                         if remaining > 0 {
                             let hours = remaining / 3600;
                             let minutes = (remaining % 3600) / 60;
-                            println!("  Token expires in {}h {}m.", hours, minutes);
+                            status_message
+                                .push_str(&format!(" Token expires in {}h {}m.", hours, minutes));
                         }
                     }
+
+                    output::set_success_message(status_message);
                 }
             }
         }
@@ -185,7 +193,7 @@ fn logout() -> Result<()> {
     if output::use_json() {
         output::print_ok("auth.logout", serde_json::json!({}))?;
     } else {
-        println!("{} Logged out.", "✓".green());
+        output::set_success_message("Logged out.");
     }
     Ok(())
 }

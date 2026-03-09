@@ -6,6 +6,7 @@ use crate::error::{MicError, Result};
 use crate::output;
 use crate::workspace::WorkspaceManifest;
 use std::fs;
+use std::path::PathBuf;
 
 /// Run the checkout command.
 pub async fn run(cmd: CheckoutCommand) -> Result<()> {
@@ -23,18 +24,19 @@ pub async fn run(cmd: CheckoutCommand) -> Result<()> {
 
     // Determine target directory
     let target_path = cmd.path.unwrap_or_else(|| repository.to_string());
+    let target_dir = PathBuf::from(&target_path);
 
     // Create directory if it doesn't exist
-    if !std::path::Path::new(&target_path).exists() {
-        fs::create_dir_all(&target_path)?;
+    if !target_dir.exists() {
+        fs::create_dir_all(&target_dir)?;
     }
 
-    // Change to target directory
-    std::env::set_current_dir(&target_path)?;
-
-    // Create workspace manifest
+    // Create workspace manifest in the checkout target without mutating process CWD.
     let manifest = WorkspaceManifest::new(&server, org, repository);
-    manifest.save()?;
+    let manifest_path = target_dir
+        .join(crate::workspace::HIF_DIR)
+        .join(crate::workspace::MANIFEST_FILE);
+    manifest.save_to(&manifest_path)?;
 
     if output::use_json() {
         output::print_ok(

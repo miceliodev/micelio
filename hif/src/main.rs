@@ -105,6 +105,7 @@ async fn async_main() -> i32 {
             &format!("Failed to change directory: {}", e),
             "cwd_error",
             use_json,
+            &[],
         );
         return 1;
     }
@@ -115,15 +116,35 @@ async fn async_main() -> i32 {
             "No command provided. Run 'hif --help' for usage.",
             "no_command",
             use_json,
+            &[],
         );
         return 1;
     };
 
+    output::reset_lifecycle();
+
     // Run the command
     match run(command).await {
-        Ok(()) => 0,
+        Ok(()) => {
+            let warnings = output::take_warnings();
+            let success_message = output::take_success_message();
+
+            if !use_json {
+                if !warnings.is_empty() {
+                    output::print_human_warnings(&warnings, false);
+                }
+                if let Some(message) = success_message {
+                    output::print_human_success(&message);
+                }
+            }
+
+            0
+        }
         Err(e) => {
-            print_error(&e.to_string(), e.code(), use_json);
+            let warnings = output::take_warnings();
+            let _ = output::take_success_message();
+
+            print_error(&e.to_string(), e.code(), use_json, &warnings);
             if verbose && !use_json {
                 eprintln!("  Code: {}", e.code());
             }
@@ -133,18 +154,26 @@ async fn async_main() -> i32 {
 }
 
 /// Print an error message in the appropriate format.
-fn print_error(message: &str, code: &str, use_json: bool) {
+fn print_error(message: &str, code: &str, use_json: bool, warnings: &[String]) {
     if use_json {
-        let json = serde_json::json!({
+        let mut json = serde_json::json!({
             "status": "error",
             "code": code,
             "message": message,
         });
+
+        if !warnings.is_empty() {
+            json["warnings"] = serde_json::json!(warnings);
+        }
+
         eprintln!(
             "{}",
             serde_json::to_string_pretty(&json).unwrap_or_default()
         );
     } else {
+        if !warnings.is_empty() {
+            output::print_human_warnings(warnings, true);
+        }
         eprintln!("{}: {}", "Error".red().bold(), message);
     }
 }

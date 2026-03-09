@@ -61,7 +61,8 @@ fn auth_status_when_not_logged_in() {
         .args(["auth", "status"])
         .assert()
         .success()
-        .stdout(predicate::str::contains("Not logged in"));
+        .stdout(predicate::str::contains("Warning: Not logged in."))
+        .stdout(predicate::str::contains("Success: Run"));
 }
 
 #[test]

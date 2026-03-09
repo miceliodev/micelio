@@ -5,11 +5,59 @@ use crate::config::Config;
 use crate::error::{MicError, Result};
 use crate::grpc::hif_v1::{call, pb, repository_ref};
 use crate::grpc::{Endpoint, GrpcClient};
-use crate::output;
+use crate::output::{self, CliOutput};
 use crate::workspace::{parse_position, PositionOrLatest};
 use regex::Regex;
+use serde::Serialize;
 use std::fs;
 use std::path::{Path, PathBuf};
+
+#[derive(Serialize)]
+pub(crate) struct SearchMatchOutput {
+    path: String,
+    line: u32,
+    column: u32,
+    snippet: String,
+    session_id: String,
+    actor_handle: String,
+    revision_hash: Vec<u8>,
+}
+
+#[derive(Serialize)]
+pub(crate) struct LocalSearchMatchOutput {
+    path: String,
+    line: usize,
+    column: usize,
+    snippet: String,
+}
+
+#[derive(Serialize)]
+pub(crate) struct GrepOutput<T>
+where
+    T: Serialize,
+{
+    source: &'static str,
+    repository: String,
+    query: String,
+    matches: Vec<T>,
+    total: u64,
+}
+
+impl CliOutput for pb::TextQueryMatch {
+    type Model = SearchMatchOutput;
+
+    fn into_cli_output(self) -> Self::Model {
+        SearchMatchOutput {
+            path: self.path,
+            line: self.line,
+            column: self.column,
+            snippet: self.snippet,
+            session_id: self.session_id,
+            actor_handle: self.actor_handle,
+            revision_hash: self.revision_hash,
+        }
+    }
+}
 
 /// Run the grep command.
 pub async fn run(cmd: GrepCommand) -> Result<()> {
@@ -60,31 +108,15 @@ pub async fn run(cmd: GrepCommand) -> Result<()> {
     match remote {
         Ok(response) => {
             if output::use_json() {
-                let matches = response
-                    .matches
-                    .into_iter()
-                    .map(|m| {
-                        serde_json::json!({
-                            "path": m.path,
-                            "line": m.line,
-                            "column": m.column,
-                            "snippet": m.snippet,
-                            "session_id": m.session_id,
-                            "actor_handle": m.actor_handle,
-                            "revision_hash": m.revision_hash
-                        })
-                    })
-                    .collect::<Vec<_>>();
-
                 output::print_ok(
                     "grep",
-                    serde_json::json!({
-                        "source": "remote",
-                        "repository": cmd.repository,
-                        "query": cmd.query,
-                        "matches": matches,
-                        "total": response.total
-                    }),
+                    GrepOutput {
+                        source: "remote",
+                        repository: cmd.repository,
+                        query: cmd.query,
+                        matches: response.matches.into_cli_output(),
+                        total: response.total,
+                    },
                 )
             } else {
                 for m in response.matches {
@@ -106,13 +138,13 @@ pub async fn run(cmd: GrepCommand) -> Result<()> {
                     if output::use_json() {
                         output::print_ok(
                             "grep",
-                            serde_json::json!({
-                                "source": "local",
-                                "repository": cmd.repository,
-                                "query": cmd.query,
-                                "matches": local_matches,
-                                "total": local_matches.len()
-                            }),
+                            GrepOutput {
+                                source: "local",
+                                repository: cmd.repository,
+                                query: cmd.query,
+                                total: local_matches.len() as u64,
+                                matches: local_matches,
+                            },
                         )
                     } else {
                         Ok(())
@@ -135,7 +167,7 @@ fn local_grep(
     case_sensitive: bool,
     limit: u32,
     json_output: bool,
-) -> Result<Vec<serde_json::Value>> {
+) -> Result<Vec<LocalSearchMatchOutput>> {
     let regex =
         if use_regex {
             Some(Regex::new(query).map_err(|error| {
@@ -198,12 +230,12 @@ fn local_grep(
                 if !json_output {
                     println!("{}:{}:{}: {}", display_path, line_number + 1, column, line);
                 }
-                matches.push(serde_json::json!({
-                    "path": display_path,
-                    "line": line_number + 1,
-                    "column": column,
-                    "snippet": line
-                }));
+                matches.push(LocalSearchMatchOutput {
+                    path: display_path.clone(),
+                    line: line_number + 1,
+                    column,
+                    snippet: line.to_string(),
+                });
                 printed += 1;
             }
         }

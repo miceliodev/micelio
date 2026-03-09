@@ -365,14 +365,11 @@ async fn abandon() -> Result<()> {
     }
     .await;
 
-    let remote_warning = remote_result.err().map(|error| error.to_string());
-    if let Some(error) = &remote_warning {
-        if !output::use_json() {
-            eprintln!(
-                "Warning: remote session abandon failed ({}). Local session will still be removed.",
-                error
-            );
-        }
+    if let Err(error) = remote_result {
+        output::warn(format!(
+            "Remote session abandon failed ({}). Local session was still removed.",
+            error
+        ));
     }
 
     Session::delete()?;
@@ -381,12 +378,11 @@ async fn abandon() -> Result<()> {
             "session.abandon",
             serde_json::json!({
                 "abandoned": true,
-                "session_id": state.id,
-                "remote_warning": remote_warning
+                "session_id": state.id
             }),
         )?;
     } else {
-        println!("Session abandoned.");
+        output::set_success_message("Session abandoned.");
     }
     Ok(())
 }

@@ -5,7 +5,42 @@ use crate::config::Config;
 use crate::error::{MicError, Result};
 use crate::grpc::hif_v1::{call, pb, repository_ref};
 use crate::grpc::{Endpoint, GrpcClient};
-use crate::output;
+use crate::output::{self, CliOutput};
+use serde::Serialize;
+
+#[derive(Serialize)]
+pub(crate) struct BlameLineOutput {
+    line: u32,
+    session_id: String,
+    text: String,
+    path: String,
+    actor_handle: String,
+    revision_hash: Vec<u8>,
+    at_ms: u64,
+}
+
+#[derive(Serialize)]
+pub(crate) struct BlameOutput {
+    repository: String,
+    path: String,
+    lines: Vec<BlameLineOutput>,
+}
+
+impl CliOutput for pb::BlameLine {
+    type Model = BlameLineOutput;
+
+    fn into_cli_output(self) -> Self::Model {
+        BlameLineOutput {
+            line: self.line,
+            session_id: self.session_id,
+            text: self.text,
+            path: self.path,
+            actor_handle: self.actor_handle,
+            revision_hash: self.revision_hash,
+            at_ms: self.at_ms,
+        }
+    }
+}
 
 /// Run the blame command.
 pub async fn run(cmd: BlameCommand) -> Result<()> {
@@ -51,29 +86,13 @@ pub async fn run(cmd: BlameCommand) -> Result<()> {
     .await?;
 
     if output::use_json() {
-        let lines = response
-            .lines
-            .into_iter()
-            .map(|line| {
-                serde_json::json!({
-                    "line": line.line,
-                    "session_id": line.session_id,
-                    "text": line.text,
-                    "path": line.path,
-                    "actor_handle": line.actor_handle,
-                    "revision_hash": line.revision_hash,
-                    "at_ms": line.at_ms
-                })
-            })
-            .collect::<Vec<_>>();
-
         output::print_ok(
             "blame",
-            serde_json::json!({
-                "repository": cmd.repository,
-                "path": path,
-                "lines": lines
-            }),
+            BlameOutput {
+                repository: cmd.repository,
+                path,
+                lines: response.lines.into_cli_output(),
+            },
         )?;
     } else {
         for line in response.lines {

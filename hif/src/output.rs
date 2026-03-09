@@ -1,8 +1,95 @@
 //! Output helpers for human and machine-readable CLI responses.
 
 use crate::error::{MicError, Result};
+use colored::Colorize;
 use serde::Serialize;
-use serde_json::Value;
+use std::sync::{Mutex, OnceLock};
+
+/// Convert command/domain values into explicit CLI JSON models.
+pub(crate) trait CliOutput {
+    type Model: Serialize;
+
+    fn into_cli_output(self) -> Self::Model;
+}
+
+impl<T> CliOutput for Vec<T>
+where
+    T: CliOutput,
+{
+    type Model = Vec<T::Model>;
+
+    fn into_cli_output(self) -> Self::Model {
+        self.into_iter().map(T::into_cli_output).collect()
+    }
+}
+
+#[derive(Default)]
+struct LifecycleState {
+    warnings: Vec<String>,
+    success_message: Option<String>,
+}
+
+fn lifecycle_state() -> &'static Mutex<LifecycleState> {
+    static STATE: OnceLock<Mutex<LifecycleState>> = OnceLock::new();
+    STATE.get_or_init(|| Mutex::new(LifecycleState::default()))
+}
+
+/// Reset lifecycle output state for a command invocation.
+pub fn reset_lifecycle() {
+    let mut state = lifecycle_state()
+        .lock()
+        .expect("output lifecycle state mutex poisoned");
+    state.warnings.clear();
+    state.success_message = None;
+}
+
+/// Record a warning to be emitted at command exit.
+pub fn warn(message: impl Into<String>) {
+    let mut state = lifecycle_state()
+        .lock()
+        .expect("output lifecycle state mutex poisoned");
+    state.warnings.push(message.into());
+}
+
+/// Take and clear any collected warnings.
+pub fn take_warnings() -> Vec<String> {
+    let mut state = lifecycle_state()
+        .lock()
+        .expect("output lifecycle state mutex poisoned");
+    std::mem::take(&mut state.warnings)
+}
+
+/// Set a standardized success message to print at command exit (human mode).
+pub fn set_success_message(message: impl Into<String>) {
+    let mut state = lifecycle_state()
+        .lock()
+        .expect("output lifecycle state mutex poisoned");
+    state.success_message = Some(message.into());
+}
+
+/// Take and clear the success message.
+pub fn take_success_message() -> Option<String> {
+    let mut state = lifecycle_state()
+        .lock()
+        .expect("output lifecycle state mutex poisoned");
+    state.success_message.take()
+}
+
+/// Print warnings in a standardized human-readable format.
+pub fn print_human_warnings(warnings: &[String], to_stderr: bool) {
+    for warning in warnings {
+        if to_stderr {
+            eprintln!("{} {}", "Warning:".yellow().bold(), warning);
+        } else {
+            println!("{} {}", "Warning:".yellow().bold(), warning);
+        }
+    }
+}
+
+/// Print a standardized human success line.
+pub fn print_human_success(message: &str) {
+    println!("{} {}", "Success:".green().bold(), message);
+}
 
 /// Whether JSON output mode is enabled for this process.
 pub fn use_json() -> bool {
@@ -18,10 +105,44 @@ pub fn print_json<T: Serialize>(value: &T) -> Result<()> {
 }
 
 /// Print a standard success envelope for machine-readable output.
-pub fn print_ok(action: &str, data: Value) -> Result<()> {
-    print_json(&serde_json::json!({
+pub fn print_ok<T: Serialize>(action: &str, data: T) -> Result<()> {
+    let data = serde_json::to_value(data)
+        .map_err(|e| MicError::Other(format!("Failed to serialize JSON output: {}", e)))?;
+    let warnings = take_warnings();
+    let mut envelope = serde_json::json!({
         "status": "ok",
         "action": action,
         "data": data
-    }))
+    });
+
+    if !warnings.is_empty() {
+        envelope["warnings"] = serde_json::json!(warnings);
+    }
+
+    print_json(&envelope)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn lifecycle_warnings_round_trip() {
+        reset_lifecycle();
+        warn("first warning");
+        warn("second warning");
+
+        let warnings = take_warnings();
+        assert_eq!(warnings, vec!["first warning", "second warning"]);
+        assert!(take_warnings().is_empty());
+    }
+
+    #[test]
+    fn lifecycle_success_message_round_trip() {
+        reset_lifecycle();
+        set_success_message("done");
+
+        assert_eq!(take_success_message().as_deref(), Some("done"));
+        assert!(take_success_message().is_none());
+    }
 }
