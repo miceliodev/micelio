@@ -1,7 +1,7 @@
 //! Repository management commands.
 
 use crate::cli::{parse_repository_ref, RepositoryCommand, RepositorySubcommand};
-use crate::config::{self, Config};
+use crate::config::Config;
 use crate::error::{MicError, Result};
 use crate::grpc::client::{read_field, read_string, write_length_delimited};
 use crate::grpc::{Endpoint, GrpcClient};
@@ -61,7 +61,6 @@ pub async fn run(cmd: RepositoryCommand) -> Result<()> {
 async fn list(account: &str) -> Result<()> {
     let mut config = Config::load()?;
     let server = config.resolve_default_grpc_url().await?;
-    let tokens = config::require_tokens()?;
     let endpoint = Endpoint::parse(&server)?;
     let client = GrpcClient::new(endpoint);
 
@@ -69,10 +68,9 @@ async fn list(account: &str) -> Result<()> {
     write_length_delimited(&mut request, 1, account.as_bytes());
 
     let response = client
-        .unary_call(
+        .unary_call_authed(
             "/micelio.repositories.v1.RepositoryService/ListRepositories",
             &request,
-            Some(&tokens.access_token),
         )
         .await?;
 
@@ -93,7 +91,6 @@ async fn list(account: &str) -> Result<()> {
 async fn create(account: &str, handle: &str, name: &str, description: Option<&str>) -> Result<()> {
     let mut config = Config::load()?;
     let server = config.resolve_default_grpc_url().await?;
-    let tokens = config::require_tokens()?;
     let endpoint = Endpoint::parse(&server)?;
     let client = GrpcClient::new(endpoint);
 
@@ -106,10 +103,9 @@ async fn create(account: &str, handle: &str, name: &str, description: Option<&st
     }
 
     let _ = client
-        .unary_call(
+        .unary_call_authed(
             "/micelio.repositories.v1.RepositoryService/CreateRepository",
             &request,
-            Some(&tokens.access_token),
         )
         .await?;
 
@@ -121,7 +117,6 @@ async fn create(account: &str, handle: &str, name: &str, description: Option<&st
 async fn info(account: &str, handle: &str) -> Result<()> {
     let mut config = Config::load()?;
     let server = config.resolve_default_grpc_url().await?;
-    let tokens = config::require_tokens()?;
     let endpoint = Endpoint::parse(&server)?;
     let client = GrpcClient::new(endpoint);
 
@@ -130,10 +125,9 @@ async fn info(account: &str, handle: &str) -> Result<()> {
     write_length_delimited(&mut request, 2, handle.as_bytes());
 
     let response = client
-        .unary_call(
+        .unary_call_authed(
             "/micelio.repositories.v1.RepositoryService/GetRepository",
             &request,
-            Some(&tokens.access_token),
         )
         .await?;
 
@@ -157,7 +151,6 @@ async fn update(
 ) -> Result<()> {
     let mut config = Config::load()?;
     let server = config.resolve_default_grpc_url().await?;
-    let tokens = config::require_tokens()?;
     let endpoint = Endpoint::parse(&server)?;
     let client = GrpcClient::new(endpoint);
 
@@ -172,10 +165,9 @@ async fn update(
     }
 
     let _ = client
-        .unary_call(
+        .unary_call_authed(
             "/micelio.repositories.v1.RepositoryService/UpdateRepository",
             &request,
-            Some(&tokens.access_token),
         )
         .await?;
 
@@ -187,7 +179,6 @@ async fn update(
 async fn delete(account: &str, handle: &str) -> Result<()> {
     let mut config = Config::load()?;
     let server = config.resolve_default_grpc_url().await?;
-    let tokens = config::require_tokens()?;
     let endpoint = Endpoint::parse(&server)?;
     let client = GrpcClient::new(endpoint);
 
@@ -196,10 +187,9 @@ async fn delete(account: &str, handle: &str) -> Result<()> {
     write_length_delimited(&mut request, 2, handle.as_bytes());
 
     let _ = client
-        .unary_call(
+        .unary_call_authed(
             "/micelio.repositories.v1.RepositoryService/DeleteRepository",
             &request,
-            Some(&tokens.access_token),
         )
         .await?;
 

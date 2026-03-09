@@ -38,15 +38,13 @@ defmodule Micelio.Protocol.HifV1ContractTest do
       parsed = parsed_proto()
 
       required_fields = [
-        {"RepositoryRef", "organization_handle", "REQUIRED"},
+        {"RepositoryRef", "account_handle", "REQUIRED"},
         {"RepositoryRef", "repository_handle", "REQUIRED"},
-        {"GetRepositoryHeadRequest", "user_id", "REQUIRED"},
         {"GetRepositoryHeadRequest", "repository", "REQUIRED"},
         {"SessionOpen", "session_id", "REQUIRED"},
         {"SessionOpen", "goal", "REQUIRED"},
-        {"SessionOpenRequest", "user_id", "REQUIRED"},
         {"SessionOpenRequest", "repository", "REQUIRED"},
-        {"LandSessionRequest", "user_id", "REQUIRED"},
+        {"SessionOpenRequest", "open", "REQUIRED"},
         {"LandSessionRequest", "session_id", "REQUIRED"},
         {"LandSessionRequest", "finalize", "REQUIRED"}
       ]

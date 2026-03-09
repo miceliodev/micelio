@@ -1,10 +1,15 @@
 defmodule Micelio.GRPC.VirtualSearchServerTest do
   use Micelio.DataCase, async: true
 
+  alias Boruta.Oauth.ResourceOwner
+  alias GRPC.Server.Stream
   alias Micelio.Accounts
   alias Micelio.GRPC.Hif.V1
   alias Micelio.GRPC.Hif.V1.SearchService.Server, as: SearchServer
   alias Micelio.Mic.{Binary, Project, SearchIndex, Tree}
+  alias Micelio.OAuth
+  alias Micelio.OAuth.AccessTokens
+  alias Micelio.OAuth.Clients
   alias Micelio.Repositories
   alias Micelio.Sessions
   alias Micelio.Storage
@@ -67,17 +72,19 @@ defmodule Micelio.GRPC.VirtualSearchServerTest do
                [change]
              )
 
+    token = create_access_token(user)
+    stream = token_stream(token)
+
     request = %V1.TextQueryRequest{
-      user_id: user.id,
       repository: %V1.RepositoryRef{
-        organization_handle: organization.account.handle,
+        account_handle: organization.account.handle,
         repository_handle: repository.handle
       },
       query: "TODO",
       limit: 20
     }
 
-    response = SearchServer.query_text(request, nil)
+    response = SearchServer.query_text(request, stream)
     assert %V1.TextQueryResponse{} = response
     assert response.total == 1
     assert length(response.matches) == 1
@@ -95,8 +102,31 @@ defmodule Micelio.GRPC.VirtualSearchServerTest do
         Binary.encode_head(Binary.new_head(2, second_tree_hash))
       )
 
-    stale = SearchServer.query_text(request, nil)
+    stale = SearchServer.query_text(request, stream)
     assert {:error, %GRPC.RPCError{message: message}} = stale
     assert message =~ "stale"
+  end
+
+  defp token_stream(token) do
+    %Stream{
+      http_request_headers: %{
+        "authorization" => "Bearer #{token}"
+      }
+    }
+  end
+
+  defp create_access_token(user) do
+    {:ok, device_client} = OAuth.register_device_client(%{"name" => "Test CLI"})
+    client = Clients.get_client(device_client.client_id)
+
+    params = %{
+      client: client,
+      scope: "",
+      sub: to_string(user.id),
+      resource_owner: %ResourceOwner{sub: to_string(user.id), username: user.email}
+    }
+
+    {:ok, token} = AccessTokens.create(params, refresh_token: true)
+    Map.get(token, :value) || Map.get(token, :access_token)
   end
 end

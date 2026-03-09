@@ -1,7 +1,7 @@
 //! Organization management commands.
 
 use crate::cli::{OrgCommand, OrgSubcommand};
-use crate::config::{self, Config};
+use crate::config::Config;
 use crate::error::Result;
 use crate::grpc::client::{read_field, read_string, write_length_delimited};
 use crate::grpc::{Endpoint, GrpcClient};
@@ -18,7 +18,6 @@ pub async fn run(cmd: OrgCommand) -> Result<()> {
 async fn list() -> Result<()> {
     let mut config = Config::load()?;
     let server = config.resolve_default_grpc_url().await?;
-    let tokens = config::require_tokens()?;
     let endpoint = Endpoint::parse(&server)?;
     let client = GrpcClient::new(endpoint);
 
@@ -26,10 +25,9 @@ async fn list() -> Result<()> {
     let request = Vec::new();
 
     let response = client
-        .unary_call(
+        .unary_call_authed(
             "/micelio.organizations.v1.OrganizationService/ListOrganizations",
             &request,
-            Some(&tokens.access_token),
         )
         .await?;
 
@@ -52,7 +50,6 @@ async fn list() -> Result<()> {
 async fn info(handle: &str) -> Result<()> {
     let mut config = Config::load()?;
     let server = config.resolve_default_grpc_url().await?;
-    let tokens = config::require_tokens()?;
     let endpoint = Endpoint::parse(&server)?;
     let client = GrpcClient::new(endpoint);
 
@@ -61,10 +58,9 @@ async fn info(handle: &str) -> Result<()> {
     write_length_delimited(&mut request, 1, handle.as_bytes());
 
     let response = client
-        .unary_call(
+        .unary_call_authed(
             "/micelio.organizations.v1.OrganizationService/GetOrganization",
             &request,
-            Some(&tokens.access_token),
         )
         .await?;
 

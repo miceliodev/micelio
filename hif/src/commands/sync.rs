@@ -1,9 +1,8 @@
 //! Sync command - sync workspace with latest upstream changes.
 
 use crate::cli::SyncCommand;
-use crate::config::{self, Config};
 use crate::error::{MicError, Result};
-use crate::grpc::hif_v1::{call, pb, repository_ref, user_id_from_token};
+use crate::grpc::hif_v1::{call, pb, repository_ref};
 use crate::grpc::{Endpoint, GrpcClient};
 use crate::workspace::{session::Session, WorkspaceManifest};
 use std::collections::HashMap;
@@ -91,21 +90,12 @@ async fn sync_workspace(
     manifest: &mut WorkspaceManifest,
     strategy: MergeStrategy,
 ) -> Result<SyncResult> {
-    let _config = Config::load()?;
-    let tokens = config::require_tokens()?;
     let endpoint = Endpoint::parse(&manifest.server)?;
     let client = GrpcClient::new(endpoint);
-    let user_id = user_id_from_token(&tokens.access_token);
 
     // Fetch latest tree from forge
-    let (upstream_tree, revision_hash) = fetch_upstream_tree(
-        &client,
-        &tokens.access_token,
-        &user_id,
-        &manifest.account,
-        &manifest.repository,
-    )
-    .await?;
+    let (upstream_tree, revision_hash) =
+        fetch_upstream_tree(&client, &manifest.account, &manifest.repository).await?;
 
     // Get local session changes if any
     let local_changes = if let Some(state) = Session::load()? {
@@ -149,8 +139,6 @@ async fn sync_workspace(
                     // Take upstream, discard local
                     let content = fetch_file_content(
                         &client,
-                        &tokens.access_token,
-                        &user_id,
                         &manifest.account,
                         &manifest.repository,
                         path,
@@ -171,8 +159,6 @@ async fn sync_workspace(
                         ConflictResolution::Theirs => {
                             let content = fetch_file_content(
                                 &client,
-                                &tokens.access_token,
-                                &user_id,
                                 &manifest.account,
                                 &manifest.repository,
                                 path,
@@ -193,8 +179,6 @@ async fn sync_workspace(
             // No local change, take upstream
             let content = fetch_file_content(
                 &client,
-                &tokens.access_token,
-                &user_id,
                 &manifest.account,
                 &manifest.repository,
                 path,
@@ -294,18 +278,14 @@ fn prompt_conflict_resolution(path: &str) -> Result<ConflictResolution> {
 /// Fetch the upstream tree.
 async fn fetch_upstream_tree(
     client: &GrpcClient,
-    access_token: &str,
-    user_id: &str,
     organization: &str,
     repository: &str,
 ) -> Result<(HashMap<String, String>, Vec<u8>)> {
     let repository = repository_ref(organization, repository);
     let head: pb::RepositoryHeadResponse = call(
         client,
-        access_token,
         "/hif.v1.VersioningService/GetRepositoryHead",
         &pb::GetRepositoryHeadRequest {
-            user_id: user_id.to_string(),
             repository: Some(repository.clone()),
         },
     )
@@ -319,10 +299,8 @@ async fn fetch_upstream_tree(
 
     let tree_response: pb::TreeResponse = call(
         client,
-        access_token,
         "/hif.v1.ContentService/GetTree",
         &pb::GetTreeRequest {
-            user_id: user_id.to_string(),
             repository: Some(repository),
             revision_hash: revision_hash.clone(),
         },
@@ -341,8 +319,6 @@ async fn fetch_upstream_tree(
 /// Fetch file content from the forge.
 async fn fetch_file_content(
     client: &GrpcClient,
-    access_token: &str,
-    user_id: &str,
     organization: &str,
     repository: &str,
     path: &str,
@@ -350,10 +326,8 @@ async fn fetch_file_content(
 ) -> Result<String> {
     let response: pb::PathResponse = call(
         client,
-        access_token,
         "/hif.v1.ContentService/GetPath",
         &pb::GetPathRequest {
-            user_id: user_id.to_string(),
             repository: Some(repository_ref(organization, repository)),
             revision_hash: revision_hash.map(|hash| hash.to_vec()).unwrap_or_default(),
             path: path.to_string(),

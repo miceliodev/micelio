@@ -13,7 +13,7 @@ defmodule Micelio.GRPC.Hif.V1.SearchService.Server do
     with :ok <- require_repository_ref(request.repository),
          :ok <- require_field(request.query, "query"),
          {:ok, organization, repository} <- load_repository(request.repository),
-         :ok <- authorize_repository_read(organization, repository, request.user_id, stream),
+         :ok <- authorize_repository_read(organization, repository, stream),
          {:ok, offset} <- resolve_offset(request.offset, request.page_token),
          params = %{
            query: request.query,
@@ -95,7 +95,7 @@ defmodule Micelio.GRPC.Hif.V1.SearchService.Server do
 
   defp load_repository(%V1.RepositoryRef{} = repository_ref) do
     with {:ok, organization} <-
-           Accounts.get_organization_by_handle(repository_ref.organization_handle),
+           Accounts.get_organization_by_handle(repository_ref.account_handle),
          repository when not is_nil(repository) <-
            Repositories.get_repository_by_handle(
              organization.id,
@@ -109,10 +109,10 @@ defmodule Micelio.GRPC.Hif.V1.SearchService.Server do
     end
   end
 
-  defp authorize_repository_read(organization, repository, user_id, stream) do
+  defp authorize_repository_read(organization, repository, stream) do
     if repository.visibility == "public" do
       if require_auth_token?(stream) do
-        case fetch_user(user_id, stream) do
+        case fetch_user(stream) do
           {:ok, _user} -> :ok
           {:error, status} -> {:error, status}
         end
@@ -120,7 +120,7 @@ defmodule Micelio.GRPC.Hif.V1.SearchService.Server do
         :ok
       end
     else
-      with {:ok, user} <- fetch_user(user_id, stream),
+      with {:ok, user} <- fetch_user(stream),
            true <- Accounts.user_in_organization?(user, organization.id) do
         :ok
       else
@@ -130,40 +130,24 @@ defmodule Micelio.GRPC.Hif.V1.SearchService.Server do
     end
   end
 
-  defp fetch_user(user_id, stream) do
-    if require_auth_token?(stream) do
-      fetch_user_from_token(user_id, stream)
-    else
-      case empty_to_nil(user_id) do
-        nil -> fetch_user_from_token(user_id, stream)
-        value -> fetch_user_by_id(value)
-      end
-    end
+  defp fetch_user(stream) do
+    fetch_user_from_token(stream)
   end
 
-  defp fetch_user_by_id(user_id) do
-    case Accounts.get_user(user_id) do
-      nil -> {:error, unauthenticated_status("User not found.")}
-      user -> {:ok, user}
-    end
-  end
-
-  defp fetch_user_from_token(user_id, stream) do
+  defp fetch_user_from_token(stream) do
     with {:ok, token} <- fetch_bearer_token(stream),
          %Boruta.Oauth.Token{} = access_token <- AccessTokens.get_by(value: token),
          user when not is_nil(user) <- Accounts.get_user(access_token.sub) do
-      case empty_to_nil(user_id) do
-        nil -> {:ok, user}
-        value when value == user.id -> {:ok, user}
-        _ -> {:error, unauthenticated_status("User does not match access token.")}
-      end
+      {:ok, user}
     else
       _ -> {:error, unauthenticated_status("User is required.")}
     end
   end
 
   defp fetch_bearer_token(stream) do
-    case Map.get(stream.http_request_headers, "authorization") do
+    headers = Map.get(stream || %{}, :http_request_headers) || %{}
+
+    case Map.get(headers, "authorization") do
       "Bearer " <> token -> {:ok, token}
       _ -> {:error, :no_token}
     end
@@ -188,7 +172,7 @@ defmodule Micelio.GRPC.Hif.V1.SearchService.Server do
 
   defp require_repository_ref(%V1.RepositoryRef{} = repository_ref) do
     with :ok <-
-           require_field(repository_ref.organization_handle, "repository.organization_handle") do
+           require_field(repository_ref.account_handle, "repository.account_handle") do
       require_field(repository_ref.repository_handle, "repository.repository_handle")
     end
   end

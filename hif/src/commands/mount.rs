@@ -4,9 +4,9 @@
 #![allow(dead_code)]
 
 use crate::cli::{parse_repository_ref, MountCommand};
-use crate::config::{self, Config};
+use crate::config::Config;
 use crate::error::{MicError, Result};
-use crate::grpc::hif_v1::{call, pb, repository_ref, user_id_from_token};
+use crate::grpc::hif_v1::{call, pb, repository_ref};
 use crate::grpc::{Endpoint, GrpcClient};
 use std::fs;
 use std::path::PathBuf;
@@ -25,10 +25,8 @@ pub async fn run(cmd: MountCommand) -> Result<()> {
 
     let mut config = Config::load()?;
     let server = config.resolve_default_grpc_url().await?;
-    let tokens = config::require_tokens()?;
     let endpoint = Endpoint::parse(&server)?;
     let client = GrpcClient::new(endpoint);
-    let user_id = user_id_from_token(&tokens.access_token);
 
     let mount_path = cmd.path.clone().unwrap_or_else(|| repository.to_string());
     let mount_path = PathBuf::from(&mount_path);
@@ -44,18 +42,9 @@ pub async fn run(cmd: MountCommand) -> Result<()> {
         fs::create_dir_all(&mount_path)?;
     }
 
-    let (tree, revision_hash) = fetch_tree(
-        &client,
-        &tokens.access_token,
-        &user_id,
-        organization,
-        repository,
-    )
-    .await?;
+    let (tree, revision_hash) = fetch_tree(&client, organization, repository).await?;
     let file_count = sync_tree(
         &client,
-        &tokens.access_token,
-        &user_id,
         organization,
         repository,
         &revision_hash,
@@ -83,18 +72,14 @@ struct MountEntry {
 /// Fetch the tree from the forge.
 async fn fetch_tree(
     client: &GrpcClient,
-    access_token: &str,
-    user_id: &str,
     organization: &str,
     repository: &str,
 ) -> Result<(Vec<MountEntry>, Vec<u8>)> {
     let repository = repository_ref(organization, repository);
     let head: pb::RepositoryHeadResponse = call(
         client,
-        access_token,
         "/hif.v1.VersioningService/GetRepositoryHead",
         &pb::GetRepositoryHeadRequest {
-            user_id: user_id.to_string(),
             repository: Some(repository.clone()),
         },
     )
@@ -107,10 +92,8 @@ async fn fetch_tree(
         .unwrap_or_default();
     let tree: pb::TreeResponse = call(
         client,
-        access_token,
         "/hif.v1.ContentService/GetTree",
         &pb::GetTreeRequest {
-            user_id: user_id.to_string(),
             repository: Some(repository),
             revision_hash: revision_hash.clone(),
         },
@@ -132,8 +115,6 @@ async fn fetch_tree(
 /// Sync the tree to the local filesystem.
 async fn sync_tree(
     client: &GrpcClient,
-    access_token: &str,
-    user_id: &str,
     organization: &str,
     repository: &str,
     revision_hash: &[u8],
@@ -150,16 +131,8 @@ async fn sync_tree(
             }
         }
 
-        let content = fetch_file(
-            client,
-            access_token,
-            user_id,
-            organization,
-            repository,
-            &entry.path,
-            revision_hash,
-        )
-        .await?;
+        let content =
+            fetch_file(client, organization, repository, &entry.path, revision_hash).await?;
 
         let should_write = match fs::read(&file_path) {
             Ok(existing) => existing != content,
@@ -179,8 +152,6 @@ async fn sync_tree(
 /// Fetch a file's content.
 async fn fetch_file(
     client: &GrpcClient,
-    access_token: &str,
-    user_id: &str,
     organization: &str,
     repository: &str,
     path: &str,
@@ -188,10 +159,8 @@ async fn fetch_file(
 ) -> Result<Vec<u8>> {
     let response: pb::PathResponse = call(
         client,
-        access_token,
         "/hif.v1.ContentService/GetPath",
         &pb::GetPathRequest {
-            user_id: user_id.to_string(),
             repository: Some(repository_ref(organization, repository)),
             revision_hash: revision_hash.to_vec(),
             path: path.to_string(),

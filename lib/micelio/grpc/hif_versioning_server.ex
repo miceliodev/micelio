@@ -18,7 +18,7 @@ defmodule Micelio.GRPC.Hif.V1.VersioningService.Server do
 
   def get_repository_head(%V1.GetRepositoryHeadRequest{} = request, stream) do
     with :ok <- require_repository_ref(request.repository),
-         {:ok, user} <- fetch_user(request.user_id, stream),
+         {:ok, user} <- fetch_user(stream),
          {:ok, organization, repository} <- load_repository(request.repository),
          true <- Accounts.user_in_organization?(user, organization.id),
          {:ok, head, etag} <- fetch_head(repository.id) do
@@ -37,7 +37,7 @@ defmodule Micelio.GRPC.Hif.V1.VersioningService.Server do
   def get_head_at(%V1.GetHeadAtRequest{} = request, stream) do
     with :ok <- require_repository_ref(request.repository),
          :ok <- require_hash(request.revision_hash, "revision_hash"),
-         {:ok, user} <- fetch_user(request.user_id, stream),
+         {:ok, user} <- fetch_user(stream),
          {:ok, organization, repository} <- load_repository(request.repository),
          true <- Accounts.user_in_organization?(user, organization.id),
          {:ok, head, etag} <- fetch_head_by_revision_hash(repository.id, request.revision_hash) do
@@ -57,7 +57,7 @@ defmodule Micelio.GRPC.Hif.V1.VersioningService.Server do
     with :ok <- require_repository_ref(request.repository),
          :ok <- require_field(request.open.session_id, "open.session_id"),
          :ok <- require_field(request.open.goal, "open.goal"),
-         {:ok, user} <- fetch_user(request.user_id, stream),
+         {:ok, user} <- fetch_user(stream),
          {:ok, organization, repository} <- load_repository(request.repository),
          true <- Accounts.user_in_organization?(user, organization.id),
          nil <- Sessions.get_session_by_session_id(request.open.session_id),
@@ -65,7 +65,7 @@ defmodule Micelio.GRPC.Hif.V1.VersioningService.Server do
            resolve_base_revision_hash(repository.id, request.open.base_position),
          metadata =
            %{
-             "organization_handle" => organization.account.handle,
+             "account_handle" => organization.account.handle,
              "repository_handle" => repository.handle,
              "base_revision_hash" => Base.encode64(base_revision_hash),
              "requested_workspace" => empty_to_nil(request.open.requested_workspace),
@@ -101,7 +101,7 @@ defmodule Micelio.GRPC.Hif.V1.VersioningService.Server do
 
   def append_session_conversation(%V1.SessionEventAppendRequest{} = request, stream) do
     with :ok <- require_field(request.session_id, "session_id"),
-         {:ok, user} <- fetch_user(request.user_id, stream),
+         {:ok, user} <- fetch_user(stream),
          {:ok, session, repository} <- load_writable_session(request.session_id, user),
          :ok <- require_field(request.event.text, "event.text"),
          event = event_to_map(request.event),
@@ -115,7 +115,7 @@ defmodule Micelio.GRPC.Hif.V1.VersioningService.Server do
 
   def append_session_change(%V1.SessionChangeAppendRequest{} = request, stream) do
     with :ok <- require_field(request.session_id, "session_id"),
-         {:ok, user} <- fetch_user(request.user_id, stream),
+         {:ok, user} <- fetch_user(stream),
          {:ok, session, repository} <- load_writable_session(request.session_id, user),
          :ok <- ensure_session_active(session),
          {:ok, files} <- operation_to_change_payloads(request.operation, session),
@@ -127,7 +127,7 @@ defmodule Micelio.GRPC.Hif.V1.VersioningService.Server do
 
   def land_session(%V1.LandSessionRequest{} = request, stream) do
     with :ok <- require_field(request.session_id, "session_id"),
-         {:ok, user} <- fetch_user(request.user_id, stream),
+         {:ok, user} <- fetch_user(stream),
          {:ok, session, repository} <- load_writable_session(request.session_id, user),
          {:ok, session_with_decisions} <- append_decisions(session, request.decision),
          {:ok, session_with_epoch} <- update_epoch_batch(session_with_decisions, request.epoch),
@@ -142,7 +142,7 @@ defmodule Micelio.GRPC.Hif.V1.VersioningService.Server do
 
   def abandon_session(%V1.AbandonSessionRequest{} = request, stream) do
     with :ok <- require_field(request.session_id, "session_id"),
-         {:ok, user} <- fetch_user(request.user_id, stream),
+         {:ok, user} <- fetch_user(stream),
          {:ok, session, repository} <- load_writable_session(request.session_id, user),
          {:ok, updated} <- Sessions.abandon_session(session) do
       session_to_proto(updated, repository)
@@ -157,7 +157,7 @@ defmodule Micelio.GRPC.Hif.V1.VersioningService.Server do
 
   def get_session(%V1.SessionRequest{} = request, stream) do
     with :ok <- require_field(request.session_id, "session_id"),
-         {:ok, user} <- fetch_user(request.user_id, stream),
+         {:ok, user} <- fetch_user(stream),
          {:ok, session, repository} <- load_readable_session(request.session_id, user) do
       session_to_proto(session, repository)
     end
@@ -165,7 +165,7 @@ defmodule Micelio.GRPC.Hif.V1.VersioningService.Server do
 
   def list_sessions(%V1.ListSessionsRequest{} = request, stream) do
     with :ok <- require_repository_ref(request.repository),
-         {:ok, user} <- fetch_user(request.user_id, stream),
+         {:ok, user} <- fetch_user(stream),
          {:ok, organization, repository} <- load_repository(request.repository),
          true <- Accounts.user_in_organization?(user, organization.id) do
       sessions =
@@ -280,7 +280,7 @@ defmodule Micelio.GRPC.Hif.V1.VersioningService.Server do
 
   defp repository_ref(organization, repository) do
     %V1.RepositoryRef{
-      organization_handle: organization.account.handle,
+      account_handle: organization.account.handle,
       repository_handle: repository.handle
     }
   end
@@ -563,7 +563,7 @@ defmodule Micelio.GRPC.Hif.V1.VersioningService.Server do
 
   defp load_repository(%V1.RepositoryRef{} = repository_ref) do
     with {:ok, organization} <-
-           Accounts.get_organization_by_handle(repository_ref.organization_handle),
+           Accounts.get_organization_by_handle(repository_ref.account_handle),
          repository when not is_nil(repository) <-
            Repositories.get_repository_by_handle(
              organization.id,
@@ -644,40 +644,24 @@ defmodule Micelio.GRPC.Hif.V1.VersioningService.Server do
 
   defp update_epoch_batch(%Session{} = session, _epoch), do: {:ok, session}
 
-  defp fetch_user(user_id, stream) do
-    if require_auth_token?(stream) do
-      fetch_user_from_token(user_id, stream)
-    else
-      case empty_to_nil(user_id) do
-        nil -> fetch_user_from_token(user_id, stream)
-        value -> fetch_user_by_id(value)
-      end
-    end
+  defp fetch_user(stream) do
+    fetch_user_from_token(stream)
   end
 
-  defp fetch_user_by_id(user_id) do
-    case Accounts.get_user(user_id) do
-      nil -> {:error, unauthenticated_status("User not found.")}
-      user -> {:ok, user}
-    end
-  end
-
-  defp fetch_user_from_token(user_id, stream) do
+  defp fetch_user_from_token(stream) do
     with {:ok, token} <- fetch_bearer_token(stream),
          %Boruta.Oauth.Token{} = access_token <- AccessTokens.get_by(value: token),
          user when not is_nil(user) <- Accounts.get_user(access_token.sub) do
-      case empty_to_nil(user_id) do
-        nil -> {:ok, user}
-        value when value == user.id -> {:ok, user}
-        _ -> {:error, unauthenticated_status("User does not match access token.")}
-      end
+      {:ok, user}
     else
       _ -> {:error, unauthenticated_status("User is required.")}
     end
   end
 
   defp fetch_bearer_token(stream) do
-    case Map.get(stream.http_request_headers, "authorization") do
+    headers = Map.get(stream || %{}, :http_request_headers) || %{}
+
+    case Map.get(headers, "authorization") do
       "Bearer " <> token -> {:ok, token}
       _ -> {:error, :no_token}
     end
@@ -685,7 +669,7 @@ defmodule Micelio.GRPC.Hif.V1.VersioningService.Server do
 
   defp require_repository_ref(%V1.RepositoryRef{} = repository_ref) do
     with :ok <-
-           require_field(repository_ref.organization_handle, "repository.organization_handle") do
+           require_field(repository_ref.account_handle, "repository.account_handle") do
       require_field(repository_ref.repository_handle, "repository.repository_handle")
     end
   end
@@ -844,23 +828,6 @@ defmodule Micelio.GRPC.Hif.V1.VersioningService.Server do
     |> Ecto.Changeset.traverse_errors(fn {message, _opts} -> message end)
     |> Enum.map_join(", ", fn {field, messages} -> "#{field} #{Enum.join(messages, ", ")}" end)
   end
-
-  defp require_auth_token? do
-    config = Application.get_env(:micelio, Micelio.GRPC, [])
-    Keyword.get(config, :require_auth_token, false)
-  end
-
-  defp require_auth_token?(stream) when is_map(stream) do
-    headers = Map.get(stream, :http_request_headers) || %{}
-
-    case Map.get(headers, "x-micelio-require-auth") do
-      "true" -> true
-      "false" -> false
-      _ -> require_auth_token?()
-    end
-  end
-
-  defp require_auth_token?(_stream), do: require_auth_token?()
 
   defp empty_to_nil(value) when is_binary(value) do
     trimmed = String.trim(value)

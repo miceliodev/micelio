@@ -1,9 +1,9 @@
 //! Diff command - show changes between two revisions.
 
 use crate::cli::{parse_repository_ref, DiffCommand};
-use crate::config::{self, Config};
+use crate::config::Config;
 use crate::error::{MicError, Result};
-use crate::grpc::hif_v1::{call, pb, repository_ref, user_id_from_token};
+use crate::grpc::hif_v1::{call, pb, repository_ref};
 use crate::grpc::{Endpoint, GrpcClient};
 use crate::workspace::{parse_position, PositionOrLatest};
 use colored::Colorize;
@@ -20,10 +20,8 @@ pub async fn run(cmd: DiffCommand) -> Result<()> {
 
     let mut config = Config::load()?;
     let server = config.resolve_default_grpc_url().await?;
-    let tokens = config::require_tokens()?;
     let endpoint = Endpoint::parse(&server)?;
     let client = GrpcClient::new(endpoint);
-    let user_id = user_id_from_token(&tokens.access_token);
 
     let from_revision_hash = match parse_position(&cmd.from) {
         Some(PositionOrLatest::Revision(revision_hash)) => revision_hash,
@@ -47,10 +45,8 @@ pub async fn run(cmd: DiffCommand) -> Result<()> {
 
     let response: pb::DiffResponse = call(
         &client,
-        &tokens.access_token,
         "/hif.v1.ContentService/Diff",
         &pb::DiffRequest {
-            user_id,
             repository: Some(repository_ref(org, repository)),
             from_revision_hash,
             to_revision_hash: to_revision_hash.unwrap_or_default(),

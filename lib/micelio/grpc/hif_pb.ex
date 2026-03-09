@@ -1,7 +1,7 @@
 defmodule Micelio.GRPC.Hif.V1.RepositoryRef do
   use Protobuf, syntax: :proto3
 
-  field :organization_handle, 1, type: :string, json_name: "organizationHandle"
+  field :account_handle, 1, type: :string, json_name: "accountHandle"
   field :repository_handle, 2, type: :string, json_name: "repositoryHandle"
 end
 
@@ -23,16 +23,14 @@ end
 defmodule Micelio.GRPC.Hif.V1.GetRepositoryHeadRequest do
   use Protobuf, syntax: :proto3
 
-  field :user_id, 1, type: :string, json_name: "userId"
-  field :repository, 2, type: Micelio.GRPC.Hif.V1.RepositoryRef
+  field :repository, 1, type: Micelio.GRPC.Hif.V1.RepositoryRef
 end
 
 defmodule Micelio.GRPC.Hif.V1.GetHeadAtRequest do
   use Protobuf, syntax: :proto3
 
-  field :user_id, 1, type: :string, json_name: "userId"
-  field :repository, 2, type: Micelio.GRPC.Hif.V1.RepositoryRef
-  field :revision_hash, 3, type: :bytes, json_name: "revisionHash"
+  field :repository, 1, type: Micelio.GRPC.Hif.V1.RepositoryRef
+  field :revision_hash, 2, type: :bytes, json_name: "revisionHash"
 end
 
 defmodule Micelio.GRPC.Hif.V1.AgentAttribution do
@@ -121,16 +119,14 @@ end
 defmodule Micelio.GRPC.Hif.V1.SessionOpenRequest do
   use Protobuf, syntax: :proto3
 
-  field :user_id, 1, type: :string, json_name: "userId"
-  field :repository, 2, type: Micelio.GRPC.Hif.V1.RepositoryRef
-  field :open, 3, type: Micelio.GRPC.Hif.V1.SessionOpen
+  field :repository, 1, type: Micelio.GRPC.Hif.V1.RepositoryRef
+  field :open, 2, type: Micelio.GRPC.Hif.V1.SessionOpen
 end
 
 defmodule Micelio.GRPC.Hif.V1.SessionRequest do
   use Protobuf, syntax: :proto3
 
-  field :user_id, 1, type: :string, json_name: "userId"
-  field :session_id, 2, type: :string, json_name: "sessionId"
+  field :session_id, 1, type: :string, json_name: "sessionId"
 end
 
 defmodule Micelio.GRPC.Hif.V1.SessionSummary do
@@ -145,10 +141,9 @@ end
 defmodule Micelio.GRPC.Hif.V1.ListSessionsRequest do
   use Protobuf, syntax: :proto3
 
-  field :user_id, 1, type: :string, json_name: "userId"
-  field :repository, 2, type: Micelio.GRPC.Hif.V1.RepositoryRef
-  field :path, 3, type: :string
-  field :limit, 4, type: :uint32
+  field :repository, 1, type: Micelio.GRPC.Hif.V1.RepositoryRef
+  field :path, 2, type: :string
+  field :limit, 3, type: :uint32
 end
 
 defmodule Micelio.GRPC.Hif.V1.ListSessionsResponse do
@@ -160,35 +155,31 @@ end
 defmodule Micelio.GRPC.Hif.V1.SessionEventAppendRequest do
   use Protobuf, syntax: :proto3
 
-  field :user_id, 1, type: :string, json_name: "userId"
-  field :session_id, 2, type: :string, json_name: "sessionId"
-  field :event, 3, type: Micelio.GRPC.Hif.V1.SessionEvent
+  field :session_id, 1, type: :string, json_name: "sessionId"
+  field :event, 2, type: Micelio.GRPC.Hif.V1.SessionEvent
 end
 
 defmodule Micelio.GRPC.Hif.V1.SessionChangeAppendRequest do
   use Protobuf, syntax: :proto3
 
-  field :user_id, 1, type: :string, json_name: "userId"
-  field :session_id, 2, type: :string, json_name: "sessionId"
-  field :operation, 3, type: Micelio.GRPC.Hif.V1.FileOperation
+  field :session_id, 1, type: :string, json_name: "sessionId"
+  field :operation, 2, type: Micelio.GRPC.Hif.V1.FileOperation
 end
 
 defmodule Micelio.GRPC.Hif.V1.LandSessionRequest do
   use Protobuf, syntax: :proto3
 
-  field :user_id, 1, type: :string, json_name: "userId"
-  field :session_id, 2, type: :string, json_name: "sessionId"
-  field :decision, 3, repeated: true, type: Micelio.GRPC.Hif.V1.SessionEvent
-  field :finalize, 4, type: :bool
-  field :epoch, 5, type: :uint32
-  field :force, 6, type: :bool
+  field :session_id, 1, type: :string, json_name: "sessionId"
+  field :decision, 2, repeated: true, type: Micelio.GRPC.Hif.V1.SessionEvent
+  field :finalize, 3, type: :bool
+  field :epoch, 4, type: :uint32
+  field :force, 5, type: :bool
 end
 
 defmodule Micelio.GRPC.Hif.V1.AbandonSessionRequest do
   use Protobuf, syntax: :proto3
 
-  field :user_id, 1, type: :string, json_name: "userId"
-  field :session_id, 2, type: :string, json_name: "sessionId"
+  field :session_id, 1, type: :string, json_name: "sessionId"
 end
 
 defmodule Micelio.GRPC.Hif.V1.TreeEntry do
@@ -209,18 +200,16 @@ end
 defmodule Micelio.GRPC.Hif.V1.GetTreeRequest do
   use Protobuf, syntax: :proto3
 
-  field :user_id, 1, type: :string, json_name: "userId"
-  field :repository, 2, type: Micelio.GRPC.Hif.V1.RepositoryRef
-  field :revision_hash, 3, type: :bytes, json_name: "revisionHash"
+  field :repository, 1, type: Micelio.GRPC.Hif.V1.RepositoryRef
+  field :revision_hash, 2, type: :bytes, json_name: "revisionHash"
 end
 
 defmodule Micelio.GRPC.Hif.V1.GetPathRequest do
   use Protobuf, syntax: :proto3
 
-  field :user_id, 1, type: :string, json_name: "userId"
-  field :repository, 2, type: Micelio.GRPC.Hif.V1.RepositoryRef
-  field :revision_hash, 3, type: :bytes, json_name: "revisionHash"
-  field :path, 4, type: :string
+  field :repository, 1, type: Micelio.GRPC.Hif.V1.RepositoryRef
+  field :revision_hash, 2, type: :bytes, json_name: "revisionHash"
+  field :path, 3, type: :string
 end
 
 defmodule Micelio.GRPC.Hif.V1.PathResponse do
@@ -235,8 +224,7 @@ end
 defmodule Micelio.GRPC.Hif.V1.GetBlobRequest do
   use Protobuf, syntax: :proto3
 
-  field :user_id, 1, type: :string, json_name: "userId"
-  field :content_hash, 2, type: :bytes, json_name: "contentHash"
+  field :content_hash, 1, type: :bytes, json_name: "contentHash"
 end
 
 defmodule Micelio.GRPC.Hif.V1.BlobResponse do
@@ -248,11 +236,10 @@ end
 defmodule Micelio.GRPC.Hif.V1.DiffRequest do
   use Protobuf, syntax: :proto3
 
-  field :user_id, 1, type: :string, json_name: "userId"
-  field :repository, 2, type: Micelio.GRPC.Hif.V1.RepositoryRef
-  field :from_revision_hash, 3, type: :bytes, json_name: "fromRevisionHash"
-  field :to_revision_hash, 4, type: :bytes, json_name: "toRevisionHash"
-  field :path_prefix, 5, type: :string, json_name: "pathPrefix"
+  field :repository, 1, type: Micelio.GRPC.Hif.V1.RepositoryRef
+  field :from_revision_hash, 2, type: :bytes, json_name: "fromRevisionHash"
+  field :to_revision_hash, 3, type: :bytes, json_name: "toRevisionHash"
+  field :path_prefix, 4, type: :string, json_name: "pathPrefix"
 end
 
 defmodule Micelio.GRPC.Hif.V1.DiffHunk do
@@ -285,10 +272,9 @@ end
 defmodule Micelio.GRPC.Hif.V1.BlameRequest do
   use Protobuf, syntax: :proto3
 
-  field :user_id, 1, type: :string, json_name: "userId"
-  field :repository, 2, type: Micelio.GRPC.Hif.V1.RepositoryRef
-  field :revision_hash, 3, type: :bytes, json_name: "revisionHash"
-  field :path, 4, type: :string
+  field :repository, 1, type: Micelio.GRPC.Hif.V1.RepositoryRef
+  field :revision_hash, 2, type: :bytes, json_name: "revisionHash"
+  field :path, 3, type: :string
 end
 
 defmodule Micelio.GRPC.Hif.V1.BlameResponse do
@@ -300,18 +286,17 @@ end
 defmodule Micelio.GRPC.Hif.V1.TextQueryRequest do
   use Protobuf, syntax: :proto3
 
-  field :user_id, 1, type: :string, json_name: "userId"
-  field :repository, 2, type: Micelio.GRPC.Hif.V1.RepositoryRef
-  field :query, 3, type: :string
-  field :at_revision_hash, 4, type: :bytes, json_name: "atRevisionHash"
-  field :path_prefix, 5, type: :string, json_name: "pathPrefix"
-  field :path_glob, 6, type: :string, json_name: "pathGlob"
-  field :regex, 7, type: :bool
-  field :case_sensitive, 8, type: :bool, json_name: "caseSensitive"
-  field :language_hint, 9, type: :string, json_name: "languageHint"
-  field :limit, 10, type: :uint32
-  field :offset, 11, type: :uint32
-  field :page_token, 12, type: :bytes, json_name: "pageToken"
+  field :repository, 1, type: Micelio.GRPC.Hif.V1.RepositoryRef
+  field :query, 2, type: :string
+  field :at_revision_hash, 3, type: :bytes, json_name: "atRevisionHash"
+  field :path_prefix, 4, type: :string, json_name: "pathPrefix"
+  field :path_glob, 5, type: :string, json_name: "pathGlob"
+  field :regex, 6, type: :bool
+  field :case_sensitive, 7, type: :bool, json_name: "caseSensitive"
+  field :language_hint, 8, type: :string, json_name: "languageHint"
+  field :limit, 9, type: :uint32
+  field :offset, 10, type: :uint32
+  field :page_token, 11, type: :bytes, json_name: "pageToken"
 end
 
 defmodule Micelio.GRPC.Hif.V1.TextQueryMatch do

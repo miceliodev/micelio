@@ -273,6 +273,7 @@ fn create_stored_tokens(grpc_url: &str, token: TokenResponse) -> StoredTokens {
         .map(|ttl| chrono::Utc::now().timestamp() + ttl);
 
     StoredTokens {
+        session_id: Some(uuid::Uuid::new_v4().to_string()),
         server: grpc_url.to_string(),
         access_token: token.access_token,
         refresh_token: token.refresh_token,
@@ -306,6 +307,7 @@ mod tests {
 
         // Not expired
         let tokens = StoredTokens {
+            session_id: Some("test-session".to_string()),
             server: "test".into(),
             access_token: "token".into(),
             refresh_token: None,

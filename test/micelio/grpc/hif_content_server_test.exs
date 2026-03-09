@@ -1,10 +1,15 @@
 defmodule Micelio.GRPC.VirtualContentServerTest do
   use Micelio.DataCase, async: true
 
+  alias Boruta.Oauth.ResourceOwner
+  alias GRPC.Server.Stream
   alias Micelio.Accounts
   alias Micelio.GRPC.Hif.V1
   alias Micelio.GRPC.Hif.V1.ContentService.Server, as: ContentServer
   alias Micelio.Mic.{Binary, Project, Tree}
+  alias Micelio.OAuth
+  alias Micelio.OAuth.AccessTokens
+  alias Micelio.OAuth.Clients
   alias Micelio.Repositories
   alias Micelio.Storage
 
@@ -38,17 +43,19 @@ defmodule Micelio.GRPC.VirtualContentServerTest do
     head = Binary.new_head(1, tree_hash)
     {:ok, _} = Storage.put(Project.head_key(repository.id), Binary.encode_head(head))
 
+    token = create_access_token(user)
+    stream = token_stream(token)
+
     tree_response =
       ContentServer.get_tree(
         %V1.GetTreeRequest{
-          user_id: user.id,
           repository: %V1.RepositoryRef{
-            organization_handle: organization.account.handle,
+            account_handle: organization.account.handle,
             repository_handle: repository.handle
           },
           revision_hash: tree_hash
         },
-        nil
+        stream
       )
 
     assert %V1.TreeResponse{} = tree_response
@@ -58,20 +65,42 @@ defmodule Micelio.GRPC.VirtualContentServerTest do
     path_response =
       ContentServer.get_path(
         %V1.GetPathRequest{
-          user_id: user.id,
           repository: %V1.RepositoryRef{
-            organization_handle: organization.account.handle,
+            account_handle: organization.account.handle,
             repository_handle: repository.handle
           },
           revision_hash: tree_hash,
           path: "README.md"
         },
-        nil
+        stream
       )
 
     assert %V1.PathResponse{} = path_response
     assert path_response.content == content
     assert path_response.content_hash == blob_hash
     assert path_response.size == byte_size(content)
+  end
+
+  defp token_stream(token) do
+    %Stream{
+      http_request_headers: %{
+        "authorization" => "Bearer #{token}"
+      }
+    }
+  end
+
+  defp create_access_token(user) do
+    {:ok, device_client} = OAuth.register_device_client(%{"name" => "Test CLI"})
+    client = Clients.get_client(device_client.client_id)
+
+    params = %{
+      client: client,
+      scope: "",
+      sub: to_string(user.id),
+      resource_owner: %ResourceOwner{sub: to_string(user.id), username: user.email}
+    }
+
+    {:ok, token} = AccessTokens.create(params, refresh_token: true)
+    Map.get(token, :value) || Map.get(token, :access_token)
   end
 end

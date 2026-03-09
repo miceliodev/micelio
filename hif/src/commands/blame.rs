@@ -1,9 +1,9 @@
 //! Blame command - show session attribution for file lines.
 
 use crate::cli::{parse_repository_ref, BlameCommand};
-use crate::config::{self, Config};
+use crate::config::Config;
 use crate::error::{MicError, Result};
-use crate::grpc::hif_v1::{call, pb, repository_ref, user_id_from_token};
+use crate::grpc::hif_v1::{call, pb, repository_ref};
 use crate::grpc::{Endpoint, GrpcClient};
 
 /// Run the blame command.
@@ -17,18 +17,14 @@ pub async fn run(cmd: BlameCommand) -> Result<()> {
 
     let mut config = Config::load()?;
     let server = config.resolve_default_grpc_url().await?;
-    let tokens = config::require_tokens()?;
     let endpoint = Endpoint::parse(&server)?;
     let client = GrpcClient::new(endpoint);
-    let user_id = user_id_from_token(&tokens.access_token);
     let repo = repository_ref(org, repository);
 
     let head: pb::RepositoryHeadResponse = call(
         &client,
-        &tokens.access_token,
         "/hif.v1.VersioningService/GetRepositoryHead",
         &pb::GetRepositoryHeadRequest {
-            user_id: user_id.clone(),
             repository: Some(repo.clone()),
         },
     )
@@ -43,10 +39,8 @@ pub async fn run(cmd: BlameCommand) -> Result<()> {
 
     let response: pb::BlameResponse = call(
         &client,
-        &tokens.access_token,
         "/hif.v1.ContentService/Blame",
         &pb::BlameRequest {
-            user_id,
             repository: Some(repo),
             revision_hash: head_revision_hash,
             path: cmd.path,

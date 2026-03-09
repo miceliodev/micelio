@@ -1,9 +1,14 @@
 defmodule Micelio.GRPC.VirtualVersioningServerTest do
   use Micelio.DataCase, async: true
 
+  alias Boruta.Oauth.ResourceOwner
+  alias GRPC.Server.Stream
   alias Micelio.Accounts
   alias Micelio.GRPC.Hif.V1
   alias Micelio.GRPC.Hif.V1.VersioningService.Server, as: VersioningServer
+  alias Micelio.OAuth
+  alias Micelio.OAuth.AccessTokens
+  alias Micelio.OAuth.Clients
   alias Micelio.Repositories
 
   test "open, append conversation, append change, and get session" do
@@ -24,14 +29,16 @@ defmodule Micelio.GRPC.VirtualVersioningServerTest do
         organization_id: organization.id
       })
 
+    token = create_access_token(user)
+    stream = token_stream(token)
+
     session_id = "virtual-session-#{unique}"
 
     opened =
       VersioningServer.open_session(
         %V1.SessionOpenRequest{
-          user_id: user.id,
           repository: %V1.RepositoryRef{
-            organization_handle: organization.account.handle,
+            account_handle: organization.account.handle,
             repository_handle: repository.handle
           },
           open: %V1.SessionOpen{
@@ -40,7 +47,7 @@ defmodule Micelio.GRPC.VirtualVersioningServerTest do
             base_position: %V1.Position{hash: <<0::size(256)>>}
           }
         },
-        nil
+        stream
       )
 
     assert %V1.SessionInfo{} = opened
@@ -50,7 +57,6 @@ defmodule Micelio.GRPC.VirtualVersioningServerTest do
     appended_note =
       VersioningServer.append_session_conversation(
         %V1.SessionEventAppendRequest{
-          user_id: user.id,
           session_id: session_id,
           event: %V1.SessionEvent{
             role: "agent",
@@ -59,7 +65,7 @@ defmodule Micelio.GRPC.VirtualVersioningServerTest do
             at_ms: System.system_time(:millisecond)
           }
         },
-        nil
+        stream
       )
 
     assert %V1.SessionInfo{} = appended_note
@@ -69,7 +75,6 @@ defmodule Micelio.GRPC.VirtualVersioningServerTest do
     appended_change =
       VersioningServer.append_session_change(
         %V1.SessionChangeAppendRequest{
-          user_id: user.id,
           session_id: session_id,
           operation: %V1.FileOperation{
             action: :ACTION_CREATE,
@@ -77,7 +82,7 @@ defmodule Micelio.GRPC.VirtualVersioningServerTest do
             content: "virtual content\n"
           }
         },
-        nil
+        stream
       )
 
     assert %V1.SessionInfo{} = appended_change
@@ -86,13 +91,36 @@ defmodule Micelio.GRPC.VirtualVersioningServerTest do
 
     loaded =
       VersioningServer.get_session(
-        %V1.SessionRequest{user_id: user.id, session_id: session_id},
-        nil
+        %V1.SessionRequest{session_id: session_id},
+        stream
       )
 
     assert %V1.SessionInfo{} = loaded
     assert loaded.session_id == session_id
     assert length(loaded.conversation) == 1
     assert length(loaded.changes) == 1
+  end
+
+  defp token_stream(token) do
+    %Stream{
+      http_request_headers: %{
+        "authorization" => "Bearer #{token}"
+      }
+    }
+  end
+
+  defp create_access_token(user) do
+    {:ok, device_client} = OAuth.register_device_client(%{"name" => "Test CLI"})
+    client = Clients.get_client(device_client.client_id)
+
+    params = %{
+      client: client,
+      scope: "",
+      sub: to_string(user.id),
+      resource_owner: %ResourceOwner{sub: to_string(user.id), username: user.email}
+    }
+
+    {:ok, token} = AccessTokens.create(params, refresh_token: true)
+    Map.get(token, :value) || Map.get(token, :access_token)
   end
 end

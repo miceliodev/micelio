@@ -22,11 +22,16 @@
 
 use crate::constants::{is_first_party_url, FIRST_PARTY_CLIENT_ID, TOKEN_REFRESH_BUFFER_SECS};
 use crate::error::{MicError, Result};
+#[cfg(test)]
 use base64::Engine;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs;
+use std::io::Write;
+use std::path::Path;
 use std::path::PathBuf;
+use std::thread;
+use std::time::{Duration, Instant, SystemTime};
 
 // =============================================================================
 // Configuration Types
@@ -401,10 +406,8 @@ pub fn ensure_config_dir() -> Result<PathBuf> {
     Ok(dir)
 }
 
-/// Extract the OAuth subject claim from a JWT access token.
-///
-/// Returns `None` for opaque tokens or malformed payloads.
-pub fn token_subject(access_token: &str) -> Option<String> {
+#[cfg(test)]
+fn token_subject(access_token: &str) -> Option<String> {
     let payload_segment = access_token.split('.').nth(1)?;
     let mut payload = payload_segment.to_string();
 
@@ -427,6 +430,9 @@ pub fn token_subject(access_token: &str) -> Option<String> {
 /// Stored authentication tokens.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct StoredTokens {
+    /// Stable local auth session ID for refresh locking.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub session_id: Option<String>,
     /// Server gRPC URL.
     pub server: String,
     /// OAuth access token.
@@ -511,24 +517,61 @@ pub fn delete_tokens() -> Result<()> {
 
 /// Require valid authentication tokens, refreshing if needed.
 pub fn require_tokens() -> Result<StoredTokens> {
-    let tokens = read_tokens()?.ok_or(MicError::NotAuthenticated)?;
+    let mut tokens = read_tokens()?.ok_or(MicError::NotAuthenticated)?;
 
     if tokens.server.is_empty() {
         return Err(MicError::InvalidTokens);
     }
 
+    tokens = ensure_token_session(tokens)?;
+
     // Check if token needs refresh
     if tokens.is_expiring_soon() {
-        if let Some(ref refresh_token) = tokens.refresh_token {
-            match refresh_tokens_sync(&tokens.server, refresh_token) {
-                Ok(new_tokens) => return Ok(new_tokens),
-                Err(_) if !tokens.is_expired() => {
-                    // Token not yet expired, continue with current
-                    return Ok(tokens);
-                }
-                Err(_) => return Err(MicError::TokenExpired),
+        if tokens.refresh_token.is_some() {
+            let _lock = acquire_refresh_lock(&tokens)?;
+
+            // Re-read after lock acquisition in case another process already refreshed.
+            let mut latest = read_tokens()?.ok_or(MicError::NotAuthenticated)?;
+            if latest.server.is_empty() {
+                return Err(MicError::InvalidTokens);
             }
-        } else if tokens.is_expired() {
+            latest = ensure_token_session(latest)?;
+
+            // Another auth session replaced tokens while waiting on lock.
+            if latest.session_id != tokens.session_id {
+                if latest.is_expired() {
+                    return Err(MicError::TokenExpired);
+                }
+                return Ok(latest);
+            }
+
+            if !latest.is_expiring_soon() {
+                return Ok(latest);
+            }
+
+            if let Some(ref latest_refresh_token) = latest.refresh_token {
+                match refresh_tokens_sync(
+                    &latest.server,
+                    latest_refresh_token,
+                    latest.session_id.as_deref(),
+                ) {
+                    Ok(new_tokens) => return Ok(new_tokens),
+                    Err(_) if !latest.is_expired() => {
+                        // Token not yet expired, continue with current
+                        return Ok(latest);
+                    }
+                    Err(_) => return Err(MicError::TokenExpired),
+                }
+            }
+
+            if latest.is_expired() {
+                return Err(MicError::TokenExpired);
+            }
+
+            return Ok(latest);
+        }
+
+        if tokens.is_expired() {
             return Err(MicError::TokenExpired);
         }
     }
@@ -536,18 +579,127 @@ pub fn require_tokens() -> Result<StoredTokens> {
     Ok(tokens)
 }
 
+const REFRESH_LOCK_WAIT: Duration = Duration::from_secs(90);
+const REFRESH_LOCK_POLL: Duration = Duration::from_millis(100);
+const REFRESH_LOCK_STALE: Duration = Duration::from_secs(300);
+
+struct RefreshLockGuard {
+    path: PathBuf,
+}
+
+impl Drop for RefreshLockGuard {
+    fn drop(&mut self) {
+        let _ = fs::remove_file(&self.path);
+    }
+}
+
+fn ensure_token_session(mut tokens: StoredTokens) -> Result<StoredTokens> {
+    let existing = tokens
+        .session_id
+        .as_ref()
+        .map(|value| value.trim())
+        .unwrap_or("");
+    if !existing.is_empty() {
+        return Ok(tokens);
+    }
+
+    tokens.session_id = Some(uuid::Uuid::new_v4().to_string());
+    store_tokens(&tokens)?;
+    Ok(tokens)
+}
+
+fn refresh_lock_path(tokens: &StoredTokens) -> Result<PathBuf> {
+    let session_id = tokens
+        .session_id
+        .as_ref()
+        .ok_or(MicError::InvalidTokens)?
+        .trim();
+    if session_id.is_empty() {
+        return Err(MicError::InvalidTokens);
+    }
+
+    let server_hash = blake3::hash(tokens.server.as_bytes()).to_hex();
+    Ok(config_dir()?.join(format!(
+        "refresh-{}-{}.lock",
+        &server_hash[..16],
+        session_id
+    )))
+}
+
+fn lock_is_stale(path: &Path) -> Result<bool> {
+    let metadata = fs::metadata(path)
+        .map_err(|e| MicError::RefreshFailed(format!("Failed to inspect refresh lock: {}", e)))?;
+    let modified = metadata.modified().map_err(|e| {
+        MicError::RefreshFailed(format!("Failed to read refresh lock timestamp: {}", e))
+    })?;
+    let age = SystemTime::now()
+        .duration_since(modified)
+        .unwrap_or_default();
+
+    Ok(age > REFRESH_LOCK_STALE)
+}
+
+fn try_create_lock_file(path: &Path) -> std::io::Result<()> {
+    let mut file = fs::OpenOptions::new()
+        .write(true)
+        .create_new(true)
+        .open(path)?;
+
+    writeln!(file, "pid={}", std::process::id())?;
+    Ok(())
+}
+
+fn acquire_refresh_lock(tokens: &StoredTokens) -> Result<RefreshLockGuard> {
+    let lock_path = refresh_lock_path(tokens)?;
+    let deadline = Instant::now() + REFRESH_LOCK_WAIT;
+
+    loop {
+        match try_create_lock_file(&lock_path) {
+            Ok(()) => return Ok(RefreshLockGuard { path: lock_path }),
+            Err(error) if error.kind() == std::io::ErrorKind::AlreadyExists => {
+                if lock_is_stale(&lock_path)? {
+                    let _ = fs::remove_file(&lock_path);
+                    continue;
+                }
+
+                if Instant::now() >= deadline {
+                    return Err(MicError::RefreshFailed(
+                        "Timed out waiting for token refresh lock".to_string(),
+                    ));
+                }
+
+                thread::sleep(REFRESH_LOCK_POLL);
+            }
+            Err(error) => {
+                return Err(MicError::RefreshFailed(format!(
+                    "Failed to acquire token refresh lock: {}",
+                    error
+                )))
+            }
+        }
+    }
+}
+
 /// Refresh tokens synchronously (blocking).
-fn refresh_tokens_sync(server: &str, refresh_token: &str) -> Result<StoredTokens> {
+fn refresh_tokens_sync(
+    server: &str,
+    refresh_token: &str,
+    session_id: Option<&str>,
+) -> Result<StoredTokens> {
     // Create a new runtime for the blocking call
     // This is a workaround - ideally require_tokens would be async
     let rt = tokio::runtime::Runtime::new()
         .map_err(|e| MicError::RefreshFailed(format!("Failed to create runtime: {}", e)))?;
 
-    rt.block_on(refresh_tokens(server, refresh_token))
+    rt.block_on(refresh_tokens(server, refresh_token, session_id))
 }
 
 /// Refresh tokens using the refresh_token grant.
-async fn refresh_tokens(grpc_url: &str, refresh_token: &str) -> Result<StoredTokens> {
+async fn refresh_tokens(
+    grpc_url: &str,
+    refresh_token: &str,
+    session_id: Option<&str>,
+) -> Result<StoredTokens> {
     let config = Config::load()?;
 
     // Find the server config by gRPC URL
@@ -602,6 +754,7 @@ async fn refresh_tokens(grpc_url: &str, refresh_token: &str) -> Result<StoredTok
         .map(|ttl| chrono::Utc::now().timestamp() + ttl);
 
     let new_tokens = StoredTokens {
+        session_id: session_id.map(|value| value.to_string()),
         server: grpc_url.to_string(),
         access_token: token.access_token,
         refresh_token: token
@@ -624,6 +777,7 @@ async fn refresh_tokens(grpc_url: &str, refresh_token: &str) -> Result<StoredTok
 #[cfg(test)]
 mod tests {
     use super::*;
+    use base64::Engine;
 
     #[test]
     fn config_default_servers() {
@@ -672,6 +826,7 @@ mod tests {
 
         // Not expired
         let tokens = StoredTokens {
+            session_id: Some("test-session".to_string()),
             server: "test".into(),
             access_token: "token".into(),
             refresh_token: None,
@@ -728,5 +883,55 @@ mod tests {
     fn token_subject_returns_none_for_invalid_tokens() {
         assert_eq!(token_subject("not-a-jwt"), None);
         assert_eq!(token_subject("one.two"), None);
+    }
+
+    #[test]
+    fn ensure_token_session_keeps_existing_session_id() {
+        let tokens = StoredTokens {
+            session_id: Some("session-123".to_string()),
+            server: "https://api.example.com".to_string(),
+            access_token: "access".to_string(),
+            refresh_token: Some("refresh".to_string()),
+            token_type: "Bearer".to_string(),
+            expires_at: Some(chrono::Utc::now().timestamp() + 3600),
+        };
+
+        let ensured = ensure_token_session(tokens.clone()).unwrap();
+        assert_eq!(ensured.session_id, tokens.session_id);
+    }
+
+    #[test]
+    fn refresh_lock_path_is_scoped_by_session_and_server() {
+        let tokens = StoredTokens {
+            session_id: Some("session-abc".to_string()),
+            server: "https://api.example.com".to_string(),
+            access_token: "access".to_string(),
+            refresh_token: Some("refresh".to_string()),
+            token_type: "Bearer".to_string(),
+            expires_at: Some(chrono::Utc::now().timestamp() + 3600),
+        };
+
+        let lock_path = refresh_lock_path(&tokens).unwrap();
+        let filename = lock_path.file_name().unwrap().to_string_lossy();
+        assert!(filename.contains("session-abc"));
+        assert!(filename.starts_with("refresh-"));
+        assert!(filename.ends_with(".lock"));
+    }
+
+    #[test]
+    fn refresh_lock_path_rejects_missing_session_id() {
+        let tokens = StoredTokens {
+            session_id: None,
+            server: "https://api.example.com".to_string(),
+            access_token: "access".to_string(),
+            refresh_token: Some("refresh".to_string()),
+            token_type: "Bearer".to_string(),
+            expires_at: Some(chrono::Utc::now().timestamp() + 3600),
+        };
+
+        assert!(matches!(
+            refresh_lock_path(&tokens),
+            Err(MicError::InvalidTokens)
+        ));
     }
 }

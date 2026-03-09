@@ -3,9 +3,9 @@
 use crate::cli::{
     looks_like_repository_ref, parse_repository_ref, SessionCommand, SessionSubcommand,
 };
-use crate::config::{self, Config};
+use crate::config::Config;
 use crate::error::{MicError, Result};
-use crate::grpc::hif_v1::{call, pb, repository_ref, user_id_from_token};
+use crate::grpc::hif_v1::{call, pb, repository_ref};
 use crate::grpc::{Endpoint, GrpcClient};
 use crate::workspace::manifest::Manifest;
 use crate::workspace::session::{Conversation, Session, SessionState};
@@ -76,21 +76,17 @@ async fn start(organization: &str, repository: &str, goal: &str) -> Result<()> {
     }
 
     let mut config = Config::load()?;
-    let tokens = config::require_tokens()?;
     let server = config.resolve_default_grpc_url().await?;
     let endpoint = Endpoint::parse(&server)?;
     let client = GrpcClient::new(endpoint);
 
     let session_id = generate_session_id();
-    let user_id = user_id_from_token(&tokens.access_token);
     let repo = repository_ref(organization, repository);
 
     let _session_info: pb::SessionInfo = call(
         &client,
-        &tokens.access_token,
         "/hif.v1.VersioningService/OpenSession",
         &pb::SessionOpenRequest {
-            user_id,
             repository: Some(repo),
             open: Some(pb::SessionOpen {
                 session_id: session_id.clone(),
@@ -188,14 +184,12 @@ fn note(role: &str, message: &str) -> Result<()> {
 async fn land() -> Result<()> {
     let state = Session::load()?.ok_or(MicError::NoActiveSession)?;
     let mut config = Config::load()?;
-    let tokens = config::require_tokens()?;
     let server = config.resolve_default_grpc_url().await?;
     let endpoint = Endpoint::parse(&server)?;
     let client = GrpcClient::new(endpoint);
-    let user_id = user_id_from_token(&tokens.access_token);
 
-    upload_conversation(&client, &tokens.access_token, &user_id, &state).await?;
-    upload_changes(&client, &tokens.access_token, &user_id, &state.id).await?;
+    upload_conversation(&client, &state).await?;
+    upload_changes(&client, &state.id).await?;
 
     let decisions = state
         .decisions
@@ -211,10 +205,8 @@ async fn land() -> Result<()> {
 
     let response: pb::SessionInfo = call(
         &client,
-        &tokens.access_token,
         "/hif.v1.VersioningService/LandSession",
         &pb::LandSessionRequest {
-            user_id,
             session_id: state.id.clone(),
             decision: decisions,
             finalize: true,
@@ -279,18 +271,14 @@ async fn abandon() -> Result<()> {
     // Best-effort remote abandon. Local cleanup still succeeds if this fails.
     let remote_result: Result<()> = async {
         let mut config = Config::load()?;
-        let tokens = config::require_tokens()?;
         let server = config.resolve_default_grpc_url().await?;
         let endpoint = Endpoint::parse(&server)?;
         let client = GrpcClient::new(endpoint);
-        let user_id = user_id_from_token(&tokens.access_token);
 
         let _response: pb::SessionInfo = call(
             &client,
-            &tokens.access_token,
             "/hif.v1.VersioningService/AbandonSession",
             &pb::AbandonSessionRequest {
-                user_id,
                 session_id: state.id.clone(),
             },
         )
@@ -322,38 +310,27 @@ fn resolve(strategy: &str) -> Result<()> {
 
 async fn fetch_remote_session_status(state: &SessionState) -> Result<pb::SessionInfo> {
     let mut config = Config::load()?;
-    let tokens = config::require_tokens()?;
     let server = config.resolve_default_grpc_url().await?;
     let endpoint = Endpoint::parse(&server)?;
     let client = GrpcClient::new(endpoint);
-    let user_id = user_id_from_token(&tokens.access_token);
 
     call(
         &client,
-        &tokens.access_token,
         "/hif.v1.VersioningService/GetSession",
         &pb::SessionRequest {
-            user_id,
             session_id: state.id.clone(),
         },
     )
     .await
 }
 
-async fn upload_conversation(
-    client: &GrpcClient,
-    access_token: &str,
-    user_id: &str,
-    state: &SessionState,
-) -> Result<()> {
+async fn upload_conversation(client: &GrpcClient, state: &SessionState) -> Result<()> {
     for note in &state.conversation {
         let event = session_note_event(note);
         let _response: pb::SessionInfo = call(
             client,
-            access_token,
             "/hif.v1.VersioningService/AppendSessionConversation",
             &pb::SessionEventAppendRequest {
-                user_id: user_id.to_string(),
                 session_id: state.id.clone(),
                 event: Some(event),
             },
@@ -364,12 +341,7 @@ async fn upload_conversation(
     Ok(())
 }
 
-async fn upload_changes(
-    client: &GrpcClient,
-    access_token: &str,
-    user_id: &str,
-    session_id: &str,
-) -> Result<()> {
+async fn upload_changes(client: &GrpcClient, session_id: &str) -> Result<()> {
     let manifest = WorkspaceManifest::load()?.ok_or(MicError::NoWorkspace)?;
     let workspace_root = std::env::current_dir()?;
     let changes = collect_changes(&workspace_root, &manifest)?;
@@ -382,10 +354,8 @@ async fn upload_changes(
         let operation = to_file_operation(&change.path, change.change_type, content);
         let _response: pb::SessionInfo = call(
             client,
-            access_token,
             "/hif.v1.VersioningService/AppendSessionChange",
             &pb::SessionChangeAppendRequest {
-                user_id: user_id.to_string(),
                 session_id: session_id.to_string(),
                 operation: Some(operation),
             },

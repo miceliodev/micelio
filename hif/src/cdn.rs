@@ -62,14 +62,7 @@ pub async fn fetch_blob(
     }
 
     // Fall back to gRPC
-    fetch_from_grpc(
-        server,
-        account,
-        repository,
-        blob_hash,
-        options.access_token.as_deref(),
-    )
-    .await
+    fetch_from_grpc(server, account, repository, blob_hash).await
 }
 
 /// Fetch a blob from the CDN.
@@ -99,15 +92,12 @@ async fn fetch_from_grpc(
     _account: &str,
     _repository: &str,
     blob_hash: &str,
-    access_token: Option<&str>,
 ) -> Result<Vec<u8>> {
-    use crate::grpc::hif_v1::{call, pb, user_id_from_token};
+    use crate::grpc::hif_v1::{call, pb};
     use crate::grpc::{Endpoint, GrpcClient};
 
     let endpoint = Endpoint::parse(server)?;
     let client = GrpcClient::new(endpoint);
-    let access_token = access_token.ok_or(MicError::NotAuthenticated)?;
-    let user_id = user_id_from_token(access_token);
     let content_hash = hex_decode(blob_hash).ok_or_else(|| {
         MicError::Other(format!(
             "Invalid blob hash '{}': expected lowercase hex string",
@@ -117,12 +107,8 @@ async fn fetch_from_grpc(
 
     let response: pb::BlobResponse = call(
         &client,
-        access_token,
         "/hif.v1.ContentService/GetBlob",
-        &pb::GetBlobRequest {
-            user_id,
-            content_hash,
-        },
+        &pb::GetBlobRequest { content_hash },
     )
     .await?;
 

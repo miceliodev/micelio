@@ -46,14 +46,12 @@ message RepositoryHeadResponse {
 }
 
 message GetRepositoryHeadRequest {
-  string user_id = 1;      // REQUIRED
-  RepositoryRef repository = 2; // REQUIRED
+  RepositoryRef repository = 1; // REQUIRED
 }
 
 message GetHeadAtRequest {
-  string user_id = 1;      // REQUIRED
-  RepositoryRef repository = 2; // REQUIRED
-  bytes revision_hash = 3; // REQUIRED
+  RepositoryRef repository = 1; // REQUIRED
+  bytes revision_hash = 2; // REQUIRED
 }
 
 message AgentAttribution {
@@ -118,14 +116,12 @@ message SessionConflict {
 }
 
 message SessionOpenRequest {
-  string user_id = 1;      // REQUIRED
-  RepositoryRef repository = 2; // REQUIRED
-  SessionOpen open = 3;    // REQUIRED
+  RepositoryRef repository = 1; // REQUIRED
+  SessionOpen open = 2;    // REQUIRED
 }
 
 message SessionRequest {
-  string user_id = 1;   // REQUIRED
-  string session_id = 2; // REQUIRED
+  string session_id = 1; // REQUIRED
 }
 
 message SessionSummary {
@@ -136,10 +132,9 @@ message SessionSummary {
 }
 
 message ListSessionsRequest {
-  string user_id = 1;       // REQUIRED
-  RepositoryRef repository = 2; // REQUIRED
-  string path = 3;          // OPTIONAL
-  uint32 limit = 4;         // OPTIONAL
+  RepositoryRef repository = 1; // REQUIRED
+  string path = 2;          // OPTIONAL
+  uint32 limit = 3;         // OPTIONAL
 }
 
 message ListSessionsResponse {
@@ -147,29 +142,25 @@ message ListSessionsResponse {
 }
 
 message SessionEventAppendRequest {
-  string user_id = 1;     // REQUIRED
-  string session_id = 2;  // REQUIRED
-  SessionEvent event = 3; // REQUIRED
+  string session_id = 1;  // REQUIRED
+  SessionEvent event = 2; // REQUIRED
 }
 
 message SessionChangeAppendRequest {
-  string user_id = 1;        // REQUIRED
-  string session_id = 2;     // REQUIRED
-  FileOperation operation = 3; // REQUIRED
+  string session_id = 1;     // REQUIRED
+  FileOperation operation = 2; // REQUIRED
 }
 
 message LandSessionRequest {
-  string user_id = 1;       // REQUIRED
-  string session_id = 2;    // REQUIRED
-  repeated SessionEvent decision = 3; // OPTIONAL
-  bool finalize = 4;        // REQUIRED
-  uint32 epoch = 5;         // OPTIONAL
-  bool force = 6;           // OPTIONAL
+  string session_id = 1;    // REQUIRED
+  repeated SessionEvent decision = 2; // OPTIONAL
+  bool finalize = 3;        // REQUIRED
+  uint32 epoch = 4;         // OPTIONAL
+  bool force = 5;           // OPTIONAL
 }
 
 message AbandonSessionRequest {
-  string user_id = 1;   // REQUIRED
-  string session_id = 2; // REQUIRED
+  string session_id = 1; // REQUIRED
 }
 
 message TreeEntry {
@@ -178,10 +169,9 @@ message TreeEntry {
 }
 
 message TreeRequest {
-  string user_id = 1;
-  RepositoryRef repository = 2;
-  bytes tree_hash = 3;
-  string prefix = 4;
+  RepositoryRef repository = 1;
+  bytes tree_hash = 2;
+  string prefix = 3;
 }
 
 message TreeResponse {
@@ -191,16 +181,14 @@ message TreeResponse {
 }
 
 message GetTreeRequest {
-  string user_id = 1;      // REQUIRED
-  RepositoryRef repository = 2; // REQUIRED
-  bytes revision_hash = 3; // OPTIONAL (defaults to HEAD)
+  RepositoryRef repository = 1; // REQUIRED
+  bytes revision_hash = 2; // OPTIONAL (defaults to HEAD)
 }
 
 message GetPathRequest {
-  string user_id = 1;      // REQUIRED
-  RepositoryRef repository = 2; // REQUIRED
-  bytes revision_hash = 3; // OPTIONAL (defaults to HEAD)
-  string path = 4;         // REQUIRED
+  RepositoryRef repository = 1; // REQUIRED
+  bytes revision_hash = 2; // OPTIONAL (defaults to HEAD)
+  string path = 3;         // REQUIRED
 }
 
 message PathResponse {
@@ -211,8 +199,7 @@ message PathResponse {
 }
 
 message GetBlobRequest {
-  string user_id = 1;      // REQUIRED
-  bytes content_hash = 2;  // REQUIRED
+  bytes content_hash = 1;  // REQUIRED
 }
 
 message BlobResponse {
@@ -220,11 +207,10 @@ message BlobResponse {
 }
 
 message DiffRequest {
-  string user_id = 1;      // REQUIRED
-  RepositoryRef repository = 2; // REQUIRED
-  bytes from_revision_hash = 3; // REQUIRED
-  bytes to_revision_hash = 4;   // OPTIONAL (defaults to HEAD)
-  string path_prefix = 5;   // OPTIONAL
+  RepositoryRef repository = 1; // REQUIRED
+  bytes from_revision_hash = 2; // REQUIRED
+  bytes to_revision_hash = 3;   // OPTIONAL (defaults to HEAD)
+  string path_prefix = 4;   // OPTIONAL
 }
 
 message DiffHunk {
@@ -249,10 +235,9 @@ message BlameLine {
 }
 
 message BlameRequest {
-  string user_id = 1;   // REQUIRED
-  RepositoryRef repository = 2; // REQUIRED
-  bytes revision_hash = 3; // REQUIRED
-  string path = 4;      // REQUIRED
+  RepositoryRef repository = 1; // REQUIRED
+  bytes revision_hash = 2; // REQUIRED
+  string path = 3;      // REQUIRED
 }
 
 message BlameResponse {
@@ -260,18 +245,17 @@ message BlameResponse {
 }
 
 message TextQueryRequest {
-  string user_id = 1;      // REQUIRED
-  RepositoryRef repository = 2; // REQUIRED
-  string query = 3;        // REQUIRED
-  bytes at_revision_hash = 4; // OPTIONAL
-  string path_prefix = 5;  // OPTIONAL
-  string path_glob = 6;    // OPTIONAL
-  bool regex = 7;          // OPTIONAL
-  bool case_sensitive = 8; // OPTIONAL
-  string language_hint = 9; // OPTIONAL
-  uint32 limit = 10;       // REQUIRED for bounded response
-  uint32 offset = 11;      // OPTIONAL
-  bytes page_token = 12;   // OPTIONAL
+  RepositoryRef repository = 1; // REQUIRED
+  string query = 2;        // REQUIRED
+  bytes at_revision_hash = 3; // OPTIONAL
+  string path_prefix = 4;  // OPTIONAL
+  string path_glob = 5;    // OPTIONAL
+  bool regex = 6;          // OPTIONAL
+  bool case_sensitive = 7; // OPTIONAL
+  string language_hint = 8; // OPTIONAL
+  uint32 limit = 9;       // REQUIRED for bounded response
+  uint32 offset = 10;      // OPTIONAL
+  bytes page_token = 11;   // OPTIONAL
 }
 
 message TextQueryMatch {

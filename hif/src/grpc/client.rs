@@ -75,6 +75,15 @@ impl GrpcClient {
         .await
     }
 
+    /// Perform a unary gRPC call using the current stored auth token.
+    ///
+    /// Token lookup and refresh are resolved at call time.
+    pub async fn unary_call_authed(&self, method: &str, request: &[u8]) -> Result<Vec<u8>> {
+        let tokens = crate::config::require_tokens()?;
+        self.unary_call(method, request, Some(&tokens.access_token))
+            .await
+    }
+
     /// Internal unary call implementation.
     async fn do_unary_call(
         client: &reqwest::Client,

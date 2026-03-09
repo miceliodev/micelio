@@ -1,9 +1,9 @@
 //! Grep command - search repository content with remote index and local fallback.
 
 use crate::cli::{parse_repository_ref, GrepCommand};
-use crate::config::{self, Config};
+use crate::config::Config;
 use crate::error::{MicError, Result};
-use crate::grpc::hif_v1::{call, pb, repository_ref, user_id_from_token};
+use crate::grpc::hif_v1::{call, pb, repository_ref};
 use crate::grpc::{Endpoint, GrpcClient};
 use crate::workspace::{parse_position, PositionOrLatest};
 use regex::Regex;
@@ -21,10 +21,8 @@ pub async fn run(cmd: GrepCommand) -> Result<()> {
 
     let mut config = Config::load()?;
     let server = config.resolve_default_grpc_url().await?;
-    let tokens = config::require_tokens()?;
     let endpoint = Endpoint::parse(&server)?;
     let client = GrpcClient::new(endpoint);
-    let user_id = user_id_from_token(&tokens.access_token);
 
     let position = if let Some(ref raw) = cmd.position {
         match parse_position(raw) {
@@ -41,7 +39,6 @@ pub async fn run(cmd: GrepCommand) -> Result<()> {
     };
 
     let request = pb::TextQueryRequest {
-        user_id,
         repository: Some(repository_ref(org, repository)),
         query: cmd.query.clone(),
         at_revision_hash: position.unwrap_or_default(),
@@ -55,13 +52,9 @@ pub async fn run(cmd: GrepCommand) -> Result<()> {
         page_token: Vec::new(),
     };
 
-    let remote = call::<_, pb::TextQueryResponse>(
-        &client,
-        &tokens.access_token,
-        "/hif.v1.SearchService/QueryText",
-        &request,
-    )
-    .await;
+    let remote =
+        call::<_, pb::TextQueryResponse>(&client, "/hif.v1.SearchService/QueryText", &request)
+            .await;
 
     match remote {
         Ok(response) => {
