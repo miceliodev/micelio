@@ -40,6 +40,7 @@ mod core;
 mod error;
 mod grpc;
 mod http_client;
+mod output;
 mod workspace;
 
 use clap::builder::styling::{AnsiColor, Color, Style, Styles};
@@ -110,8 +111,11 @@ async fn async_main() -> i32 {
 
     // Handle no command
     let Some(command) = cli.command else {
-        // No command provided, show help hint
-        eprintln!("No command provided. Run 'hif --help' for usage.");
+        print_error(
+            "No command provided. Run 'hif --help' for usage.",
+            "no_command",
+            use_json,
+        );
         return 1;
     };
 

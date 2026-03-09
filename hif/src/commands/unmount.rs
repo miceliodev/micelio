@@ -2,12 +2,14 @@
 
 use crate::cli::UnmountCommand;
 use crate::error::{MicError, Result};
+use crate::output;
 use crate::workspace::{WorkspaceManifest, HIF_DIR};
 use std::fs;
 use std::path::PathBuf;
 
 /// Run the unmount command.
 pub async fn run(cmd: UnmountCommand) -> Result<()> {
+    let json_output = output::use_json();
     let mount_path = PathBuf::from(&cmd.path);
 
     if !mount_path.exists() {
@@ -31,16 +33,24 @@ pub async fn run(cmd: UnmountCommand) -> Result<()> {
     let manifest =
         WorkspaceManifest::load_from(&manifest_path)?.ok_or_else(|| MicError::NoWorkspace)?;
 
-    println!(
-        "Unmounting {}/{} from {}...",
-        manifest.account,
-        manifest.repository,
-        mount_path.display()
-    );
+    if !json_output {
+        println!(
+            "Unmounting {}/{} from {}...",
+            manifest.account,
+            manifest.repository,
+            mount_path.display()
+        );
+    }
 
     // Check for uncommitted changes
     let session_path = hif_dir.join("session.bin");
     if session_path.exists() {
+        if json_output {
+            return Err(MicError::Other(
+                "Active session with uncommitted changes. Run 'hif session land' or 'hif session abandon' first.".to_string(),
+            ));
+        }
+
         println!();
         println!("Warning: There is an active session with uncommitted changes.");
         println!("Run 'hif session land' or 'hif session abandon' before unmounting.");
@@ -54,7 +64,9 @@ pub async fn run(cmd: UnmountCommand) -> Result<()> {
         std::io::stdin().read_line(&mut input)?;
 
         if !input.trim().eq_ignore_ascii_case("y") {
-            println!("Unmount cancelled.");
+            if !json_output {
+                println!("Unmount cancelled.");
+            }
             return Ok(());
         }
     }
@@ -77,10 +89,30 @@ pub async fn run(cmd: UnmountCommand) -> Result<()> {
 
         // Remove the mount directory itself
         fs::remove_dir(&mount_path)?;
-        println!("Removed mount directory: {}", mount_path.display());
+        if json_output {
+            output::print_ok(
+                "unmount",
+                serde_json::json!({
+                    "path": mount_path,
+                    "removed": true
+                }),
+            )?;
+        } else {
+            println!("Removed mount directory: {}", mount_path.display());
+        }
     } else {
-        println!("Unmounted. Files remain at: {}", mount_path.display());
-        println!("To remove files, run: hif unmount {} --remove", cmd.path);
+        if json_output {
+            output::print_ok(
+                "unmount",
+                serde_json::json!({
+                    "path": mount_path,
+                    "removed": false
+                }),
+            )?;
+        } else {
+            println!("Unmounted. Files remain at: {}", mount_path.display());
+            println!("To remove files, run: hif unmount {} --remove", cmd.path);
+        }
     }
 
     Ok(())

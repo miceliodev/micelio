@@ -5,6 +5,7 @@ use crate::config::Config;
 use crate::error::{MicError, Result};
 use crate::grpc::hif_v1::{call, pb, repository_ref};
 use crate::grpc::{Endpoint, GrpcClient};
+use crate::output;
 use crate::workspace::{parse_position, PositionOrLatest};
 use colored::Colorize;
 use std::collections::BTreeMap;
@@ -56,11 +57,39 @@ pub async fn run(cmd: DiffCommand) -> Result<()> {
     .await?;
 
     let changes = summarize_changes(&response.hunks);
-    for (path, change_type) in changes {
-        match change_type {
-            ChangeType::Added => println!("{} {}", "A".green(), path.green()),
-            ChangeType::Deleted => println!("{} {}", "D".red(), path.red()),
-            ChangeType::Modified => println!("{} {}", "M".yellow(), path.yellow()),
+    if output::use_json() {
+        let items = changes
+            .iter()
+            .map(|(path, change_type)| {
+                let change = match change_type {
+                    ChangeType::Added => "added",
+                    ChangeType::Deleted => "deleted",
+                    ChangeType::Modified => "modified",
+                };
+
+                serde_json::json!({
+                    "path": path,
+                    "change_type": change
+                })
+            })
+            .collect::<Vec<_>>();
+
+        output::print_ok(
+            "diff",
+            serde_json::json!({
+                "repository": cmd.repository,
+                "from": cmd.from,
+                "to": cmd.to,
+                "changes": items
+            }),
+        )?;
+    } else {
+        for (path, change_type) in changes {
+            match change_type {
+                ChangeType::Added => println!("{} {}", "A".green(), path.green()),
+                ChangeType::Deleted => println!("{} {}", "D".red(), path.red()),
+                ChangeType::Modified => println!("{} {}", "M".yellow(), path.yellow()),
+            }
         }
     }
 

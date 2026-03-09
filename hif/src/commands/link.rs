@@ -3,6 +3,7 @@
 use crate::cli::{parse_repository_ref, LinkCommand};
 use crate::config::{self, Config};
 use crate::error::{MicError, Result};
+use crate::output;
 use crate::workspace::manifest::Manifest;
 
 /// Run the link command.
@@ -25,8 +26,19 @@ pub async fn run(cmd: LinkCommand) -> Result<()> {
     let manifest = Manifest::new(&server, org, repository);
     manifest.save()?;
 
-    println!("Linked to {}/{}", org, repository);
-    println!("Server: {}", server);
+    if output::use_json() {
+        output::print_ok(
+            "link",
+            serde_json::json!({
+                "account": org,
+                "repository": repository,
+                "server": server
+            }),
+        )?;
+    } else {
+        println!("Linked to {}/{}", org, repository);
+        println!("Server: {}", server);
+    }
 
     Ok(())
 }

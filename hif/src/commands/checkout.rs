@@ -3,6 +3,7 @@
 use crate::cli::{parse_repository_ref, CheckoutCommand};
 use crate::config::{self, Config};
 use crate::error::{MicError, Result};
+use crate::output;
 use crate::workspace::WorkspaceManifest;
 use std::fs;
 
@@ -35,11 +36,23 @@ pub async fn run(cmd: CheckoutCommand) -> Result<()> {
     let manifest = WorkspaceManifest::new(&server, org, repository);
     manifest.save()?;
 
-    println!("Checked out {}/{} to {}", org, repository, target_path);
-    println!();
-    println!("Start working:");
-    println!("  cd {}", target_path);
-    println!("  hif session start \"your goal\"");
+    if output::use_json() {
+        output::print_ok(
+            "checkout",
+            serde_json::json!({
+                "account": org,
+                "repository": repository,
+                "path": target_path,
+                "server": server
+            }),
+        )?;
+    } else {
+        println!("Checked out {}/{} to {}", org, repository, target_path);
+        println!();
+        println!("Start working:");
+        println!("  cd {}", target_path);
+        println!("  hif session start \"your goal\"");
+    }
 
     Ok(())
 }

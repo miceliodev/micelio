@@ -5,6 +5,7 @@ use crate::config::Config;
 use crate::error::Result;
 use crate::grpc::client::{read_field, read_string, write_length_delimited};
 use crate::grpc::{Endpoint, GrpcClient};
+use crate::output;
 
 /// Run the org command.
 pub async fn run(cmd: OrgCommand) -> Result<()> {
@@ -33,13 +34,25 @@ async fn list() -> Result<()> {
 
     // Parse response (simplified)
     let mut pos = 0;
+    let mut organizations = Vec::new();
     while pos < response.len() {
         if let Some((field_number, _, data)) = read_field(&response, &mut pos) {
             if field_number == 1 {
-                // organizations field (repeated)
-                let org_name = parse_organization(data);
-                println!("{}", org_name);
+                organizations.push(parse_organization(data));
             }
+        }
+    }
+
+    if output::use_json() {
+        output::print_ok(
+            "org.list",
+            serde_json::json!({
+                "organizations": organizations
+            }),
+        )?;
+    } else {
+        for org in organizations {
+            println!("{}", org);
         }
     }
 
@@ -67,10 +80,21 @@ async fn info(handle: &str) -> Result<()> {
     // Parse response
     let (name, handle, description) = parse_organization_details(&response);
 
-    println!("Organization: {}", name);
-    println!("Handle: {}", handle);
-    if !description.is_empty() {
-        println!("Description: {}", description);
+    if output::use_json() {
+        output::print_ok(
+            "org.info",
+            serde_json::json!({
+                "name": name,
+                "handle": handle,
+                "description": description
+            }),
+        )?;
+    } else {
+        println!("Organization: {}", name);
+        println!("Handle: {}", handle);
+        if !description.is_empty() {
+            println!("Description: {}", description);
+        }
     }
 
     Ok(())

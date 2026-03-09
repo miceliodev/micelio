@@ -5,6 +5,7 @@ use crate::config::Config;
 use crate::error::{MicError, Result};
 use crate::grpc::hif_v1::{call, pb, repository_ref};
 use crate::grpc::{Endpoint, GrpcClient};
+use crate::output;
 use crate::workspace::{parse_position, PositionOrLatest};
 use std::collections::BTreeSet;
 
@@ -47,8 +48,21 @@ pub async fn run(cmd: TreeCommand) -> Result<()> {
         .into_iter()
         .map(|entry| entry.path)
         .collect::<Vec<_>>();
-    for entry in list_directory_entries(&entries, cmd.path.as_deref().unwrap_or("")) {
-        println!("{}", entry);
+
+    let listed = list_directory_entries(&entries, cmd.path.as_deref().unwrap_or(""));
+    if output::use_json() {
+        output::print_ok(
+            "tree",
+            serde_json::json!({
+                "repository": cmd.repository,
+                "path": cmd.path.unwrap_or_default(),
+                "entries": listed
+            }),
+        )?;
+    } else {
+        for entry in listed {
+            println!("{}", entry);
+        }
     }
 
     Ok(())

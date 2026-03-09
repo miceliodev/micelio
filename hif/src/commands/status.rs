@@ -1,24 +1,104 @@
 //! Status command - show workspace changes.
 
 use crate::error::{MicError, Result};
+use crate::output;
 use crate::workspace::{collect_changes, session::Session, ChangeType, WorkspaceManifest};
 use colored::Colorize;
 
 /// Run the status command.
 pub async fn run() -> Result<()> {
     let cwd = std::env::current_dir()?;
+    let json_output = output::use_json();
 
     // Check if we're in a workspace
     let manifest = WorkspaceManifest::load()?.ok_or(MicError::NoWorkspace)?;
 
-    println!(
-        "{}",
-        format!("On repository {}/{}", manifest.account, manifest.repository).bold()
-    );
-    println!("Server: {}", manifest.server.dimmed());
+    if !json_output {
+        println!(
+            "{}",
+            format!("On repository {}/{}", manifest.account, manifest.repository).bold()
+        );
+        println!("Server: {}", manifest.server.dimmed());
+    }
 
     // Get workspace changes from disk
     let disk_changes = collect_changes(&cwd, &manifest)?;
+
+    if json_output {
+        if let Some(state) = Session::load()? {
+            let staged_paths: std::collections::HashSet<_> =
+                state.files.iter().map(|f| &f.path).collect();
+            let unstaged = disk_changes
+                .iter()
+                .filter(|c| !staged_paths.contains(&c.path))
+                .map(|change| {
+                    serde_json::json!({
+                        "path": change.path,
+                        "change_type": match change.change_type {
+                            ChangeType::Added => "added",
+                            ChangeType::Modified => "modified",
+                            ChangeType::Deleted => "deleted",
+                        }
+                    })
+                })
+                .collect::<Vec<_>>();
+            let staged = state
+                .files
+                .iter()
+                .map(|file| {
+                    serde_json::json!({
+                        "path": file.path,
+                        "change_type": file.change_type
+                    })
+                })
+                .collect::<Vec<_>>();
+
+            output::print_ok(
+                "status",
+                serde_json::json!({
+                    "workspace": {
+                        "account": manifest.account,
+                        "repository": manifest.repository,
+                        "server": manifest.server
+                    },
+                    "session": {
+                        "id": state.id,
+                        "goal": state.goal
+                    },
+                    "staged_changes": staged,
+                    "unstaged_changes": unstaged
+                }),
+            )?;
+        } else {
+            let changes = disk_changes
+                .iter()
+                .map(|change| {
+                    serde_json::json!({
+                        "path": change.path,
+                        "change_type": match change.change_type {
+                            ChangeType::Added => "added",
+                            ChangeType::Modified => "modified",
+                            ChangeType::Deleted => "deleted",
+                        }
+                    })
+                })
+                .collect::<Vec<_>>();
+
+            output::print_ok(
+                "status",
+                serde_json::json!({
+                    "workspace": {
+                        "account": manifest.account,
+                        "repository": manifest.repository,
+                        "server": manifest.server
+                    },
+                    "session": serde_json::Value::Null,
+                    "changes": changes
+                }),
+            )?;
+        }
+        return Ok(());
+    }
 
     // Check for active session
     if let Some(state) = Session::load()? {

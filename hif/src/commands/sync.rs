@@ -4,6 +4,7 @@ use crate::cli::SyncCommand;
 use crate::error::{MicError, Result};
 use crate::grpc::hif_v1::{call, pb, repository_ref};
 use crate::grpc::{Endpoint, GrpcClient};
+use crate::output;
 use crate::workspace::{session::Session, WorkspaceManifest};
 use std::collections::HashMap;
 use std::fs;
@@ -46,41 +47,65 @@ pub struct SyncResult {
 pub async fn run(cmd: SyncCommand) -> Result<()> {
     let strategy = MergeStrategy::parse(&cmd.strategy)
         .ok_or_else(|| MicError::Other(format!("Invalid strategy: {}", cmd.strategy)))?;
+    let json_output = output::use_json();
+
+    if json_output && strategy == MergeStrategy::Interactive {
+        return Err(MicError::Other(
+            "Interactive sync is not supported with --json. Use --strategy ours|theirs."
+                .to_string(),
+        ));
+    }
 
     // Check if we're in a workspace
     let mut manifest = WorkspaceManifest::load()?.ok_or(MicError::NoWorkspace)?;
 
-    println!(
-        "Syncing {}/{} from {}...",
-        manifest.account, manifest.repository, manifest.server
-    );
+    if !json_output {
+        println!(
+            "Syncing {}/{} from {}...",
+            manifest.account, manifest.repository, manifest.server
+        );
+    }
 
     let result = sync_workspace(&mut manifest, strategy).await?;
 
     // Report results
-    if result.updated.is_empty() && result.conflicts.is_empty() {
-        println!("Already up to date.");
+    if json_output {
+        output::print_ok(
+            "sync",
+            serde_json::json!({
+                "account": manifest.account,
+                "repository": manifest.repository,
+                "strategy": cmd.strategy,
+                "updated": result.updated,
+                "conflicts": result.conflicts,
+                "revision": format_revision_hash(&result.revision_hash)
+            }),
+        )?;
     } else {
-        if !result.updated.is_empty() {
-            println!("\nUpdated {} files:", result.updated.len());
-            for path in &result.updated {
-                println!("  U {}", path);
+        if result.updated.is_empty() && result.conflicts.is_empty() {
+            println!("Already up to date.");
+        } else {
+            if !result.updated.is_empty() {
+                println!("\nUpdated {} files:", result.updated.len());
+                for path in &result.updated {
+                    println!("  U {}", path);
+                }
+            }
+
+            if !result.conflicts.is_empty() {
+                println!("\nConflicts in {} files:", result.conflicts.len());
+                for path in &result.conflicts {
+                    println!("  C {}", path);
+                }
+                println!("\nResolve conflicts and run 'hif session land' to continue.");
             }
         }
 
-        if !result.conflicts.is_empty() {
-            println!("\nConflicts in {} files:", result.conflicts.len());
-            for path in &result.conflicts {
-                println!("  C {}", path);
-            }
-            println!("\nResolve conflicts and run 'hif session land' to continue.");
-        }
+        println!(
+            "\nSynced to revision {}",
+            format_revision_hash(&result.revision_hash)
+        );
     }
-
-    println!(
-        "\nSynced to revision {}",
-        format_revision_hash(&result.revision_hash)
-    );
 
     Ok(())
 }
@@ -207,7 +232,9 @@ async fn sync_workspace(
                         updated.push(format!("{} (deleted)", path));
                     }
                     MergeStrategy::Interactive => {
-                        println!("File '{}' was deleted upstream but modified locally.", path);
+                        if !output::use_json() {
+                            println!("File '{}' was deleted upstream but modified locally.", path);
+                        }
                         let resolution = prompt_conflict_resolution(path)?;
                         match resolution {
                             ConflictResolution::Ours => {

@@ -5,6 +5,7 @@ use crate::config::Config;
 use crate::error::{MicError, Result};
 use crate::grpc::client::{read_field, read_string, write_length_delimited};
 use crate::grpc::{Endpoint, GrpcClient};
+use crate::output;
 
 /// Run the repository command.
 pub async fn run(cmd: RepositoryCommand) -> Result<()> {
@@ -75,12 +76,36 @@ async fn list(account: &str) -> Result<()> {
         .await?;
 
     let mut pos = 0;
+    let mut repositories = Vec::new();
     while pos < response.len() {
         if let Some((field_number, _, data)) = read_field(&response, &mut pos) {
             if field_number == 1 {
                 let (name, handle) = parse_repository(data);
-                println!("{}/{} - {}", account, handle, name);
+                repositories.push(serde_json::json!({
+                    "account": account,
+                    "handle": handle,
+                    "name": name
+                }));
             }
+        }
+    }
+
+    if output::use_json() {
+        output::print_ok(
+            "repository.list",
+            serde_json::json!({
+                "account": account,
+                "repositories": repositories
+            }),
+        )?;
+    } else {
+        for repository in repositories {
+            println!(
+                "{}/{} - {}",
+                repository["account"].as_str().unwrap_or_default(),
+                repository["handle"].as_str().unwrap_or_default(),
+                repository["name"].as_str().unwrap_or_default()
+            );
         }
     }
 
@@ -109,7 +134,19 @@ async fn create(account: &str, handle: &str, name: &str, description: Option<&st
         )
         .await?;
 
-    println!("Repository created: {}/{}", account, handle);
+    if output::use_json() {
+        output::print_ok(
+            "repository.create",
+            serde_json::json!({
+                "account": account,
+                "repository": handle,
+                "name": name,
+                "description": description
+            }),
+        )?;
+    } else {
+        println!("Repository created: {}/{}", account, handle);
+    }
     Ok(())
 }
 
@@ -133,10 +170,22 @@ async fn info(account: &str, handle: &str) -> Result<()> {
 
     let (name, handle, description) = parse_repository_details(&response);
 
-    println!("Repository: {}", name);
-    println!("Handle: {}/{}", account, handle);
-    if !description.is_empty() {
-        println!("Description: {}", description);
+    if output::use_json() {
+        output::print_ok(
+            "repository.info",
+            serde_json::json!({
+                "account": account,
+                "handle": handle,
+                "name": name,
+                "description": description
+            }),
+        )?;
+    } else {
+        println!("Repository: {}", name);
+        println!("Handle: {}/{}", account, handle);
+        if !description.is_empty() {
+            println!("Description: {}", description);
+        }
     }
 
     Ok(())
@@ -171,7 +220,19 @@ async fn update(
         )
         .await?;
 
-    println!("Repository updated.");
+    if output::use_json() {
+        output::print_ok(
+            "repository.update",
+            serde_json::json!({
+                "account": account,
+                "repository": handle,
+                "name": name,
+                "description": description
+            }),
+        )?;
+    } else {
+        println!("Repository updated.");
+    }
     Ok(())
 }
 
@@ -193,7 +254,17 @@ async fn delete(account: &str, handle: &str) -> Result<()> {
         )
         .await?;
 
-    println!("Repository deleted: {}/{}", account, handle);
+    if output::use_json() {
+        output::print_ok(
+            "repository.delete",
+            serde_json::json!({
+                "account": account,
+                "repository": handle
+            }),
+        )?;
+    } else {
+        println!("Repository deleted: {}/{}", account, handle);
+    }
     Ok(())
 }
 

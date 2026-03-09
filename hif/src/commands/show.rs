@@ -5,6 +5,7 @@ use crate::config::Config;
 use crate::error::{MicError, Result};
 use crate::grpc::hif_v1::{call, pb, repository_ref};
 use crate::grpc::{Endpoint, GrpcClient};
+use crate::output;
 use crate::workspace::{parse_position, PositionOrLatest};
 
 /// Run the show command.
@@ -42,6 +43,32 @@ pub async fn run(cmd: ShowCommand) -> Result<()> {
     )
     .await?;
 
-    print!("{}", String::from_utf8_lossy(&response.content));
+    if output::use_json() {
+        use base64::Engine;
+
+        let (content, encoding) = match String::from_utf8(response.content.clone()) {
+            Ok(text) => (text, "utf8"),
+            Err(_) => (
+                base64::engine::general_purpose::STANDARD.encode(&response.content),
+                "base64",
+            ),
+        };
+
+        output::print_ok(
+            "show",
+            serde_json::json!({
+                "repository": cmd.repository,
+                "path": cmd.path.trim_start_matches('/'),
+                "content": content,
+                "encoding": encoding,
+                "content_hash": response.content_hash,
+                "size": response.size,
+                "mode": response.mode
+            }),
+        )?;
+    } else {
+        print!("{}", String::from_utf8_lossy(&response.content));
+    }
+
     Ok(())
 }

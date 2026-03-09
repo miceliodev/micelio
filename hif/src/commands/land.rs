@@ -5,6 +5,7 @@ use crate::cli::{
 };
 use crate::commands::session;
 use crate::error::{MicError, Result};
+use crate::output;
 use crate::workspace::manifest::Manifest;
 use crate::workspace::session::Session;
 
@@ -21,7 +22,9 @@ pub async fn run(cmd: LandCommand) -> Result<()> {
     // Check for active session
     if Session::exists()? {
         // If there's already a session, just land it (ignore the goal)
-        println!("Active session found. Landing existing session...");
+        if !output::use_json() {
+            println!("Active session found. Landing existing session...");
+        }
         let session_cmd = SessionCommand {
             command: SessionSubcommand::Land,
         };
@@ -29,7 +32,9 @@ pub async fn run(cmd: LandCommand) -> Result<()> {
     }
 
     // No active session - start one with the goal and immediately land.
-    println!("Starting session and landing...");
+    if !output::use_json() {
+        println!("Starting session and landing...");
+    }
 
     let start_cmd = SessionCommand {
         command: SessionSubcommand::Start {

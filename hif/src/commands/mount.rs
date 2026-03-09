@@ -8,6 +8,7 @@ use crate::config::Config;
 use crate::error::{MicError, Result};
 use crate::grpc::hif_v1::{call, pb, repository_ref};
 use crate::grpc::{Endpoint, GrpcClient};
+use crate::output;
 use std::fs;
 use std::path::PathBuf;
 
@@ -27,16 +28,19 @@ pub async fn run(cmd: MountCommand) -> Result<()> {
     let server = config.resolve_default_grpc_url().await?;
     let endpoint = Endpoint::parse(&server)?;
     let client = GrpcClient::new(endpoint);
+    let json_output = output::use_json();
 
     let mount_path = cmd.path.clone().unwrap_or_else(|| repository.to_string());
     let mount_path = PathBuf::from(&mount_path);
 
-    println!(
-        "Mounting {}/{} to {}...",
-        organization,
-        repository,
-        mount_path.display()
-    );
+    if !json_output {
+        println!(
+            "Mounting {}/{} to {}...",
+            organization,
+            repository,
+            mount_path.display()
+        );
+    }
 
     if !mount_path.exists() {
         fs::create_dir_all(&mount_path)?;
@@ -50,15 +54,34 @@ pub async fn run(cmd: MountCommand) -> Result<()> {
         &revision_hash,
         &tree,
         &mount_path,
+        json_output,
     )
     .await?;
 
     write_mount_metadata(&mount_path, &server, organization, repository)?;
 
-    println!("Synced {} files to {}", file_count, mount_path.display());
-    println!();
-    println!("Note: This is a local mirror, not a live mount.");
-    println!("Changes made locally are not auto-landed; use 'hif session land'.");
+    if json_output {
+        let revision = revision_hash
+            .iter()
+            .map(|byte| format!("{:02x}", byte))
+            .collect::<String>();
+
+        output::print_ok(
+            "mount",
+            serde_json::json!({
+                "account": organization,
+                "repository": repository,
+                "path": mount_path,
+                "synced_files": file_count,
+                "revision": revision
+            }),
+        )?;
+    } else {
+        println!("Synced {} files to {}", file_count, mount_path.display());
+        println!();
+        println!("Note: This is a local mirror, not a live mount.");
+        println!("Changes made locally are not auto-landed; use 'hif session land'.");
+    }
 
     Ok(())
 }
@@ -120,6 +143,7 @@ async fn sync_tree(
     revision_hash: &[u8],
     tree: &[MountEntry],
     mount_path: &PathBuf,
+    json_output: bool,
 ) -> Result<usize> {
     let mut synced = 0;
 
@@ -142,7 +166,9 @@ async fn sync_tree(
         if should_write {
             fs::write(&file_path, &content)?;
             synced += 1;
-            println!("  {} ({})", entry.path, entry.hash);
+            if !json_output {
+                println!("  {} ({})", entry.path, entry.hash);
+            }
         }
     }
 

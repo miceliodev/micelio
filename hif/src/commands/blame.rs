@@ -5,6 +5,7 @@ use crate::config::Config;
 use crate::error::{MicError, Result};
 use crate::grpc::hif_v1::{call, pb, repository_ref};
 use crate::grpc::{Endpoint, GrpcClient};
+use crate::output;
 
 /// Run the blame command.
 pub async fn run(cmd: BlameCommand) -> Result<()> {
@@ -37,19 +38,47 @@ pub async fn run(cmd: BlameCommand) -> Result<()> {
         ));
     }
 
+    let path = cmd.path.clone();
     let response: pb::BlameResponse = call(
         &client,
         "/hif.v1.ContentService/Blame",
         &pb::BlameRequest {
             repository: Some(repo),
             revision_hash: head_revision_hash,
-            path: cmd.path,
+            path: path.clone(),
         },
     )
     .await?;
 
-    for line in response.lines {
-        println!("{:>4} {} | {}", line.line, line.session_id, line.text);
+    if output::use_json() {
+        let lines = response
+            .lines
+            .into_iter()
+            .map(|line| {
+                serde_json::json!({
+                    "line": line.line,
+                    "session_id": line.session_id,
+                    "text": line.text,
+                    "path": line.path,
+                    "actor_handle": line.actor_handle,
+                    "revision_hash": line.revision_hash,
+                    "at_ms": line.at_ms
+                })
+            })
+            .collect::<Vec<_>>();
+
+        output::print_ok(
+            "blame",
+            serde_json::json!({
+                "repository": cmd.repository,
+                "path": path,
+                "lines": lines
+            }),
+        )?;
+    } else {
+        for line in response.lines {
+            println!("{:>4} {} | {}", line.line, line.session_id, line.text);
+        }
     }
 
     Ok(())

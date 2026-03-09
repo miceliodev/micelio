@@ -10,6 +10,7 @@ use crate::constants::{
 };
 use crate::error::{MicError, Result};
 use crate::http_client;
+use crate::output;
 use colored::Colorize;
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
@@ -87,7 +88,9 @@ async fn login() -> Result<()> {
     let auth = start_device_authorization(web_url, client_id.as_deref()).await?;
 
     // Display instructions
-    print_authorization_instructions(&auth);
+    if !output::use_json() {
+        print_authorization_instructions(&auth);
+    }
 
     // Poll for token
     let token = poll_for_token(web_url, &auth).await?;
@@ -96,7 +99,18 @@ async fn login() -> Result<()> {
     let stored = create_stored_tokens(grpc_url, token);
     config::store_tokens(&stored)?;
 
-    println!("{} Authenticated with {}.", "✓".green(), server_name);
+    if output::use_json() {
+        output::print_ok(
+            "auth.login",
+            serde_json::json!({
+                "server": server_name,
+                "grpc_url": grpc_url,
+                "expires_at": stored.expires_at
+            }),
+        )?;
+    } else {
+        println!("{} Authenticated with {}.", "✓".green(), server_name);
+    }
     Ok(())
 }
 
@@ -104,22 +118,59 @@ async fn login() -> Result<()> {
 fn status() -> Result<()> {
     match config::read_tokens()? {
         None => {
-            println!("Not logged in.");
-            println!("\nRun {} to authenticate.", "hif auth login".cyan());
+            if output::use_json() {
+                output::print_ok(
+                    "auth.status",
+                    serde_json::json!({
+                        "authenticated": false
+                    }),
+                )?;
+            } else {
+                println!("Not logged in.");
+                println!("\nRun {} to authenticate.", "hif auth login".cyan());
+            }
         }
         Some(tokens) => {
             if is_token_expired(&tokens) {
-                println!("{} Access token expired.", "✗".red());
-                println!("\nRun {} to re-authenticate.", "hif auth login".cyan());
+                if output::use_json() {
+                    output::print_ok(
+                        "auth.status",
+                        serde_json::json!({
+                            "authenticated": true,
+                            "expired": true,
+                            "server": tokens.server,
+                            "expires_at": tokens.expires_at
+                        }),
+                    )?;
+                } else {
+                    println!("{} Access token expired.", "✗".red());
+                    println!("\nRun {} to re-authenticate.", "hif auth login".cyan());
+                }
             } else {
-                println!("{} Authenticated with {}.", "✓".green(), tokens.server);
+                if output::use_json() {
+                    let remaining = tokens
+                        .expires_at
+                        .map(|expires_at| (expires_at - chrono::Utc::now().timestamp()).max(0));
+                    output::print_ok(
+                        "auth.status",
+                        serde_json::json!({
+                            "authenticated": true,
+                            "expired": false,
+                            "server": tokens.server,
+                            "expires_at": tokens.expires_at,
+                            "remaining_seconds": remaining
+                        }),
+                    )?;
+                } else {
+                    println!("{} Authenticated with {}.", "✓".green(), tokens.server);
 
-                if let Some(expires_at) = tokens.expires_at {
-                    let remaining = expires_at - chrono::Utc::now().timestamp();
-                    if remaining > 0 {
-                        let hours = remaining / 3600;
-                        let minutes = (remaining % 3600) / 60;
-                        println!("  Token expires in {}h {}m.", hours, minutes);
+                    if let Some(expires_at) = tokens.expires_at {
+                        let remaining = expires_at - chrono::Utc::now().timestamp();
+                        if remaining > 0 {
+                            let hours = remaining / 3600;
+                            let minutes = (remaining % 3600) / 60;
+                            println!("  Token expires in {}h {}m.", hours, minutes);
+                        }
                     }
                 }
             }
@@ -131,7 +182,11 @@ fn status() -> Result<()> {
 /// Log out (remove stored credentials).
 fn logout() -> Result<()> {
     config::delete_tokens()?;
-    println!("{} Logged out.", "✓".green());
+    if output::use_json() {
+        output::print_ok("auth.logout", serde_json::json!({}))?;
+    } else {
+        println!("{} Logged out.", "✓".green());
+    }
     Ok(())
 }
 

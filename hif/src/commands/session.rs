@@ -7,6 +7,7 @@ use crate::config::Config;
 use crate::error::{MicError, Result};
 use crate::grpc::hif_v1::{call, pb, repository_ref};
 use crate::grpc::{Endpoint, GrpcClient};
+use crate::output;
 use crate::workspace::manifest::Manifest;
 use crate::workspace::session::{Conversation, Session, SessionState};
 use crate::workspace::{collect_changes, ChangeType, WorkspaceManifest};
@@ -100,11 +101,23 @@ async fn start(organization: &str, repository: &str, goal: &str) -> Result<()> {
 
     let state = Session::start_with_id(organization, repository, goal, &session_id)?;
 
-    println!("Session started: {}", state.id);
-    println!("Goal: {}", goal);
-    println!("Repository: {}/{}", organization, repository);
-    println!();
-    println!("Make your changes, then run 'hif session land' to push to the forge.");
+    if output::use_json() {
+        output::print_ok(
+            "session.start",
+            serde_json::json!({
+                "session_id": state.id,
+                "goal": goal,
+                "account": organization,
+                "repository": repository
+            }),
+        )?;
+    } else {
+        println!("Session started: {}", state.id);
+        println!("Goal: {}", goal);
+        println!("Repository: {}/{}", organization, repository);
+        println!();
+        println!("Make your changes, then run 'hif session land' to push to the forge.");
+    }
 
     Ok(())
 }
@@ -112,57 +125,85 @@ async fn start(organization: &str, repository: &str, goal: &str) -> Result<()> {
 /// Show session status.
 async fn status() -> Result<()> {
     let state = Session::load()?;
+    let json_output = output::use_json();
 
     match state {
         None => {
-            println!("No active session.");
-            println!("Start one with: hif session start <account>/<repository> <goal>");
+            if json_output {
+                output::print_ok("session.status", serde_json::json!({"active": false}))?;
+            } else {
+                println!("No active session.");
+                println!("Start one with: hif session start <account>/<repository> <goal>");
+            }
         }
         Some(state) => {
-            println!("Active session: {}", state.id);
-            println!("Goal: {}", state.goal);
-            println!(
-                "Repository: {}/{}",
-                state.repository_org, state.repository_handle
-            );
-            println!("Started: {}", state.started_at);
+            let remote = fetch_remote_session_status(&state).await.ok();
+            if json_output {
+                let remote_json = remote
+                    .as_ref()
+                    .map(session_info_to_json)
+                    .unwrap_or(serde_json::Value::Null);
+                output::print_ok(
+                    "session.status",
+                    serde_json::json!({
+                        "active": true,
+                        "session_id": state.id,
+                        "goal": state.goal,
+                        "account": state.repository_org,
+                        "repository": state.repository_handle,
+                        "started_at": state.started_at,
+                        "conversation": state.conversation,
+                        "decisions": state.decisions,
+                        "files": state.files,
+                        "remote": remote_json
+                    }),
+                )?;
+            } else {
+                println!("Active session: {}", state.id);
+                println!("Goal: {}", state.goal);
+                println!(
+                    "Repository: {}/{}",
+                    state.repository_org, state.repository_handle
+                );
+                println!("Started: {}", state.started_at);
 
-            if !state.conversation.is_empty() {
-                println!();
-                println!("Conversation ({} messages):", state.conversation.len());
-                for msg in &state.conversation {
-                    println!("  [{}] {}", msg.role, msg.message);
+                if !state.conversation.is_empty() {
+                    println!();
+                    println!("Conversation ({} messages):", state.conversation.len());
+                    for msg in &state.conversation {
+                        println!("  [{}] {}", msg.role, msg.message);
+                    }
                 }
-            }
 
-            if !state.decisions.is_empty() {
-                println!();
-                println!("Decisions ({}):", state.decisions.len());
-                for decision in &state.decisions {
-                    println!("  - {}", decision.description);
-                    println!("    Reasoning: {}", decision.reasoning);
+                if !state.decisions.is_empty() {
+                    println!();
+                    println!("Decisions ({}):", state.decisions.len());
+                    for decision in &state.decisions {
+                        println!("  - {}", decision.description);
+                        println!("    Reasoning: {}", decision.reasoning);
+                    }
                 }
-            }
 
-            if !state.files.is_empty() {
-                println!();
-                println!("Files ({}):", state.files.len());
-                for file in &state.files {
-                    println!("  {} ({})", file.path, file.change_type);
+                if !state.files.is_empty() {
+                    println!();
+                    println!("Files ({}):", state.files.len());
+                    for file in &state.files {
+                        println!("  {} ({})", file.path, file.change_type);
+                    }
                 }
-            }
 
-            if let Ok(remote) = fetch_remote_session_status(&state).await {
-                println!();
-                println!("Remote status: {}", remote.status);
-                if let Some(conflict) = remote.conflict {
-                    println!(
-                        "Conflict revision: {}",
-                        format_revision_hash(&conflict.revision_hash)
-                    );
-                    if !conflict.paths.is_empty() {
-                        for path in conflict.paths {
-                            println!("  - {}", path);
+                if let Some(remote) = remote.as_ref() {
+                    println!();
+                    println!("Remote status: {}", remote.status);
+                    if let Some(conflict) = remote.conflict.as_ref() {
+                        println!(
+                            "Conflict revision: {}",
+                            format_revision_hash(&conflict.revision_hash)
+                        );
+                        if !conflict.paths.is_empty() {
+                            for path in &conflict.paths {
+                                println!("  - {}", path);
+                            }
                         }
                     }
                 }
@@ -176,7 +217,17 @@ async fn status() -> Result<()> {
 /// Add a note to the session.
 fn note(role: &str, message: &str) -> Result<()> {
     Session::add_note(role, message)?;
-    println!("Note added to session.");
+    if output::use_json() {
+        output::print_ok(
+            "session.note",
+            serde_json::json!({
+                "role": role,
+                "message": message
+            }),
+        )?;
+    } else {
+        println!("Note added to session.");
+    }
     Ok(())
 }
 
@@ -217,8 +268,20 @@ async fn land() -> Result<()> {
     .await?;
 
     if response.status == "conflict" {
+        if output::use_json() {
+            let details = response
+                .conflict
+                .as_ref()
+                .map(session_conflict_to_json)
+                .unwrap_or(serde_json::Value::Null);
+            return Err(MicError::Other(format!(
+                "Conflicts detected with upstream changes: {}",
+                serde_json::to_string(&details).unwrap_or_else(|_| "null".to_string())
+            )));
+        }
+
         println!("Error: Conflicts detected with upstream changes.");
-        if let Some(conflict) = response.conflict {
+        if let Some(conflict) = response.conflict.as_ref() {
             println!();
             println!(
                 "Conflict revision: {}",
@@ -229,7 +292,7 @@ async fn land() -> Result<()> {
             }
             if !conflict.paths.is_empty() {
                 println!("Conflicting files:");
-                for path in conflict.paths {
+                for path in &conflict.paths {
                     println!("  - {}", path);
                 }
             }
@@ -248,10 +311,20 @@ async fn land() -> Result<()> {
         .map(|position| format_revision_hash(&position.hash))
         .unwrap_or_else(|| String::new());
 
-    println!("Session landed successfully!");
-    println!("Session ID: {}", response.session_id);
-    if !landing_revision.is_empty() {
-        println!("Landing revision: {}", landing_revision);
+    if output::use_json() {
+        output::print_ok(
+            "session.land",
+            serde_json::json!({
+                "session_id": response.session_id,
+                "revision": landing_revision
+            }),
+        )?;
+    } else {
+        println!("Session landed successfully!");
+        println!("Session ID: {}", response.session_id);
+        if !landing_revision.is_empty() {
+            println!("Landing revision: {}", landing_revision);
+        }
     }
 
     Session::delete()?;
@@ -263,7 +336,11 @@ async fn abandon() -> Result<()> {
     let state = match Session::load()? {
         Some(state) => state,
         None => {
-            println!("No active session to abandon.");
+            if output::use_json() {
+                output::print_ok("session.abandon", serde_json::json!({"abandoned": false}))?;
+            } else {
+                println!("No active session to abandon.");
+            }
             return Ok(());
         }
     };
@@ -288,24 +365,84 @@ async fn abandon() -> Result<()> {
     }
     .await;
 
-    if let Err(error) = remote_result {
-        eprintln!(
-            "Warning: remote session abandon failed ({}). Local session will still be removed.",
-            error
-        );
+    let remote_warning = remote_result.err().map(|error| error.to_string());
+    if let Some(error) = &remote_warning {
+        if !output::use_json() {
+            eprintln!(
+                "Warning: remote session abandon failed ({}). Local session will still be removed.",
+                error
+            );
+        }
     }
 
     Session::delete()?;
-    println!("Session abandoned.");
+    if output::use_json() {
+        output::print_ok(
+            "session.abandon",
+            serde_json::json!({
+                "abandoned": true,
+                "session_id": state.id,
+                "remote_warning": remote_warning
+            }),
+        )?;
+    } else {
+        println!("Session abandoned.");
+    }
     Ok(())
 }
 
 /// Resolve conflicts.
 fn resolve(strategy: &str) -> Result<()> {
-    println!("Conflict resolution is not yet implemented.");
-    println!("Available strategies: ours, theirs, interactive");
-    println!("Strategy: {}", strategy);
+    if output::use_json() {
+        output::print_ok(
+            "session.resolve",
+            serde_json::json!({
+                "implemented": false,
+                "strategy": strategy
+            }),
+        )?;
+    } else {
+        println!("Conflict resolution is not yet implemented.");
+        println!("Available strategies: ours, theirs, interactive");
+        println!("Strategy: {}", strategy);
+    }
     Ok(())
+}
+
+fn session_info_to_json(info: &pb::SessionInfo) -> serde_json::Value {
+    serde_json::json!({
+        "session_id": &info.session_id,
+        "goal": &info.goal,
+        "status": &info.status,
+        "repository": info.repository.as_ref().map(|repository| serde_json::json!({
+            "account": &repository.account_handle,
+            "repository": &repository.repository_handle
+        })),
+        "base_position": info.base_position.as_ref().map(position_to_json),
+        "current_position": info.current_position.as_ref().map(position_to_json),
+        "conversation_count": info.conversation.len(),
+        "decisions_count": info.decisions.len(),
+        "changes_count": info.changes.len(),
+        "created_at_ms": info.created_at_ms,
+        "updated_at_ms": info.updated_at_ms,
+        "conflict": info.conflict.as_ref().map(session_conflict_to_json)
+    })
+}
+
+fn session_conflict_to_json(conflict: &pb::SessionConflict) -> serde_json::Value {
+    serde_json::json!({
+        "revision_hash": format_revision_hash(&conflict.revision_hash),
+        "session_id": &conflict.session_id,
+        "reason": &conflict.reason,
+        "paths": &conflict.paths
+    })
+}
+
+fn position_to_json(position: &pb::Position) -> serde_json::Value {
+    serde_json::json!({
+        "hash": format_revision_hash(&position.hash),
+        "at": &position.at
+    })
 }
 
 async fn fetch_remote_session_status(state: &SessionState) -> Result<pb::SessionInfo> {
