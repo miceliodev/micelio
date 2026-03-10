@@ -6,6 +6,20 @@ use crate::error::Result;
 use crate::grpc::client::{read_field, read_string, write_length_delimited};
 use crate::grpc::{Endpoint, GrpcClient};
 use crate::output;
+use serde::Serialize;
+
+#[derive(Serialize)]
+pub(crate) struct OrgListOutput {
+    organizations: Vec<String>,
+}
+
+#[derive(Serialize)]
+pub(crate) struct OrgInfoOutput {
+    name: String,
+    handle: String,
+    #[serde(skip_serializing_if = "String::is_empty")]
+    description: String,
+}
 
 /// Run the org command.
 pub async fn run(cmd: OrgCommand) -> Result<()> {
@@ -44,12 +58,7 @@ async fn list() -> Result<()> {
     }
 
     if output::use_json() {
-        output::print_ok(
-            "org.list",
-            serde_json::json!({
-                "organizations": organizations
-            }),
-        )?;
+        output::print_ok("org.list", OrgListOutput { organizations })?;
     } else {
         for org in organizations {
             println!("{}", org);
@@ -83,11 +92,11 @@ async fn info(handle: &str) -> Result<()> {
     if output::use_json() {
         output::print_ok(
             "org.info",
-            serde_json::json!({
-                "name": name,
-                "handle": handle,
-                "description": description
-            }),
+            OrgInfoOutput {
+                name,
+                handle,
+                description,
+            },
         )?;
     } else {
         println!("Organization: {}", name);

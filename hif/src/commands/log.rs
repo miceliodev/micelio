@@ -6,6 +6,24 @@ use crate::error::{MicError, Result};
 use crate::grpc::hif_v1::{call, pb, repository_ref};
 use crate::grpc::{Endpoint, GrpcClient};
 use crate::output;
+use serde::Serialize;
+
+#[derive(Serialize)]
+pub(crate) struct LogSessionOutput {
+    id: String,
+    goal: String,
+    author: String,
+    revision: String,
+}
+
+#[derive(Serialize)]
+pub(crate) struct LogOutput {
+    repository: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    path: Option<String>,
+    limit: u32,
+    sessions: Vec<LogSessionOutput>,
+}
 
 /// Run the log command.
 pub async fn run(cmd: LogCommand) -> Result<()> {
@@ -47,37 +65,30 @@ pub async fn run(cmd: LogCommand) -> Result<()> {
                     .collect::<String>()
             };
 
-            serde_json::json!({
-                "id": session.id,
-                "goal": session.goal,
-                "author": session.author,
-                "revision": revision
-            })
+            LogSessionOutput {
+                id: session.id,
+                goal: session.goal,
+                author: session.author,
+                revision,
+            }
         })
         .collect::<Vec<_>>();
 
     if output::use_json() {
         output::print_ok(
             "log",
-            serde_json::json!({
-                "repository": cmd.repository,
-                "path": cmd.path,
-                "limit": cmd.limit,
-                "sessions": sessions
-            }),
+            LogOutput {
+                repository: cmd.repository,
+                path: cmd.path,
+                limit: cmd.limit,
+                sessions,
+            },
         )?;
     } else {
-        for session in &sessions {
-            println!(
-                "{} {}",
-                session["revision"].as_str().unwrap_or_default(),
-                session["id"].as_str().unwrap_or_default()
-            );
-            println!("  Goal: {}", session["goal"].as_str().unwrap_or_default());
-            println!(
-                "  Author: {}",
-                session["author"].as_str().unwrap_or_default()
-            );
+        for session in sessions {
+            println!("{} {}", session.revision, session.id);
+            println!("  Goal: {}", session.goal);
+            println!("  Author: {}", session.author);
             println!();
         }
     }

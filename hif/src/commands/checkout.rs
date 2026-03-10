@@ -5,8 +5,17 @@ use crate::config::{self, Config};
 use crate::error::{MicError, Result};
 use crate::output;
 use crate::workspace::WorkspaceManifest;
+use serde::Serialize;
 use std::fs;
 use std::path::PathBuf;
+
+#[derive(Serialize)]
+pub(crate) struct CheckoutOutput {
+    account: String,
+    repository: String,
+    path: String,
+    server: String,
+}
 
 /// Run the checkout command.
 pub async fn run(cmd: CheckoutCommand) -> Result<()> {
@@ -41,12 +50,12 @@ pub async fn run(cmd: CheckoutCommand) -> Result<()> {
     if output::use_json() {
         output::print_ok(
             "checkout",
-            serde_json::json!({
-                "account": org,
-                "repository": repository,
-                "path": target_path,
-                "server": server
-            }),
+            CheckoutOutput {
+                account: org.to_string(),
+                repository: repository.to_string(),
+                path: target_path.clone(),
+                server: server.clone(),
+            },
         )?;
     } else {
         println!("Checked out {}/{} to {}", org, repository, target_path);

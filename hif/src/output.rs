@@ -29,6 +29,15 @@ struct LifecycleState {
     success_message: Option<String>,
 }
 
+#[derive(Serialize)]
+struct SuccessEnvelope<'a, T: Serialize> {
+    status: &'static str,
+    action: &'a str,
+    data: T,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    warnings: Option<Vec<String>>,
+}
+
 fn lifecycle_state() -> &'static Mutex<LifecycleState> {
     static STATE: OnceLock<Mutex<LifecycleState>> = OnceLock::new();
     STATE.get_or_init(|| Mutex::new(LifecycleState::default()))
@@ -106,19 +115,13 @@ pub fn print_json<T: Serialize>(value: &T) -> Result<()> {
 
 /// Print a standard success envelope for machine-readable output.
 pub fn print_ok<T: Serialize>(action: &str, data: T) -> Result<()> {
-    let data = serde_json::to_value(data)
-        .map_err(|e| MicError::Other(format!("Failed to serialize JSON output: {}", e)))?;
     let warnings = take_warnings();
-    let mut envelope = serde_json::json!({
-        "status": "ok",
-        "action": action,
-        "data": data
-    });
-
-    if !warnings.is_empty() {
-        envelope["warnings"] = serde_json::json!(warnings);
-    }
-
+    let envelope = SuccessEnvelope {
+        status: "ok",
+        action,
+        data,
+        warnings: (!warnings.is_empty()).then_some(warnings),
+    };
     print_json(&envelope)
 }
 

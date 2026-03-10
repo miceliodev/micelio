@@ -4,6 +4,39 @@ use crate::error::{MicError, Result};
 use crate::output;
 use crate::workspace::{collect_changes, session::Session, ChangeType, WorkspaceManifest};
 use colored::Colorize;
+use serde::Serialize;
+
+#[derive(Serialize)]
+pub(crate) struct StatusWorkspaceOutput {
+    account: String,
+    repository: String,
+    server: String,
+}
+
+#[derive(Serialize)]
+pub(crate) struct StatusSessionOutput {
+    id: String,
+    goal: String,
+}
+
+#[derive(Serialize)]
+pub(crate) struct StatusFileChangeOutput {
+    path: String,
+    change_type: String,
+}
+
+#[derive(Serialize)]
+pub(crate) struct StatusOutput {
+    workspace: StatusWorkspaceOutput,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    session: Option<StatusSessionOutput>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    staged_changes: Vec<StatusFileChangeOutput>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    unstaged_changes: Vec<StatusFileChangeOutput>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    changes: Vec<StatusFileChangeOutput>,
+}
 
 /// Run the status command.
 pub async fn run() -> Result<()> {
@@ -25,76 +58,63 @@ pub async fn run() -> Result<()> {
     let disk_changes = collect_changes(&cwd, &manifest)?;
 
     if json_output {
+        let workspace = StatusWorkspaceOutput {
+            account: manifest.account.clone(),
+            repository: manifest.repository.clone(),
+            server: manifest.server.clone(),
+        };
+
         if let Some(state) = Session::load()? {
             let staged_paths: std::collections::HashSet<_> =
                 state.files.iter().map(|f| &f.path).collect();
             let unstaged = disk_changes
                 .iter()
                 .filter(|c| !staged_paths.contains(&c.path))
-                .map(|change| {
-                    serde_json::json!({
-                        "path": change.path,
-                        "change_type": match change.change_type {
-                            ChangeType::Added => "added",
-                            ChangeType::Modified => "modified",
-                            ChangeType::Deleted => "deleted",
-                        }
-                    })
+                .map(|change| StatusFileChangeOutput {
+                    path: change.path.clone(),
+                    change_type: change_type_label(change.change_type).to_string(),
                 })
                 .collect::<Vec<_>>();
             let staged = state
                 .files
                 .iter()
-                .map(|file| {
-                    serde_json::json!({
-                        "path": file.path,
-                        "change_type": file.change_type
-                    })
+                .map(|file| StatusFileChangeOutput {
+                    path: file.path.clone(),
+                    change_type: file.change_type.clone(),
                 })
                 .collect::<Vec<_>>();
 
             output::print_ok(
                 "status",
-                serde_json::json!({
-                    "workspace": {
-                        "account": manifest.account,
-                        "repository": manifest.repository,
-                        "server": manifest.server
-                    },
-                    "session": {
-                        "id": state.id,
-                        "goal": state.goal
-                    },
-                    "staged_changes": staged,
-                    "unstaged_changes": unstaged
-                }),
+                StatusOutput {
+                    workspace,
+                    session: Some(StatusSessionOutput {
+                        id: state.id,
+                        goal: state.goal,
+                    }),
+                    staged_changes: staged,
+                    unstaged_changes: unstaged,
+                    changes: Vec::new(),
+                },
             )?;
         } else {
             let changes = disk_changes
                 .iter()
-                .map(|change| {
-                    serde_json::json!({
-                        "path": change.path,
-                        "change_type": match change.change_type {
-                            ChangeType::Added => "added",
-                            ChangeType::Modified => "modified",
-                            ChangeType::Deleted => "deleted",
-                        }
-                    })
+                .map(|change| StatusFileChangeOutput {
+                    path: change.path.clone(),
+                    change_type: change_type_label(change.change_type).to_string(),
                 })
                 .collect::<Vec<_>>();
 
             output::print_ok(
                 "status",
-                serde_json::json!({
-                    "workspace": {
-                        "account": manifest.account,
-                        "repository": manifest.repository,
-                        "server": manifest.server
-                    },
-                    "session": serde_json::Value::Null,
-                    "changes": changes
-                }),
+                StatusOutput {
+                    workspace,
+                    session: None,
+                    staged_changes: Vec::new(),
+                    unstaged_changes: Vec::new(),
+                    changes,
+                },
             )?;
         }
         return Ok(());
@@ -182,4 +202,12 @@ pub async fn run() -> Result<()> {
     }
 
     Ok(())
+}
+
+fn change_type_label(change_type: ChangeType) -> &'static str {
+    match change_type {
+        ChangeType::Added => "added",
+        ChangeType::Modified => "modified",
+        ChangeType::Deleted => "deleted",
+    }
 }

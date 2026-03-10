@@ -7,6 +7,18 @@ use crate::grpc::hif_v1::{call, pb, repository_ref};
 use crate::grpc::{Endpoint, GrpcClient};
 use crate::output;
 use crate::workspace::{parse_position, PositionOrLatest};
+use serde::Serialize;
+
+#[derive(Serialize)]
+pub(crate) struct ShowOutput {
+    repository: String,
+    path: String,
+    content: String,
+    encoding: String,
+    content_hash: Vec<u8>,
+    size: u64,
+    mode: u32,
+}
 
 /// Run the show command.
 pub async fn run(cmd: ShowCommand) -> Result<()> {
@@ -56,15 +68,15 @@ pub async fn run(cmd: ShowCommand) -> Result<()> {
 
         output::print_ok(
             "show",
-            serde_json::json!({
-                "repository": cmd.repository,
-                "path": cmd.path.trim_start_matches('/'),
-                "content": content,
-                "encoding": encoding,
-                "content_hash": response.content_hash,
-                "size": response.size,
-                "mode": response.mode
-            }),
+            ShowOutput {
+                repository: cmd.repository,
+                path: cmd.path.trim_start_matches('/').to_string(),
+                content,
+                encoding: encoding.to_string(),
+                content_hash: response.content_hash,
+                size: response.size,
+                mode: response.mode,
+            },
         )?;
     } else {
         print!("{}", String::from_utf8_lossy(&response.content));

@@ -6,6 +6,7 @@ use crate::grpc::hif_v1::{call, pb, repository_ref};
 use crate::grpc::{Endpoint, GrpcClient};
 use crate::output;
 use crate::workspace::{session::Session, WorkspaceManifest};
+use serde::Serialize;
 use std::collections::HashMap;
 use std::fs;
 use std::io::{self, Write};
@@ -43,6 +44,16 @@ pub struct SyncResult {
     pub revision_hash: Vec<u8>,
 }
 
+#[derive(Serialize)]
+pub(crate) struct SyncOutput {
+    account: String,
+    repository: String,
+    strategy: String,
+    updated: Vec<String>,
+    conflicts: Vec<String>,
+    revision: String,
+}
+
 /// Run the sync command.
 pub async fn run(cmd: SyncCommand) -> Result<()> {
     let strategy = MergeStrategy::parse(&cmd.strategy)
@@ -72,14 +83,14 @@ pub async fn run(cmd: SyncCommand) -> Result<()> {
     if json_output {
         output::print_ok(
             "sync",
-            serde_json::json!({
-                "account": manifest.account,
-                "repository": manifest.repository,
-                "strategy": cmd.strategy,
-                "updated": result.updated,
-                "conflicts": result.conflicts,
-                "revision": format_revision_hash(&result.revision_hash)
-            }),
+            SyncOutput {
+                account: manifest.account.clone(),
+                repository: manifest.repository.clone(),
+                strategy: cmd.strategy,
+                updated: result.updated,
+                conflicts: result.conflicts,
+                revision: format_revision_hash(&result.revision_hash),
+            },
         )?;
     } else {
         if result.updated.is_empty() && result.conflicts.is_empty() {

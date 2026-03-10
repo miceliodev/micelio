@@ -6,6 +6,54 @@ use crate::error::{MicError, Result};
 use crate::grpc::client::{read_field, read_string, write_length_delimited};
 use crate::grpc::{Endpoint, GrpcClient};
 use crate::output;
+use serde::Serialize;
+
+#[derive(Serialize)]
+pub(crate) struct RepositoryListEntryOutput {
+    account: String,
+    handle: String,
+    name: String,
+}
+
+#[derive(Serialize)]
+pub(crate) struct RepositoryListOutput {
+    account: String,
+    repositories: Vec<RepositoryListEntryOutput>,
+}
+
+#[derive(Serialize)]
+pub(crate) struct RepositoryCreateOutput {
+    account: String,
+    repository: String,
+    name: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    description: Option<String>,
+}
+
+#[derive(Serialize)]
+pub(crate) struct RepositoryInfoOutput {
+    account: String,
+    handle: String,
+    name: String,
+    #[serde(skip_serializing_if = "String::is_empty")]
+    description: String,
+}
+
+#[derive(Serialize)]
+pub(crate) struct RepositoryUpdateOutput {
+    account: String,
+    repository: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    name: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    description: Option<String>,
+}
+
+#[derive(Serialize)]
+pub(crate) struct RepositoryDeleteOutput {
+    account: String,
+    repository: String,
+}
 
 /// Run the repository command.
 pub async fn run(cmd: RepositoryCommand) -> Result<()> {
@@ -81,11 +129,11 @@ async fn list(account: &str) -> Result<()> {
         if let Some((field_number, _, data)) = read_field(&response, &mut pos) {
             if field_number == 1 {
                 let (name, handle) = parse_repository(data);
-                repositories.push(serde_json::json!({
-                    "account": account,
-                    "handle": handle,
-                    "name": name
-                }));
+                repositories.push(RepositoryListEntryOutput {
+                    account: account.to_string(),
+                    handle,
+                    name,
+                });
             }
         }
     }
@@ -93,18 +141,16 @@ async fn list(account: &str) -> Result<()> {
     if output::use_json() {
         output::print_ok(
             "repository.list",
-            serde_json::json!({
-                "account": account,
-                "repositories": repositories
-            }),
+            RepositoryListOutput {
+                account: account.to_string(),
+                repositories,
+            },
         )?;
     } else {
         for repository in repositories {
             println!(
                 "{}/{} - {}",
-                repository["account"].as_str().unwrap_or_default(),
-                repository["handle"].as_str().unwrap_or_default(),
-                repository["name"].as_str().unwrap_or_default()
+                repository.account, repository.handle, repository.name
             );
         }
     }
@@ -137,12 +183,12 @@ async fn create(account: &str, handle: &str, name: &str, description: Option<&st
     if output::use_json() {
         output::print_ok(
             "repository.create",
-            serde_json::json!({
-                "account": account,
-                "repository": handle,
-                "name": name,
-                "description": description
-            }),
+            RepositoryCreateOutput {
+                account: account.to_string(),
+                repository: handle.to_string(),
+                name: name.to_string(),
+                description: description.map(str::to_string),
+            },
         )?;
     } else {
         println!("Repository created: {}/{}", account, handle);
@@ -173,12 +219,12 @@ async fn info(account: &str, handle: &str) -> Result<()> {
     if output::use_json() {
         output::print_ok(
             "repository.info",
-            serde_json::json!({
-                "account": account,
-                "handle": handle,
-                "name": name,
-                "description": description
-            }),
+            RepositoryInfoOutput {
+                account: account.to_string(),
+                handle,
+                name,
+                description,
+            },
         )?;
     } else {
         println!("Repository: {}", name);
@@ -223,12 +269,12 @@ async fn update(
     if output::use_json() {
         output::print_ok(
             "repository.update",
-            serde_json::json!({
-                "account": account,
-                "repository": handle,
-                "name": name,
-                "description": description
-            }),
+            RepositoryUpdateOutput {
+                account: account.to_string(),
+                repository: handle.to_string(),
+                name: name.map(str::to_string),
+                description: description.map(str::to_string),
+            },
         )?;
     } else {
         println!("Repository updated.");
@@ -257,10 +303,10 @@ async fn delete(account: &str, handle: &str) -> Result<()> {
     if output::use_json() {
         output::print_ok(
             "repository.delete",
-            serde_json::json!({
-                "account": account,
-                "repository": handle
-            }),
+            RepositoryDeleteOutput {
+                account: account.to_string(),
+                repository: handle.to_string(),
+            },
         )?;
     } else {
         println!("Repository deleted: {}/{}", account, handle);

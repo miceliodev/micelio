@@ -10,7 +10,7 @@ use crate::constants::{
 };
 use crate::error::{MicError, Result};
 use crate::http_client;
-use crate::output;
+use crate::output::{self, CliOutput};
 use colored::Colorize;
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
@@ -69,6 +69,73 @@ struct PollRequest {
     device_code: String,
 }
 
+#[derive(Serialize)]
+pub(crate) struct AuthLoginOutput {
+    server: String,
+    grpc_url: String,
+    expires_at: Option<i64>,
+}
+
+#[derive(Serialize)]
+pub(crate) struct AuthLogoutOutput {}
+
+#[derive(Serialize)]
+pub(crate) struct AuthStatusOutput {
+    authenticated: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    expired: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    server: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    expires_at: Option<i64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    remaining_seconds: Option<i64>,
+}
+
+enum AuthStatusState {
+    NotAuthenticated,
+    Expired {
+        tokens: StoredTokens,
+    },
+    Authenticated {
+        tokens: StoredTokens,
+        remaining_seconds: Option<i64>,
+    },
+}
+
+impl CliOutput for AuthStatusState {
+    type Model = AuthStatusOutput;
+
+    fn into_cli_output(self) -> Self::Model {
+        match self {
+            AuthStatusState::NotAuthenticated => AuthStatusOutput {
+                authenticated: false,
+                expired: None,
+                server: None,
+                expires_at: None,
+                remaining_seconds: None,
+            },
+            AuthStatusState::Expired { tokens } => AuthStatusOutput {
+                authenticated: true,
+                expired: Some(true),
+                server: Some(tokens.server),
+                expires_at: tokens.expires_at,
+                remaining_seconds: None,
+            },
+            AuthStatusState::Authenticated {
+                tokens,
+                remaining_seconds,
+            } => AuthStatusOutput {
+                authenticated: true,
+                expired: Some(false),
+                server: Some(tokens.server),
+                expires_at: tokens.expires_at,
+                remaining_seconds,
+            },
+        }
+    }
+}
+
 // =============================================================================
 // Commands
 // =============================================================================
@@ -102,11 +169,11 @@ async fn login() -> Result<()> {
     if output::use_json() {
         output::print_ok(
             "auth.login",
-            serde_json::json!({
-                "server": server_name,
-                "grpc_url": grpc_url,
-                "expires_at": stored.expires_at
-            }),
+            AuthLoginOutput {
+                server: server_name,
+                grpc_url: grpc_url.to_string(),
+                expires_at: stored.expires_at,
+            },
         )?;
     } else {
         output::set_success_message(format!("Authenticated with {}.", server_name));
@@ -116,74 +183,56 @@ async fn login() -> Result<()> {
 
 /// Show authentication status.
 fn status() -> Result<()> {
-    match config::read_tokens()? {
-        None => {
-            if output::use_json() {
-                output::print_ok(
-                    "auth.status",
-                    serde_json::json!({
-                        "authenticated": false
-                    }),
-                )?;
-            } else {
-                output::warn("Not logged in.");
-                output::set_success_message(format!(
-                    "Run {} to authenticate.",
-                    "hif auth login".cyan()
-                ));
+    let state = match config::read_tokens()? {
+        None => AuthStatusState::NotAuthenticated,
+        Some(tokens) if is_token_expired(&tokens) => AuthStatusState::Expired { tokens },
+        Some(tokens) => {
+            let remaining = tokens
+                .expires_at
+                .map(|expires_at| (expires_at - chrono::Utc::now().timestamp()).max(0));
+            AuthStatusState::Authenticated {
+                tokens,
+                remaining_seconds: remaining,
             }
         }
-        Some(tokens) => {
-            if is_token_expired(&tokens) {
-                if output::use_json() {
-                    output::print_ok(
-                        "auth.status",
-                        serde_json::json!({
-                            "authenticated": true,
-                            "expired": true,
-                            "server": tokens.server,
-                            "expires_at": tokens.expires_at
-                        }),
-                    )?;
-                } else {
-                    output::warn("Access token expired.");
-                    output::set_success_message(format!(
-                        "Run {} to re-authenticate.",
-                        "hif auth login".cyan()
-                    ));
-                }
-            } else {
-                if output::use_json() {
-                    let remaining = tokens
-                        .expires_at
-                        .map(|expires_at| (expires_at - chrono::Utc::now().timestamp()).max(0));
-                    output::print_ok(
-                        "auth.status",
-                        serde_json::json!({
-                            "authenticated": true,
-                            "expired": false,
-                            "server": tokens.server,
-                            "expires_at": tokens.expires_at,
-                            "remaining_seconds": remaining
-                        }),
-                    )?;
-                } else {
-                    let mut status_message = format!("Authenticated with {}.", tokens.server);
-                    if let Some(expires_at) = tokens.expires_at {
-                        let remaining = expires_at - chrono::Utc::now().timestamp();
-                        if remaining > 0 {
-                            let hours = remaining / 3600;
-                            let minutes = (remaining % 3600) / 60;
-                            status_message
-                                .push_str(&format!(" Token expires in {}h {}m.", hours, minutes));
-                        }
-                    }
+    };
 
-                    output::set_success_message(status_message);
+    if output::use_json() {
+        output::print_ok("auth.status", state.into_cli_output())?;
+        return Ok(());
+    }
+
+    match state {
+        AuthStatusState::NotAuthenticated => {
+            output::warn("Not logged in.");
+            output::set_success_message(format!(
+                "Run {} to authenticate.",
+                "hif auth login".cyan()
+            ));
+        }
+        AuthStatusState::Expired { .. } => {
+            output::warn("Access token expired.");
+            output::set_success_message(format!(
+                "Run {} to re-authenticate.",
+                "hif auth login".cyan()
+            ));
+        }
+        AuthStatusState::Authenticated {
+            tokens,
+            remaining_seconds,
+        } => {
+            let mut status_message = format!("Authenticated with {}.", tokens.server);
+            if let Some(remaining) = remaining_seconds {
+                if remaining > 0 {
+                    let hours = remaining / 3600;
+                    let minutes = (remaining % 3600) / 60;
+                    status_message.push_str(&format!(" Token expires in {}h {}m.", hours, minutes));
                 }
             }
+            output::set_success_message(status_message);
         }
     }
+
     Ok(())
 }
 
@@ -191,7 +240,7 @@ fn status() -> Result<()> {
 fn logout() -> Result<()> {
     config::delete_tokens()?;
     if output::use_json() {
-        output::print_ok("auth.logout", serde_json::json!({}))?;
+        output::print_ok("auth.logout", AuthLogoutOutput {})?;
     } else {
         output::set_success_message("Logged out.");
     }

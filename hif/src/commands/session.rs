@@ -9,9 +9,107 @@ use crate::grpc::hif_v1::{call, pb, repository_ref};
 use crate::grpc::{Endpoint, GrpcClient};
 use crate::output;
 use crate::workspace::manifest::Manifest;
-use crate::workspace::session::{Conversation, Session, SessionState};
+use crate::workspace::session::{Conversation, Decision, FileChange, Session, SessionState};
 use crate::workspace::{collect_changes, ChangeType, WorkspaceManifest};
+use serde::Serialize;
 use std::fs;
+
+#[derive(Serialize)]
+pub(crate) struct SessionStartOutput {
+    session_id: String,
+    goal: String,
+    account: String,
+    repository: String,
+}
+
+#[derive(Serialize)]
+pub(crate) struct SessionStatusOutput {
+    active: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    session_id: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    goal: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    account: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    repository: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    started_at: Option<String>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    conversation: Vec<Conversation>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    decisions: Vec<Decision>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    files: Vec<FileChange>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    remote: Option<RemoteSessionStatusOutput>,
+}
+
+#[derive(Serialize)]
+pub(crate) struct SessionNoteOutput {
+    role: String,
+    message: String,
+}
+
+#[derive(Serialize)]
+pub(crate) struct SessionLandOutput {
+    session_id: String,
+    #[serde(skip_serializing_if = "String::is_empty")]
+    revision: String,
+}
+
+#[derive(Serialize)]
+pub(crate) struct SessionAbandonOutput {
+    abandoned: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    session_id: Option<String>,
+}
+
+#[derive(Serialize)]
+pub(crate) struct SessionResolveOutput {
+    implemented: bool,
+    strategy: String,
+}
+
+#[derive(Serialize)]
+pub(crate) struct SessionRepositoryOutput {
+    account: String,
+    repository: String,
+}
+
+#[derive(Serialize)]
+pub(crate) struct SessionPositionOutput {
+    hash: String,
+    at: String,
+}
+
+#[derive(Serialize)]
+pub(crate) struct SessionConflictOutput {
+    revision_hash: String,
+    session_id: String,
+    reason: String,
+    paths: Vec<String>,
+}
+
+#[derive(Serialize)]
+pub(crate) struct RemoteSessionStatusOutput {
+    session_id: String,
+    goal: String,
+    status: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    repository: Option<SessionRepositoryOutput>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    base_position: Option<SessionPositionOutput>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    current_position: Option<SessionPositionOutput>,
+    conversation_count: usize,
+    decisions_count: usize,
+    changes_count: usize,
+    created_at_ms: u64,
+    updated_at_ms: u64,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    conflict: Option<SessionConflictOutput>,
+}
 
 /// Run the session command.
 pub async fn run(cmd: SessionCommand) -> Result<()> {
@@ -104,12 +202,12 @@ async fn start(organization: &str, repository: &str, goal: &str) -> Result<()> {
     if output::use_json() {
         output::print_ok(
             "session.start",
-            serde_json::json!({
-                "session_id": state.id,
-                "goal": goal,
-                "account": organization,
-                "repository": repository
-            }),
+            SessionStartOutput {
+                session_id: state.id,
+                goal: goal.to_string(),
+                account: organization.to_string(),
+                repository: repository.to_string(),
+            },
         )?;
     } else {
         println!("Session started: {}", state.id);
@@ -130,7 +228,21 @@ async fn status() -> Result<()> {
     match state {
         None => {
             if json_output {
-                output::print_ok("session.status", serde_json::json!({"active": false}))?;
+                output::print_ok(
+                    "session.status",
+                    SessionStatusOutput {
+                        active: false,
+                        session_id: None,
+                        goal: None,
+                        account: None,
+                        repository: None,
+                        started_at: None,
+                        conversation: Vec::new(),
+                        decisions: Vec::new(),
+                        files: Vec::new(),
+                        remote: None,
+                    },
+                )?;
             } else {
                 println!("No active session.");
                 println!("Start one with: hif session start <account>/<repository> <goal>");
@@ -139,24 +251,20 @@ async fn status() -> Result<()> {
         Some(state) => {
             let remote = fetch_remote_session_status(&state).await.ok();
             if json_output {
-                let remote_json = remote
-                    .as_ref()
-                    .map(session_info_to_json)
-                    .unwrap_or(serde_json::Value::Null);
                 output::print_ok(
                     "session.status",
-                    serde_json::json!({
-                        "active": true,
-                        "session_id": state.id,
-                        "goal": state.goal,
-                        "account": state.repository_org,
-                        "repository": state.repository_handle,
-                        "started_at": state.started_at,
-                        "conversation": state.conversation,
-                        "decisions": state.decisions,
-                        "files": state.files,
-                        "remote": remote_json
-                    }),
+                    SessionStatusOutput {
+                        active: true,
+                        session_id: Some(state.id.clone()),
+                        goal: Some(state.goal.clone()),
+                        account: Some(state.repository_org.clone()),
+                        repository: Some(state.repository_handle.clone()),
+                        started_at: Some(state.started_at.clone()),
+                        conversation: state.conversation.clone(),
+                        decisions: state.decisions.clone(),
+                        files: state.files.clone(),
+                        remote: remote.as_ref().map(session_info_output),
+                    },
                 )?;
             } else {
                 println!("Active session: {}", state.id);
@@ -220,10 +328,10 @@ fn note(role: &str, message: &str) -> Result<()> {
     if output::use_json() {
         output::print_ok(
             "session.note",
-            serde_json::json!({
-                "role": role,
-                "message": message
-            }),
+            SessionNoteOutput {
+                role: role.to_string(),
+                message: message.to_string(),
+            },
         )?;
     } else {
         println!("Note added to session.");
@@ -269,11 +377,7 @@ async fn land() -> Result<()> {
 
     if response.status == "conflict" {
         if output::use_json() {
-            let details = response
-                .conflict
-                .as_ref()
-                .map(session_conflict_to_json)
-                .unwrap_or(serde_json::Value::Null);
+            let details = response.conflict.as_ref().map(session_conflict_output);
             return Err(MicError::Other(format!(
                 "Conflicts detected with upstream changes: {}",
                 serde_json::to_string(&details).unwrap_or_else(|_| "null".to_string())
@@ -314,10 +418,10 @@ async fn land() -> Result<()> {
     if output::use_json() {
         output::print_ok(
             "session.land",
-            serde_json::json!({
-                "session_id": response.session_id,
-                "revision": landing_revision
-            }),
+            SessionLandOutput {
+                session_id: response.session_id,
+                revision: landing_revision,
+            },
         )?;
     } else {
         println!("Session landed successfully!");
@@ -337,7 +441,13 @@ async fn abandon() -> Result<()> {
         Some(state) => state,
         None => {
             if output::use_json() {
-                output::print_ok("session.abandon", serde_json::json!({"abandoned": false}))?;
+                output::print_ok(
+                    "session.abandon",
+                    SessionAbandonOutput {
+                        abandoned: false,
+                        session_id: None,
+                    },
+                )?;
             } else {
                 println!("No active session to abandon.");
             }
@@ -376,10 +486,10 @@ async fn abandon() -> Result<()> {
     if output::use_json() {
         output::print_ok(
             "session.abandon",
-            serde_json::json!({
-                "abandoned": true,
-                "session_id": state.id
-            }),
+            SessionAbandonOutput {
+                abandoned: true,
+                session_id: Some(state.id),
+            },
         )?;
     } else {
         output::set_success_message("Session abandoned.");
@@ -392,10 +502,10 @@ fn resolve(strategy: &str) -> Result<()> {
     if output::use_json() {
         output::print_ok(
             "session.resolve",
-            serde_json::json!({
-                "implemented": false,
-                "strategy": strategy
-            }),
+            SessionResolveOutput {
+                implemented: false,
+                strategy: strategy.to_string(),
+            },
         )?;
     } else {
         println!("Conflict resolution is not yet implemented.");
@@ -405,40 +515,43 @@ fn resolve(strategy: &str) -> Result<()> {
     Ok(())
 }
 
-fn session_info_to_json(info: &pb::SessionInfo) -> serde_json::Value {
-    serde_json::json!({
-        "session_id": &info.session_id,
-        "goal": &info.goal,
-        "status": &info.status,
-        "repository": info.repository.as_ref().map(|repository| serde_json::json!({
-            "account": &repository.account_handle,
-            "repository": &repository.repository_handle
-        })),
-        "base_position": info.base_position.as_ref().map(position_to_json),
-        "current_position": info.current_position.as_ref().map(position_to_json),
-        "conversation_count": info.conversation.len(),
-        "decisions_count": info.decisions.len(),
-        "changes_count": info.changes.len(),
-        "created_at_ms": info.created_at_ms,
-        "updated_at_ms": info.updated_at_ms,
-        "conflict": info.conflict.as_ref().map(session_conflict_to_json)
-    })
+fn session_info_output(info: &pb::SessionInfo) -> RemoteSessionStatusOutput {
+    RemoteSessionStatusOutput {
+        session_id: info.session_id.clone(),
+        goal: info.goal.clone(),
+        status: info.status.clone(),
+        repository: info
+            .repository
+            .as_ref()
+            .map(|repository| SessionRepositoryOutput {
+                account: repository.account_handle.clone(),
+                repository: repository.repository_handle.clone(),
+            }),
+        base_position: info.base_position.as_ref().map(position_output),
+        current_position: info.current_position.as_ref().map(position_output),
+        conversation_count: info.conversation.len(),
+        decisions_count: info.decisions.len(),
+        changes_count: info.changes.len(),
+        created_at_ms: info.created_at_ms,
+        updated_at_ms: info.updated_at_ms,
+        conflict: info.conflict.as_ref().map(session_conflict_output),
+    }
 }
 
-fn session_conflict_to_json(conflict: &pb::SessionConflict) -> serde_json::Value {
-    serde_json::json!({
-        "revision_hash": format_revision_hash(&conflict.revision_hash),
-        "session_id": &conflict.session_id,
-        "reason": &conflict.reason,
-        "paths": &conflict.paths
-    })
+fn session_conflict_output(conflict: &pb::SessionConflict) -> SessionConflictOutput {
+    SessionConflictOutput {
+        revision_hash: format_revision_hash(&conflict.revision_hash),
+        session_id: conflict.session_id.clone(),
+        reason: conflict.reason.clone(),
+        paths: conflict.paths.clone(),
+    }
 }
 
-fn position_to_json(position: &pb::Position) -> serde_json::Value {
-    serde_json::json!({
-        "hash": format_revision_hash(&position.hash),
-        "at": &position.at
-    })
+fn position_output(position: &pb::Position) -> SessionPositionOutput {
+    SessionPositionOutput {
+        hash: format_revision_hash(&position.hash),
+        at: position.at.clone(),
+    }
 }
 
 async fn fetch_remote_session_status(state: &SessionState) -> Result<pb::SessionInfo> {

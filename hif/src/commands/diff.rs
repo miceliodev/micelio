@@ -8,7 +8,23 @@ use crate::grpc::{Endpoint, GrpcClient};
 use crate::output;
 use crate::workspace::{parse_position, PositionOrLatest};
 use colored::Colorize;
+use serde::Serialize;
 use std::collections::BTreeMap;
+
+#[derive(Serialize)]
+pub(crate) struct DiffChangeOutput {
+    path: String,
+    change_type: String,
+}
+
+#[derive(Serialize)]
+pub(crate) struct DiffOutput {
+    repository: String,
+    from: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    to: Option<String>,
+    changes: Vec<DiffChangeOutput>,
+}
 
 /// Run the diff command.
 pub async fn run(cmd: DiffCommand) -> Result<()> {
@@ -61,27 +77,27 @@ pub async fn run(cmd: DiffCommand) -> Result<()> {
         let items = changes
             .iter()
             .map(|(path, change_type)| {
-                let change = match change_type {
+                let change_type = match change_type {
                     ChangeType::Added => "added",
                     ChangeType::Deleted => "deleted",
                     ChangeType::Modified => "modified",
                 };
 
-                serde_json::json!({
-                    "path": path,
-                    "change_type": change
-                })
+                DiffChangeOutput {
+                    path: path.clone(),
+                    change_type: change_type.to_string(),
+                }
             })
             .collect::<Vec<_>>();
 
         output::print_ok(
             "diff",
-            serde_json::json!({
-                "repository": cmd.repository,
-                "from": cmd.from,
-                "to": cmd.to,
-                "changes": items
-            }),
+            DiffOutput {
+                repository: cmd.repository,
+                from: cmd.from,
+                to: cmd.to,
+                changes: items,
+            },
         )?;
     } else {
         for (path, change_type) in changes {

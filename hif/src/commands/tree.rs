@@ -7,7 +7,15 @@ use crate::grpc::hif_v1::{call, pb, repository_ref};
 use crate::grpc::{Endpoint, GrpcClient};
 use crate::output;
 use crate::workspace::{parse_position, PositionOrLatest};
+use serde::Serialize;
 use std::collections::BTreeSet;
+
+#[derive(Serialize)]
+pub(crate) struct TreeOutput {
+    repository: String,
+    path: String,
+    entries: Vec<String>,
+}
 
 /// Run the tree command.
 pub async fn run(cmd: TreeCommand) -> Result<()> {
@@ -53,11 +61,11 @@ pub async fn run(cmd: TreeCommand) -> Result<()> {
     if output::use_json() {
         output::print_ok(
             "tree",
-            serde_json::json!({
-                "repository": cmd.repository,
-                "path": cmd.path.unwrap_or_default(),
-                "entries": listed
-            }),
+            TreeOutput {
+                repository: cmd.repository,
+                path: cmd.path.unwrap_or_default(),
+                entries: listed,
+            },
         )?;
     } else {
         for entry in listed {

@@ -4,8 +4,15 @@ use crate::cli::UnmountCommand;
 use crate::error::{MicError, Result};
 use crate::output;
 use crate::workspace::{WorkspaceManifest, HIF_DIR};
+use serde::Serialize;
 use std::fs;
 use std::path::PathBuf;
+
+#[derive(Serialize)]
+pub(crate) struct UnmountOutput {
+    path: PathBuf,
+    removed: bool,
+}
 
 /// Run the unmount command.
 pub async fn run(cmd: UnmountCommand) -> Result<()> {
@@ -92,10 +99,10 @@ pub async fn run(cmd: UnmountCommand) -> Result<()> {
         if json_output {
             output::print_ok(
                 "unmount",
-                serde_json::json!({
-                    "path": mount_path,
-                    "removed": true
-                }),
+                UnmountOutput {
+                    path: mount_path,
+                    removed: true,
+                },
             )?;
         } else {
             println!("Removed mount directory: {}", mount_path.display());
@@ -104,10 +111,10 @@ pub async fn run(cmd: UnmountCommand) -> Result<()> {
         if json_output {
             output::print_ok(
                 "unmount",
-                serde_json::json!({
-                    "path": mount_path,
-                    "removed": false
-                }),
+                UnmountOutput {
+                    path: mount_path,
+                    removed: false,
+                },
             )?;
         } else {
             println!("Unmounted. Files remain at: {}", mount_path.display());

@@ -49,6 +49,7 @@ use cli::{Cli, Commands};
 use colored::Colorize;
 use config::Config;
 use error::Result;
+use serde::Serialize;
 use std::io::IsTerminal;
 
 fn main() {
@@ -153,22 +154,28 @@ async fn async_main() -> i32 {
     }
 }
 
+#[derive(Serialize)]
+struct ErrorEnvelope<'a> {
+    status: &'static str,
+    code: &'a str,
+    message: &'a str,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    warnings: Option<&'a [String]>,
+}
+
 /// Print an error message in the appropriate format.
 fn print_error(message: &str, code: &str, use_json: bool, warnings: &[String]) {
     if use_json {
-        let mut json = serde_json::json!({
-            "status": "error",
-            "code": code,
-            "message": message,
-        });
-
-        if !warnings.is_empty() {
-            json["warnings"] = serde_json::json!(warnings);
-        }
+        let envelope = ErrorEnvelope {
+            status: "error",
+            code,
+            message,
+            warnings: (!warnings.is_empty()).then_some(warnings),
+        };
 
         eprintln!(
             "{}",
-            serde_json::to_string_pretty(&json).unwrap_or_default()
+            serde_json::to_string_pretty(&envelope).unwrap_or_default()
         );
     } else {
         if !warnings.is_empty() {

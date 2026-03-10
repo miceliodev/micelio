@@ -9,11 +9,21 @@ use crate::error::{MicError, Result};
 use crate::grpc::hif_v1::{call, pb, repository_ref};
 use crate::grpc::{Endpoint, GrpcClient};
 use crate::output;
+use serde::Serialize;
 use std::fs;
 use std::path::PathBuf;
 
 /// Default NFS port.
 pub const DEFAULT_PORT: u16 = 20490;
+
+#[derive(Serialize)]
+pub(crate) struct MountOutput {
+    account: String,
+    repository: String,
+    path: PathBuf,
+    synced_files: usize,
+    revision: String,
+}
 
 /// Run the mount command.
 pub async fn run(cmd: MountCommand) -> Result<()> {
@@ -68,13 +78,13 @@ pub async fn run(cmd: MountCommand) -> Result<()> {
 
         output::print_ok(
             "mount",
-            serde_json::json!({
-                "account": organization,
-                "repository": repository,
-                "path": mount_path,
-                "synced_files": file_count,
-                "revision": revision
-            }),
+            MountOutput {
+                account: organization.to_string(),
+                repository: repository.to_string(),
+                path: mount_path,
+                synced_files: file_count,
+                revision,
+            },
         )?;
     } else {
         println!("Synced {} files to {}", file_count, mount_path.display());
