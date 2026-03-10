@@ -71,7 +71,7 @@ struct PollRequest {
 
 #[derive(Serialize)]
 pub(crate) struct AuthLoginOutput {
-    server: String,
+    server_name: String,
     grpc_url: String,
     expires_at: Option<i64>,
 }
@@ -85,7 +85,7 @@ pub(crate) struct AuthStatusOutput {
     #[serde(skip_serializing_if = "Option::is_none")]
     expired: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    server: Option<String>,
+    server_url: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     expires_at: Option<i64>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -111,14 +111,14 @@ impl CliOutput for AuthStatusState {
             AuthStatusState::NotAuthenticated => AuthStatusOutput {
                 authenticated: false,
                 expired: None,
-                server: None,
+                server_url: None,
                 expires_at: None,
                 remaining_seconds: None,
             },
             AuthStatusState::Expired { tokens } => AuthStatusOutput {
                 authenticated: true,
                 expired: Some(true),
-                server: Some(tokens.server),
+                server_url: Some(tokens.server),
                 expires_at: tokens.expires_at,
                 remaining_seconds: None,
             },
@@ -128,7 +128,7 @@ impl CliOutput for AuthStatusState {
             } => AuthStatusOutput {
                 authenticated: true,
                 expired: Some(false),
-                server: Some(tokens.server),
+                server_url: Some(tokens.server),
                 expires_at: tokens.expires_at,
                 remaining_seconds,
             },
@@ -170,7 +170,7 @@ async fn login() -> Result<()> {
         output::print_ok(
             "auth.login",
             AuthLoginOutput {
-                server: server_name,
+                server_name,
                 grpc_url: grpc_url.to_string(),
                 expires_at: stored.expires_at,
             },
