@@ -44,8 +44,10 @@ pub async fn run(cmd: LinkCommand) -> Result<()> {
             },
         )?;
     } else {
-        println!("Linked to {}/{}", org, repository);
-        println!("Server: {}", server);
+        output::set_success_message(format!(
+            "linked working tree to '{}/{}' (server {})",
+            org, repository, server
+        ));
     }
 
     Ok(())

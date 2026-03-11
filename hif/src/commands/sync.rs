@@ -72,7 +72,7 @@ pub async fn run(cmd: SyncCommand) -> Result<()> {
 
     if !json_output {
         println!(
-            "Syncing {}/{} from {}...",
+            "syncing {}/{} from {}",
             manifest.account, manifest.repository, manifest.server
         );
     }
@@ -94,28 +94,25 @@ pub async fn run(cmd: SyncCommand) -> Result<()> {
         )?;
     } else {
         if result.updated.is_empty() && result.conflicts.is_empty() {
-            println!("Already up to date.");
+            println!("already up to date");
         } else {
             if !result.updated.is_empty() {
-                println!("\nUpdated {} files:", result.updated.len());
+                println!("\nupdated {} files:", result.updated.len());
                 for path in &result.updated {
                     println!("  U {}", path);
                 }
             }
 
             if !result.conflicts.is_empty() {
-                println!("\nConflicts in {} files:", result.conflicts.len());
+                println!("\nconflicts in {} files:", result.conflicts.len());
                 for path in &result.conflicts {
                     println!("  C {}", path);
                 }
-                println!("\nResolve conflicts and run 'hif session land' to continue.");
+                println!("\nresolve conflicts and run 'hif session land'");
             }
         }
 
-        println!(
-            "\nSynced to revision {}",
-            format_revision_hash(&result.revision_hash)
-        );
+        println!("\nrevision {}", format_revision_hash(&result.revision_hash));
     }
 
     Ok(())
@@ -244,7 +241,7 @@ async fn sync_workspace(
                     }
                     MergeStrategy::Interactive => {
                         if !output::use_json() {
-                            println!("File '{}' was deleted upstream but modified locally.", path);
+                            println!("file '{}' was deleted upstream but modified locally", path);
                         }
                         let resolution = prompt_conflict_resolution(path)?;
                         match resolution {
@@ -299,7 +296,7 @@ enum ConflictResolution {
 
 /// Prompt user for conflict resolution.
 fn prompt_conflict_resolution(path: &str) -> Result<ConflictResolution> {
-    print!("Conflict in '{}'. [o]urs / [t]heirs / [s]kip? ", path);
+    print!("conflict in '{}': [o]urs / [t]heirs / [s]kip? ", path);
     io::stdout().flush()?;
 
     let mut input = String::new();

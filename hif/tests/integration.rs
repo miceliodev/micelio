@@ -61,8 +61,8 @@ fn auth_status_when_not_logged_in() {
         .args(["auth", "status"])
         .assert()
         .success()
-        .stdout(predicate::str::contains("Warning: Not logged in."))
-        .stdout(predicate::str::contains("Success: Run"));
+        .stdout(predicate::str::contains("warning: not logged in"))
+        .stdout(predicate::str::contains("run"));
 }
 
 #[test]
@@ -74,7 +74,7 @@ fn auth_logout_when_not_logged_in() {
         .args(["auth", "logout"])
         .assert()
         .success()
-        .stdout(predicate::str::contains("Logged out"));
+        .stdout(predicate::str::contains("logged out"));
 }
 
 // =============================================================================
@@ -121,7 +121,7 @@ fn session_status_without_workspace() {
         .args(["session", "status"])
         .assert()
         .success()
-        .stdout(predicate::str::contains("No active session"));
+        .stdout(predicate::str::contains("no active session"));
 }
 
 #[test]
@@ -152,6 +152,33 @@ fn json_error_format() {
         .failure()
         .stderr(predicate::str::contains(r#""status": "error""#))
         .stderr(predicate::str::contains(r#""code":"#));
+}
+
+#[test]
+fn toon_success_format() {
+    let temp_dir = tempfile::tempdir().unwrap();
+
+    hif()
+        .env("HIF_HOME", temp_dir.path())
+        .args(["--toon", "auth", "status"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("status: ok"))
+        .stdout(predicate::str::contains("action: auth.status"));
+}
+
+#[test]
+fn toon_error_format() {
+    let temp_dir = tempfile::tempdir().unwrap();
+
+    hif()
+        .env("HIF_HOME", temp_dir.path())
+        .current_dir(temp_dir.path())
+        .args(["--toon", "status"])
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("status: error"))
+        .stderr(predicate::str::contains("code: no_workspace"));
 }
 
 // =============================================================================

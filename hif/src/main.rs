@@ -51,6 +51,7 @@ use config::Config;
 use error::Result;
 use serde::Serialize;
 use std::io::IsTerminal;
+use toon_format::encode_default;
 
 fn main() {
     // Build async runtime
@@ -69,22 +70,63 @@ async fn async_main() -> i32 {
     let args: Vec<String> = std::env::args().collect();
     let has_help = args.iter().any(|a| a == "--help" || a == "-h");
     let has_json = args.iter().any(|a| a == "--json");
+    let has_toon = args.iter().any(|a| a == "--toon");
     let has_docs = args.iter().any(|a| a == "--docs");
-    let use_json = has_json || cli::should_use_json();
-    let color_enabled = resolve_color_enabled(&args, use_json);
+    let use_structured = has_json || has_toon || cli::should_use_json() || cli::should_use_toon();
+    let color_enabled = resolve_color_enabled(&args, use_structured);
     configure_color(color_enabled);
+
+    if has_json && has_toon {
+        print_error(
+            "Choose one output mode: --json or --toon",
+            "invalid_output_mode",
+            true,
+            &[],
+        );
+        return 1;
+    }
 
     // --docs outputs full documentation for website generation
     if has_docs {
         let docs = cli::generate_docs();
-        println!("{}", serde_json::to_string_pretty(&docs).unwrap());
+        if has_toon {
+            match encode_default(&docs) {
+                Ok(toon) => println!("{}", toon),
+                Err(error) => {
+                    print_error(
+                        &format!("Failed to serialize --docs output as TOON: {}", error),
+                        "serialization_error",
+                        false,
+                        &[],
+                    );
+                    return 1;
+                }
+            }
+        } else {
+            println!("{}", serde_json::to_string_pretty(&docs).unwrap());
+        }
         return 0;
     }
 
-    // --help --json outputs agent-friendly help
-    if has_help && has_json {
+    // --help --json/--toon outputs agent-friendly help
+    if has_help && (has_json || has_toon) {
         let help = cli::generate_help_json();
-        println!("{}", serde_json::to_string_pretty(&help).unwrap());
+        if has_toon {
+            match encode_default(&help) {
+                Ok(toon) => println!("{}", toon),
+                Err(error) => {
+                    print_error(
+                        &format!("Failed to serialize help as TOON: {}", error),
+                        "serialization_error",
+                        false,
+                        &[],
+                    );
+                    return 1;
+                }
+            }
+        } else {
+            println!("{}", serde_json::to_string_pretty(&help).unwrap());
+        }
         return 0;
     }
 
@@ -95,8 +137,8 @@ async fn async_main() -> i32 {
     let cli = Cli::from_arg_matches(&matches).unwrap_or_else(|err| err.exit());
 
     let verbose = cli.verbose;
-    let use_json = cli.json || cli::should_use_json();
-    if use_json && color_enabled {
+    let use_structured = cli.json || cli.toon || cli::should_use_json() || cli::should_use_toon();
+    if use_structured && color_enabled {
         configure_color(false);
     }
 
@@ -105,7 +147,7 @@ async fn async_main() -> i32 {
         print_error(
             &format!("Failed to change directory: {}", e),
             "cwd_error",
-            use_json,
+            use_structured,
             &[],
         );
         return 1;
@@ -116,7 +158,7 @@ async fn async_main() -> i32 {
         print_error(
             "No command provided. Run 'hif --help' for usage.",
             "no_command",
-            use_json,
+            use_structured,
             &[],
         );
         return 1;
@@ -130,7 +172,7 @@ async fn async_main() -> i32 {
             let warnings = output::take_warnings();
             let success_message = output::take_success_message();
 
-            if !use_json {
+            if !use_structured {
                 if !warnings.is_empty() {
                     output::print_human_warnings(&warnings, false);
                 }
@@ -145,9 +187,9 @@ async fn async_main() -> i32 {
             let warnings = output::take_warnings();
             let _ = output::take_success_message();
 
-            print_error(&e.to_string(), e.code(), use_json, &warnings);
-            if verbose && !use_json {
-                eprintln!("  Code: {}", e.code());
+            print_error(&e.to_string(), e.code(), use_structured, &warnings);
+            if verbose && !use_structured {
+                eprintln!("  code: {}", e.code());
             }
             1
         }
@@ -164,8 +206,8 @@ struct ErrorEnvelope<'a> {
 }
 
 /// Print an error message in the appropriate format.
-fn print_error(message: &str, code: &str, use_json: bool, warnings: &[String]) {
-    if use_json {
+fn print_error(message: &str, code: &str, use_structured: bool, warnings: &[String]) {
+    if use_structured {
         let envelope = ErrorEnvelope {
             status: "error",
             code,
@@ -173,15 +215,31 @@ fn print_error(message: &str, code: &str, use_json: bool, warnings: &[String]) {
             warnings: (!warnings.is_empty()).then_some(warnings),
         };
 
-        eprintln!(
-            "{}",
-            serde_json::to_string_pretty(&envelope).unwrap_or_default()
-        );
+        if output::use_toon() {
+            match encode_default(&envelope) {
+                Ok(toon) => eprintln!("{}", toon),
+                Err(error) => eprintln!(
+                    "{}",
+                    serde_json::to_string_pretty(&ErrorEnvelope {
+                        status: "error",
+                        code: "serialization_error",
+                        message: &format!("Failed to serialize TOON error output: {}", error),
+                        warnings: None,
+                    })
+                    .unwrap_or_default()
+                ),
+            }
+        } else {
+            eprintln!(
+                "{}",
+                serde_json::to_string_pretty(&envelope).unwrap_or_default()
+            );
+        }
     } else {
         if !warnings.is_empty() {
             output::print_human_warnings(warnings, true);
         }
-        eprintln!("{}: {}", "Error".red().bold(), message);
+        eprintln!("{} {}", "error:".red().bold(), message);
     }
 }
 
@@ -189,8 +247,8 @@ fn configure_color(enabled: bool) {
     colored::control::set_override(enabled);
 }
 
-fn resolve_color_enabled(args: &[String], use_json: bool) -> bool {
-    if use_json {
+fn resolve_color_enabled(args: &[String], use_structured: bool) -> bool {
+    if use_structured {
         return false;
     }
 

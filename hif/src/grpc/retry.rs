@@ -69,7 +69,7 @@ where
 
                 // Log retry attempt
                 eprintln!(
-                    "Retry attempt {}/{} after error: {}",
+                    "warning: retry {}/{} after error: {}",
                     attempt, config.max_retries, e
                 );
 

@@ -59,8 +59,12 @@ pub async fn run(cmd: CheckoutCommand) -> Result<()> {
         )?;
     } else {
         output::set_success_message(format!(
-            "Checked out {}/{} to {}. Next: cd {} && hif session start \"your goal\"",
-            org, repository, target_path, target_path
+            "checked out '{}/{}' to '{}'",
+            org, repository, target_path
+        ));
+        output::warn(format!(
+            "run `cd {}` then `hif session start \"goal\"`",
+            target_path
         ));
     }
 

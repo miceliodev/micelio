@@ -176,7 +176,7 @@ async fn login() -> Result<()> {
             },
         )?;
     } else {
-        output::set_success_message(format!("Authenticated with {}.", server_name));
+        output::set_success_message(format!("authenticated with {}", server_name));
     }
     Ok(())
 }
@@ -204,16 +204,13 @@ fn status() -> Result<()> {
 
     match state {
         AuthStatusState::NotAuthenticated => {
-            output::warn("Not logged in.");
-            output::set_success_message(format!(
-                "Run {} to authenticate.",
-                "hif auth login".cyan()
-            ));
+            output::warn("not logged in");
+            output::set_success_message(format!("run {} to authenticate", "hif auth login".cyan()));
         }
         AuthStatusState::Expired { .. } => {
-            output::warn("Access token expired.");
+            output::warn("access token expired");
             output::set_success_message(format!(
-                "Run {} to re-authenticate.",
+                "run {} to re-authenticate",
                 "hif auth login".cyan()
             ));
         }
@@ -221,12 +218,12 @@ fn status() -> Result<()> {
             tokens,
             remaining_seconds,
         } => {
-            let mut status_message = format!("Authenticated with {}.", tokens.server);
+            let mut status_message = format!("authenticated with {}", tokens.server);
             if let Some(remaining) = remaining_seconds {
                 if remaining > 0 {
                     let hours = remaining / 3600;
                     let minutes = (remaining % 3600) / 60;
-                    status_message.push_str(&format!(" Token expires in {}h {}m.", hours, minutes));
+                    status_message.push_str(&format!("; token expires in {}h {}m", hours, minutes));
                 }
             }
             output::set_success_message(status_message);
@@ -242,7 +239,7 @@ fn logout() -> Result<()> {
     if output::use_json() {
         output::print_ok("auth.logout", AuthLogoutOutput {})?;
     } else {
-        output::set_success_message("Logged out.");
+        output::set_success_message("logged out");
     }
     Ok(())
 }
@@ -305,12 +302,9 @@ fn print_authorization_instructions(auth: &DeviceAuthResponse) {
         .unwrap_or(&auth.verification_uri);
 
     println!();
-    println!("Open this URL in your browser:");
-    println!("  {}", url.cyan());
-    println!();
-    println!("Enter code: {}", auth.user_code.bold());
-    println!();
-    println!("Waiting for authorization...");
+    println!("visit {}", url.cyan());
+    println!("code {}", auth.user_code.bold());
+    println!("waiting for authorization...");
 }
 
 /// Poll for token after device authorization.

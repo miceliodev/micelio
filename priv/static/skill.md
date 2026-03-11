@@ -32,10 +32,10 @@ When adding new user interactions that should influence "recent repositories", a
 Design principles:
 1. **Rich help with examples**: Every command includes `after_help` with EXAMPLES, WORKFLOW, and NOTES sections
 2. **Main help has quick start**: The root `--help` shows a complete workflow from auth to landing
-3. **`--help --json` for agents**: Machine-readable help that agents can parse programmatically
+3. **`--help --json` / `--help --toon` for agents**: Machine-readable help that agents can parse programmatically
 4. **Actionable error messages**: Errors should suggest next steps (e.g., "Run 'hif auth login' first")
 
-The `--help --json` output includes:
+The `--help --json` / `--help --toon` output includes:
 - `concepts`: Definitions of Session, Workspace, Forge, Landing, Position
 - `workflow`: Numbered steps for the typical flow
 - `commands`: Full command tree with args, options, and requirements (`requires_auth`, `requires_workspace`, `requires_session`)
@@ -208,6 +208,7 @@ hif sync                               # Pull latest from forge
 ### hif CLI Global Options
 
 - `--json` - Output in JSON format (for scripts/agents)
+- `--toon` - Output in TOON format (compact machine format)
 - `--verbose` / `-v` - Show additional details
 - `--no-color` - Disable colored output (also respects `NO_COLOR`)
 - `--cwd` / `-C` - Run as if started in a different directory

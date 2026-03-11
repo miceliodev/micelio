@@ -42,7 +42,7 @@ pub async fn run(cmd: UnmountCommand) -> Result<()> {
 
     if !json_output {
         println!(
-            "Unmounting {}/{} from {}...",
+            "unmounting {}/{} from {}",
             manifest.account,
             manifest.repository,
             mount_path.display()
@@ -59,12 +59,12 @@ pub async fn run(cmd: UnmountCommand) -> Result<()> {
         }
 
         println!();
-        println!("Warning: There is an active session with uncommitted changes.");
-        println!("Run 'hif session land' or 'hif session abandon' before unmounting.");
+        println!("warning: active session with uncommitted changes");
+        println!("run 'hif session land' or 'hif session abandon' before unmounting");
         println!();
 
         // Ask for confirmation
-        print!("Continue anyway? [y/N] ");
+        print!("continue anyway? [y/N] ");
         std::io::Write::flush(&mut std::io::stdout())?;
 
         let mut input = String::new();
@@ -72,7 +72,7 @@ pub async fn run(cmd: UnmountCommand) -> Result<()> {
 
         if !input.trim().eq_ignore_ascii_case("y") {
             if !json_output {
-                println!("Unmount cancelled.");
+                println!("unmount aborted");
             }
             return Ok(());
         }
@@ -105,7 +105,7 @@ pub async fn run(cmd: UnmountCommand) -> Result<()> {
                 },
             )?;
         } else {
-            println!("Removed mount directory: {}", mount_path.display());
+            println!("removed '{}'", mount_path.display());
         }
     } else {
         if json_output {
@@ -117,8 +117,8 @@ pub async fn run(cmd: UnmountCommand) -> Result<()> {
                 },
             )?;
         } else {
-            println!("Unmounted. Files remain at: {}", mount_path.display());
-            println!("To remove files, run: hif unmount {} --remove", cmd.path);
+            println!("unmounted; files remain at '{}'", mount_path.display());
+            println!("run 'hif unmount {} --remove' to remove files", cmd.path);
         }
     }
 

@@ -99,9 +99,9 @@ pub async fn run(cmd: LogCommand) -> Result<()> {
     } else {
         for session in sessions {
             println!("{} {}", session.revision, session.id);
-            println!("  Goal: {}", session.goal);
+            println!("  goal: {}", session.goal);
             println!(
-                "  Attributed To: {}",
+                "  attributed-to: {}",
                 display_identity(&session.attributed_to)
             );
             println!();

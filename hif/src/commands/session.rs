@@ -210,11 +210,10 @@ async fn start(organization: &str, repository: &str, goal: &str) -> Result<()> {
             },
         )?;
     } else {
-        println!("Session started: {}", state.id);
-        println!("Goal: {}", goal);
-        println!("Repository: {}/{}", organization, repository);
-        println!();
-        println!("Make your changes, then run 'hif session land' to push to the forge.");
+        println!("started session {}", state.id);
+        println!("goal {}", goal);
+        println!("repository {}/{}", organization, repository);
+        println!("run 'hif session land' when ready");
     }
 
     Ok(())
@@ -244,8 +243,8 @@ async fn status() -> Result<()> {
                     },
                 )?;
             } else {
-                println!("No active session.");
-                println!("Start one with: hif session start <account>/<repository> <goal>");
+                println!("no active session");
+                println!("start one with: hif session start <account>/<repository> <goal>");
             }
         }
         Some(state) => {
@@ -267,17 +266,17 @@ async fn status() -> Result<()> {
                     },
                 )?;
             } else {
-                println!("Active session: {}", state.id);
-                println!("Goal: {}", state.goal);
+                println!("session {}", state.id);
+                println!("goal {}", state.goal);
                 println!(
-                    "Repository: {}/{}",
+                    "repository {}/{}",
                     state.repository_org, state.repository_handle
                 );
-                println!("Started: {}", state.started_at);
+                println!("started {}", state.started_at);
 
                 if !state.conversation.is_empty() {
                     println!();
-                    println!("Conversation ({} messages):", state.conversation.len());
+                    println!("conversation ({}):", state.conversation.len());
                     for msg in &state.conversation {
                         println!("  [{}] {}", msg.role, msg.message);
                     }
@@ -285,16 +284,16 @@ async fn status() -> Result<()> {
 
                 if !state.decisions.is_empty() {
                     println!();
-                    println!("Decisions ({}):", state.decisions.len());
+                    println!("decisions ({}):", state.decisions.len());
                     for decision in &state.decisions {
                         println!("  - {}", decision.description);
-                        println!("    Reasoning: {}", decision.reasoning);
+                        println!("    reasoning: {}", decision.reasoning);
                     }
                 }
 
                 if !state.files.is_empty() {
                     println!();
-                    println!("Files ({}):", state.files.len());
+                    println!("files ({}):", state.files.len());
                     for file in &state.files {
                         println!("  {} ({})", file.path, file.change_type);
                     }
@@ -302,10 +301,10 @@ async fn status() -> Result<()> {
 
                 if let Some(remote) = remote.as_ref() {
                     println!();
-                    println!("Remote status: {}", remote.status);
+                    println!("remote-status {}", remote.status);
                     if let Some(conflict) = remote.conflict.as_ref() {
                         println!(
-                            "Conflict revision: {}",
+                            "conflict-revision {}",
                             format_revision_hash(&conflict.revision_hash)
                         );
                         if !conflict.paths.is_empty() {
@@ -334,7 +333,7 @@ fn note(role: &str, message: &str) -> Result<()> {
             },
         )?;
     } else {
-        println!("Note added to session.");
+        println!("added note to session");
     }
     Ok(())
 }
@@ -384,28 +383,28 @@ async fn land() -> Result<()> {
             )));
         }
 
-        println!("Error: Conflicts detected with upstream changes.");
+        println!("error: conflicts detected with upstream changes");
         if let Some(conflict) = response.conflict.as_ref() {
             println!();
             println!(
-                "Conflict revision: {}",
+                "conflict-revision {}",
                 format_revision_hash(&conflict.revision_hash)
             );
             if !conflict.reason.is_empty() {
-                println!("Reason: {}", conflict.reason);
+                println!("reason {}", conflict.reason);
             }
             if !conflict.paths.is_empty() {
-                println!("Conflicting files:");
+                println!("conflicting files:");
                 for path in &conflict.paths {
                     println!("  - {}", path);
                 }
             }
         }
         println!();
-        println!("To resolve:");
-        println!("  1. Run 'hif sync' to fetch latest upstream state");
-        println!("  2. Merge your local changes");
-        println!("  3. Run 'hif session land' again");
+        println!("resolve with:");
+        println!("  1. run 'hif sync'");
+        println!("  2. merge local changes");
+        println!("  3. run 'hif session land' again");
         return Err(MicError::ConflictsDetected);
     }
 
@@ -424,10 +423,9 @@ async fn land() -> Result<()> {
             },
         )?;
     } else {
-        println!("Session landed successfully!");
-        println!("Session ID: {}", response.session_id);
+        println!("landed session {}", response.session_id);
         if !landing_revision.is_empty() {
-            println!("Landing revision: {}", landing_revision);
+            println!("revision {}", landing_revision);
         }
     }
 
@@ -449,7 +447,7 @@ async fn abandon() -> Result<()> {
                     },
                 )?;
             } else {
-                println!("No active session to abandon.");
+                println!("no active session to abandon");
             }
             return Ok(());
         }
@@ -492,7 +490,7 @@ async fn abandon() -> Result<()> {
             },
         )?;
     } else {
-        output::set_success_message("Session abandoned.");
+        output::set_success_message("abandoned session");
     }
     Ok(())
 }
@@ -508,9 +506,9 @@ fn resolve(strategy: &str) -> Result<()> {
             },
         )?;
     } else {
-        println!("Conflict resolution is not yet implemented.");
-        println!("Available strategies: ours, theirs, interactive");
-        println!("Strategy: {}", strategy);
+        println!("conflict resolution is not implemented");
+        println!("available strategies: ours, theirs, interactive");
+        println!("strategy {}", strategy);
     }
     Ok(())
 }

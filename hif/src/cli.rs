@@ -23,8 +23,12 @@ QUICK START:
 ")]
 pub struct Cli {
     /// Output in JSON format (for scripting and agents)
-    #[arg(long, global = true)]
+    #[arg(long, global = true, conflicts_with = "toon")]
     pub json: bool,
+
+    /// Output in TOON format (for low-token machine consumption)
+    #[arg(long, global = true, conflicts_with = "json")]
+    pub toon: bool,
 
     /// Verbose output (show additional details)
     #[arg(short, long, global = true)]
@@ -140,6 +144,7 @@ NOTES:
 EXAMPLES:
     $ hif status          # Show all changes
     $ hif status --json   # Output as JSON (for scripts/agents)
+    $ hif status --toon   # Output as TOON (compact machine format)
 
 OUTPUT:
     A = Added file
@@ -214,6 +219,7 @@ EXAMPLES:
     $ hif show acme/myapp README.md           # Current version
     $ hif show acme/myapp src/main.rs -r @0123456789abcdef...  # At revision hash
     $ hif show acme/myapp config.json --json  # Output as JSON
+    $ hif show acme/myapp config.json --toon  # Output as TOON
 
 NOTES:
     Reads directly from forge - no local workspace needed.
@@ -742,10 +748,11 @@ pub fn generate_help_json() -> serde_json::Value {
 
         "global_options": {
             "--json": "Output in JSON format",
+            "--toon": "Output in TOON format (compact machine format)",
             "--verbose": "Show additional details",
             "--no-color": "Disable colored output",
             "-C, --cwd": "Run from different directory",
-            "--help": "Show help (add --json for machine-readable)"
+            "--help": "Show help (add --json or --toon for machine-readable)"
         },
 
         "error_codes": {
@@ -772,6 +779,11 @@ pub fn generate_help_json() -> serde_json::Value {
 /// Check if JSON output should be used.
 pub fn should_use_json() -> bool {
     std::env::args().any(|arg| arg == "--json")
+}
+
+/// Check if TOON output should be used.
+pub fn should_use_toon() -> bool {
+    std::env::args().any(|arg| arg == "--toon")
 }
 
 // =============================================================================
@@ -1039,7 +1051,8 @@ pub fn generate_docs() -> serde_json::Value {
                 "options": [],
                 "examples": [
                     {"command": "hif status", "description": "Show all local changes"},
-                    {"command": "hif status --json", "description": "Output as JSON"}
+                    {"command": "hif status --json", "description": "Output as JSON"},
+                    {"command": "hif status --toon", "description": "Output as TOON"}
                 ],
                 "output_format": {
                     "A": "Added - new file",
@@ -1275,6 +1288,7 @@ pub fn generate_docs() -> serde_json::Value {
 
         "global_options": [
             {"name": "--json", "description": "Output in JSON format (for scripting and agents)"},
+            {"name": "--toon", "description": "Output in TOON format (for low-token machine consumption)"},
             {"name": "--verbose, -v", "description": "Show additional details"},
             {"name": "--no-color", "description": "Disable colored output"},
             {"name": "--cwd, -C", "description": "Run as if started in <PATH> instead of current directory"},

@@ -36,10 +36,10 @@ Use `MuonTrap.cmd/3` instead of `System.cmd/3` for running external commands.
 Design principles:
 1. **Rich help with examples**: Every command includes `after_help` with EXAMPLES, WORKFLOW, and NOTES sections
 2. **Main help has quick start**: The root `--help` shows a complete workflow from auth to landing
-3. **`--help --json` for agents**: Machine-readable help that agents can parse programmatically
+3. **`--help --json` / `--help --toon` for agents**: Machine-readable help that agents can parse programmatically
 4. **Actionable error messages**: Errors should suggest next steps (e.g., "Run 'hif auth login' first")
 
-The `--help --json` output includes:
+The `--help --json` / `--help --toon` output includes:
 - `concepts`: Definitions of Session, Workspace, Forge, Landing, Position
 - `workflow`: Numbered steps for the typical flow
 - `commands`: Full command tree with args, options, and requirements (`requires_auth`, `requires_workspace`, `requires_session`)

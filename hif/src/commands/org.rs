@@ -99,10 +99,10 @@ async fn info(handle: &str) -> Result<()> {
             },
         )?;
     } else {
-        println!("Organization: {}", name);
-        println!("Handle: {}", handle);
+        println!("organization {}", name);
+        println!("handle {}", handle);
         if !description.is_empty() {
-            println!("Description: {}", description);
+            println!("description {}", description);
         }
     }
 

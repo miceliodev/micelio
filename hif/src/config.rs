@@ -24,14 +24,16 @@ use crate::constants::{is_first_party_url, FIRST_PARTY_CLIENT_ID, TOKEN_REFRESH_
 use crate::error::{MicError, Result};
 #[cfg(test)]
 use base64::Engine;
+use fs2::FileExt;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::fs;
-use std::io::Write;
+use std::fs::{self, File, OpenOptions};
+use std::future::Future;
+use std::io::{ErrorKind, Write};
 use std::path::Path;
 use std::path::PathBuf;
 use std::thread;
-use std::time::{Duration, Instant, SystemTime};
+use std::time::{Duration, Instant};
 
 // =============================================================================
 // Configuration Types
@@ -87,6 +89,7 @@ pub enum OutputFormat {
     #[default]
     Text,
     Json,
+    Toon,
 }
 
 /// User preferences.
@@ -465,47 +468,19 @@ impl StoredTokens {
 
 /// Read stored tokens from disk.
 pub fn read_tokens() -> Result<Option<StoredTokens>> {
-    let path = config_dir()?.join("tokens.json");
-
-    if !path.exists() {
-        return Ok(None);
-    }
-
-    let data = fs::read_to_string(&path)
-        .map_err(|e| MicError::ConfigError(format!("Failed to read tokens: {}", e)))?;
-
-    let tokens: StoredTokens = serde_json::from_str(&data)
-        .map_err(|e| MicError::ConfigError(format!("Failed to parse tokens: {}", e)))?;
-
-    Ok(Some(tokens))
+    let path = tokens_file_path()?;
+    read_tokens_from_path(&path)
 }
 
 /// Write stored tokens to disk.
 pub fn store_tokens(tokens: &StoredTokens) -> Result<()> {
-    ensure_config_dir()?;
-
-    let path = config_dir()?.join("tokens.json");
-    let data = serde_json::to_string_pretty(tokens)
-        .map_err(|e| MicError::ConfigError(format!("Failed to serialize tokens: {}", e)))?;
-
-    fs::write(&path, data)
-        .map_err(|e| MicError::ConfigError(format!("Failed to write tokens: {}", e)))?;
-
-    // Set file permissions to 0600 (owner read/write only) on Unix
-    #[cfg(unix)]
-    {
-        use std::os::unix::fs::PermissionsExt;
-        fs::set_permissions(&path, fs::Permissions::from_mode(0o600)).map_err(|e| {
-            MicError::ConfigError(format!("Failed to set token permissions: {}", e))
-        })?;
-    }
-
-    Ok(())
+    store_tokens_with_expected_session(tokens, None)
 }
 
 /// Delete stored tokens.
 pub fn delete_tokens() -> Result<()> {
-    let path = config_dir()?.join("tokens.json");
+    let _state_lock = acquire_token_state_lock()?;
+    let path = tokens_file_path()?;
 
     if path.exists() {
         fs::remove_file(&path)
@@ -557,7 +532,15 @@ pub fn require_tokens() -> Result<StoredTokens> {
                 ) {
                     Ok(new_tokens) => return Ok(new_tokens),
                     Err(_) if !latest.is_expired() => {
-                        // Token not yet expired, continue with current
+                        if let Some(current) = read_tokens()? {
+                            if current.server == latest.server
+                                && !current.is_expired()
+                                && current.session_id != latest.session_id
+                            {
+                                return Ok(current);
+                            }
+                        }
+                        // Token not yet expired, continue with current.
                         return Ok(latest);
                     }
                     Err(_) => return Err(MicError::TokenExpired),
@@ -579,17 +562,17 @@ pub fn require_tokens() -> Result<StoredTokens> {
     Ok(tokens)
 }
 
-const REFRESH_LOCK_WAIT: Duration = Duration::from_secs(90);
-const REFRESH_LOCK_POLL: Duration = Duration::from_millis(100);
-const REFRESH_LOCK_STALE: Duration = Duration::from_secs(300);
+const LOCK_WAIT: Duration = Duration::from_secs(90);
+const LOCK_POLL: Duration = Duration::from_millis(100);
 
-struct RefreshLockGuard {
-    path: PathBuf,
+struct FileLockGuard {
+    _path: PathBuf,
+    file: File,
 }
 
-impl Drop for RefreshLockGuard {
+impl Drop for FileLockGuard {
     fn drop(&mut self) {
-        let _ = fs::remove_file(&self.path);
+        let _ = self.file.unlock();
     }
 }
 
@@ -603,20 +586,28 @@ fn ensure_token_session(mut tokens: StoredTokens) -> Result<StoredTokens> {
         return Ok(tokens);
     }
 
+    let _state_lock = acquire_token_state_lock()?;
+    let path = tokens_file_path()?;
+    let latest = read_tokens_from_path(&path)?.ok_or(MicError::NotAuthenticated)?;
+    if latest.server.is_empty() {
+        return Err(MicError::InvalidTokens);
+    }
+
+    if normalized_session_id(latest.session_id.as_deref()).is_some() {
+        return Ok(latest);
+    }
+
+    tokens = latest;
     tokens.session_id = Some(uuid::Uuid::new_v4().to_string());
-    store_tokens(&tokens)?;
+    write_tokens_atomic(&path, &tokens)?;
     Ok(tokens)
 }
 
 fn refresh_lock_path(tokens: &StoredTokens) -> Result<PathBuf> {
-    let session_id = tokens
-        .session_id
-        .as_ref()
-        .ok_or(MicError::InvalidTokens)?
-        .trim();
-    if session_id.is_empty() {
+    let session_id = normalized_session_id(tokens.session_id.as_deref());
+    let Some(session_id) = session_id else {
         return Err(MicError::InvalidTokens);
-    }
+    };
 
     let server_hash = blake3::hash(tokens.server.as_bytes()).to_hex();
     Ok(config_dir()?.join(format!(
@@ -626,58 +617,162 @@ fn refresh_lock_path(tokens: &StoredTokens) -> Result<PathBuf> {
     )))
 }
 
-fn lock_is_stale(path: &Path) -> Result<bool> {
-    let metadata = fs::metadata(path)
-        .map_err(|e| MicError::RefreshFailed(format!("Failed to inspect refresh lock: {}", e)))?;
-    let modified = metadata.modified().map_err(|e| {
-        MicError::RefreshFailed(format!("Failed to read refresh lock timestamp: {}", e))
-    })?;
-    let age = SystemTime::now()
-        .duration_since(modified)
-        .unwrap_or_default();
-
-    Ok(age > REFRESH_LOCK_STALE)
+fn token_state_lock_path() -> Result<PathBuf> {
+    Ok(config_dir()?.join("tokens.state.lock"))
 }
 
-fn try_create_lock_file(path: &Path) -> std::io::Result<()> {
-    let mut file = fs::OpenOptions::new()
-        .write(true)
-        .create_new(true)
-        .open(path)?;
-
-    writeln!(file, "pid={}", std::process::id())?;
-    Ok(())
-}
-
-fn acquire_refresh_lock(tokens: &StoredTokens) -> Result<RefreshLockGuard> {
+fn acquire_refresh_lock(tokens: &StoredTokens) -> Result<FileLockGuard> {
     let lock_path = refresh_lock_path(tokens)?;
-    let deadline = Instant::now() + REFRESH_LOCK_WAIT;
+    acquire_file_lock(&lock_path, "refresh")
+}
 
+fn acquire_token_state_lock() -> Result<FileLockGuard> {
+    let lock_path = token_state_lock_path()?;
+    acquire_file_lock(&lock_path, "token state")
+}
+
+fn acquire_file_lock(path: &Path, lock_name: &str) -> Result<FileLockGuard> {
+    ensure_config_dir()?;
+    let deadline = Instant::now() + LOCK_WAIT;
     loop {
-        match try_create_lock_file(&lock_path) {
-            Ok(()) => return Ok(RefreshLockGuard { path: lock_path }),
-            Err(error) if error.kind() == std::io::ErrorKind::AlreadyExists => {
-                if lock_is_stale(&lock_path)? {
-                    let _ = fs::remove_file(&lock_path);
-                    continue;
-                }
+        let file = OpenOptions::new()
+            .read(true)
+            .write(true)
+            .create(true)
+            .truncate(false)
+            .open(path)
+            .map_err(|error| {
+                MicError::RefreshFailed(format!(
+                    "Failed to open {} lock file: {}",
+                    lock_name, error
+                ))
+            })?;
 
+        match file.try_lock_exclusive() {
+            Ok(()) => {
+                return Ok(FileLockGuard {
+                    _path: path.to_path_buf(),
+                    file,
+                });
+            }
+            Err(error) if error.kind() == ErrorKind::WouldBlock => {
                 if Instant::now() >= deadline {
-                    return Err(MicError::RefreshFailed(
-                        "Timed out waiting for token refresh lock".to_string(),
-                    ));
+                    return Err(MicError::RefreshFailed(format!(
+                        "Timed out waiting for {} lock",
+                        lock_name
+                    )));
                 }
-
-                thread::sleep(REFRESH_LOCK_POLL);
+                thread::sleep(LOCK_POLL);
             }
             Err(error) => {
                 return Err(MicError::RefreshFailed(format!(
-                    "Failed to acquire token refresh lock: {}",
-                    error
-                )))
+                    "Failed to acquire {} lock: {}",
+                    lock_name, error
+                )));
             }
         }
     }
+}
+
+fn normalized_session_id(session_id: Option<&str>) -> Option<String> {
+    session_id
+        .map(str::trim)
+        .filter(|value| !value.is_empty())
+        .map(ToOwned::to_owned)
+}
+
+fn tokens_file_path() -> Result<PathBuf> {
+    Ok(config_dir()?.join("tokens.json"))
+}
+
+fn read_tokens_from_path(path: &Path) -> Result<Option<StoredTokens>> {
+    if !path.exists() {
+        return Ok(None);
+    }
+
+    let data = fs::read_to_string(path)
+        .map_err(|e| MicError::ConfigError(format!("Failed to read tokens: {}", e)))?;
+
+    let tokens: StoredTokens = serde_json::from_str(&data)
+        .map_err(|e| MicError::ConfigError(format!("Failed to parse tokens: {}", e)))?;
+
+    Ok(Some(tokens))
+}
+
+fn store_tokens_with_expected_session(
+    tokens: &StoredTokens,
+    expected_session_id: Option<&str>,
+) -> Result<()> {
+    let _state_lock = acquire_token_state_lock()?;
+    let path = tokens_file_path()?;
+    let expected_session_id = normalized_session_id(expected_session_id);
+
+    if let Some(expected) = expected_session_id {
+        let current_tokens = read_tokens_from_path(&path)?.ok_or(MicError::NotAuthenticated)?;
+        let current_session = normalized_session_id(current_tokens.session_id.as_deref());
+
+        if current_session.as_deref() != Some(expected.as_str()) {
+            return Err(MicError::RefreshFailed(
+                "Token session changed while refresh was in progress".to_string(),
+            ));
+        }
+    }
+
+    write_tokens_atomic(&path, tokens)
+}
+
+fn write_tokens_atomic(path: &Path, tokens: &StoredTokens) -> Result<()> {
+    ensure_config_dir()?;
+
+    let data = serde_json::to_string_pretty(tokens)
+        .map_err(|e| MicError::ConfigError(format!("Failed to serialize tokens: {}", e)))?;
+
+    let file_name = path
+        .file_name()
+        .ok_or_else(|| MicError::ConfigError("Invalid token file path".to_string()))?
+        .to_string_lossy();
+    let tmp_path = path.with_file_name(format!(
+        "{}.tmp.{}.{}",
+        file_name,
+        std::process::id(),
+        uuid::Uuid::new_v4()
+    ));
+
+    let write_result = (|| -> Result<()> {
+        let mut tmp_file = OpenOptions::new()
+            .write(true)
+            .create_new(true)
+            .open(&tmp_path)
+            .map_err(|e| {
+                MicError::ConfigError(format!("Failed to create temp token file: {}", e))
+            })?;
+
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::PermissionsExt;
+            fs::set_permissions(&tmp_path, fs::Permissions::from_mode(0o600)).map_err(|e| {
+                MicError::ConfigError(format!("Failed to set token permissions: {}", e))
+            })?;
+        }
+
+        tmp_file
+            .write_all(data.as_bytes())
+            .map_err(|e| MicError::ConfigError(format!("Failed to write tokens: {}", e)))?;
+        tmp_file
+            .sync_all()
+            .map_err(|e| MicError::ConfigError(format!("Failed to sync token file: {}", e)))?;
+
+        fs::rename(&tmp_path, path)
+            .map_err(|e| MicError::ConfigError(format!("Failed to replace tokens file: {}", e)))?;
+
+        Ok(())
+    })();
+
+    if write_result.is_err() {
+        let _ = fs::remove_file(&tmp_path);
+    }
+
+    write_result
 }
 
 /// Refresh tokens synchronously (blocking).
@@ -686,12 +781,50 @@ fn refresh_tokens_sync(
     refresh_token: &str,
     session_id: Option<&str>,
 ) -> Result<StoredTokens> {
-    // Create a new runtime for the blocking call
-    // This is a workaround - ideally require_tokens would be async
+    let server = server.to_string();
+    let refresh_token = refresh_token.to_string();
+    let session_id = session_id.map(|value| value.to_string());
+
+    run_async_blocking(async move {
+        refresh_tokens(&server, &refresh_token, session_id.as_deref()).await
+    })
+}
+
+fn run_async_blocking<T, Fut>(future: Fut) -> Result<T>
+where
+    T: Send + 'static,
+    Fut: Future<Output = Result<T>> + Send + 'static,
+{
+    if let Ok(handle) = tokio::runtime::Handle::try_current() {
+        return match handle.runtime_flavor() {
+            tokio::runtime::RuntimeFlavor::MultiThread => {
+                tokio::task::block_in_place(|| handle.block_on(future))
+            }
+            tokio::runtime::RuntimeFlavor::CurrentThread => {
+                thread::spawn(move || run_async_with_new_runtime(future))
+                    .join()
+                    .map_err(|_| {
+                        MicError::RefreshFailed("Token refresh worker thread panicked".to_string())
+                    })?
+            }
+            _ => thread::spawn(move || run_async_with_new_runtime(future))
+                .join()
+                .map_err(|_| {
+                    MicError::RefreshFailed("Token refresh worker thread panicked".to_string())
+                })?,
+        };
+    }
+
+    run_async_with_new_runtime(future)
+}
+
+fn run_async_with_new_runtime<T, Fut>(future: Fut) -> Result<T>
+where
+    Fut: Future<Output = Result<T>>,
+{
     let rt = tokio::runtime::Runtime::new()
         .map_err(|e| MicError::RefreshFailed(format!("Failed to create runtime: {}", e)))?;
-
-    rt.block_on(refresh_tokens(server, refresh_token, session_id))
+    rt.block_on(future)
 }
 
 /// Refresh tokens using the refresh_token grant.
@@ -764,8 +897,8 @@ async fn refresh_tokens(
         expires_at,
     };
 
-    // Store the refreshed tokens
-    store_tokens(&new_tokens)?;
+    // Store refreshed tokens only if this auth session is still current.
+    store_tokens_with_expected_session(&new_tokens, session_id)?;
 
     Ok(new_tokens)
 }
@@ -933,5 +1066,36 @@ mod tests {
             refresh_lock_path(&tokens),
             Err(MicError::InvalidTokens)
         ));
+    }
+
+    #[test]
+    fn run_async_blocking_works_without_runtime() {
+        let result = run_async_blocking(async { Ok::<_, MicError>(42) }).unwrap();
+        assert_eq!(result, 42);
+    }
+
+    #[test]
+    fn run_async_blocking_works_inside_multi_thread_runtime() {
+        let runtime = tokio::runtime::Builder::new_multi_thread()
+            .worker_threads(1)
+            .enable_all()
+            .build()
+            .unwrap();
+
+        let result =
+            runtime.block_on(async { run_async_blocking(async { Ok::<_, MicError>(7) }).unwrap() });
+        assert_eq!(result, 7);
+    }
+
+    #[test]
+    fn run_async_blocking_works_inside_current_thread_runtime() {
+        let runtime = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap();
+
+        let result = runtime
+            .block_on(async { run_async_blocking(async { Ok::<_, MicError>(11) }).unwrap() });
+        assert_eq!(result, 11);
     }
 }

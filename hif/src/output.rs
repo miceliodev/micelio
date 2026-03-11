@@ -4,6 +4,7 @@ use crate::error::{MicError, Result};
 use colored::Colorize;
 use serde::Serialize;
 use std::sync::{Mutex, OnceLock};
+use toon_format::encode_default;
 
 /// Convert command/domain values into explicit CLI JSON models.
 pub(crate) trait CliOutput {
@@ -88,21 +89,26 @@ pub fn take_success_message() -> Option<String> {
 pub fn print_human_warnings(warnings: &[String], to_stderr: bool) {
     for warning in warnings {
         if to_stderr {
-            eprintln!("{} {}", "Warning:".yellow().bold(), warning);
+            eprintln!("{} {}", "warning:".yellow().bold(), warning);
         } else {
-            println!("{} {}", "Warning:".yellow().bold(), warning);
+            println!("{} {}", "warning:".yellow().bold(), warning);
         }
     }
 }
 
 /// Print a standardized human success line.
 pub fn print_human_success(message: &str) {
-    println!("{} {}", "Success:".green().bold(), message);
+    println!("{}", message);
 }
 
 /// Whether JSON output mode is enabled for this process.
 pub fn use_json() -> bool {
-    crate::cli::should_use_json()
+    crate::cli::should_use_json() || crate::cli::should_use_toon()
+}
+
+/// Whether TOON output mode is enabled for this process.
+pub fn use_toon() -> bool {
+    crate::cli::should_use_toon()
 }
 
 /// Print a serializable value as pretty JSON.
@@ -111,6 +117,23 @@ pub fn print_json<T: Serialize>(value: &T) -> Result<()> {
         .map_err(|e| MicError::Other(format!("Failed to serialize JSON output: {}", e)))?;
     println!("{}", json);
     Ok(())
+}
+
+/// Print a serializable value as TOON.
+pub fn print_toon<T: Serialize>(value: &T) -> Result<()> {
+    let toon = encode_default(value)
+        .map_err(|e| MicError::Other(format!("Failed to serialize TOON output: {}", e)))?;
+    println!("{}", toon);
+    Ok(())
+}
+
+/// Print a serializable value in the selected structured format (JSON or TOON).
+pub fn print_structured<T: Serialize>(value: &T) -> Result<()> {
+    if use_toon() {
+        print_toon(value)
+    } else {
+        print_json(value)
+    }
 }
 
 /// Print a standard success envelope for machine-readable output.
@@ -122,7 +145,7 @@ pub fn print_ok<T: Serialize>(action: &str, data: T) -> Result<()> {
         data,
         warnings: (!warnings.is_empty()).then_some(warnings),
     };
-    print_json(&envelope)
+    print_structured(&envelope)
 }
 
 #[cfg(test)]

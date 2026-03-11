@@ -51,7 +51,7 @@ pub async fn run() -> Result<()> {
             "{}",
             format!("On repository {}/{}", manifest.account, manifest.repository).bold()
         );
-        println!("Server: {}", manifest.server.dimmed());
+        println!("server {}", manifest.server.dimmed());
     }
 
     // Get workspace changes from disk
@@ -123,13 +123,13 @@ pub async fn run() -> Result<()> {
     // Check for active session
     if let Some(state) = Session::load()? {
         println!();
-        println!("{}", format!("Session: {}", state.id).cyan());
-        println!("Goal: {}", state.goal);
+        println!("{}", format!("session {}", state.id).cyan());
+        println!("goal {}", state.goal);
 
         // Show session files (staged changes)
         if !state.files.is_empty() {
             println!();
-            println!("{}", "Staged changes:".green());
+            println!("{}", "changes to be landed:".green());
             for file in &state.files {
                 let prefix = match file.change_type.as_str() {
                     "added" => "A".green(),
@@ -151,7 +151,7 @@ pub async fn run() -> Result<()> {
 
         if !unstaged.is_empty() {
             println!();
-            println!("{}", "Unstaged changes:".yellow());
+            println!("{}", "unstaged changes:".yellow());
             for change in &unstaged {
                 let prefix = match change.change_type {
                     ChangeType::Added => "A".green(),
@@ -161,18 +161,18 @@ pub async fn run() -> Result<()> {
                 println!("  {} {}", prefix, change.path);
             }
             println!();
-            println!("Use your editor to continue changes, then run 'hif session land'.");
+            println!("run 'hif session land' when ready");
         }
 
         if state.files.is_empty() && unstaged.is_empty() {
             println!();
-            println!("No changes.");
+            println!("nothing to land");
         }
     } else {
         // No active session
         if !disk_changes.is_empty() {
             println!();
-            println!("{}", "Changes not in a session:".yellow());
+            println!("{}", "changes not in a session:".yellow());
             for change in &disk_changes {
                 let prefix = match change.change_type {
                     ChangeType::Added => "A".green(),
@@ -182,18 +182,20 @@ pub async fn run() -> Result<()> {
                 println!("  {} {}", prefix, change.path);
             }
             println!();
+            println!("start a session with:");
             println!(
-                "Start a session with: {} {} {} \"goal\"",
+                "  {} {} {} \"goal\"",
                 "hif session start".cyan(),
                 manifest.account,
                 manifest.repository
             );
         } else {
             println!();
-            println!("{}", "No changes.".dimmed());
+            println!("{}", "nothing to commit".dimmed());
             println!();
+            println!("start a session with:");
             println!(
-                "Start a session with: {} {} {} \"goal\"",
+                "  {} {} {} \"goal\"",
                 "hif session start".cyan(),
                 manifest.account,
                 manifest.repository
