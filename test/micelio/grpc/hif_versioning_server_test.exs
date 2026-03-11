@@ -53,6 +53,12 @@ defmodule Micelio.GRPC.VirtualVersioningServerTest do
     assert %V1.SessionInfo{} = opened
     assert opened.session_id == session_id
     assert opened.status == "active"
+    assert %V1.Attribution{} = opened.attribution
+    assert %V1.IdentityRef{} = opened.attribution.attributed_to
+    assert opened.attribution.attributed_to.handle == user.account.handle
+    assert opened.attribution.attributed_to.kind == "user"
+    assert %V1.IdentityRef{} = opened.attribution.performed_by
+    assert opened.attribution.performed_by.id == opened.attribution.attributed_to.id
 
     appended_note =
       VersioningServer.append_session_conversation(

@@ -4,6 +4,7 @@ defmodule Micelio.GRPC.Hif.V1.ContentService.Server do
   alias GRPC.RPCError
   alias GRPC.Status
   alias Micelio.Accounts
+  alias Micelio.GRPC.Hif.Identity, as: HifIdentity
   alias Micelio.GRPC.Hif.V1
   alias Micelio.Mic.{Binary, Project}
   alias Micelio.OAuth.AccessTokens
@@ -105,9 +106,9 @@ defmodule Micelio.GRPC.Hif.V1.ContentService.Server do
             line: line.line_number,
             text: line.text,
             session_id: if(session, do: session.session_id, else: ""),
-            actor_handle: actor_handle(session),
+            attributed_to: HifIdentity.attributed_to_for_session(session),
             revision_hash: landing_revision_hash(session),
-            at_ms: landed_at_ms(session)
+            landed_at: landed_at_ms(session)
           }
         end)
 
@@ -268,12 +269,6 @@ defmodule Micelio.GRPC.Hif.V1.ContentService.Server do
     else
       {:error, invalid_status("Blob is not valid UTF-8 text.")}
     end
-  end
-
-  defp actor_handle(nil), do: ""
-
-  defp actor_handle(session) do
-    get_in(session, [:user, :account, :handle]) || ""
   end
 
   defp landing_revision_hash(nil), do: <<>>

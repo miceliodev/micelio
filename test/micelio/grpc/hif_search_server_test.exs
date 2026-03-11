@@ -88,7 +88,12 @@ defmodule Micelio.GRPC.VirtualSearchServerTest do
     assert %V1.TextQueryResponse{} = response
     assert response.total == 1
     assert length(response.matches) == 1
-    assert hd(response.matches).path == "src/main.txt"
+    assert %V1.TextQueryMatch{} = match = hd(response.matches)
+    assert match.path == "src/main.txt"
+    assert %V1.IdentityRef{} = match.attributed_to
+    assert match.attributed_to.handle == user.account.handle
+    assert match.attributed_to.kind == "user"
+    assert match.attributed_to.id != ""
 
     # Advance HEAD to a new revision hash without indexing it to trigger stale index handling.
     second_tree = %{"src/second.txt" => blob_hash}

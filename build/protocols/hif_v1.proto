@@ -54,12 +54,17 @@ message GetHeadAtRequest {
   bytes revision_hash = 2; // REQUIRED
 }
 
-message AgentAttribution {
-  string actor_kind = 1; // user|agent
-  string actor_id = 2;
-  string model_id = 3;
-  string tool_name = 4;
-  string tool_version = 5;
+message IdentityRef {
+  string id = 1;       // REQUIRED canonical identity id (URI or URN)
+  string acct = 2;     // OPTIONAL fediverse-style account (user@instance)
+  string handle = 3;   // OPTIONAL display handle
+  string instance = 4; // OPTIONAL identity host/instance
+  string kind = 5;     // REQUIRED user|agent|system
+}
+
+message Attribution {
+  IdentityRef attributed_to = 1; // REQUIRED work ownership/credit
+  IdentityRef performed_by = 2;  // REQUIRED executor identity
 }
 
 message SessionEvent {
@@ -102,7 +107,7 @@ message SessionInfo {
   repeated SessionEvent conversation = 7; // OPTIONAL
   repeated SessionEvent decisions = 8; // OPTIONAL
   repeated FileOperation changes = 9; // OPTIONAL
-  AgentAttribution attribution = 10; // OPTIONAL
+  Attribution attribution = 10; // OPTIONAL
   uint64 created_at_ms = 11; // REQUIRED
   uint64 updated_at_ms = 12; // REQUIRED
   SessionConflict conflict = 13; // OPTIONAL: present when status=conflict
@@ -127,7 +132,7 @@ message SessionRequest {
 message SessionSummary {
   string id = 1;       // REQUIRED
   string goal = 2;     // REQUIRED
-  string author = 3;   // REQUIRED
+  IdentityRef attributed_to = 3; // REQUIRED
   bytes revision_hash = 4; // REQUIRED
 }
 
@@ -229,9 +234,9 @@ message BlameLine {
   uint32 line = 2;
   string text = 3;
   string session_id = 4;
-  string actor_handle = 5;
+  IdentityRef attributed_to = 5;
   bytes revision_hash = 6;
-  uint64 at_ms = 7;
+  uint64 landed_at = 7;
 }
 
 message BlameRequest {
@@ -264,7 +269,7 @@ message TextQueryMatch {
   uint32 column = 3;
   string snippet = 4;
   string session_id = 5;
-  string actor_handle = 6;
+  IdentityRef attributed_to = 6;
   bytes revision_hash = 7;
   string revision_etag = 8;
 }

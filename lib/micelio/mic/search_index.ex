@@ -21,7 +21,7 @@ defmodule Micelio.Mic.SearchIndex do
           column: non_neg_integer(),
           snippet: String.t(),
           session_id: String.t(),
-          actor_handle: String.t(),
+          attributed_to_handle: String.t(),
           revision_hash: binary(),
           landed_at_ms: non_neg_integer()
         }
@@ -46,7 +46,7 @@ defmodule Micelio.Mic.SearchIndex do
       when is_binary(repository_id) and is_binary(revision_hash) and
              byte_size(revision_hash) == 32 and is_integer(landed_at_ms) and landed_at_ms >= 0 and
              is_list(changes) do
-    actor_handle = resolve_actor_handle(session)
+    attributed_to_handle = resolve_attributed_to_handle(session)
 
     postings_by_token =
       changes
@@ -55,7 +55,7 @@ defmodule Micelio.Mic.SearchIndex do
           acc,
           change,
           session.session_id,
-          actor_handle,
+          attributed_to_handle,
           revision_hash,
           landed_at_ms,
           opts
@@ -146,7 +146,7 @@ defmodule Micelio.Mic.SearchIndex do
          acc,
          %SessionChange{change_type: type},
          _session_id,
-         _actor_handle,
+         _attributed_to_handle,
          _revision_hash,
          _landed_at_ms,
          _opts
@@ -157,7 +157,7 @@ defmodule Micelio.Mic.SearchIndex do
          acc,
          %SessionChange{} = change,
          session_id,
-         actor_handle,
+         attributed_to_handle,
          revision_hash,
          landed_at_ms,
          opts
@@ -168,7 +168,7 @@ defmodule Micelio.Mic.SearchIndex do
           change.file_path,
           content,
           session_id,
-          actor_handle,
+          attributed_to_handle,
           revision_hash,
           landed_at_ms
         )
@@ -181,7 +181,14 @@ defmodule Micelio.Mic.SearchIndex do
     end
   end
 
-  defp build_postings(path, content, session_id, actor_handle, revision_hash, landed_at_ms)
+  defp build_postings(
+         path,
+         content,
+         session_id,
+         attributed_to_handle,
+         revision_hash,
+         landed_at_ms
+       )
        when is_binary(content) do
     content
     |> String.split("\n")
@@ -197,7 +204,7 @@ defmodule Micelio.Mic.SearchIndex do
           column: column + 1,
           snippet: String.slice(line, 0, 400),
           session_id: session_id,
-          actor_handle: actor_handle,
+          attributed_to_handle: attributed_to_handle,
           revision_hash: revision_hash,
           landed_at_ms: landed_at_ms
         }
@@ -373,7 +380,8 @@ defmodule Micelio.Mic.SearchIndex do
       column: Map.get(value, "column", 0),
       snippet: Map.get(value, "snippet", ""),
       session_id: Map.get(value, "session_id", ""),
-      actor_handle: Map.get(value, "actor_handle", ""),
+      attributed_to_handle:
+        Map.get(value, "attributed_to_handle", Map.get(value, "author_handle", "")),
       revision_hash: Map.get(value, "revision_hash", "") |> decode_revision_hash(),
       landed_at_ms: Map.get(value, "landed_at_ms", 0)
     }
@@ -386,7 +394,7 @@ defmodule Micelio.Mic.SearchIndex do
       "column" => value.column,
       "snippet" => value.snippet,
       "session_id" => value.session_id,
-      "actor_handle" => value.actor_handle,
+      "attributed_to_handle" => value.attributed_to_handle,
       "revision_hash" => Base.encode16(value.revision_hash, case: :lower),
       "landed_at_ms" => value.landed_at_ms
     }
@@ -453,12 +461,12 @@ defmodule Micelio.Mic.SearchIndex do
 
   defp decode_revision_hash(_), do: Binary.zero_hash()
 
-  defp resolve_actor_handle(%{user_id: user_id}) when is_binary(user_id) do
+  defp resolve_attributed_to_handle(%{user_id: user_id}) when is_binary(user_id) do
     case Accounts.get_user_with_account(user_id) do
       %{account: %{handle: handle}} when is_binary(handle) and handle != "" -> handle
       _ -> ""
     end
   end
 
-  defp resolve_actor_handle(_), do: ""
+  defp resolve_attributed_to_handle(_), do: ""
 end

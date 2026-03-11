@@ -4,6 +4,7 @@ defmodule Micelio.GRPC.Hif.V1.SearchService.Server do
   alias GRPC.RPCError
   alias GRPC.Status
   alias Micelio.Accounts
+  alias Micelio.GRPC.Hif.Identity, as: HifIdentity
   alias Micelio.GRPC.Hif.V1
   alias Micelio.Mic.SearchIndex
   alias Micelio.OAuth.AccessTokens
@@ -52,7 +53,7 @@ defmodule Micelio.GRPC.Hif.V1.SearchService.Server do
       column: posting.column,
       snippet: posting.snippet,
       session_id: posting.session_id,
-      actor_handle: posting.actor_handle,
+      attributed_to: HifIdentity.attributed_to_for_handle(posting.attributed_to_handle),
       revision_hash: Map.get(posting, :revision_hash, <<>>),
       revision_etag:
         case Map.get(posting, :revision_hash) do

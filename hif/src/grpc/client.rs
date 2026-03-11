@@ -116,6 +116,18 @@ impl GrpcClient {
         let resp = client.post(url).headers(headers).body(body).send().await?;
 
         let status = resp.status();
+        let grpc_status = resp
+            .headers()
+            .get("grpc-status")
+            .and_then(|value| value.to_str().ok())
+            .map(str::trim)
+            .map(str::to_string);
+        let grpc_message = resp
+            .headers()
+            .get("grpc-message")
+            .and_then(|value| value.to_str().ok())
+            .map(str::trim)
+            .map(str::to_string);
 
         // Check if we should retry
         if is_retryable_error(status) {
@@ -124,7 +136,16 @@ impl GrpcClient {
 
         let response_body = resp.bytes().await?;
 
-        // Check gRPC status from trailer (simplified - we check HTTP status)
+        if let Some(code) = grpc_status.as_deref() {
+            if code != "0" {
+                let message = grpc_message
+                    .filter(|value| !value.is_empty())
+                    .unwrap_or_else(|| format!("gRPC call failed with grpc-status {}", code));
+                return Err(MicError::GrpcError(message));
+            }
+        }
+
+        // Check HTTP status when no explicit gRPC status is available.
         if !status.is_success() {
             let error_msg = if response_body.len() > 5 {
                 // Try to extract error message from response
@@ -135,12 +156,38 @@ impl GrpcClient {
             return Err(MicError::GrpcError(error_msg));
         }
 
-        // Parse gRPC response: skip 1 byte compression flag + 4 bytes length
+        // Parse gRPC response: 1 byte compression flag + 4 bytes length + payload.
+        // A valid unary response must include at least one message frame header.
         if response_body.len() < 5 {
-            return Ok(Vec::new());
+            return Err(MicError::GrpcError(
+                "gRPC call returned no message frame. \
+                 The server may have returned a trailer-only error (grpc-status)."
+                    .to_string(),
+            ));
+        }
+        let compressed = response_body[0];
+        if compressed != 0 {
+            return Err(MicError::GrpcError(format!(
+                "Unsupported gRPC compression flag: {}",
+                compressed
+            )));
+        }
+        let message_len = u32::from_be_bytes([
+            response_body[1],
+            response_body[2],
+            response_body[3],
+            response_body[4],
+        ]) as usize;
+
+        if response_body.len() < 5 + message_len {
+            return Err(MicError::GrpcError(format!(
+                "Malformed gRPC frame: declared length {} but body has {} bytes",
+                message_len,
+                response_body.len().saturating_sub(5)
+            )));
         }
 
-        Ok(response_body[5..].to_vec())
+        Ok(response_body[5..5 + message_len].to_vec())
     }
 
     /// Perform a unary gRPC call and return a result with error details.

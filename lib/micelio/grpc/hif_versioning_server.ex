@@ -4,6 +4,7 @@ defmodule Micelio.GRPC.Hif.V1.VersioningService.Server do
   alias GRPC.RPCError
   alias GRPC.Status
   alias Micelio.Accounts
+  alias Micelio.GRPC.Hif.Identity, as: HifIdentity
   alias Micelio.GRPC.Hif.V1
   alias Micelio.Mic.{Binary, Landing, Project}
   alias Micelio.OAuth.AccessTokens
@@ -402,21 +403,9 @@ defmodule Micelio.GRPC.Hif.V1.VersioningService.Server do
   end
 
   defp attribution_from_session(session) do
-    metadata = normalize_metadata(session.metadata)
-
-    actor_kind =
-      case Map.get(metadata, "contributor_type") do
-        "ai" -> "agent"
-        "mixed" -> "agent"
-        _ -> "user"
-      end
-
-    %V1.AgentAttribution{
-      actor_kind: actor_kind,
-      actor_id: session.user_id,
-      model_id: Map.get(metadata, "model_id", ""),
-      tool_name: Map.get(metadata, "tool_name", ""),
-      tool_version: Map.get(metadata, "tool_version", "")
+    %V1.Attribution{
+      attributed_to: HifIdentity.attributed_to_for_session(session),
+      performed_by: HifIdentity.performed_by_for_session(session)
     }
   end
 
@@ -750,16 +739,9 @@ defmodule Micelio.GRPC.Hif.V1.VersioningService.Server do
     %V1.SessionSummary{
       id: session.session_id,
       goal: session.goal || "",
-      author: session_author_handle(session),
+      attributed_to: HifIdentity.attributed_to_for_session(session),
       revision_hash: landing_revision_hash_from_session(session)
     }
-  end
-
-  defp session_author_handle(%Session{} = session) do
-    case session do
-      %{user: %{account: %{handle: handle}}} when is_binary(handle) and handle != "" -> handle
-      _ -> ""
-    end
   end
 
   defp maybe_filter_sessions_by_path(sessions, _repository_id, nil), do: sessions

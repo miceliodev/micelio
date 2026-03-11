@@ -8,15 +8,24 @@ use crate::grpc::{Endpoint, GrpcClient};
 use crate::output::{self, CliOutput};
 use serde::Serialize;
 
+#[derive(Serialize, Default)]
+pub(crate) struct IdentityOutput {
+    id: String,
+    acct: String,
+    handle: String,
+    instance: String,
+    kind: String,
+}
+
 #[derive(Serialize)]
 pub(crate) struct BlameLineOutput {
     line: u32,
     session_id: String,
     text: String,
     path: String,
-    actor_handle: String,
+    attributed_to: IdentityOutput,
     revision_hash: Vec<u8>,
-    at_ms: u64,
+    landed_at: u64,
 }
 
 #[derive(Serialize)]
@@ -35,9 +44,9 @@ impl CliOutput for pb::BlameLine {
             session_id: self.session_id,
             text: self.text,
             path: self.path,
-            actor_handle: self.actor_handle,
+            attributed_to: self.attributed_to.map(identity_output).unwrap_or_default(),
             revision_hash: self.revision_hash,
-            at_ms: self.at_ms,
+            landed_at: self.landed_at,
         }
     }
 }
@@ -101,4 +110,14 @@ pub async fn run(cmd: BlameCommand) -> Result<()> {
     }
 
     Ok(())
+}
+
+fn identity_output(identity: pb::IdentityRef) -> IdentityOutput {
+    IdentityOutput {
+        id: identity.id,
+        acct: identity.acct,
+        handle: identity.handle,
+        instance: identity.instance,
+        kind: identity.kind,
+    }
 }

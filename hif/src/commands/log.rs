@@ -8,11 +8,20 @@ use crate::grpc::{Endpoint, GrpcClient};
 use crate::output;
 use serde::Serialize;
 
+#[derive(Serialize, Default)]
+pub(crate) struct IdentityOutput {
+    id: String,
+    acct: String,
+    handle: String,
+    instance: String,
+    kind: String,
+}
+
 #[derive(Serialize)]
 pub(crate) struct LogSessionOutput {
     id: String,
     goal: String,
-    author: String,
+    attributed_to: IdentityOutput,
     revision: String,
 }
 
@@ -68,7 +77,10 @@ pub async fn run(cmd: LogCommand) -> Result<()> {
             LogSessionOutput {
                 id: session.id,
                 goal: session.goal,
-                author: session.author,
+                attributed_to: session
+                    .attributed_to
+                    .map(identity_output)
+                    .unwrap_or_default(),
                 revision,
             }
         })
@@ -88,10 +100,35 @@ pub async fn run(cmd: LogCommand) -> Result<()> {
         for session in sessions {
             println!("{} {}", session.revision, session.id);
             println!("  Goal: {}", session.goal);
-            println!("  Author: {}", session.author);
+            println!(
+                "  Attributed To: {}",
+                display_identity(&session.attributed_to)
+            );
             println!();
         }
     }
 
     Ok(())
+}
+
+fn display_identity(identity: &IdentityOutput) -> String {
+    if !identity.handle.is_empty() {
+        identity.handle.clone()
+    } else if !identity.acct.is_empty() {
+        identity.acct.clone()
+    } else if !identity.id.is_empty() {
+        identity.id.clone()
+    } else {
+        "unknown".to_string()
+    }
+}
+
+fn identity_output(identity: pb::IdentityRef) -> IdentityOutput {
+    IdentityOutput {
+        id: identity.id,
+        acct: identity.acct,
+        handle: identity.handle,
+        instance: identity.instance,
+        kind: identity.kind,
+    }
 }

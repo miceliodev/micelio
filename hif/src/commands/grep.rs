@@ -12,6 +12,15 @@ use serde::Serialize;
 use std::fs;
 use std::path::{Path, PathBuf};
 
+#[derive(Serialize, Default)]
+pub(crate) struct IdentityOutput {
+    id: String,
+    acct: String,
+    handle: String,
+    instance: String,
+    kind: String,
+}
+
 #[derive(Serialize)]
 pub(crate) struct SearchMatchOutput {
     path: String,
@@ -19,7 +28,7 @@ pub(crate) struct SearchMatchOutput {
     column: u32,
     snippet: String,
     session_id: String,
-    actor_handle: String,
+    attributed_to: IdentityOutput,
     revision_hash: Vec<u8>,
 }
 
@@ -53,7 +62,7 @@ impl CliOutput for pb::TextQueryMatch {
             column: self.column,
             snippet: self.snippet,
             session_id: self.session_id,
-            actor_handle: self.actor_handle,
+            attributed_to: self.attributed_to.map(identity_output).unwrap_or_default(),
             revision_hash: self.revision_hash,
         }
     }
@@ -282,5 +291,15 @@ fn normalize_limit(limit: u32) -> u32 {
         500
     } else {
         limit
+    }
+}
+
+fn identity_output(identity: pb::IdentityRef) -> IdentityOutput {
+    IdentityOutput {
+        id: identity.id,
+        acct: identity.acct,
+        handle: identity.handle,
+        instance: identity.instance,
+        kind: identity.kind,
     }
 }

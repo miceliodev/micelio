@@ -58,11 +58,10 @@ pub async fn run(cmd: CheckoutCommand) -> Result<()> {
             },
         )?;
     } else {
-        println!("Checked out {}/{} to {}", org, repository, target_path);
-        println!();
-        println!("Start working:");
-        println!("  cd {}", target_path);
-        println!("  hif session start \"your goal\"");
+        output::set_success_message(format!(
+            "Checked out {}/{} to {}. Next: cd {} && hif session start \"your goal\"",
+            org, repository, target_path, target_path
+        ));
     }
 
     Ok(())

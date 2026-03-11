@@ -33,14 +33,21 @@ defmodule Micelio.GRPC.Hif.V1.GetHeadAtRequest do
   field :revision_hash, 2, type: :bytes, json_name: "revisionHash"
 end
 
-defmodule Micelio.GRPC.Hif.V1.AgentAttribution do
+defmodule Micelio.GRPC.Hif.V1.IdentityRef do
   use Protobuf, syntax: :proto3
 
-  field :actor_kind, 1, type: :string, json_name: "actorKind"
-  field :actor_id, 2, type: :string, json_name: "actorId"
-  field :model_id, 3, type: :string, json_name: "modelId"
-  field :tool_name, 4, type: :string, json_name: "toolName"
-  field :tool_version, 5, type: :string, json_name: "toolVersion"
+  field :id, 1, type: :string
+  field :acct, 2, type: :string
+  field :handle, 3, type: :string
+  field :instance, 4, type: :string
+  field :kind, 5, type: :string
+end
+
+defmodule Micelio.GRPC.Hif.V1.Attribution do
+  use Protobuf, syntax: :proto3
+
+  field :attributed_to, 1, type: Micelio.GRPC.Hif.V1.IdentityRef, json_name: "attributedTo"
+  field :performed_by, 2, type: Micelio.GRPC.Hif.V1.IdentityRef, json_name: "performedBy"
 end
 
 defmodule Micelio.GRPC.Hif.V1.SessionEvent do
@@ -110,7 +117,7 @@ defmodule Micelio.GRPC.Hif.V1.SessionInfo do
   field :conversation, 7, repeated: true, type: Micelio.GRPC.Hif.V1.SessionEvent
   field :decisions, 8, repeated: true, type: Micelio.GRPC.Hif.V1.SessionEvent
   field :changes, 9, repeated: true, type: Micelio.GRPC.Hif.V1.FileOperation
-  field :attribution, 10, type: Micelio.GRPC.Hif.V1.AgentAttribution
+  field :attribution, 10, type: Micelio.GRPC.Hif.V1.Attribution
   field :created_at_ms, 11, type: :uint64, json_name: "createdAtMs"
   field :updated_at_ms, 12, type: :uint64, json_name: "updatedAtMs"
   field :conflict, 13, type: Micelio.GRPC.Hif.V1.SessionConflict
@@ -134,7 +141,7 @@ defmodule Micelio.GRPC.Hif.V1.SessionSummary do
 
   field :id, 1, type: :string
   field :goal, 2, type: :string
-  field :author, 3, type: :string
+  field :attributed_to, 3, type: Micelio.GRPC.Hif.V1.IdentityRef, json_name: "attributedTo"
   field :revision_hash, 4, type: :bytes, json_name: "revisionHash"
 end
 
@@ -264,9 +271,9 @@ defmodule Micelio.GRPC.Hif.V1.BlameLine do
   field :line, 2, type: :uint32
   field :text, 3, type: :string
   field :session_id, 4, type: :string, json_name: "sessionId"
-  field :actor_handle, 5, type: :string, json_name: "actorHandle"
+  field :attributed_to, 5, type: Micelio.GRPC.Hif.V1.IdentityRef, json_name: "attributedTo"
   field :revision_hash, 6, type: :bytes, json_name: "revisionHash"
-  field :at_ms, 7, type: :uint64, json_name: "atMs"
+  field :landed_at, 7, type: :uint64, json_name: "landedAt"
 end
 
 defmodule Micelio.GRPC.Hif.V1.BlameRequest do
@@ -307,7 +314,7 @@ defmodule Micelio.GRPC.Hif.V1.TextQueryMatch do
   field :column, 3, type: :uint32
   field :snippet, 4, type: :string
   field :session_id, 5, type: :string, json_name: "sessionId"
-  field :actor_handle, 6, type: :string, json_name: "actorHandle"
+  field :attributed_to, 6, type: Micelio.GRPC.Hif.V1.IdentityRef, json_name: "attributedTo"
   field :revision_hash, 7, type: :bytes, json_name: "revisionHash"
   field :revision_etag, 8, type: :string, json_name: "revisionEtag"
 end
