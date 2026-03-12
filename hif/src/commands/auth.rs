@@ -302,8 +302,10 @@ fn print_authorization_instructions(auth: &DeviceAuthResponse) {
         .unwrap_or(&auth.verification_uri);
 
     println!();
-    println!("visit {}", url.cyan());
-    println!("code {}", auth.user_code.bold());
+    println!("{}", "To authorize this device:".bold());
+    println!("  1. Open {}", url.cyan());
+    println!("  2. Enter code {}", auth.user_code.bold());
+    println!();
     println!("waiting for authorization...");
 }
 
