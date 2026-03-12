@@ -409,3 +409,18 @@ fn format_revision_hash(hash: &[u8]) -> String {
         .map(|byte| format!("{:02x}", byte))
         .collect::<String>()
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::commands::ui_test_support::assert_output_snapshot;
+
+    #[test]
+    fn ui_snapshot_sync_outside_workspace() {
+        assert_output_snapshot(
+            &["sync"],
+            1,
+            "",
+            "error: No workspace found. Run 'hif checkout' or 'hif link' first.\n",
+        );
+    }
+}

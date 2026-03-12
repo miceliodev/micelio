@@ -52,3 +52,18 @@ pub async fn run(cmd: LinkCommand) -> Result<()> {
 
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::commands::ui_test_support::assert_output_snapshot;
+
+    #[test]
+    fn ui_snapshot_link_requires_auth() {
+        assert_output_snapshot(
+            &["link", "acme/repo"],
+            1,
+            "",
+            "error: Not authenticated. Run 'hif auth login' first.\n",
+        );
+    }
+}

@@ -153,3 +153,18 @@ fn merge_change_types(existing: ChangeType, next: ChangeType) -> ChangeType {
         existing
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::commands::ui_test_support::assert_output_snapshot;
+
+    #[test]
+    fn ui_snapshot_diff_invalid_from_revision() {
+        assert_output_snapshot(
+            &["diff", "acme/repo", "aaaaa"],
+            1,
+            "",
+            "error: Invalid FROM revision\n",
+        );
+    }
+}

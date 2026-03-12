@@ -149,3 +149,28 @@ fn parse_organization_details(data: &[u8]) -> (String, String, String) {
 
     (name, handle, description)
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::commands::ui_test_support::assert_output_snapshot;
+
+    #[test]
+    fn ui_snapshot_org_list_requires_auth() {
+        assert_output_snapshot(
+            &["org", "list"],
+            1,
+            "",
+            "error: Not authenticated. Run 'hif auth login' first.\n",
+        );
+    }
+
+    #[test]
+    fn ui_snapshot_org_info_requires_auth() {
+        assert_output_snapshot(
+            &["org", "info", "acme"],
+            1,
+            "",
+            "error: Not authenticated. Run 'hif auth login' first.\n",
+        );
+    }
+}

@@ -17,3 +17,6 @@ pub mod status;
 pub mod sync;
 pub mod tree;
 pub mod unmount;
+
+#[cfg(test)]
+pub(crate) mod ui_test_support;

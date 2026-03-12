@@ -232,3 +232,21 @@ fn write_mount_metadata(
 
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::commands::ui_test_support::assert_output_snapshot_with_setup;
+
+    #[test]
+    fn ui_snapshot_mount_requires_auth() {
+        assert_output_snapshot_with_setup(
+            &["mount", "acme/repo", "--path", "/tmp/hif-ui-snapshot-mount"],
+            1,
+            "Mounting acme/repo at /tmp/hif-ui-snapshot-mount\n",
+            "error: Not authenticated. Run 'hif auth login' first.\n",
+            |_home, _cwd| {
+                let _ = std::fs::remove_dir_all("/tmp/hif-ui-snapshot-mount");
+            },
+        );
+    }
+}

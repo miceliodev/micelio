@@ -84,3 +84,18 @@ pub async fn run(cmd: ShowCommand) -> Result<()> {
 
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::commands::ui_test_support::assert_output_snapshot;
+
+    #[test]
+    fn ui_snapshot_show_requires_auth() {
+        assert_output_snapshot(
+            &["show", "acme/repo", "README.md"],
+            1,
+            "",
+            "error: Not authenticated. Run 'hif auth login' first.\n",
+        );
+    }
+}

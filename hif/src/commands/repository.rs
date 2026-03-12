@@ -359,3 +359,58 @@ fn parse_repository_details(data: &[u8]) -> (String, String, String) {
 
     (name, handle, description)
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::commands::ui_test_support::assert_output_snapshot;
+
+    #[test]
+    fn ui_snapshot_repository_list_requires_auth() {
+        assert_output_snapshot(
+            &["repository", "list", "acme"],
+            1,
+            "",
+            "error: Not authenticated. Run 'hif auth login' first.\n",
+        );
+    }
+
+    #[test]
+    fn ui_snapshot_repository_create_requires_auth() {
+        assert_output_snapshot(
+            &["repository", "create", "acme/repo", "Repo"],
+            1,
+            "",
+            "error: Not authenticated. Run 'hif auth login' first.\n",
+        );
+    }
+
+    #[test]
+    fn ui_snapshot_repository_info_requires_auth() {
+        assert_output_snapshot(
+            &["repository", "info", "acme/repo"],
+            1,
+            "",
+            "error: Not authenticated. Run 'hif auth login' first.\n",
+        );
+    }
+
+    #[test]
+    fn ui_snapshot_repository_update_requires_auth() {
+        assert_output_snapshot(
+            &["repository", "update", "acme/repo", "--name", "Renamed"],
+            1,
+            "",
+            "error: Not authenticated. Run 'hif auth login' first.\n",
+        );
+    }
+
+    #[test]
+    fn ui_snapshot_repository_delete_requires_auth() {
+        assert_output_snapshot(
+            &["repository", "delete", "acme/repo"],
+            1,
+            "",
+            "error: Not authenticated. Run 'hif auth login' first.\n",
+        );
+    }
+}

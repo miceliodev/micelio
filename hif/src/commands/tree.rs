@@ -76,6 +76,21 @@ pub async fn run(cmd: TreeCommand) -> Result<()> {
     Ok(())
 }
 
+#[cfg(test)]
+mod tests {
+    use crate::commands::ui_test_support::assert_output_snapshot;
+
+    #[test]
+    fn ui_snapshot_tree_requires_auth() {
+        assert_output_snapshot(
+            &["tree", "acme/repo"],
+            1,
+            "",
+            "error: Not authenticated. Run 'hif auth login' first.\n",
+        );
+    }
+}
+
 fn list_directory_entries(entries: &[String], directory: &str) -> Vec<String> {
     let normalized = directory.trim_matches('/');
     let prefix = if normalized.is_empty() {

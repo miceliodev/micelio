@@ -126,3 +126,22 @@ pub async fn run(cmd: UnmountCommand) -> Result<()> {
 
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::commands::ui_test_support::assert_output_snapshot_with_setup;
+
+    #[test]
+    fn ui_snapshot_unmount_missing_path() {
+        assert_output_snapshot_with_setup(
+            &["unmount", "/tmp/hif-ui-snapshot-missing-path"],
+            1,
+            "",
+            "error: Mount path does not exist: /tmp/hif-ui-snapshot-missing-path\n",
+            |_home, _cwd| {
+                let _ = std::fs::remove_file("/tmp/hif-ui-snapshot-missing-path");
+                let _ = std::fs::remove_dir_all("/tmp/hif-ui-snapshot-missing-path");
+            },
+        );
+    }
+}

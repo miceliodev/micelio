@@ -658,3 +658,68 @@ fn format_revision_hash(hash: &[u8]) -> String {
         .map(|byte| format!("{:02x}", byte))
         .collect::<String>()
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::commands::ui_test_support::assert_output_snapshot;
+
+    #[test]
+    fn ui_snapshot_session_start_requires_auth() {
+        assert_output_snapshot(
+            &["session", "start", "acme/repo", "goal"],
+            1,
+            "",
+            "error: Not authenticated. Run 'hif auth login' first.\n",
+        );
+    }
+
+    #[test]
+    fn ui_snapshot_session_status_without_active_session() {
+        assert_output_snapshot(
+            &["session", "status"],
+            0,
+            "no active session\nstart one with: hif session start <account>/<repository> <goal>\n",
+            "",
+        );
+    }
+
+    #[test]
+    fn ui_snapshot_session_note_without_active_session() {
+        assert_output_snapshot(
+            &["session", "note", "hello"],
+            1,
+            "",
+            "error: No active session. Start one with 'hif session start'.\n",
+        );
+    }
+
+    #[test]
+    fn ui_snapshot_session_land_without_active_session() {
+        assert_output_snapshot(
+            &["session", "land"],
+            1,
+            "",
+            "error: No active session. Start one with 'hif session start'.\n",
+        );
+    }
+
+    #[test]
+    fn ui_snapshot_session_abandon_without_active_session() {
+        assert_output_snapshot(
+            &["session", "abandon"],
+            0,
+            "No active session to abandon.\n",
+            "",
+        );
+    }
+
+    #[test]
+    fn ui_snapshot_session_resolve_default_strategy() {
+        assert_output_snapshot(
+            &["session", "resolve"],
+            0,
+            "warning: Conflict resolution is not implemented.\nwarning: Available strategies: ours, theirs, interactive.\nRequested strategy: interactive.\n",
+            "",
+        );
+    }
+}

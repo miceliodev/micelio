@@ -405,6 +405,9 @@ fn is_token_expired(tokens: &StoredTokens) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::commands::ui_test_support::{
+        assert_output_snapshot, assert_output_snapshot_with_setup,
+    };
 
     #[test]
     fn test_get_device_name() {
@@ -463,5 +466,45 @@ mod tests {
             resolve_client_id(&server_no_id, "https://example.com"),
             None
         );
+    }
+
+    #[test]
+    fn ui_snapshot_auth_login_missing_web_url() {
+        assert_output_snapshot_with_setup(
+            &["auth", "login"],
+            1,
+            "",
+            "error: Server configuration missing web_url\n",
+            |home, _cwd| {
+                std::fs::write(
+                    home.join("config.json"),
+                    r#"{
+  "servers": {
+    "test": {
+      "grpc_url": "https://example.com"
+    }
+  },
+  "default_server": "test"
+}
+"#,
+                )
+                .expect("write config");
+            },
+        );
+    }
+
+    #[test]
+    fn ui_snapshot_auth_status_not_logged_in() {
+        assert_output_snapshot(
+            &["auth", "status"],
+            0,
+            "warning: Not logged in.\nRun hif auth login to authenticate.\n",
+            "",
+        );
+    }
+
+    #[test]
+    fn ui_snapshot_auth_logout_not_logged_in() {
+        assert_output_snapshot(&["auth", "logout"], 0, "Logged out.\n", "");
     }
 }

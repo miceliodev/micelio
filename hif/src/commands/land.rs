@@ -95,3 +95,18 @@ fn parse_land_args(first: &str, second: Option<&str>) -> Result<(String, String,
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::commands::ui_test_support::assert_output_snapshot;
+
+    #[test]
+    fn ui_snapshot_land_outside_workspace() {
+        assert_output_snapshot(
+            &["land", "goal"],
+            1,
+            "",
+            "error: Not in a workspace. Either:\n  1. Run from inside a workspace (created with 'hif checkout'), or\n  2. Specify the repository: hif land <account/repository> \"<goal>\"\n",
+        );
+    }
+}

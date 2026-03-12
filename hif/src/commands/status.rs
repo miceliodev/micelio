@@ -206,6 +206,21 @@ pub async fn run() -> Result<()> {
     Ok(())
 }
 
+#[cfg(test)]
+mod tests {
+    use crate::commands::ui_test_support::assert_output_snapshot;
+
+    #[test]
+    fn ui_snapshot_status_outside_workspace() {
+        assert_output_snapshot(
+            &["status"],
+            1,
+            "",
+            "error: No workspace found. Run 'hif checkout' or 'hif link' first.\n",
+        );
+    }
+}
+
 fn change_type_label(change_type: ChangeType) -> &'static str {
     match change_type {
         ChangeType::Added => "added",

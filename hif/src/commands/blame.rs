@@ -121,3 +121,18 @@ fn identity_output(identity: pb::IdentityRef) -> IdentityOutput {
         kind: identity.kind,
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::commands::ui_test_support::assert_output_snapshot;
+
+    #[test]
+    fn ui_snapshot_blame_requires_auth() {
+        assert_output_snapshot(
+            &["blame", "acme/repo", "README.md"],
+            1,
+            "",
+            "error: Not authenticated. Run 'hif auth login' first.\n",
+        );
+    }
+}
