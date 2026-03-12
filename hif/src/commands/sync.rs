@@ -94,7 +94,7 @@ pub async fn run(cmd: SyncCommand) -> Result<()> {
         )?;
     } else {
         if result.updated.is_empty() && result.conflicts.is_empty() {
-            println!("Already up to date.");
+            output::set_success_message("Already up to date.");
         } else {
             if !result.updated.is_empty() {
                 println!("\nUpdated {} files:", result.updated.len());
@@ -108,8 +108,14 @@ pub async fn run(cmd: SyncCommand) -> Result<()> {
                 for path in &result.conflicts {
                     println!("  C {}", path);
                 }
-                println!("\nResolve conflicts and run 'hif session land'.");
+                output::warn(format!(
+                    "Conflicts detected in {} file(s).",
+                    result.conflicts.len()
+                ));
+                output::add_next_step("Resolve conflicts and run 'hif session land'.");
             }
+
+            output::set_success_message("Sync completed.");
         }
 
         println!("\nRevision {}", format_revision_hash(&result.revision_hash));

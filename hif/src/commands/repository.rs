@@ -147,12 +147,17 @@ async fn list(account: &str) -> Result<()> {
             },
         )?;
     } else {
+        let repository_count = repositories.len();
         for repository in repositories {
             println!(
                 "{}/{} - {}",
                 repository.account, repository.handle, repository.name
             );
         }
+        output::set_success_message(format!(
+            "Listed {} repositories in '{}'.",
+            repository_count, account
+        ));
     }
 
     Ok(())
@@ -191,7 +196,7 @@ async fn create(account: &str, handle: &str, name: &str, description: Option<&st
             },
         )?;
     } else {
-        println!("Created repository '{}/{}'.", account, handle);
+        output::set_success_message(format!("Created repository '{}/{}'.", account, handle));
     }
     Ok(())
 }
@@ -227,11 +232,12 @@ async fn info(account: &str, handle: &str) -> Result<()> {
             },
         )?;
     } else {
-        println!("repository {}", name);
-        println!("handle {}/{}", account, handle);
+        println!("Repository: {}", name);
+        println!("Handle: {}/{}", account, handle);
         if !description.is_empty() {
-            println!("description {}", description);
+            println!("Description: {}", description);
         }
+        output::set_success_message("Loaded repository details.");
     }
 
     Ok(())
@@ -277,7 +283,7 @@ async fn update(
             },
         )?;
     } else {
-        println!("Updated repository '{}/{}'.", account, handle);
+        output::set_success_message(format!("Updated repository '{}/{}'.", account, handle));
     }
     Ok(())
 }
@@ -309,7 +315,7 @@ async fn delete(account: &str, handle: &str) -> Result<()> {
             },
         )?;
     } else {
-        println!("Deleted repository '{}/{}'.", account, handle);
+        output::set_success_message(format!("Deleted repository '{}/{}'.", account, handle));
     }
     Ok(())
 }

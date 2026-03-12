@@ -1526,10 +1526,18 @@ mod tests {
 
     #[test]
     fn test_output_mode_from_args_legacy_aliases() {
-        let json_args = vec!["hif".to_string(), "--json".to_string(), "status".to_string()];
+        let json_args = vec![
+            "hif".to_string(),
+            "--json".to_string(),
+            "status".to_string(),
+        ];
         assert_eq!(output_mode_from_args(&json_args), OutputMode::Json);
 
-        let toon_args = vec!["hif".to_string(), "--toon".to_string(), "status".to_string()];
+        let toon_args = vec![
+            "hif".to_string(),
+            "--toon".to_string(),
+            "status".to_string(),
+        ];
         assert_eq!(output_mode_from_args(&toon_args), OutputMode::Toon);
     }
 }

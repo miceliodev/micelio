@@ -303,6 +303,19 @@ fn org_list_requires_auth() {
 }
 
 #[test]
+fn org_list_supports_toon_format() {
+    let temp_dir = tempfile::tempdir().unwrap();
+
+    hif()
+        .env("HIF_HOME", temp_dir.path())
+        .args(["--format", "toon", "org", "list"])
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("status: error"))
+        .stderr(predicate::str::contains("code: not_authenticated"));
+}
+
+#[test]
 fn repository_list_requires_auth() {
     let temp_dir = tempfile::tempdir().unwrap();
 

@@ -60,9 +60,11 @@ async fn list() -> Result<()> {
     if output::use_json() {
         output::print_ok("org.list", OrgListOutput { organizations })?;
     } else {
+        let org_count = organizations.len();
         for org in organizations {
             println!("{}", org);
         }
+        output::set_success_message(format!("Listed {} organization(s).", org_count));
     }
 
     Ok(())
@@ -99,11 +101,12 @@ async fn info(handle: &str) -> Result<()> {
             },
         )?;
     } else {
-        println!("organization {}", name);
-        println!("handle {}", handle);
+        println!("Organization: {}", name);
+        println!("Handle: {}", handle);
         if !description.is_empty() {
-            println!("description {}", description);
+            println!("Description: {}", description);
         }
+        output::set_success_message("Loaded organization details.");
     }
 
     Ok(())

@@ -58,13 +58,12 @@ pub async fn run(cmd: UnmountCommand) -> Result<()> {
             ));
         }
 
-        println!();
-        println!("warning: active session with uncommitted changes");
-        println!("Run 'hif session land' or 'hif session abandon' before unmounting.");
-        println!();
+        output::warn("Active session with uncommitted changes.");
+        output::add_next_step("hif session land");
+        output::add_next_step("hif session abandon");
 
         // Ask for confirmation
-        print!("continue anyway? [y/N] ");
+        print!("Continue anyway? [y/N] ");
         std::io::Write::flush(&mut std::io::stdout())?;
 
         let mut input = String::new();
@@ -72,7 +71,7 @@ pub async fn run(cmd: UnmountCommand) -> Result<()> {
 
         if !input.trim().eq_ignore_ascii_case("y") {
             if !json_output {
-                println!("Unmount aborted.");
+                output::set_success_message("Unmount aborted.");
             }
             return Ok(());
         }
@@ -105,7 +104,7 @@ pub async fn run(cmd: UnmountCommand) -> Result<()> {
                 },
             )?;
         } else {
-            println!("Removed '{}'.", mount_path.display());
+            output::set_success_message(format!("Removed '{}'.", mount_path.display()));
         }
     } else {
         if json_output {
@@ -117,8 +116,11 @@ pub async fn run(cmd: UnmountCommand) -> Result<()> {
                 },
             )?;
         } else {
-            println!("Unmounted; files remain at '{}'.", mount_path.display());
-            println!("Run 'hif unmount {} --remove' to remove files.", cmd.path);
+            output::set_success_message(format!(
+                "Unmounted; files remain at '{}'.",
+                mount_path.display()
+            ));
+            output::add_next_step(format!("hif unmount {} --remove", cmd.path));
         }
     }
 

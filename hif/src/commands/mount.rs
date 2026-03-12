@@ -45,7 +45,7 @@ pub async fn run(cmd: MountCommand) -> Result<()> {
 
     if !json_output {
         println!(
-            "mounting {}/{} at {}",
+            "Mounting {}/{} at {}",
             organization,
             repository,
             mount_path.display()
@@ -87,9 +87,15 @@ pub async fn run(cmd: MountCommand) -> Result<()> {
             },
         )?;
     } else {
-        println!("Synced {} files to {}", file_count, mount_path.display());
-        println!("Note: local mirror only; changes are not auto-landed.");
-        println!("Run 'hif session land' to publish changes.");
+        output::set_success_message(format!(
+            "Mounted '{}/{}' at '{}'. Synced {} file(s).",
+            organization,
+            repository,
+            mount_path.display(),
+            file_count
+        ));
+        output::warn("Local mirror only; changes are not auto-landed.");
+        output::add_next_step("hif session land");
     }
 
     Ok(())

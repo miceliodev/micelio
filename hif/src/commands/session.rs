@@ -210,10 +210,11 @@ async fn start(organization: &str, repository: &str, goal: &str) -> Result<()> {
             },
         )?;
     } else {
-        println!("Started session {}", state.id);
-        println!("Goal {}", goal);
-        println!("Repository {}/{}", organization, repository);
-        println!("Run 'hif session land' when ready.");
+        output::set_success_message(format!(
+            "Started session {} for '{}/{}'.",
+            state.id, organization, repository
+        ));
+        output::add_next_step("hif session land");
     }
 
     Ok(())
@@ -333,7 +334,7 @@ fn note(role: &str, message: &str) -> Result<()> {
             },
         )?;
     } else {
-        println!("Added note to session.");
+        output::set_success_message("Added note to session.");
     }
     Ok(())
 }
@@ -383,28 +384,25 @@ async fn land() -> Result<()> {
             )));
         }
 
-        println!("error: conflicts detected with upstream changes");
+        output::warn("Conflicts detected with upstream changes.");
         if let Some(conflict) = response.conflict.as_ref() {
-            println!();
-            println!(
-                "conflict-revision {}",
+            output::warn(format!(
+                "Conflict revision: {}.",
                 format_revision_hash(&conflict.revision_hash)
-            );
+            ));
             if !conflict.reason.is_empty() {
-                println!("reason {}", conflict.reason);
+                output::warn(format!("Reason: {}.", conflict.reason));
             }
             if !conflict.paths.is_empty() {
-                println!("conflicting files:");
+                output::warn("Conflicting files:");
                 for path in &conflict.paths {
-                    println!("  - {}", path);
+                    output::warn(format!("- {}", path));
                 }
             }
         }
-        println!();
-        println!("resolve with:");
-        println!("  1. run 'hif sync'");
-        println!("  2. merge local changes");
-        println!("  3. run 'hif session land' again");
+        output::add_next_step("hif sync");
+        output::add_next_step("Merge local changes.");
+        output::add_next_step("hif session land");
         return Err(MicError::ConflictsDetected);
     }
 
@@ -423,10 +421,11 @@ async fn land() -> Result<()> {
             },
         )?;
     } else {
-        println!("Landed session {}", response.session_id);
+        let mut message = format!("Landed session {}.", response.session_id);
         if !landing_revision.is_empty() {
-            println!("Revision {}", landing_revision);
+            message.push_str(&format!(" Revision {}.", landing_revision));
         }
+        output::set_success_message(message);
     }
 
     Session::delete()?;
@@ -447,7 +446,7 @@ async fn abandon() -> Result<()> {
                     },
                 )?;
             } else {
-                println!("no active session to abandon");
+                output::set_success_message("No active session to abandon.");
             }
             return Ok(());
         }
@@ -506,9 +505,9 @@ fn resolve(strategy: &str) -> Result<()> {
             },
         )?;
     } else {
-        println!("conflict resolution is not implemented");
-        println!("available strategies: ours, theirs, interactive");
-        println!("strategy {}", strategy);
+        output::warn("Conflict resolution is not implemented.");
+        output::warn("Available strategies: ours, theirs, interactive.");
+        output::set_success_message(format!("Requested strategy: {}.", strategy));
     }
     Ok(())
 }
