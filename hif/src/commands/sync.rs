@@ -62,7 +62,7 @@ pub async fn run(cmd: SyncCommand) -> Result<()> {
 
     if json_output && strategy == MergeStrategy::Interactive {
         return Err(MicError::Other(
-            "Interactive sync is not supported with --json. Use --strategy ours|theirs."
+            "Interactive sync is not supported with structured output (--format json|toon). Use --strategy ours|theirs."
                 .to_string(),
         ));
     }

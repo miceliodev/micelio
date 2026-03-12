@@ -147,7 +147,7 @@ fn json_error_format() {
     hif()
         .env("HIF_HOME", temp_dir.path())
         .current_dir(temp_dir.path())
-        .args(["--json", "status"])
+        .args(["--format", "json", "status"])
         .assert()
         .failure()
         .stderr(predicate::str::contains(r#""status": "error""#))
@@ -160,7 +160,7 @@ fn toon_success_format() {
 
     hif()
         .env("HIF_HOME", temp_dir.path())
-        .args(["--toon", "auth", "status"])
+        .args(["--format", "toon", "auth", "status"])
         .assert()
         .success()
         .stdout(predicate::str::contains("status: ok"))
@@ -174,7 +174,7 @@ fn toon_error_format() {
     hif()
         .env("HIF_HOME", temp_dir.path())
         .current_dir(temp_dir.path())
-        .args(["--toon", "status"])
+        .args(["--format", "toon", "status"])
         .assert()
         .failure()
         .stderr(predicate::str::contains("status: error"))
@@ -187,11 +187,14 @@ fn toon_error_format() {
 
 #[test]
 fn help_json_is_valid_json() {
-    let output = hif().args(["--help", "--json"]).assert().success();
+    let output = hif()
+        .args(["--help", "--format", "json"])
+        .assert()
+        .success();
 
     let stdout = String::from_utf8_lossy(&output.get_output().stdout);
     let parsed: serde_json::Value =
-        serde_json::from_str(&stdout).expect("--help --json should output valid JSON");
+        serde_json::from_str(&stdout).expect("--help --format json should output valid JSON");
 
     // Verify key fields exist
     assert!(parsed.get("name").is_some());
@@ -204,7 +207,10 @@ fn help_json_is_valid_json() {
 
 #[test]
 fn help_json_has_all_commands() {
-    let output = hif().args(["--help", "--json"]).assert().success();
+    let output = hif()
+        .args(["--help", "--format", "json"])
+        .assert()
+        .success();
 
     let stdout = String::from_utf8_lossy(&output.get_output().stdout);
     let parsed: serde_json::Value = serde_json::from_str(&stdout).unwrap();
@@ -217,6 +223,49 @@ fn help_json_has_all_commands() {
     assert!(commands.contains_key("status"));
     assert!(commands.contains_key("land"));
     assert!(commands.contains_key("grep"));
+}
+
+#[test]
+fn format_from_env_uses_toon() {
+    let temp_dir = tempfile::tempdir().unwrap();
+
+    hif()
+        .env("HIF_HOME", temp_dir.path())
+        .env("HIF_FORMAT", "toon")
+        .current_dir(temp_dir.path())
+        .args(["status"])
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("status: error"))
+        .stderr(predicate::str::contains("code: no_workspace"));
+}
+
+#[test]
+fn checkout_repository_can_come_from_env() {
+    let temp_dir = tempfile::tempdir().unwrap();
+
+    hif()
+        .env("HIF_HOME", temp_dir.path())
+        .env("HIF_CHECKOUT_REPOSITORY", "invalid")
+        .current_dir(temp_dir.path())
+        .args(["checkout"])
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("Invalid repository"));
+}
+
+#[test]
+fn sync_strategy_can_come_from_env() {
+    let temp_dir = tempfile::tempdir().unwrap();
+
+    hif()
+        .env("HIF_HOME", temp_dir.path())
+        .env("HIF_SYNC_STRATEGY", "invalid")
+        .current_dir(temp_dir.path())
+        .args(["sync"])
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("invalid value"));
 }
 
 // =============================================================================

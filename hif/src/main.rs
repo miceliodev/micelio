@@ -45,7 +45,7 @@ mod workspace;
 
 use clap::builder::styling::{AnsiColor, Color, Style, Styles};
 use clap::{ColorChoice, CommandFactory, FromArgMatches};
-use cli::{Cli, Commands};
+use cli::{Cli, Commands, OutputMode};
 use colored::Colorize;
 use config::Config;
 use error::Result;
@@ -66,13 +66,17 @@ fn main() {
 }
 
 async fn async_main() -> i32 {
-    // Check for --help --json before clap parses (clap exits on --help)
+    // Check for --help --format json|toon before clap parses (clap exits on --help)
     let args: Vec<String> = std::env::args().collect();
     let has_help = args.iter().any(|a| a == "--help" || a == "-h");
     let has_json = args.iter().any(|a| a == "--json");
     let has_toon = args.iter().any(|a| a == "--toon");
+    let has_format = args
+        .iter()
+        .any(|a| a == "--format" || a.starts_with("--format="));
     let has_docs = args.iter().any(|a| a == "--docs");
-    let use_structured = has_json || has_toon || cli::should_use_json() || cli::should_use_toon();
+    let requested_output_mode = cli::output_mode_from_args(&args);
+    let use_structured = requested_output_mode.is_structured();
     let color_enabled = resolve_color_enabled(&args, use_structured);
     configure_color(color_enabled);
 
@@ -85,11 +89,20 @@ async fn async_main() -> i32 {
         );
         return 1;
     }
+    if has_format && (has_json || has_toon) {
+        print_error(
+            "Choose one output mode selector: use --format or legacy --json/--toon",
+            "invalid_output_mode",
+            true,
+            &[],
+        );
+        return 1;
+    }
 
     // --docs outputs full documentation for website generation
     if has_docs {
         let docs = cli::generate_docs();
-        if has_toon {
+        if requested_output_mode == OutputMode::Toon {
             match encode_default(&docs) {
                 Ok(toon) => println!("{}", toon),
                 Err(error) => {
@@ -108,10 +121,10 @@ async fn async_main() -> i32 {
         return 0;
     }
 
-    // --help --json/--toon outputs agent-friendly help
-    if has_help && (has_json || has_toon) {
+    // --help --format json|toon outputs agent-friendly help
+    if has_help && use_structured {
         let help = cli::generate_help_json();
-        if has_toon {
+        if requested_output_mode == OutputMode::Toon {
             match encode_default(&help) {
                 Ok(toon) => println!("{}", toon),
                 Err(error) => {
@@ -137,7 +150,7 @@ async fn async_main() -> i32 {
     let cli = Cli::from_arg_matches(&matches).unwrap_or_else(|err| err.exit());
 
     let verbose = cli.verbose;
-    let use_structured = cli.json || cli.toon || cli::should_use_json() || cli::should_use_toon();
+    let use_structured = cli.output_mode().is_structured();
     if use_structured && color_enabled {
         configure_color(false);
     }

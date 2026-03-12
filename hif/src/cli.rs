@@ -3,7 +3,21 @@
 //! This module defines all CLI commands and their arguments using clap.
 //! The CLI is designed to be self-documenting for both humans and AI agents.
 
-use clap::{Parser, Subcommand};
+use clap::{Parser, Subcommand, ValueEnum};
+
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq, ValueEnum)]
+pub enum OutputMode {
+    #[default]
+    Human,
+    Json,
+    Toon,
+}
+
+impl OutputMode {
+    pub fn is_structured(self) -> bool {
+        matches!(self, Self::Json | Self::Toon)
+    }
+}
 
 /// The hif CLI - a forge-first version control system for the agent era
 ///
@@ -22,28 +36,44 @@ QUICK START:
     hif session land
 ")]
 pub struct Cli {
-    /// Output in JSON format (for scripting and agents)
-    #[arg(long, global = true, conflicts_with = "toon")]
+    /// Output format: human (default), json, or toon
+    #[arg(long, value_enum, default_value_t = OutputMode::Human, global = true, env = "HIF_FORMAT")]
+    pub format: OutputMode,
+
+    /// Output in JSON format (deprecated alias for --format json)
+    #[arg(
+        long,
+        global = true,
+        hide = true,
+        env = "HIF_JSON",
+        conflicts_with = "toon"
+    )]
     pub json: bool,
 
-    /// Output in TOON format (for low-token machine consumption)
-    #[arg(long, global = true, conflicts_with = "json")]
+    /// Output in TOON format (deprecated alias for --format toon)
+    #[arg(
+        long,
+        global = true,
+        hide = true,
+        env = "HIF_TOON",
+        conflicts_with = "json"
+    )]
     pub toon: bool,
 
     /// Verbose output (show additional details)
-    #[arg(short, long, global = true)]
+    #[arg(short, long, global = true, env = "HIF_VERBOSE")]
     pub verbose: bool,
 
     /// Disable colored output
-    #[arg(long, global = true)]
+    #[arg(long, global = true, env = "HIF_NO_COLOR")]
     pub no_color: bool,
 
     /// Run as if started in <PATH> instead of current directory
-    #[arg(short = 'C', long, global = true, value_name = "PATH")]
+    #[arg(short = 'C', long, global = true, value_name = "PATH", env = "HIF_CWD")]
     pub cwd: Option<std::path::PathBuf>,
 
     /// Output full CLI documentation as JSON (for website generation)
-    #[arg(long, hide = true)]
+    #[arg(long, hide = true, env = "HIF_DOCS")]
     pub docs: bool,
 
     #[command(subcommand)]
@@ -51,6 +81,16 @@ pub struct Cli {
 }
 
 impl Cli {
+    pub fn output_mode(&self) -> OutputMode {
+        if self.json {
+            OutputMode::Json
+        } else if self.toon {
+            OutputMode::Toon
+        } else {
+            self.format
+        }
+    }
+
     /// Get the working directory (--cwd or current directory)
     #[allow(dead_code)]
     pub fn working_dir(&self) -> std::io::Result<std::path::PathBuf> {
@@ -143,8 +183,8 @@ NOTES:
     #[command(after_help = "\
 EXAMPLES:
     $ hif status          # Show all changes
-    $ hif status --json   # Output as JSON (for scripts/agents)
-    $ hif status --toon   # Output as TOON (compact machine format)
+    $ hif status --format json   # Output as JSON (for scripts/agents)
+    $ hif status --format toon   # Output as TOON (compact machine format)
 
 OUTPUT:
     A = Added file
@@ -218,8 +258,8 @@ WHEN TO USE:
 EXAMPLES:
     $ hif show acme/myapp README.md           # Current version
     $ hif show acme/myapp src/main.rs -r @0123456789abcdef...  # At revision hash
-    $ hif show acme/myapp config.json --json  # Output as JSON
-    $ hif show acme/myapp config.json --toon  # Output as TOON
+    $ hif show acme/myapp config.json --format json  # Output as JSON
+    $ hif show acme/myapp config.json --format toon  # Output as TOON
 
 NOTES:
     Reads directly from forge - no local workspace needed.
@@ -331,6 +371,7 @@ pub enum OrgSubcommand {
     /// Get organization details
     Info {
         /// Organization handle (e.g., 'acme')
+        #[arg(env = "HIF_ORG_INFO_ORG")]
         org: String,
     },
 }
@@ -350,42 +391,55 @@ pub enum RepositorySubcommand {
     /// List repositories in an account
     List {
         /// Account handle (personal or organization)
-        #[arg(value_name = "ACCOUNT")]
+        #[arg(value_name = "ACCOUNT", env = "HIF_REPOSITORY_LIST_ACCOUNT")]
         account: String,
     },
     /// Create a new repository
     Create {
         /// Repository reference (account/repository)
-        #[arg(value_name = "ACCOUNT/REPOSITORY")]
+        #[arg(
+            value_name = "ACCOUNT/REPOSITORY",
+            env = "HIF_REPOSITORY_CREATE_REPOSITORY"
+        )]
         repository: String,
+        #[arg(env = "HIF_REPOSITORY_CREATE_NAME")]
         /// Repository display name
         name: String,
         /// Repository description
-        #[arg(short, long)]
+        #[arg(short, long, env = "HIF_REPOSITORY_CREATE_DESCRIPTION")]
         description: Option<String>,
     },
     /// Get repository details
     Info {
         /// Repository reference (account/repository)
-        #[arg(value_name = "ACCOUNT/REPOSITORY")]
+        #[arg(
+            value_name = "ACCOUNT/REPOSITORY",
+            env = "HIF_REPOSITORY_INFO_REPOSITORY"
+        )]
         repository: String,
     },
     /// Update a repository
     Update {
         /// Repository reference (account/repository)
-        #[arg(value_name = "ACCOUNT/REPOSITORY")]
+        #[arg(
+            value_name = "ACCOUNT/REPOSITORY",
+            env = "HIF_REPOSITORY_UPDATE_REPOSITORY"
+        )]
         repository: String,
         /// New display name
-        #[arg(short, long)]
+        #[arg(short, long, env = "HIF_REPOSITORY_UPDATE_NAME")]
         name: Option<String>,
         /// New description
-        #[arg(short, long)]
+        #[arg(short, long, env = "HIF_REPOSITORY_UPDATE_DESCRIPTION")]
         description: Option<String>,
     },
     /// Delete a repository (cannot be undone)
     Delete {
         /// Repository reference (account/repository)
-        #[arg(value_name = "ACCOUNT/REPOSITORY")]
+        #[arg(
+            value_name = "ACCOUNT/REPOSITORY",
+            env = "HIF_REPOSITORY_DELETE_REPOSITORY"
+        )]
         repository: String,
     },
 }
@@ -397,25 +451,25 @@ pub enum RepositorySubcommand {
 #[derive(Parser, Debug)]
 pub struct CheckoutCommand {
     /// Repository reference (account/repository)
-    #[arg(value_name = "ACCOUNT/REPOSITORY")]
+    #[arg(value_name = "ACCOUNT/REPOSITORY", env = "HIF_CHECKOUT_REPOSITORY")]
     pub repository: String,
 
     /// Local directory path (defaults to repository name)
-    #[arg(short, long)]
+    #[arg(short, long, env = "HIF_CHECKOUT_PATH")]
     pub path: Option<String>,
 }
 
 #[derive(Parser, Debug)]
 pub struct LinkCommand {
     /// Repository reference (account/repository)
-    #[arg(value_name = "ACCOUNT/REPOSITORY")]
+    #[arg(value_name = "ACCOUNT/REPOSITORY", env = "HIF_LINK_REPOSITORY")]
     pub repository: String,
 }
 
 #[derive(Parser, Debug)]
 pub struct SyncCommand {
     /// Conflict resolution strategy
-    #[arg(short, long, default_value = "interactive")]
+    #[arg(short, long, default_value = "interactive", env = "HIF_SYNC_STRATEGY")]
     #[arg(value_parser = ["ours", "theirs", "interactive"])]
     pub strategy: String,
 }
@@ -435,9 +489,13 @@ pub enum SessionSubcommand {
     /// Start a new session
     Start {
         /// Session goal, or account/repository + goal if outside workspace
-        #[arg(value_name = "GOAL or ACCOUNT/REPOSITORY")]
+        #[arg(
+            value_name = "GOAL or ACCOUNT/REPOSITORY",
+            env = "HIF_SESSION_START_FIRST"
+        )]
         first: String,
         /// Session goal (when first arg is account/repository)
+        #[arg(env = "HIF_SESSION_START_SECOND")]
         second: Option<String>,
     },
     /// Show current session status
@@ -445,9 +503,10 @@ pub enum SessionSubcommand {
     /// Add a note to the current session
     Note {
         /// Note message
+        #[arg(env = "HIF_SESSION_NOTE_MESSAGE")]
         message: String,
         /// Role: human or agent
-        #[arg(short, long, default_value = "human")]
+        #[arg(short, long, default_value = "human", env = "HIF_SESSION_NOTE_ROLE")]
         role: String,
     },
     /// Land the session (push to forge)
@@ -457,7 +516,12 @@ pub enum SessionSubcommand {
     /// Resolve conflicts interactively
     Resolve {
         /// Resolution strategy
-        #[arg(short, long, default_value = "interactive")]
+        #[arg(
+            short,
+            long,
+            default_value = "interactive",
+            env = "HIF_SESSION_RESOLVE_STRATEGY"
+        )]
         strategy: String,
     },
 }
@@ -465,9 +529,10 @@ pub enum SessionSubcommand {
 #[derive(Parser, Debug)]
 pub struct LandCommand {
     /// Session goal, or account/repository + goal if outside workspace
-    #[arg(value_name = "GOAL or ACCOUNT/REPOSITORY")]
+    #[arg(value_name = "GOAL or ACCOUNT/REPOSITORY", env = "HIF_LAND_FIRST")]
     pub first: String,
     /// Session goal (when first arg is account/repository)
+    #[arg(env = "HIF_LAND_SECOND")]
     pub second: Option<String>,
 }
 
@@ -478,51 +543,54 @@ pub struct LandCommand {
 #[derive(Parser, Debug)]
 pub struct ShowCommand {
     /// Repository reference (account/repository)
-    #[arg(value_name = "ACCOUNT/REPOSITORY")]
+    #[arg(value_name = "ACCOUNT/REPOSITORY", env = "HIF_SHOW_REPOSITORY")]
     pub repository: String,
     /// File path
+    #[arg(env = "HIF_SHOW_PATH")]
     pub path: String,
     /// Revision reference (64-hex hash, @latest, or HEAD)
-    #[arg(short, long, value_name = "REF")]
+    #[arg(short, long, value_name = "REF", env = "HIF_SHOW_REF")]
     pub r#ref: Option<String>,
 }
 
 #[derive(Parser, Debug)]
 pub struct TreeCommand {
     /// Repository reference (account/repository)
-    #[arg(value_name = "ACCOUNT/REPOSITORY")]
+    #[arg(value_name = "ACCOUNT/REPOSITORY", env = "HIF_TREE_REPOSITORY")]
     pub repository: String,
     /// Directory path (defaults to root)
+    #[arg(env = "HIF_TREE_PATH")]
     pub path: Option<String>,
     /// Revision reference (64-hex hash, @latest, or HEAD)
-    #[arg(short, long, value_name = "REF")]
+    #[arg(short, long, value_name = "REF", env = "HIF_TREE_REF")]
     pub r#ref: Option<String>,
 }
 
 #[derive(Parser, Debug)]
 pub struct GrepCommand {
     /// Repository reference (account/repository)
-    #[arg(value_name = "ACCOUNT/REPOSITORY")]
+    #[arg(value_name = "ACCOUNT/REPOSITORY", env = "HIF_GREP_REPOSITORY")]
     pub repository: String,
     /// Query string or pattern
+    #[arg(env = "HIF_GREP_QUERY")]
     pub query: String,
     /// Revision reference (64-hex hash, @latest, or HEAD)
-    #[arg(long, value_name = "REF")]
+    #[arg(long, value_name = "REF", env = "HIF_GREP_POSITION")]
     pub position: Option<String>,
     /// Restrict search to path prefix
-    #[arg(long, value_name = "PATH_PREFIX")]
+    #[arg(long, value_name = "PATH_PREFIX", env = "HIF_GREP_PATH")]
     pub path: Option<String>,
     /// Treat query as regex
-    #[arg(long)]
+    #[arg(long, env = "HIF_GREP_REGEX")]
     pub regex: bool,
     /// Case-sensitive search (default: case-insensitive)
-    #[arg(long)]
+    #[arg(long, env = "HIF_GREP_CASE_SENSITIVE")]
     pub case_sensitive: bool,
     /// Allow local filesystem fallback when remote search fails
-    #[arg(long)]
+    #[arg(long, env = "HIF_GREP_LOCAL")]
     pub local: bool,
     /// Maximum matches to return (1-500)
-    #[arg(short = 'n', long, default_value = "20")]
+    #[arg(short = 'n', long, default_value = "20", env = "HIF_GREP_LIMIT")]
     pub limit: u32,
 }
 
@@ -533,33 +601,36 @@ pub struct GrepCommand {
 #[derive(Parser, Debug)]
 pub struct LogCommand {
     /// Repository reference (account/repository)
-    #[arg(value_name = "ACCOUNT/REPOSITORY")]
+    #[arg(value_name = "ACCOUNT/REPOSITORY", env = "HIF_LOG_REPOSITORY")]
     pub repository: String,
     /// Filter by file path
-    #[arg(short, long)]
+    #[arg(short, long, env = "HIF_LOG_PATH")]
     pub path: Option<String>,
     /// Maximum number of sessions to show
-    #[arg(short = 'n', long, default_value = "20")]
+    #[arg(short = 'n', long, default_value = "20", env = "HIF_LOG_LIMIT")]
     pub limit: u32,
 }
 
 #[derive(Parser, Debug)]
 pub struct BlameCommand {
     /// Repository reference (account/repository)
-    #[arg(value_name = "ACCOUNT/REPOSITORY")]
+    #[arg(value_name = "ACCOUNT/REPOSITORY", env = "HIF_BLAME_REPOSITORY")]
     pub repository: String,
     /// File path
+    #[arg(env = "HIF_BLAME_PATH")]
     pub path: String,
 }
 
 #[derive(Parser, Debug)]
 pub struct DiffCommand {
     /// Repository reference (account/repository)
-    #[arg(value_name = "ACCOUNT/REPOSITORY")]
+    #[arg(value_name = "ACCOUNT/REPOSITORY", env = "HIF_DIFF_REPOSITORY")]
     pub repository: String,
     /// Starting revision hash (e.g., @0123...abcd)
+    #[arg(env = "HIF_DIFF_FROM")]
     pub from: String,
     /// Ending revision hash (default: HEAD)
+    #[arg(env = "HIF_DIFF_TO")]
     pub to: Option<String>,
 }
 
@@ -570,19 +641,20 @@ pub struct DiffCommand {
 #[derive(Parser, Debug)]
 pub struct MountCommand {
     /// Repository reference (account/repository)
-    #[arg(value_name = "ACCOUNT/REPOSITORY")]
+    #[arg(value_name = "ACCOUNT/REPOSITORY", env = "HIF_MOUNT_REPOSITORY")]
     pub repository: String,
     /// Mount point directory
-    #[arg(short, long)]
+    #[arg(short, long, env = "HIF_MOUNT_PATH")]
     pub path: Option<String>,
     /// NFS port
-    #[arg(short = 'P', long, default_value = "20490")]
+    #[arg(short = 'P', long, default_value = "20490", env = "HIF_MOUNT_PORT")]
     pub port: u16,
 }
 
 #[derive(Parser, Debug)]
 pub struct UnmountCommand {
     /// Mount point directory
+    #[arg(env = "HIF_UNMOUNT_PATH")]
     pub path: String,
 }
 
@@ -747,12 +819,11 @@ pub fn generate_help_json() -> serde_json::Value {
         },
 
         "global_options": {
-            "--json": "Output in JSON format",
-            "--toon": "Output in TOON format (compact machine format)",
+            "--format": "Output format: human|json|toon",
             "--verbose": "Show additional details",
             "--no-color": "Disable colored output",
             "-C, --cwd": "Run from different directory",
-            "--help": "Show help (add --json or --toon for machine-readable)"
+            "--help": "Show help (add --format json|toon for machine-readable)"
         },
 
         "error_codes": {
@@ -776,14 +847,93 @@ pub fn generate_help_json() -> serde_json::Value {
     })
 }
 
+fn parse_output_mode(value: &str) -> Option<OutputMode> {
+    if value.eq_ignore_ascii_case("human") || value.eq_ignore_ascii_case("text") {
+        Some(OutputMode::Human)
+    } else if value.eq_ignore_ascii_case("json") {
+        Some(OutputMode::Json)
+    } else if value.eq_ignore_ascii_case("toon") {
+        Some(OutputMode::Toon)
+    } else {
+        None
+    }
+}
+
+fn env_var_truthy(name: &str) -> bool {
+    std::env::var(name)
+        .ok()
+        .map(|value| {
+            matches!(
+                value.trim().to_ascii_lowercase().as_str(),
+                "1" | "true" | "yes" | "on"
+            )
+        })
+        .unwrap_or(false)
+}
+
+pub fn output_mode_from_args(args: &[String]) -> OutputMode {
+    let mut mode = None;
+    let mut iter = args.iter().peekable();
+
+    while let Some(arg) = iter.next() {
+        if arg == "--json" {
+            mode = Some(OutputMode::Json);
+            continue;
+        }
+        if arg == "--toon" {
+            mode = Some(OutputMode::Toon);
+            continue;
+        }
+        if let Some(value) = arg.strip_prefix("--format=") {
+            if let Some(parsed) = parse_output_mode(value) {
+                mode = Some(parsed);
+            }
+            continue;
+        }
+        if arg == "--format" {
+            if let Some(value) = iter.peek() {
+                if let Some(parsed) = parse_output_mode(value.as_str()) {
+                    mode = Some(parsed);
+                }
+            }
+            continue;
+        }
+    }
+
+    if let Some(mode) = mode {
+        return mode;
+    }
+
+    if let Ok(value) = std::env::var("HIF_FORMAT") {
+        if let Some(parsed) = parse_output_mode(&value) {
+            return parsed;
+        }
+    }
+
+    if env_var_truthy("HIF_JSON") {
+        return OutputMode::Json;
+    }
+
+    if env_var_truthy("HIF_TOON") {
+        return OutputMode::Toon;
+    }
+
+    OutputMode::Human
+}
+
+pub fn output_mode_from_process() -> OutputMode {
+    let args: Vec<String> = std::env::args().collect();
+    output_mode_from_args(&args)
+}
+
 /// Check if JSON output should be used.
 pub fn should_use_json() -> bool {
-    std::env::args().any(|arg| arg == "--json")
+    output_mode_from_process() == OutputMode::Json
 }
 
 /// Check if TOON output should be used.
 pub fn should_use_toon() -> bool {
-    std::env::args().any(|arg| arg == "--toon")
+    output_mode_from_process() == OutputMode::Toon
 }
 
 // =============================================================================
@@ -1051,8 +1201,8 @@ pub fn generate_docs() -> serde_json::Value {
                 "options": [],
                 "examples": [
                     {"command": "hif status", "description": "Show all local changes"},
-                    {"command": "hif status --json", "description": "Output as JSON"},
-                    {"command": "hif status --toon", "description": "Output as TOON"}
+                    {"command": "hif status --format json", "description": "Output as JSON"},
+                    {"command": "hif status --format toon", "description": "Output as TOON"}
                 ],
                 "output_format": {
                     "A": "Added - new file",
@@ -1287,8 +1437,7 @@ pub fn generate_docs() -> serde_json::Value {
         ],
 
         "global_options": [
-            {"name": "--json", "description": "Output in JSON format (for scripting and agents)"},
-            {"name": "--toon", "description": "Output in TOON format (for low-token machine consumption)"},
+            {"name": "--format", "description": "Output format: human, json, or toon"},
             {"name": "--verbose, -v", "description": "Show additional details"},
             {"name": "--no-color", "description": "Disable colored output"},
             {"name": "--cwd, -C", "description": "Run as if started in <PATH> instead of current directory"},
@@ -1298,7 +1447,12 @@ pub fn generate_docs() -> serde_json::Value {
 
         "environment_variables": [
             {"name": "HIF_HOME", "description": "Override config directory", "default": "~/.hif"},
-            {"name": "NO_COLOR", "description": "Disable colored output", "default": ""}
+            {"name": "HIF_FORMAT", "description": "Default output format: human|json|toon", "default": "human"},
+            {"name": "HIF_VERBOSE", "description": "Enable verbose mode (true/false)", "default": "false"},
+            {"name": "HIF_NO_COLOR", "description": "Disable color output (true/false)", "default": "false"},
+            {"name": "HIF_CWD", "description": "Working directory override", "default": ""},
+            {"name": "NO_COLOR", "description": "Disable colored output", "default": ""},
+            {"name": "HIF_<COMMAND>_<ARG>", "description": "Every command argument/option has an env var (e.g., HIF_GREP_QUERY, HIF_SYNC_STRATEGY, HIF_SESSION_NOTE_MESSAGE)", "default": ""}
         ],
 
         "error_codes": [
@@ -1347,5 +1501,35 @@ mod tests {
         assert!(looks_like_repository_ref("acme/myapp"));
         assert!(!looks_like_repository_ref("just-a-goal"));
         assert!(!looks_like_repository_ref("Fix the bug"));
+    }
+
+    #[test]
+    fn test_output_mode_from_args_format_json() {
+        let args = vec![
+            "hif".to_string(),
+            "--format".to_string(),
+            "json".to_string(),
+            "status".to_string(),
+        ];
+        assert_eq!(output_mode_from_args(&args), OutputMode::Json);
+    }
+
+    #[test]
+    fn test_output_mode_from_args_format_toon_equals_syntax() {
+        let args = vec![
+            "hif".to_string(),
+            "--format=toon".to_string(),
+            "status".to_string(),
+        ];
+        assert_eq!(output_mode_from_args(&args), OutputMode::Toon);
+    }
+
+    #[test]
+    fn test_output_mode_from_args_legacy_aliases() {
+        let json_args = vec!["hif".to_string(), "--json".to_string(), "status".to_string()];
+        assert_eq!(output_mode_from_args(&json_args), OutputMode::Json);
+
+        let toon_args = vec!["hif".to_string(), "--toon".to_string(), "status".to_string()];
+        assert_eq!(output_mode_from_args(&toon_args), OutputMode::Toon);
     }
 }
