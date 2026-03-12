@@ -161,7 +161,7 @@ pub async fn run() -> Result<()> {
                 println!("  {} {}", prefix, change.path);
             }
             println!();
-            println!("run 'hif session land' when ready");
+            println!("Run 'hif session land' when ready.");
         }
 
         if state.files.is_empty() && unstaged.is_empty() {

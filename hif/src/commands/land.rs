@@ -23,7 +23,7 @@ pub async fn run(cmd: LandCommand) -> Result<()> {
     if Session::exists()? {
         // If there's already a session, just land it (ignore the goal)
         if !output::use_json() {
-            println!("active session found; landing existing session");
+            println!("Active session found; landing existing session.");
         }
         let session_cmd = SessionCommand {
             command: SessionSubcommand::Land,
@@ -33,7 +33,7 @@ pub async fn run(cmd: LandCommand) -> Result<()> {
 
     // No active session - start one with the goal and immediately land.
     if !output::use_json() {
-        println!("starting session and landing");
+        println!("Starting session and landing.");
     }
 
     let start_cmd = SessionCommand {

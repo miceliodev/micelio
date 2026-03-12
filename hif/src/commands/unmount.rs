@@ -42,7 +42,7 @@ pub async fn run(cmd: UnmountCommand) -> Result<()> {
 
     if !json_output {
         println!(
-            "unmounting {}/{} from {}",
+            "Unmounting {}/{} from {}",
             manifest.account,
             manifest.repository,
             mount_path.display()
@@ -60,7 +60,7 @@ pub async fn run(cmd: UnmountCommand) -> Result<()> {
 
         println!();
         println!("warning: active session with uncommitted changes");
-        println!("run 'hif session land' or 'hif session abandon' before unmounting");
+        println!("Run 'hif session land' or 'hif session abandon' before unmounting.");
         println!();
 
         // Ask for confirmation
@@ -72,7 +72,7 @@ pub async fn run(cmd: UnmountCommand) -> Result<()> {
 
         if !input.trim().eq_ignore_ascii_case("y") {
             if !json_output {
-                println!("unmount aborted");
+                println!("Unmount aborted.");
             }
             return Ok(());
         }
@@ -105,7 +105,7 @@ pub async fn run(cmd: UnmountCommand) -> Result<()> {
                 },
             )?;
         } else {
-            println!("removed '{}'", mount_path.display());
+            println!("Removed '{}'.", mount_path.display());
         }
     } else {
         if json_output {
@@ -117,8 +117,8 @@ pub async fn run(cmd: UnmountCommand) -> Result<()> {
                 },
             )?;
         } else {
-            println!("unmounted; files remain at '{}'", mount_path.display());
-            println!("run 'hif unmount {} --remove' to remove files", cmd.path);
+            println!("Unmounted; files remain at '{}'.", mount_path.display());
+            println!("Run 'hif unmount {} --remove' to remove files.", cmd.path);
         }
     }
 

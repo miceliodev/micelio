@@ -45,7 +45,7 @@ pub async fn run(cmd: LinkCommand) -> Result<()> {
         )?;
     } else {
         output::set_success_message(format!(
-            "linked working tree to '{}/{}' (server {})",
+            "Linked working tree to '{}/{}' (server {}).",
             org, repository, server
         ));
     }

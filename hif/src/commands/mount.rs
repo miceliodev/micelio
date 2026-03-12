@@ -87,9 +87,9 @@ pub async fn run(cmd: MountCommand) -> Result<()> {
             },
         )?;
     } else {
-        println!("synced {} files to {}", file_count, mount_path.display());
-        println!("note: local mirror only; changes are not auto-landed");
-        println!("run 'hif session land' to publish changes");
+        println!("Synced {} files to {}", file_count, mount_path.display());
+        println!("Note: local mirror only; changes are not auto-landed.");
+        println!("Run 'hif session land' to publish changes.");
     }
 
     Ok(())

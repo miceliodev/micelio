@@ -210,10 +210,10 @@ async fn start(organization: &str, repository: &str, goal: &str) -> Result<()> {
             },
         )?;
     } else {
-        println!("started session {}", state.id);
-        println!("goal {}", goal);
-        println!("repository {}/{}", organization, repository);
-        println!("run 'hif session land' when ready");
+        println!("Started session {}", state.id);
+        println!("Goal {}", goal);
+        println!("Repository {}/{}", organization, repository);
+        println!("Run 'hif session land' when ready.");
     }
 
     Ok(())
@@ -266,13 +266,13 @@ async fn status() -> Result<()> {
                     },
                 )?;
             } else {
-                println!("session {}", state.id);
-                println!("goal {}", state.goal);
+                println!("Session {}", state.id);
+                println!("Goal {}", state.goal);
                 println!(
-                    "repository {}/{}",
+                    "Repository {}/{}",
                     state.repository_org, state.repository_handle
                 );
-                println!("started {}", state.started_at);
+                println!("Started {}", state.started_at);
 
                 if !state.conversation.is_empty() {
                     println!();
@@ -333,7 +333,7 @@ fn note(role: &str, message: &str) -> Result<()> {
             },
         )?;
     } else {
-        println!("added note to session");
+        println!("Added note to session.");
     }
     Ok(())
 }
@@ -423,9 +423,9 @@ async fn land() -> Result<()> {
             },
         )?;
     } else {
-        println!("landed session {}", response.session_id);
+        println!("Landed session {}", response.session_id);
         if !landing_revision.is_empty() {
-            println!("revision {}", landing_revision);
+            println!("Revision {}", landing_revision);
         }
     }
 
@@ -490,7 +490,7 @@ async fn abandon() -> Result<()> {
             },
         )?;
     } else {
-        output::set_success_message("abandoned session");
+        output::set_success_message("Abandoned session.");
     }
     Ok(())
 }

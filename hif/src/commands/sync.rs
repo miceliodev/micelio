@@ -72,7 +72,7 @@ pub async fn run(cmd: SyncCommand) -> Result<()> {
 
     if !json_output {
         println!(
-            "syncing {}/{} from {}",
+            "Syncing {}/{} from {}",
             manifest.account, manifest.repository, manifest.server
         );
     }
@@ -94,25 +94,25 @@ pub async fn run(cmd: SyncCommand) -> Result<()> {
         )?;
     } else {
         if result.updated.is_empty() && result.conflicts.is_empty() {
-            println!("already up to date");
+            println!("Already up to date.");
         } else {
             if !result.updated.is_empty() {
-                println!("\nupdated {} files:", result.updated.len());
+                println!("\nUpdated {} files:", result.updated.len());
                 for path in &result.updated {
                     println!("  U {}", path);
                 }
             }
 
             if !result.conflicts.is_empty() {
-                println!("\nconflicts in {} files:", result.conflicts.len());
+                println!("\nConflicts in {} files:", result.conflicts.len());
                 for path in &result.conflicts {
                     println!("  C {}", path);
                 }
-                println!("\nresolve conflicts and run 'hif session land'");
+                println!("\nResolve conflicts and run 'hif session land'.");
             }
         }
 
-        println!("\nrevision {}", format_revision_hash(&result.revision_hash));
+        println!("\nRevision {}", format_revision_hash(&result.revision_hash));
     }
 
     Ok(())

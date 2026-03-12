@@ -191,7 +191,7 @@ async fn create(account: &str, handle: &str, name: &str, description: Option<&st
             },
         )?;
     } else {
-        println!("created repository '{}/{}'", account, handle);
+        println!("Created repository '{}/{}'.", account, handle);
     }
     Ok(())
 }
@@ -277,7 +277,7 @@ async fn update(
             },
         )?;
     } else {
-        println!("updated repository '{}/{}'", account, handle);
+        println!("Updated repository '{}/{}'.", account, handle);
     }
     Ok(())
 }
@@ -309,7 +309,7 @@ async fn delete(account: &str, handle: &str) -> Result<()> {
             },
         )?;
     } else {
-        println!("deleted repository '{}/{}'", account, handle);
+        println!("Deleted repository '{}/{}'.", account, handle);
     }
     Ok(())
 }

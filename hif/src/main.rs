@@ -171,6 +171,7 @@ async fn async_main() -> i32 {
         Ok(()) => {
             let warnings = output::take_warnings();
             let success_message = output::take_success_message();
+            let next_steps = output::take_next_steps();
 
             if !use_structured {
                 if !warnings.is_empty() {
@@ -179,6 +180,9 @@ async fn async_main() -> i32 {
                 if let Some(message) = success_message {
                     output::print_human_success(&message);
                 }
+                if !next_steps.is_empty() {
+                    output::print_human_next_steps(&next_steps);
+                }
             }
 
             0
@@ -186,6 +190,7 @@ async fn async_main() -> i32 {
         Err(e) => {
             let warnings = output::take_warnings();
             let _ = output::take_success_message();
+            let _ = output::take_next_steps();
 
             print_error(&e.to_string(), e.code(), use_structured, &warnings);
             if verbose && !use_structured {
