@@ -98,13 +98,13 @@ pub async fn run(cmd: LogCommand) -> Result<()> {
         )?;
     } else {
         for session in sessions {
-            println!("{} {}", session.revision, session.id);
-            println!("  goal: {}", session.goal);
-            println!(
+            output::ui_line(format!("{} {}", session.revision, session.id));
+            output::ui_line(format!("  goal: {}", session.goal));
+            output::ui_line(format!(
                 "  attributed-to: {}",
                 display_identity(&session.attributed_to)
-            );
-            println!();
+            ));
+            output::ui_blank_line();
         }
     }
 

@@ -71,10 +71,10 @@ pub async fn run(cmd: SyncCommand) -> Result<()> {
     let mut manifest = WorkspaceManifest::load()?.ok_or(MicError::NoWorkspace)?;
 
     if !json_output {
-        println!(
+        output::ui_line(format!(
             "Syncing {}/{} from {}",
             manifest.account, manifest.repository, manifest.server
-        );
+        ));
     }
 
     let result = sync_workspace(&mut manifest, strategy).await?;
@@ -97,16 +97,18 @@ pub async fn run(cmd: SyncCommand) -> Result<()> {
             output::set_success_message("Already up to date.");
         } else {
             if !result.updated.is_empty() {
-                println!("\nUpdated {} files:", result.updated.len());
+                output::ui_blank_line();
+                output::ui_line(format!("Updated {} files:", result.updated.len()));
                 for path in &result.updated {
-                    println!("  U {}", path);
+                    output::ui_line(format!("  U {}", path));
                 }
             }
 
             if !result.conflicts.is_empty() {
-                println!("\nConflicts in {} files:", result.conflicts.len());
+                output::ui_blank_line();
+                output::ui_line(format!("Conflicts in {} files:", result.conflicts.len()));
                 for path in &result.conflicts {
-                    println!("  C {}", path);
+                    output::ui_line(format!("  C {}", path));
                 }
                 output::warn(format!(
                     "Conflicts detected in {} file(s).",
@@ -118,7 +120,11 @@ pub async fn run(cmd: SyncCommand) -> Result<()> {
             output::set_success_message("Sync completed.");
         }
 
-        println!("\nRevision {}", format_revision_hash(&result.revision_hash));
+        output::ui_blank_line();
+        output::ui_line(format!(
+            "Revision {}",
+            format_revision_hash(&result.revision_hash)
+        ));
     }
 
     Ok(())
@@ -247,7 +253,10 @@ async fn sync_workspace(
                     }
                     MergeStrategy::Interactive => {
                         if !output::use_json() {
-                            println!("file '{}' was deleted upstream but modified locally", path);
+                            output::ui_line(format!(
+                                "file '{}' was deleted upstream but modified locally",
+                                path
+                            ));
                         }
                         let resolution = prompt_conflict_resolution(path)?;
                         match resolution {
@@ -302,7 +311,10 @@ enum ConflictResolution {
 
 /// Prompt user for conflict resolution.
 fn prompt_conflict_resolution(path: &str) -> Result<ConflictResolution> {
-    print!("conflict in '{}': [o]urs / [t]heirs / [s]kip? ", path);
+    output::ui_text(&format!(
+        "conflict in '{}': [o]urs / [t]heirs / [s]kip? ",
+        path
+    ));
     io::stdout().flush()?;
 
     let mut input = String::new();

@@ -62,7 +62,7 @@ async fn list() -> Result<()> {
     } else {
         let org_count = organizations.len();
         for org in organizations {
-            println!("{}", org);
+            output::ui_line(org);
         }
         output::set_success_message(format!("Listed {} organization(s).", org_count));
     }
@@ -101,10 +101,10 @@ async fn info(handle: &str) -> Result<()> {
             },
         )?;
     } else {
-        println!("Organization: {}", name);
-        println!("Handle: {}", handle);
+        output::ui_line(format!("Organization: {}", name));
+        output::ui_line(format!("Handle: {}", handle));
         if !description.is_empty() {
-            println!("Description: {}", description);
+            output::ui_line(format!("Description: {}", description));
         }
         output::set_success_message("Loaded organization details.");
     }

@@ -149,10 +149,10 @@ async fn list(account: &str) -> Result<()> {
     } else {
         let repository_count = repositories.len();
         for repository in repositories {
-            println!(
+            output::ui_line(format!(
                 "{}/{} - {}",
                 repository.account, repository.handle, repository.name
-            );
+            ));
         }
         output::set_success_message(format!(
             "Listed {} repositories in '{}'.",
@@ -232,10 +232,10 @@ async fn info(account: &str, handle: &str) -> Result<()> {
             },
         )?;
     } else {
-        println!("Repository: {}", name);
-        println!("Handle: {}/{}", account, handle);
+        output::ui_line(format!("Repository: {}", name));
+        output::ui_line(format!("Handle: {}/{}", account, handle));
         if !description.is_empty() {
-            println!("Description: {}", description);
+            output::ui_line(format!("Description: {}", description));
         }
         output::set_success_message("Loaded repository details.");
     }

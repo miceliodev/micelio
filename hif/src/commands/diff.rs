@@ -102,9 +102,11 @@ pub async fn run(cmd: DiffCommand) -> Result<()> {
     } else {
         for (path, change_type) in changes {
             match change_type {
-                ChangeType::Added => println!("{} {}", "A".green(), path.green()),
-                ChangeType::Deleted => println!("{} {}", "D".red(), path.red()),
-                ChangeType::Modified => println!("{} {}", "M".yellow(), path.yellow()),
+                ChangeType::Added => output::ui_line(format!("{} {}", "A".green(), path.green())),
+                ChangeType::Deleted => output::ui_line(format!("{} {}", "D".red(), path.red())),
+                ChangeType::Modified => {
+                    output::ui_line(format!("{} {}", "M".yellow(), path.yellow()))
+                }
             }
         }
     }

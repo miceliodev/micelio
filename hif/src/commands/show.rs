@@ -79,7 +79,7 @@ pub async fn run(cmd: ShowCommand) -> Result<()> {
             },
         )?;
     } else {
-        print!("{}", String::from_utf8_lossy(&response.content));
+        output::ui_text(&String::from_utf8_lossy(&response.content));
     }
 
     Ok(())

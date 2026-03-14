@@ -129,7 +129,7 @@ pub async fn run(cmd: GrepCommand) -> Result<()> {
                 )
             } else {
                 for m in response.matches {
-                    println!("{}:{}:{}: {}", m.path, m.line, m.column, m.snippet);
+                    output::ui_line(format!("{}:{}:{}: {}", m.path, m.line, m.column, m.snippet));
                 }
                 Ok(())
             }
@@ -237,7 +237,13 @@ fn local_grep(
 
             if let Some(column) = maybe_column {
                 if !json_output {
-                    println!("{}:{}:{}: {}", display_path, line_number + 1, column, line);
+                    output::ui_line(format!(
+                        "{}:{}:{}: {}",
+                        display_path,
+                        line_number + 1,
+                        column,
+                        line
+                    ));
                 }
                 matches.push(LocalSearchMatchOutput {
                     path: display_path.clone(),

@@ -42,12 +42,12 @@ pub async fn run(cmd: UnmountCommand) -> Result<()> {
         WorkspaceManifest::load_from(&manifest_path)?.ok_or_else(|| MicError::NoWorkspace)?;
 
     if !json_output {
-        println!(
+        output::ui_line(format!(
             "Unmounting {}/{} from {}",
             manifest.account,
             manifest.repository,
             mount_path.display()
-        );
+        ));
     }
 
     // Check for uncommitted changes
@@ -64,7 +64,7 @@ pub async fn run(cmd: UnmountCommand) -> Result<()> {
         output::add_next_step("hif session abandon");
 
         // Ask for confirmation
-        print!("Continue anyway? [y/N] ");
+        output::ui_text("Continue anyway? [y/N] ");
         std::io::Write::flush(&mut std::io::stdout())?;
 
         let mut input = String::new();

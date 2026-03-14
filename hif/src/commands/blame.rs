@@ -105,7 +105,10 @@ pub async fn run(cmd: BlameCommand) -> Result<()> {
         )?;
     } else {
         for line in response.lines {
-            println!("{:>4} {} | {}", line.line, line.session_id, line.text);
+            output::ui_line(format!(
+                "{:>4} {} | {}",
+                line.line, line.session_id, line.text
+            ));
         }
     }
 

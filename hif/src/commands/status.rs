@@ -47,11 +47,11 @@ pub async fn run() -> Result<()> {
     let manifest = WorkspaceManifest::load()?.ok_or(MicError::NoWorkspace)?;
 
     if !json_output {
-        println!(
+        output::ui_line(format!(
             "{}",
             format!("On repository {}/{}", manifest.account, manifest.repository).bold()
-        );
-        println!("server {}", manifest.server.dimmed());
+        ));
+        output::ui_line(format!("server {}", manifest.server.dimmed()));
     }
 
     // Get workspace changes from disk
@@ -122,14 +122,14 @@ pub async fn run() -> Result<()> {
 
     // Check for active session
     if let Some(state) = Session::load()? {
-        println!();
-        println!("{}", format!("session {}", state.id).cyan());
-        println!("goal {}", state.goal);
+        output::ui_blank_line();
+        output::ui_line(format!("{}", format!("session {}", state.id).cyan()));
+        output::ui_line(format!("goal {}", state.goal));
 
         // Show session files (staged changes)
         if !state.files.is_empty() {
-            println!();
-            println!("{}", "changes to be landed:".green());
+            output::ui_blank_line();
+            output::ui_line(format!("{}", "changes to be landed:".green()));
             for file in &state.files {
                 let prefix = match file.change_type.as_str() {
                     "added" => "A".green(),
@@ -137,7 +137,7 @@ pub async fn run() -> Result<()> {
                     "deleted" => "D".red(),
                     _ => "?".normal(),
                 };
-                println!("  {} {}", prefix, file.path);
+                output::ui_line(format!("  {} {}", prefix, file.path));
             }
         }
 
@@ -150,56 +150,56 @@ pub async fn run() -> Result<()> {
             .collect();
 
         if !unstaged.is_empty() {
-            println!();
-            println!("{}", "unstaged changes:".yellow());
+            output::ui_blank_line();
+            output::ui_line(format!("{}", "unstaged changes:".yellow()));
             for change in &unstaged {
                 let prefix = match change.change_type {
                     ChangeType::Added => "A".green(),
                     ChangeType::Modified => "M".yellow(),
                     ChangeType::Deleted => "D".red(),
                 };
-                println!("  {} {}", prefix, change.path);
+                output::ui_line(format!("  {} {}", prefix, change.path));
             }
-            println!();
-            println!("Run 'hif session land' when ready.");
+            output::ui_blank_line();
+            output::ui_line("Run 'hif session land' when ready.");
         }
 
         if state.files.is_empty() && unstaged.is_empty() {
-            println!();
-            println!("nothing to land");
+            output::ui_blank_line();
+            output::ui_line("nothing to land");
         }
     } else {
         // No active session
         if !disk_changes.is_empty() {
-            println!();
-            println!("{}", "changes not in a session:".yellow());
+            output::ui_blank_line();
+            output::ui_line(format!("{}", "changes not in a session:".yellow()));
             for change in &disk_changes {
                 let prefix = match change.change_type {
                     ChangeType::Added => "A".green(),
                     ChangeType::Modified => "M".yellow(),
                     ChangeType::Deleted => "D".red(),
                 };
-                println!("  {} {}", prefix, change.path);
+                output::ui_line(format!("  {} {}", prefix, change.path));
             }
-            println!();
-            println!("start a session with:");
-            println!(
+            output::ui_blank_line();
+            output::ui_line("start a session with:");
+            output::ui_line(format!(
                 "  {} {} {} \"goal\"",
                 "hif session start".cyan(),
                 manifest.account,
                 manifest.repository
-            );
+            ));
         } else {
-            println!();
-            println!("{}", "nothing to commit".dimmed());
-            println!();
-            println!("start a session with:");
-            println!(
+            output::ui_blank_line();
+            output::ui_line(format!("{}", "nothing to commit".dimmed()));
+            output::ui_blank_line();
+            output::ui_line("start a session with:");
+            output::ui_line(format!(
                 "  {} {} {} \"goal\"",
                 "hif session start".cyan(),
                 manifest.account,
                 manifest.repository
-            );
+            ));
         }
     }
 

@@ -244,8 +244,8 @@ async fn status() -> Result<()> {
                     },
                 )?;
             } else {
-                println!("no active session");
-                println!("start one with: hif session start <account>/<repository> <goal>");
+                output::ui_line("no active session");
+                output::ui_line("start one with: hif session start <account>/<repository> <goal>");
             }
         }
         Some(state) => {
@@ -267,50 +267,50 @@ async fn status() -> Result<()> {
                     },
                 )?;
             } else {
-                println!("Session {}", state.id);
-                println!("Goal {}", state.goal);
-                println!(
+                output::ui_line(format!("Session {}", state.id));
+                output::ui_line(format!("Goal {}", state.goal));
+                output::ui_line(format!(
                     "Repository {}/{}",
                     state.repository_org, state.repository_handle
-                );
-                println!("Started {}", state.started_at);
+                ));
+                output::ui_line(format!("Started {}", state.started_at));
 
                 if !state.conversation.is_empty() {
-                    println!();
-                    println!("conversation ({}):", state.conversation.len());
+                    output::ui_blank_line();
+                    output::ui_line(format!("conversation ({}):", state.conversation.len()));
                     for msg in &state.conversation {
-                        println!("  [{}] {}", msg.role, msg.message);
+                        output::ui_line(format!("  [{}] {}", msg.role, msg.message));
                     }
                 }
 
                 if !state.decisions.is_empty() {
-                    println!();
-                    println!("decisions ({}):", state.decisions.len());
+                    output::ui_blank_line();
+                    output::ui_line(format!("decisions ({}):", state.decisions.len()));
                     for decision in &state.decisions {
-                        println!("  - {}", decision.description);
-                        println!("    reasoning: {}", decision.reasoning);
+                        output::ui_line(format!("  - {}", decision.description));
+                        output::ui_line(format!("    reasoning: {}", decision.reasoning));
                     }
                 }
 
                 if !state.files.is_empty() {
-                    println!();
-                    println!("files ({}):", state.files.len());
+                    output::ui_blank_line();
+                    output::ui_line(format!("files ({}):", state.files.len()));
                     for file in &state.files {
-                        println!("  {} ({})", file.path, file.change_type);
+                        output::ui_line(format!("  {} ({})", file.path, file.change_type));
                     }
                 }
 
                 if let Some(remote) = remote.as_ref() {
-                    println!();
-                    println!("remote-status {}", remote.status);
+                    output::ui_blank_line();
+                    output::ui_line(format!("remote-status {}", remote.status));
                     if let Some(conflict) = remote.conflict.as_ref() {
-                        println!(
+                        output::ui_line(format!(
                             "conflict-revision {}",
                             format_revision_hash(&conflict.revision_hash)
-                        );
+                        ));
                         if !conflict.paths.is_empty() {
                             for path in &conflict.paths {
-                                println!("  - {}", path);
+                                output::ui_line(format!("  - {}", path));
                             }
                         }
                     }

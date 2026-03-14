@@ -69,7 +69,7 @@ pub async fn run(cmd: TreeCommand) -> Result<()> {
         )?;
     } else {
         for entry in listed {
-            println!("{}", entry);
+            output::ui_line(entry);
         }
     }
 

@@ -305,12 +305,12 @@ fn print_authorization_instructions(auth: &DeviceAuthResponse) {
         .as_ref()
         .unwrap_or(&auth.verification_uri);
 
-    println!();
-    println!("{}", "To authorize this device:".bold());
-    println!("  1. Open {}", url.cyan());
-    println!("  2. Enter code {}", auth.user_code.bold());
-    println!();
-    println!("Waiting for authorization...");
+    output::ui_blank_line();
+    output::ui_line(format!("{}", "To authorize this device:".bold()));
+    output::ui_line(format!("  1. Open {}", url.cyan()));
+    output::ui_line(format!("  2. Enter code {}", auth.user_code.bold()));
+    output::ui_blank_line();
+    output::ui_line("Waiting for authorization...");
 }
 
 /// Poll for token after device authorization.

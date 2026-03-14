@@ -44,12 +44,12 @@ pub async fn run(cmd: MountCommand) -> Result<()> {
     let mount_path = PathBuf::from(&mount_path);
 
     if !json_output {
-        println!(
+        output::ui_line(format!(
             "Mounting {}/{} at {}",
             organization,
             repository,
             mount_path.display()
-        );
+        ));
     }
 
     if !mount_path.exists() {
@@ -182,7 +182,7 @@ async fn sync_tree(
             fs::write(&file_path, &content)?;
             synced += 1;
             if !json_output {
-                println!("  {} ({})", entry.path, entry.hash);
+                output::ui_line(format!("  {} ({})", entry.path, entry.hash));
             }
         }
     }
