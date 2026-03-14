@@ -115,9 +115,9 @@ fn logs(reference: Option<&str>) -> Result<()> {
             },
         )?;
     } else {
-        print!("{}", content);
+        output::ui_text(&content);
         if !content.is_empty() && !content.ends_with('\n') {
-            println!();
+            output::ui_blank_line();
         }
     }
     Ok(())
@@ -168,78 +168,84 @@ fn path(reference: Option<&str>) -> Result<()> {
             },
         )?;
     } else {
-        println!("{}", session.dir.display());
+        output::ui_line(session.dir.display());
     }
     Ok(())
 }
 
 fn print_session_summary(output: &DebugSessionOutput, session: &StoredSession) {
-    println!("Diagnostics session {}", output.id);
-    println!("Command {}", session.argv.join(" "));
-    println!("Started {}", output.started_at);
+    output::ui_kv("Diagnostics session", &output.id);
+    output::ui_kv("Command", session.argv.join(" "));
+    output::ui_kv("Started", &output.started_at);
     if let Some(ended_at) = &output.ended_at {
-        println!("Ended {}", ended_at);
+        output::ui_kv("Ended", ended_at);
     }
     if let Some(exit_code) = output.exit_code {
-        println!("Exit code {}", exit_code);
+        output::ui_kv("Exit code", exit_code);
     }
-    println!("Output {}", output.output_mode);
-    println!("Verbose {}", output.verbose);
-    println!("CWD {}", output.cwd);
+    output::ui_kv("Output", &output.output_mode);
+    output::ui_kv("Verbose", output.verbose);
+    output::ui_kv("CWD", &output.cwd);
     if let Some(requested_cwd) = &output.requested_cwd {
-        println!("Requested cwd {}", requested_cwd);
+        output::ui_kv("Requested cwd", requested_cwd);
     }
-    println!("Directory {}", output.dir);
-    println!("session.json {}", output.session_file);
-    println!("verbose.log {}", output.verbose_log_file);
-    println!("network.har {} entries", output.request_count);
-    println!("grpc.jsonl {} exchanges", output.grpc_exchange_count);
+    output::ui_kv("Directory", &output.dir);
+    output::ui_kv("session.json", &output.session_file);
+    output::ui_kv("verbose.log", &output.verbose_log_file);
+    output::ui_kv("network.har", format!("{} entries", output.request_count));
+    output::ui_kv(
+        "grpc.jsonl",
+        format!("{} exchanges", output.grpc_exchange_count),
+    );
 }
 
 fn print_request_summaries(session: &StoredSession, requests: &[RequestSummary]) {
-    println!("Persisted requests for {}", session.id);
+    output::ui_kv("Persisted requests for", &session.id);
     if requests.is_empty() {
-        println!("No persisted requests.");
+        output::ui_line("No persisted requests.");
         return;
     }
 
     for request in requests {
-        println!(
+        output::ui_line(format!(
             "{} {} {} -> {} ({:.1} ms)",
             request.transport, request.method, request.url, request.status, request.duration_ms
-        );
+        ));
     }
 }
 
 fn print_grpc_exchanges(session: &StoredSession, exchanges: &[GrpcDebugEntry]) {
-    println!("Persisted gRPC exchanges for {}", session.id);
+    output::ui_kv("Persisted gRPC exchanges for", &session.id);
     if exchanges.is_empty() {
-        println!("No persisted gRPC exchanges.");
+        output::ui_line("No persisted gRPC exchanges.");
         return;
     }
 
     for exchange in exchanges {
-        println!(
+        output::ui_line(format!(
             "{} -> http {} grpc-status {} ({:.1} ms)",
             exchange.method,
             exchange.http_status,
             exchange.grpc_status.as_deref().unwrap_or("<none>"),
             exchange.duration_ms
-        );
+        ));
         for message in &exchange.request_messages {
-            println!("request[{}] {} bytes", message.index, message.size);
+            output::ui_line(format!("request[{}] {} bytes", message.index, message.size));
         }
         for message in &exchange.response_messages {
-            println!("response[{}] {} bytes", message.index, message.size);
+            output::ui_line(format!(
+                "response[{}] {} bytes",
+                message.index, message.size
+            ));
         }
         if let Some(error) = &exchange.error {
-            println!("error {}", error);
+            output::ui_kv("error", error);
         }
         if let Some(parse_error) = &exchange.request_parse_error {
-            println!("request parse error {}", parse_error);
+            output::ui_kv("request parse error", parse_error);
         }
         if let Some(parse_error) = &exchange.response_parse_error {
-            println!("response parse error {}", parse_error);
+            output::ui_kv("response parse error", parse_error);
         }
     }
 }

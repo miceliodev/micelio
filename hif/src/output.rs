@@ -4,6 +4,7 @@ use crate::diagnostics;
 use crate::error::{MicError, Result};
 use colored::Colorize;
 use serde::Serialize;
+use std::fmt::Display;
 use std::sync::{Mutex, OnceLock};
 use toon_format::encode_default;
 
@@ -125,7 +126,7 @@ pub fn print_human_warnings(warnings: &[String], to_stderr: bool) {
 
 /// Print a standardized human success line.
 pub fn print_human_success(message: &str) {
-    println!("{}", message);
+    ui_line(message);
 }
 
 /// Print next steps in a standardized human-readable format.
@@ -134,10 +135,30 @@ pub fn print_human_next_steps(next_steps: &[String]) {
         return;
     }
 
-    println!("{}", "Next steps:".bold());
+    ui_line(format!("{}", "Next steps:".bold()));
     for step in next_steps {
-        println!("  {}", step);
+        ui_line(format!("  {}", step));
     }
+}
+
+/// Print a user-facing line to stdout.
+pub fn ui_line(message: impl Display) {
+    println!("{}", message);
+}
+
+/// Print raw user-facing text to stdout without forcing a trailing newline.
+pub fn ui_text(text: &str) {
+    print!("{}", text);
+}
+
+/// Print a blank user-facing line.
+pub fn ui_blank_line() {
+    println!();
+}
+
+/// Print a simple label/value pair for human-readable output.
+pub fn ui_kv(label: &str, value: impl Display) {
+    ui_line(format!("{} {}", label, value));
 }
 
 /// Whether JSON output mode is enabled for this process.
