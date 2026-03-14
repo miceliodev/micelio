@@ -3,6 +3,7 @@
 pub mod auth;
 pub mod blame;
 pub mod checkout;
+pub mod debug;
 pub mod diff;
 pub mod grep;
 pub mod land;

@@ -16,6 +16,7 @@ path = "src/main.rs"
 [dependencies]
 # CLI
 clap = { version = "4", features = ["derive", "env", "color"] }
+clap_usage = "2.0.3"
 
 # Async runtime
 tokio = { version = "1", features = ["full"] }
@@ -42,7 +43,7 @@ anyhow = "1"
 directories = "6"
 dirs = "6"
 chrono = { version = "0.4", features = ["serde"] }
-uuid = { version = "1", features = ["v4"] }
+uuid = { version = "1", features = ["v4", "v7"] }
 rand = "0.9"
 url = "2"
 urlencoding = "2"

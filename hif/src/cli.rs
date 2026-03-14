@@ -76,6 +76,10 @@ pub struct Cli {
     #[arg(long, hide = true, env = "HIF_DOCS")]
     pub docs: bool,
 
+    /// Output the CLI specification in usage KDL format
+    #[arg(long, hide = true, action = clap::ArgAction::SetTrue)]
+    pub usage_spec: bool,
+
     #[command(subcommand)]
     pub command: Option<Commands>,
 }
@@ -249,6 +253,22 @@ WHEN TO USE:
     and document decisions along the way.
 ")]
     Land(LandCommand),
+
+    /// Inspect persisted diagnostics sessions
+    #[command(after_help = "\
+EXAMPLES:
+    $ hif debug latest            # Inspect the most recent non-debug invocation
+    $ hif debug show 019cec...    # Show session metadata and file paths
+    $ hif debug requests          # Summarize persisted HTTP/gRPC requests
+    $ hif debug grpc latest       # Inspect gRPC message captures
+    $ hif debug logs current      # Inspect the current debug command's own logs
+
+NOTES:
+    Diagnostics are stored in the XDG state directory for hif.
+    SESSION may be a session ID, 'latest', or 'current'.
+    Omitting SESSION defaults to the most recent non-debug invocation.
+")]
+    Debug(DebugCommand),
 
     // =========================================================================
     // Content Commands (no checkout needed)
@@ -536,6 +556,48 @@ pub struct LandCommand {
     pub second: Option<String>,
 }
 
+#[derive(Parser, Debug)]
+pub struct DebugCommand {
+    #[command(subcommand)]
+    pub command: DebugSubcommand,
+}
+
+#[derive(Subcommand, Debug)]
+pub enum DebugSubcommand {
+    /// Show a summary of the most recent non-debug diagnostics session
+    Latest,
+    /// Show session metadata and artifact paths
+    Show {
+        /// Session ID, 'latest', or 'current'
+        #[arg(value_name = "SESSION")]
+        session: Option<String>,
+    },
+    /// Print the persisted verbose log
+    Logs {
+        /// Session ID, 'latest', or 'current'
+        #[arg(value_name = "SESSION")]
+        session: Option<String>,
+    },
+    /// Summarize persisted HTTP and gRPC requests
+    Requests {
+        /// Session ID, 'latest', or 'current'
+        #[arg(value_name = "SESSION")]
+        session: Option<String>,
+    },
+    /// Show persisted gRPC message captures from grpc.jsonl
+    Grpc {
+        /// Session ID, 'latest', or 'current'
+        #[arg(value_name = "SESSION")]
+        session: Option<String>,
+    },
+    /// Print the diagnostics session directory
+    Path {
+        /// Session ID, 'latest', or 'current'
+        #[arg(value_name = "SESSION")]
+        session: Option<String>,
+    },
+}
+
 // =============================================================================
 // Content Commands
 // =============================================================================
@@ -656,6 +718,9 @@ pub struct UnmountCommand {
     /// Mount point directory
     #[arg(env = "HIF_UNMOUNT_PATH")]
     pub path: String,
+    /// Remove all files and the mount directory
+    #[arg(long)]
+    pub remove: bool,
 }
 
 // =============================================================================
@@ -775,6 +840,17 @@ pub fn generate_help_json() -> serde_json::Value {
                 "requires_auth": true,
                 "requires_workspace": "optional"
             },
+            "debug": {
+                "description": "Inspect persisted diagnostics sessions",
+                "subcommands": {
+                    "latest": {"description": "Show the latest non-debug diagnostics session"},
+                    "show": {"description": "Show session metadata and paths", "args": ["[session]"]},
+                    "logs": {"description": "Print verbose.log", "args": ["[session]"]},
+                    "requests": {"description": "Summarize network.har entries", "args": ["[session]"]},
+                    "grpc": {"description": "Show grpc.jsonl message captures", "args": ["[session]"]},
+                    "path": {"description": "Print diagnostics directory path", "args": ["[session]"]}
+                }
+            },
             "show": {
                 "description": "Show file contents from forge",
                 "args": ["account/repository", "path"],
@@ -834,6 +910,8 @@ pub fn generate_help_json() -> serde_json::Value {
             "session_already_active": "Run 'hif session land' or 'hif session abandon' first",
             "invalid_repository_ref": "Use format: account/repository (e.g., 'acme/myapp')",
             "conflicts_detected": "Run 'hif session resolve' or 'hif sync'",
+            "no_diagnostics_session": "Run a hif command first, or use 'hif debug current' from the current invocation",
+            "diagnostics_session_not_found": "Use 'hif debug latest' or provide a valid diagnostics session ID",
             "no_web_url": "Set web_url in config.json for the server",
             "no_grpc_url": "Set grpc_url in config.json or enable discovery via /.well-known/micelio.json",
             "discovery_failed": "Check /.well-known/micelio.json or set grpc_url manually"

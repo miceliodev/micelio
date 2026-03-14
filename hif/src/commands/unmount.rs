@@ -17,6 +17,7 @@ pub(crate) struct UnmountOutput {
 /// Run the unmount command.
 pub async fn run(cmd: UnmountCommand) -> Result<()> {
     let json_output = output::use_json();
+    let remove = cmd.remove;
     let mount_path = PathBuf::from(&cmd.path);
 
     if !mount_path.exists() {
@@ -80,8 +81,8 @@ pub async fn run(cmd: UnmountCommand) -> Result<()> {
     // Remove the .hif directory
     fs::remove_dir_all(&hif_dir)?;
 
-    // Optionally remove the entire mount directory if empty or if requested
-    if std::env::args().any(|a| a == "--remove") {
+    // Optionally remove the entire mount directory if requested
+    if remove {
         // Remove all files in the mount directory
         for entry in fs::read_dir(&mount_path)? {
             let entry = entry?;

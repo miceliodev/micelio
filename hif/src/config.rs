@@ -394,6 +394,26 @@ pub fn config_dir() -> Result<PathBuf> {
     Ok(home.join(".hif"))
 }
 
+/// Get the hif state directory path.
+pub fn state_dir() -> Result<PathBuf> {
+    if let Ok(mic_home) = std::env::var("HIF_HOME") {
+        if !mic_home.is_empty() {
+            return Ok(PathBuf::from(mic_home).join("state"));
+        }
+    }
+
+    if let Ok(state_home) = std::env::var("XDG_STATE_HOME") {
+        if !state_home.is_empty() {
+            return Ok(PathBuf::from(state_home).join("hif"));
+        }
+    }
+
+    let home = dirs::home_dir()
+        .ok_or_else(|| MicError::ConfigError("Could not find home directory".to_string()))?;
+
+    Ok(home.join(".local").join("state").join("hif"))
+}
+
 /// Get the full path to the config file.
 pub fn config_file_path() -> Result<PathBuf> {
     Ok(config_dir()?.join("config.json"))
@@ -405,6 +425,16 @@ pub fn ensure_config_dir() -> Result<PathBuf> {
     if !dir.exists() {
         fs::create_dir_all(&dir)
             .map_err(|e| MicError::ConfigError(format!("Failed to create config dir: {}", e)))?;
+    }
+    Ok(dir)
+}
+
+/// Ensure the state directory exists.
+pub fn ensure_state_dir() -> Result<PathBuf> {
+    let dir = state_dir()?;
+    if !dir.exists() {
+        fs::create_dir_all(&dir)
+            .map_err(|e| MicError::ConfigError(format!("Failed to create state dir: {}", e)))?;
     }
     Ok(dir)
 }

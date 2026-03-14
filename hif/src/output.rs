@@ -1,5 +1,6 @@
 //! Output helpers for human and machine-readable CLI responses.
 
+use crate::diagnostics;
 use crate::error::{MicError, Result};
 use colored::Colorize;
 use serde::Serialize;
@@ -59,10 +60,12 @@ pub fn reset_lifecycle() {
 
 /// Record a warning to be emitted at command exit.
 pub fn warn(message: impl Into<String>) {
+    let message = message.into();
+    diagnostics::log_warn(&message);
     let mut state = lifecycle_state()
         .lock()
         .expect("output lifecycle state mutex poisoned");
-    state.warnings.push(message.into());
+    state.warnings.push(message);
 }
 
 /// Take and clear any collected warnings.
@@ -75,18 +78,22 @@ pub fn take_warnings() -> Vec<String> {
 
 /// Set a standardized success message to print at command exit (human mode).
 pub fn set_success_message(message: impl Into<String>) {
+    let message = message.into();
+    diagnostics::log_info(format!("ui success: {}", message));
     let mut state = lifecycle_state()
         .lock()
         .expect("output lifecycle state mutex poisoned");
-    state.success_message = Some(message.into());
+    state.success_message = Some(message);
 }
 
 /// Add a next step to print at command exit (human mode) and include in structured output.
 pub fn add_next_step(step: impl Into<String>) {
+    let step = step.into();
+    diagnostics::log_debug(format!("ui next step: {}", step));
     let mut state = lifecycle_state()
         .lock()
         .expect("output lifecycle state mutex poisoned");
-    state.next_steps.push(step.into());
+    state.next_steps.push(step);
 }
 
 /// Take and clear the success message.

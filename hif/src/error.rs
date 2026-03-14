@@ -99,6 +99,12 @@ pub enum MicError {
     #[error("HTTP error: {0}")]
     HttpError(String),
 
+    #[error("No diagnostics session found. Run a hif command first.")]
+    NoDiagnosticsSession,
+
+    #[error("Diagnostics session not found: {0}")]
+    DiagnosticsSessionNotFound(String),
+
     // =========================================================================
     // Wrapped errors
     // =========================================================================
@@ -155,6 +161,8 @@ impl MicError {
             // Network
             MicError::GrpcError(_) => "grpc_error",
             MicError::HttpError(_) => "http_error",
+            MicError::NoDiagnosticsSession => "no_diagnostics_session",
+            MicError::DiagnosticsSessionNotFound(_) => "diagnostics_session_not_found",
 
             // Wrapped
             MicError::Io(_) => "io_error",

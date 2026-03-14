@@ -58,6 +58,7 @@ impl GrpcClient {
         auth_token: Option<&str>,
     ) -> Result<Vec<u8>> {
         let url = format!("{}{}", self.endpoint.url(), method);
+        let rpc_method = method.to_string();
         let request = request.to_vec();
         let auth_token = auth_token.map(|s| s.to_string());
 
@@ -69,8 +70,12 @@ impl GrpcClient {
             let request = request.clone();
             let auth_token = auth_token.clone();
             let client = client.clone();
+            let rpc_method = rpc_method.clone();
 
-            async move { Self::do_unary_call(&client, &url, &request, auth_token.as_deref()).await }
+            async move {
+                Self::do_unary_call(&client, &url, &rpc_method, &request, auth_token.as_deref())
+                    .await
+            }
         })
         .await
     }
@@ -88,6 +93,7 @@ impl GrpcClient {
     async fn do_unary_call(
         client: &reqwest::Client,
         url: &str,
+        rpc_method: &str,
         request: &[u8],
         auth_token: Option<&str>,
     ) -> Result<Vec<u8>> {
@@ -113,9 +119,58 @@ impl GrpcClient {
         body.extend_from_slice(&(request.len() as u32).to_be_bytes());
         body.extend_from_slice(request);
 
-        let resp = client.post(url).headers(headers).body(body).send().await?;
+        let started_at = crate::diagnostics::timestamp_now();
+        let started = std::time::Instant::now();
+        let request_headers = crate::diagnostics::header_pairs(&headers);
+        let request_body = crate::diagnostics::capture_binary_body(&body, "application/grpc+proto");
+        let request_body_bytes = body.clone();
+
+        let resp = match client
+            .post(url)
+            .headers(headers)
+            .body(body.clone())
+            .send()
+            .await
+        {
+            Ok(response) => response,
+            Err(error) => {
+                crate::diagnostics::record_network_exchange(crate::diagnostics::NetworkExchange {
+                    kind: "grpc",
+                    started_at: started_at.clone(),
+                    duration: started.elapsed(),
+                    method: "POST".to_string(),
+                    url: url.to_string(),
+                    http_version: None,
+                    request_headers: request_headers.clone(),
+                    request_body: Some(request_body.clone()),
+                    response_status: 0,
+                    response_status_text: "request failed".to_string(),
+                    response_headers: Vec::new(),
+                    response_body: None,
+                    error: Some(error.to_string()),
+                });
+                crate::diagnostics::record_grpc_exchange(crate::diagnostics::GrpcExchange {
+                    started_at: crate::diagnostics::timestamp_now(),
+                    duration: started.elapsed(),
+                    method: rpc_method.to_string(),
+                    url: url.to_string(),
+                    http_version: None,
+                    http_status: 0,
+                    request_headers: request_headers.clone(),
+                    response_headers: Vec::new(),
+                    grpc_status: None,
+                    grpc_message: None,
+                    request_body: request_body_bytes.clone(),
+                    response_body: None,
+                    error: Some(error.to_string()),
+                });
+                return Err(error.into());
+            }
+        };
 
         let status = resp.status();
+        let http_version = crate::diagnostics::http_version_label(resp.version());
+        let response_headers = crate::diagnostics::header_pairs(resp.headers());
         let grpc_status = resp
             .headers()
             .get("grpc-status")
@@ -129,12 +184,86 @@ impl GrpcClient {
             .map(str::trim)
             .map(str::to_string);
 
+        let response_body = match resp.bytes().await {
+            Ok(body) => body,
+            Err(error) => {
+                crate::diagnostics::record_network_exchange(crate::diagnostics::NetworkExchange {
+                    kind: "grpc",
+                    started_at: started_at.clone(),
+                    duration: started.elapsed(),
+                    method: "POST".to_string(),
+                    url: url.to_string(),
+                    http_version: Some(http_version.clone()),
+                    request_headers: request_headers.clone(),
+                    request_body: Some(request_body.clone()),
+                    response_status: status.as_u16(),
+                    response_status_text: status
+                        .canonical_reason()
+                        .unwrap_or("gRPC response")
+                        .to_string(),
+                    response_headers: response_headers.clone(),
+                    response_body: None,
+                    error: Some(error.to_string()),
+                });
+                crate::diagnostics::record_grpc_exchange(crate::diagnostics::GrpcExchange {
+                    started_at: started_at.clone(),
+                    duration: started.elapsed(),
+                    method: rpc_method.to_string(),
+                    url: url.to_string(),
+                    http_version: Some(http_version),
+                    http_status: status.as_u16(),
+                    request_headers: request_headers.clone(),
+                    response_headers: response_headers.clone(),
+                    grpc_status: grpc_status.clone(),
+                    grpc_message: grpc_message.clone(),
+                    request_body: request_body_bytes.clone(),
+                    response_body: None,
+                    error: Some(error.to_string()),
+                });
+                return Err(error.into());
+            }
+        };
+        let captured_response_body =
+            crate::diagnostics::capture_binary_body(&response_body, "application/grpc+proto");
+
+        crate::diagnostics::record_network_exchange(crate::diagnostics::NetworkExchange {
+            kind: "grpc",
+            started_at: started_at.clone(),
+            duration: started.elapsed(),
+            method: "POST".to_string(),
+            url: url.to_string(),
+            http_version: Some(http_version.clone()),
+            request_headers: request_headers.clone(),
+            request_body: Some(request_body),
+            response_status: status.as_u16(),
+            response_status_text: status
+                .canonical_reason()
+                .unwrap_or("gRPC response")
+                .to_string(),
+            response_headers: response_headers.clone(),
+            response_body: Some(captured_response_body),
+            error: None,
+        });
+        crate::diagnostics::record_grpc_exchange(crate::diagnostics::GrpcExchange {
+            started_at: started_at.clone(),
+            duration: started.elapsed(),
+            method: rpc_method.to_string(),
+            url: url.to_string(),
+            http_version: Some(http_version),
+            http_status: status.as_u16(),
+            request_headers,
+            response_headers,
+            grpc_status: grpc_status.clone(),
+            grpc_message: grpc_message.clone(),
+            request_body: request_body_bytes,
+            response_body: Some(response_body.to_vec()),
+            error: None,
+        });
+
         // Check if we should retry
         if is_retryable_error(status) {
             return Err(MicError::GrpcError(format!("Retryable error: {}", status)));
         }
-
-        let response_body = resp.bytes().await?;
 
         if let Some(code) = grpc_status.as_deref() {
             if code != "0" {

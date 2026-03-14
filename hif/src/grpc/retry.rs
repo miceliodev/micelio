@@ -67,11 +67,10 @@ where
                     return Err(e);
                 }
 
-                // Log retry attempt
-                eprintln!(
-                    "warning: retry {}/{} after error: {}",
+                crate::diagnostics::log_warn(format!(
+                    "retry {}/{} after error: {}",
                     attempt, config.max_retries, e
-                );
+                ));
 
                 // Wait before retrying
                 sleep(backoff).await;

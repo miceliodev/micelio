@@ -203,6 +203,11 @@ hif session abandon                    # Discard session
 
 # Sync
 hif sync                               # Pull latest from forge
+
+# Diagnostics
+hif debug latest                       # Inspect the latest diagnostics session
+hif debug requests                     # Summarize persisted network requests
+hif debug grpc                         # Inspect persisted gRPC message captures
 ```
 
 ### hif CLI Global Options
@@ -212,6 +217,7 @@ hif sync                               # Pull latest from forge
 - `--verbose` / `-v` - Show additional details
 - `--no-color` - Disable colored output (also respects `NO_COLOR`)
 - `--cwd` / `-C` - Run as if started in a different directory
+- `--usage-spec` - Output the hidden `usage` KDL spec generated from the clap CLI definition
 
 ### Importing from Git
 
