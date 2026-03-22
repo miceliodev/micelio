@@ -1,33 +1,31 @@
-//! Mount command - mount repository as virtual filesystem.
-//!
-//! This command currently creates a local mirror from forge content.
-#![allow(dead_code)]
+//! Mount command - expose a lazy workspace through the local filesystem.
 
 use crate::cli::{parse_repository_ref, MountCommand};
 use crate::config::Config;
 use crate::error::{MicError, Result};
-use crate::grpc::hif_v1::{call, pb, repository_ref};
 use crate::grpc::{Endpoint, GrpcClient};
+use crate::mountfs;
 use crate::output;
 use serde::Serialize;
 use std::fs;
-use std::path::PathBuf;
-
-/// Default NFS port.
-pub const DEFAULT_PORT: u16 = 20490;
+use std::path::{Path, PathBuf};
+use std::time::Duration;
 
 #[derive(Serialize)]
 pub(crate) struct MountOutput {
     account: String,
     repository: String,
     path: PathBuf,
-    synced_files: usize,
+    available_files: usize,
     revision: String,
+    mode: &'static str,
 }
 
 /// Run the mount command.
 pub async fn run(cmd: MountCommand) -> Result<()> {
-    let (organization, repository) = parse_repository_ref(&cmd.repository).ok_or_else(|| {
+    ensure_supported_platform()?;
+
+    let (account, repository) = parse_repository_ref(&cmd.repository).ok_or_else(|| {
         MicError::InvalidRepositoryRef(format!(
             "Invalid repository reference '{}'. Use format: account/repository",
             cmd.repository
@@ -42,211 +40,133 @@ pub async fn run(cmd: MountCommand) -> Result<()> {
 
     let mount_path = cmd.path.clone().unwrap_or_else(|| repository.to_string());
     let mount_path = PathBuf::from(&mount_path);
+    prepare_mount_path(&mount_path)?;
 
     if !json_output {
         output::ui_line(format!(
             "Mounting {}/{} at {}",
-            organization,
+            account,
             repository,
             mount_path.display()
         ));
     }
 
-    if !mount_path.exists() {
-        fs::create_dir_all(&mount_path)?;
+    let tree = mountfs::fetch_remote_tree(&client, account, repository).await?;
+    let state_dir = mountfs::create_state_dir()?;
+    let mut info = mountfs::persist_mount_state(
+        &state_dir,
+        &server,
+        account,
+        repository,
+        &mount_path,
+        cmd.port,
+        &tree,
+    )?;
+
+    let cleanup_result = async {
+        let child = mountfs::spawn_mount_server(&state_dir)?;
+        info.server_pid = Some(child.id());
+        mountfs::persist_mount_info(&state_dir, &info)?;
+        let ready = mountfs::wait_for_ready(&state_dir, Duration::from_secs(10))?;
+        info.server_pid = Some(ready.pid);
+        mountfs::persist_mount_info(&state_dir, &info)?;
+
+        let url = format!("http://127.0.0.1:{}/", ready.port);
+        let activation = mountfs::mount_workspace(&url, &mount_path)?;
+        info.mount_kind = activation.kind;
+        info.mount_source = activation.mount_source;
+        info.link_target = activation.link_target;
+        mountfs::persist_mount_info(&state_dir, &info)?;
+        Ok::<(), MicError>(())
+    }
+    .await;
+
+    if let Err(error) = cleanup_result {
+        let _ = mountfs::stop_mount_server(&info);
+        let _ = fs::remove_dir_all(&state_dir);
+        return Err(error);
     }
 
-    let (tree, revision_hash) = fetch_tree(&client, organization, repository).await?;
-    let file_count = sync_tree(
-        &client,
-        organization,
-        repository,
-        &revision_hash,
-        &tree,
-        &mount_path,
-        json_output,
-    )
-    .await?;
-
-    write_mount_metadata(&mount_path, &server, organization, repository)?;
-
+    let revision = encode_hex(&tree.revision_hash);
     if json_output {
-        let revision = revision_hash
-            .iter()
-            .map(|byte| format!("{:02x}", byte))
-            .collect::<String>();
-
         output::print_ok(
             "mount",
             MountOutput {
-                account: organization.to_string(),
+                account: account.to_string(),
                 repository: repository.to_string(),
                 path: mount_path,
-                synced_files: file_count,
+                available_files: tree.entries.len(),
                 revision,
+                mode: "lazy",
             },
         )?;
     } else {
         output::set_success_message(format!(
-            "Mounted '{}/{}' at '{}'. Synced {} file(s).",
-            organization,
+            "Mounted lazy workspace '{}/{}' at '{}'.",
+            account,
             repository,
-            mount_path.display(),
-            file_count
+            mount_path.display()
         ));
-        output::warn("Local mirror only; changes are not auto-landed.");
-        output::add_next_step("hif session land");
+        output::add_next_step(format!("cd {}", mount_path.display()));
+        output::add_next_step(format!("hif unmount {}", mount_path.display()));
     }
 
     Ok(())
 }
 
-/// Tree entry for mounting.
-struct MountEntry {
-    path: String,
-    hash: String,
-}
+fn ensure_supported_platform() -> Result<()> {
+    if cfg!(target_os = "macos") || cfg!(target_os = "linux") || cfg!(windows) {
+        return Ok(());
+    }
 
-/// Fetch the tree from the forge.
-async fn fetch_tree(
-    client: &GrpcClient,
-    organization: &str,
-    repository: &str,
-) -> Result<(Vec<MountEntry>, Vec<u8>)> {
-    let repository = repository_ref(organization, repository);
-    let head: pb::RepositoryHeadResponse = call(
-        client,
-        "/hif.v1.VersioningService/GetRepositoryHead",
-        &pb::GetRepositoryHeadRequest {
-            repository: Some(repository.clone()),
-        },
-    )
-    .await?;
-
-    let revision_hash = head
-        .head
-        .as_ref()
-        .map(|value| value.hash.clone())
-        .unwrap_or_default();
-    let tree: pb::TreeResponse = call(
-        client,
-        "/hif.v1.ContentService/GetTree",
-        &pb::GetTreeRequest {
-            repository: Some(repository),
-            revision_hash: revision_hash.clone(),
-        },
-    )
-    .await?;
-
-    Ok((
-        tree.entries
-            .into_iter()
-            .map(|entry| MountEntry {
-                path: entry.path,
-                hash: entry.hash,
-            })
-            .collect::<Vec<_>>(),
-        revision_hash,
+    Err(MicError::Other(
+        "Lazy mount currently supports macOS, Linux, and Windows.".to_string(),
     ))
 }
 
-/// Sync the tree to the local filesystem.
-async fn sync_tree(
-    client: &GrpcClient,
-    organization: &str,
-    repository: &str,
-    revision_hash: &[u8],
-    tree: &[MountEntry],
-    mount_path: &PathBuf,
-    json_output: bool,
-) -> Result<usize> {
-    let mut synced = 0;
-
-    for entry in tree {
-        let file_path = mount_path.join(&entry.path);
-        if let Some(parent) = file_path.parent() {
-            if !parent.exists() {
-                fs::create_dir_all(parent)?;
-            }
+fn prepare_mount_path(path: &Path) -> Result<()> {
+    if path.exists() {
+        if !path.is_dir() {
+            return Err(MicError::Other(format!(
+                "Mount path must be a directory: {}",
+                path.display()
+            )));
         }
 
-        let content =
-            fetch_file(client, organization, repository, &entry.path, revision_hash).await?;
-
-        let should_write = match fs::read(&file_path) {
-            Ok(existing) => existing != content,
-            Err(_) => true,
-        };
-
-        if should_write {
-            fs::write(&file_path, &content)?;
-            synced += 1;
-            if !json_output {
-                output::ui_line(format!("  {} ({})", entry.path, entry.hash));
-            }
+        if fs::read_dir(path)?.next().is_some() {
+            return Err(MicError::Other(format!(
+                "Mount path must be empty before mounting: {}",
+                path.display()
+            )));
         }
+
+        return Ok(());
     }
 
-    Ok(synced)
-}
-
-/// Fetch a file's content.
-async fn fetch_file(
-    client: &GrpcClient,
-    organization: &str,
-    repository: &str,
-    path: &str,
-    revision_hash: &[u8],
-) -> Result<Vec<u8>> {
-    let response: pb::PathResponse = call(
-        client,
-        "/hif.v1.ContentService/GetPath",
-        &pb::GetPathRequest {
-            repository: Some(repository_ref(organization, repository)),
-            revision_hash: revision_hash.to_vec(),
-            path: path.to_string(),
-        },
-    )
-    .await?;
-
-    Ok(response.content)
-}
-
-/// Create a .hif directory in the mount path with repository metadata.
-fn write_mount_metadata(
-    mount_path: &PathBuf,
-    server: &str,
-    organization: &str,
-    repository: &str,
-) -> Result<()> {
-    use crate::workspace::{WorkspaceManifest, HIF_DIR, MANIFEST_FILE};
-
-    let hif_dir = mount_path.join(HIF_DIR);
-    if !hif_dir.exists() {
-        fs::create_dir_all(&hif_dir)?;
-    }
-
-    let manifest = WorkspaceManifest::new(server, organization, repository);
-    let manifest_path = hif_dir.join(MANIFEST_FILE);
-    manifest.save_to(&manifest_path)?;
-
+    fs::create_dir_all(path)?;
     Ok(())
+}
+
+fn encode_hex(bytes: &[u8]) -> String {
+    bytes
+        .iter()
+        .map(|byte| format!("{:02x}", byte))
+        .collect::<String>()
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::commands::ui_test_support::assert_output_snapshot_with_setup;
+    use super::prepare_mount_path;
+    use tempfile::tempdir;
 
     #[test]
-    fn ui_snapshot_mount_requires_auth() {
-        assert_output_snapshot_with_setup(
-            &["mount", "acme/repo", "--path", "/tmp/hif-ui-snapshot-mount"],
-            1,
-            "Mounting acme/repo at /tmp/hif-ui-snapshot-mount\n",
-            "error: Not authenticated. Run 'hif auth login' first.\n",
-            |_home, _cwd| {
-                let _ = std::fs::remove_dir_all("/tmp/hif-ui-snapshot-mount");
-            },
-        );
+    fn prepare_mount_path_rejects_non_empty_directory() {
+        let dir = tempdir().unwrap();
+        std::fs::write(dir.path().join("README.md"), "hello").unwrap();
+
+        let error = prepare_mount_path(dir.path()).unwrap_err();
+        assert!(error
+            .to_string()
+            .contains("Mount path must be empty before mounting"));
     }
 }

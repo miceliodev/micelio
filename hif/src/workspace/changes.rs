@@ -3,9 +3,9 @@
 //! Detects changes between the workspace manifest and the actual files on disk.
 #![allow(dead_code)]
 
-use crate::core::hash;
 use crate::error::Result;
 use crate::workspace::{is_safe_path, WorkspaceManifest};
+use sha2::{Digest, Sha256};
 use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -85,7 +85,7 @@ pub fn collect_changes(
         if let Some(known_hash) = known_files.remove(&relative) {
             // File exists in manifest - check if modified
             let content = fs::read(file_path)?;
-            let current_hash = hash::format_hex(&hash::hash_blob(&content));
+            let current_hash = micelio_blob_hash_hex(&content);
 
             if current_hash != known_hash {
                 changes.push(WorkspaceChange {
@@ -181,6 +181,7 @@ impl IgnorePatterns {
                 "node_modules".to_string(),
                 "node_modules/".to_string(),
                 ".DS_Store".to_string(),
+                "._*".to_string(),
                 "*.swp".to_string(),
                 "*~".to_string(),
             ],
@@ -219,6 +220,17 @@ fn matches_pattern(path: &str, pattern: &str) -> bool {
     }
 
     // Glob pattern with *
+    if pattern.ends_with('*') {
+        let prefix = &pattern[..pattern.len() - 1];
+        if path.starts_with(prefix)
+            || path
+                .split('/')
+                .any(|component| component.starts_with(prefix))
+        {
+            return true;
+        }
+    }
+
     if pattern.starts_with('*') {
         let suffix = &pattern[1..];
         if path.ends_with(suffix) {
@@ -254,6 +266,12 @@ fn load_ignore_patterns(workspace_root: &Path) -> IgnorePatterns {
     patterns
 }
 
+fn micelio_blob_hash_hex(content: &[u8]) -> String {
+    let mut hasher = Sha256::new();
+    hasher.update(content);
+    format!("{:x}", hasher.finalize())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -275,6 +293,7 @@ mod tests {
         assert!(ignore.is_ignored(".git"));
         assert!(ignore.is_ignored("node_modules"));
         assert!(ignore.is_ignored("test.swp"));
+        assert!(ignore.is_ignored("src/._main.rs"));
 
         assert!(!ignore.is_ignored("src/main.rs"));
         assert!(!ignore.is_ignored("README.md"));
@@ -286,6 +305,7 @@ mod tests {
         assert!(matches_pattern(".git/config", ".git/"));
         assert!(matches_pattern("test.swp", "*.swp"));
         assert!(matches_pattern("path/to/.DS_Store", ".DS_Store"));
+        assert!(matches_pattern("src/._main.rs", "._*"));
 
         assert!(!matches_pattern("src/main.rs", ".git"));
         assert!(!matches_pattern("test.txt", "*.swp"));

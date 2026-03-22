@@ -309,6 +309,7 @@ EXAMPLES:
 
 NOTES:
     Without --local, this command requires remote SearchService support.
+    Public repositories can be searched without logging in.
 ")]
     Grep(GrepCommand),
 
@@ -348,6 +349,10 @@ EXAMPLES:
     /// Mount repository as virtual filesystem (experimental)
     #[command(hide = true)]
     Mount(MountCommand),
+
+    /// Internal lazy mount WebDAV server
+    #[command(name = "mount-serve", hide = true)]
+    MountServe(MountServeCommand),
 
     /// Unmount a mounted repository
     #[command(hide = true)]
@@ -708,9 +713,16 @@ pub struct MountCommand {
     /// Mount point directory
     #[arg(short, long, env = "HIF_MOUNT_PATH")]
     pub path: Option<String>,
-    /// NFS port
+    /// Local lazy-mount server port
     #[arg(short = 'P', long, default_value = "20490", env = "HIF_MOUNT_PORT")]
     pub port: u16,
+}
+
+#[derive(Parser, Debug)]
+pub struct MountServeCommand {
+    /// State directory for the mount server.
+    #[arg(long, hide = true)]
+    pub state_dir: std::path::PathBuf,
 }
 
 #[derive(Parser, Debug)]
@@ -874,7 +886,7 @@ pub fn generate_help_json() -> serde_json::Value {
                     "--local": "Fallback to local grep when remote fails",
                     "-n, --limit": "Maximum matches"
                 },
-                "requires_auth": true
+                "requires_auth": false
             },
             "log": {
                 "description": "Show session history",
@@ -1461,7 +1473,7 @@ pub fn generate_docs() -> serde_json::Value {
                     {"command": "hif grep acme/myapp \"fn\\\\s+main\" --regex", "description": "Regex search"},
                     {"command": "hif grep acme/myapp \"TODO\" --local", "description": "Use local fallback on remote failure"}
                 ],
-                "notes": "Uses forge search index by default and supports local fallback with --local."
+                "notes": "Uses forge search index by default, supports anonymous access to public repositories, and falls back locally with --local."
             },
             {
                 "name": "log",

@@ -41,6 +41,7 @@ mod diagnostics;
 mod error;
 mod grpc;
 mod http_client;
+mod mountfs;
 mod output;
 mod workspace;
 
@@ -405,6 +406,7 @@ fn command_name(command: &Commands) -> &'static str {
         Commands::Blame(_) => "blame",
         Commands::Diff(_) => "diff",
         Commands::Mount(_) => "mount",
+        Commands::MountServe(_) => "mount-serve",
         Commands::Unmount(_) => "unmount",
     }
 }
@@ -442,6 +444,7 @@ async fn run(command: Commands) -> Result<()> {
 
         // Experimental (hidden)
         Commands::Mount(cmd) => commands::mount::run(cmd).await,
+        Commands::MountServe(cmd) => mountfs::serve(cmd).await,
         Commands::Unmount(cmd) => commands::unmount::run(cmd).await,
     }
 }

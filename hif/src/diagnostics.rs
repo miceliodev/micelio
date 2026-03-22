@@ -877,7 +877,10 @@ fn resolve_latest_non_debug_session() -> Result<StoredSession> {
         }
 
         let session = load_session(&candidate)?;
-        if session.command_name.as_deref() != Some("debug") {
+        if !matches!(
+            session.command_name.as_deref(),
+            Some("debug" | "mount-serve")
+        ) {
             return Ok(session);
         }
 

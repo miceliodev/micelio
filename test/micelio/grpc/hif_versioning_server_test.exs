@@ -6,10 +6,12 @@ defmodule Micelio.GRPC.VirtualVersioningServerTest do
   alias Micelio.Accounts
   alias Micelio.GRPC.Hif.V1
   alias Micelio.GRPC.Hif.V1.VersioningService.Server, as: VersioningServer
+  alias Micelio.Mic.{Binary, Project, Tree}
   alias Micelio.OAuth
   alias Micelio.OAuth.AccessTokens
   alias Micelio.OAuth.Clients
   alias Micelio.Repositories
+  alias Micelio.Storage
 
   test "open, append conversation, append change, and get session" do
     unique = System.unique_integer([:positive])
@@ -105,6 +107,55 @@ defmodule Micelio.GRPC.VirtualVersioningServerTest do
     assert loaded.session_id == session_id
     assert length(loaded.conversation) == 1
     assert length(loaded.changes) == 1
+  end
+
+  test "get_repository_head allows anonymous reads for public repositories" do
+    unique = System.unique_integer([:positive])
+
+    {:ok, organization} =
+      Accounts.create_organization(%{
+        handle: "public-versioning-org-#{unique}",
+        name: "Public Versioning Org #{unique}"
+      })
+
+    {:ok, repository} =
+      Repositories.create_repository(%{
+        handle: "public-versioning-repo-#{unique}",
+        name: "Public Versioning Repo #{unique}",
+        organization_id: organization.id,
+        visibility: "public"
+      })
+
+    content = "lazy mount\n"
+    blob_hash = :crypto.hash(:sha256, content)
+    {:ok, _} = Storage.put(Project.blob_key(repository.id, blob_hash), content)
+
+    tree = %{"README.md" => blob_hash}
+    encoded_tree = Tree.encode(tree)
+    tree_hash = Tree.hash(encoded_tree)
+    {:ok, _} = Storage.put(Project.tree_key(repository.id, tree_hash), encoded_tree)
+
+    {:ok, _} =
+      Storage.put(
+        Project.head_key(repository.id),
+        Binary.encode_head(Binary.new_head(1, tree_hash))
+      )
+
+    response =
+      VersioningServer.get_repository_head(
+        %V1.GetRepositoryHeadRequest{
+          repository: %V1.RepositoryRef{
+            account_handle: organization.account.handle,
+            repository_handle: repository.handle
+          }
+        },
+        %Stream{http_request_headers: %{}}
+      )
+
+    assert %V1.RepositoryHeadResponse{} = response
+    assert response.head.hash == tree_hash
+    assert response.repository.account_handle == organization.account.handle
+    assert response.repository.repository_handle == repository.handle
   end
 
   defp token_stream(token) do

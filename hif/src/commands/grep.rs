@@ -3,7 +3,7 @@
 use crate::cli::{parse_repository_ref, GrepCommand};
 use crate::config::Config;
 use crate::error::{MicError, Result};
-use crate::grpc::hif_v1::{call, pb, repository_ref};
+use crate::grpc::hif_v1::{call_optional_auth, pb, repository_ref};
 use crate::grpc::{Endpoint, GrpcClient};
 use crate::output::{self, CliOutput};
 use crate::workspace::{parse_position, PositionOrLatest};
@@ -110,9 +110,12 @@ pub async fn run(cmd: GrepCommand) -> Result<()> {
         page_token: Vec::new(),
     };
 
-    let remote =
-        call::<_, pb::TextQueryResponse>(&client, "/hif.v1.SearchService/QueryText", &request)
-            .await;
+    let remote = call_optional_auth::<_, pb::TextQueryResponse>(
+        &client,
+        "/hif.v1.SearchService/QueryText",
+        &request,
+    )
+    .await;
 
     match remote {
         Ok(response) => {
@@ -312,15 +315,12 @@ fn identity_output(identity: pb::IdentityRef) -> IdentityOutput {
 
 #[cfg(test)]
 mod tests {
-    use crate::commands::ui_test_support::assert_output_snapshot;
+    use super::normalize_limit;
 
     #[test]
-    fn ui_snapshot_grep_requires_auth() {
-        assert_output_snapshot(
-            &["grep", "acme/repo", "term"],
-            1,
-            "",
-            "error: Not authenticated. Run 'hif auth login' first.\n",
-        );
+    fn normalize_limit_clamps_to_supported_range() {
+        assert_eq!(normalize_limit(0), 20);
+        assert_eq!(normalize_limit(20), 20);
+        assert_eq!(normalize_limit(999), 500);
     }
 }

@@ -112,6 +112,82 @@ defmodule Micelio.GRPC.VirtualSearchServerTest do
     assert message =~ "stale"
   end
 
+  test "query_text returns invalid argument for malformed regex" do
+    unique = System.unique_integer([:positive])
+
+    {:ok, user} =
+      Accounts.get_or_create_user_by_email("virtual-search-regex-#{unique}@example.com")
+
+    {:ok, organization} =
+      Accounts.create_organization_for_user(user, %{
+        handle: "virtual-search-regex-org-#{unique}",
+        name: "Virtual Search Regex Org #{unique}"
+      })
+
+    {:ok, repository} =
+      Repositories.create_repository(%{
+        handle: "virtual-search-regex-repo-#{unique}",
+        name: "Virtual Search Regex Repo #{unique}",
+        organization_id: organization.id,
+        visibility: "public"
+      })
+
+    file_content = "TODO: index this line\n"
+    blob_hash = :crypto.hash(:sha256, file_content)
+    {:ok, _} = Storage.put(Project.blob_key(repository.id, blob_hash), file_content)
+
+    tree = %{"src/main.txt" => blob_hash}
+    encoded_tree = Tree.encode(tree)
+    tree_hash = Tree.hash(encoded_tree)
+    {:ok, _} = Storage.put(Project.tree_key(repository.id, tree_hash), encoded_tree)
+
+    {:ok, _} =
+      Storage.put(
+        Project.head_key(repository.id),
+        Binary.encode_head(Binary.new_head(1, tree_hash))
+      )
+
+    {:ok, session} =
+      Sessions.create_session(%{
+        session_id: "virtual-search-regex-session-#{unique}",
+        goal: "Index regex content",
+        repository_id: repository.id,
+        user_id: user.id
+      })
+
+    {:ok, change} =
+      Sessions.create_session_change(%{
+        session_id: session.id,
+        file_path: "src/main.txt",
+        change_type: "added",
+        content: file_content
+      })
+
+    assert :ok =
+             SearchIndex.index_session_changes(
+               repository.id,
+               tree_hash,
+               System.system_time(:millisecond),
+               session,
+               [change]
+             )
+
+    request = %V1.TextQueryRequest{
+      repository: %V1.RepositoryRef{
+        account_handle: organization.account.handle,
+        repository_handle: repository.handle
+      },
+      query: "[",
+      regex: true,
+      limit: 20
+    }
+
+    assert {:error, %GRPC.RPCError{message: message}} =
+             SearchServer.query_text(request, token_stream(create_access_token(user)))
+
+    assert message =~ "Invalid regex"
+  end
+
   defp token_stream(token) do
     %Stream{
       http_request_headers: %{

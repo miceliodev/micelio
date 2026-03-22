@@ -186,7 +186,7 @@ hif repository list <account>
 # Working with content (no checkout needed)
 hif show <account/repository> <path>       # Read file
 hif tree <account/repository> [path]       # List directory
-hif grep <account/repository> "<query>"    # Search repository text
+hif grep <account/repository> "<query>"    # Search repository text (public repositories do not require login)
 hif log <account/repository>               # List sessions
 hif blame <account/repository> <path>      # Session attribution
 

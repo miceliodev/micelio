@@ -41,6 +41,20 @@ defmodule Micelio.GRPC.Hif.V1.SearchService.Server do
            message: "Search index is stale. Retry after index catch-up."
          }}
 
+      {:error, :index_updating} ->
+        {:error,
+         %RPCError{
+           status: Status.failed_precondition(),
+           message: "Search index is updating. Retry shortly."
+         }}
+
+      {:error, {:invalid_regex, message}} ->
+        {:error,
+         %RPCError{
+           status: Status.invalid_argument(),
+           message: "Invalid regex: #{message}"
+         }}
+
       {:error, status} ->
         {:error, status}
     end

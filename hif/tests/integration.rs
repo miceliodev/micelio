@@ -405,19 +405,6 @@ fn sync_strategy_can_come_from_env() {
 // =============================================================================
 
 #[test]
-fn mount_requires_auth() {
-    let temp_dir = tempfile::tempdir().unwrap();
-    let mount_dir = temp_dir.path().join("mount-target");
-
-    hif()
-        .env("HIF_HOME", temp_dir.path())
-        .args(["mount", "acme/repo", "--path", mount_dir.to_str().unwrap()])
-        .assert()
-        .failure()
-        .stderr(predicate::str::contains("Not authenticated"));
-}
-
-#[test]
 fn mount_invalid_repository_ref() {
     let temp_dir = tempfile::tempdir().unwrap();
 
@@ -427,27 +414,6 @@ fn mount_invalid_repository_ref() {
         .assert()
         .failure()
         .stderr(predicate::str::contains("Invalid repository"));
-}
-
-#[test]
-fn mount_json_format_requires_auth() {
-    let temp_dir = tempfile::tempdir().unwrap();
-    let mount_dir = temp_dir.path().join("mount-target");
-
-    hif()
-        .env("HIF_HOME", temp_dir.path())
-        .args([
-            "--format",
-            "json",
-            "mount",
-            "acme/repo",
-            "--path",
-            mount_dir.to_str().unwrap(),
-        ])
-        .assert()
-        .failure()
-        .stderr(predicate::str::contains(r#""status": "error""#))
-        .stderr(predicate::str::contains("not_authenticated"));
 }
 
 // =============================================================================

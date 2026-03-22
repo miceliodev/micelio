@@ -19,9 +19,8 @@ defmodule Micelio.GRPC.Hif.V1.VersioningService.Server do
 
   def get_repository_head(%V1.GetRepositoryHeadRequest{} = request, stream) do
     with :ok <- require_repository_ref(request.repository),
-         {:ok, user} <- fetch_user(stream),
          {:ok, organization, repository} <- load_repository(request.repository),
-         true <- Accounts.user_in_organization?(user, organization.id),
+         :ok <- authorize_repository_read(organization, repository, stream),
          {:ok, head, etag} <- fetch_head(repository.id) do
       %V1.RepositoryHeadResponse{
         repository: repository_ref(organization, repository),
@@ -29,7 +28,6 @@ defmodule Micelio.GRPC.Hif.V1.VersioningService.Server do
         head_etag: etag
       }
     else
-      false -> {:error, forbidden_status("You do not have access to this organization.")}
       nil -> {:error, not_found_status("Repository not found.")}
       {:error, status} -> {:error, status}
     end
@@ -38,9 +36,8 @@ defmodule Micelio.GRPC.Hif.V1.VersioningService.Server do
   def get_head_at(%V1.GetHeadAtRequest{} = request, stream) do
     with :ok <- require_repository_ref(request.repository),
          :ok <- require_hash(request.revision_hash, "revision_hash"),
-         {:ok, user} <- fetch_user(stream),
          {:ok, organization, repository} <- load_repository(request.repository),
-         true <- Accounts.user_in_organization?(user, organization.id),
+         :ok <- authorize_repository_read(organization, repository, stream),
          {:ok, head, etag} <- fetch_head_by_revision_hash(repository.id, request.revision_hash) do
       %V1.RepositoryHeadResponse{
         repository: repository_ref(organization, repository),
@@ -48,7 +45,6 @@ defmodule Micelio.GRPC.Hif.V1.VersioningService.Server do
         head_etag: etag
       }
     else
-      false -> {:error, forbidden_status("You do not have access to this organization.")}
       nil -> {:error, not_found_status("Repository not found.")}
       {:error, status} -> {:error, status}
     end
@@ -637,6 +633,27 @@ defmodule Micelio.GRPC.Hif.V1.VersioningService.Server do
     fetch_user_from_token(stream)
   end
 
+  defp authorize_repository_read(organization, repository, stream) do
+    if repository.visibility == "public" do
+      if require_auth_token?(stream) do
+        case fetch_user(stream) do
+          {:ok, _user} -> :ok
+          {:error, status} -> {:error, status}
+        end
+      else
+        :ok
+      end
+    else
+      with {:ok, user} <- fetch_user(stream),
+           true <- Accounts.user_in_organization?(user, organization.id) do
+        :ok
+      else
+        false -> {:error, forbidden_status("You do not have access to this organization.")}
+        {:error, status} -> {:error, status}
+      end
+    end
+  end
+
   defp fetch_user_from_token(stream) do
     with {:ok, token} <- fetch_bearer_token(stream),
          %Boruta.Oauth.Token{} = access_token <- AccessTokens.get_by(value: token),
@@ -655,6 +672,23 @@ defmodule Micelio.GRPC.Hif.V1.VersioningService.Server do
       _ -> {:error, :no_token}
     end
   end
+
+  defp require_auth_token? do
+    config = Application.get_env(:micelio, Micelio.GRPC, [])
+    Keyword.get(config, :require_auth_token, false)
+  end
+
+  defp require_auth_token?(stream) when is_map(stream) do
+    headers = Map.get(stream, :http_request_headers) || %{}
+
+    case Map.get(headers, "x-micelio-require-auth") do
+      "true" -> true
+      "false" -> false
+      _ -> require_auth_token?()
+    end
+  end
+
+  defp require_auth_token?(_stream), do: require_auth_token?()
 
   defp require_repository_ref(%V1.RepositoryRef{} = repository_ref) do
     with :ok <-
