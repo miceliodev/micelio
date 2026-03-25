@@ -31,7 +31,7 @@ defmodule Micelio.Mic.RollupScheduler do
     lookback = Keyword.get(config, :lookback_positions, @default_lookback)
 
     if enabled do
-      send(self(), :run)
+      Process.send_after(self(), :run, interval_ms)
       {:ok, %{interval_ms: interval_ms, lookback: lookback}}
     else
       {:ok, %{interval_ms: interval_ms, lookback: lookback, disabled: true}}
