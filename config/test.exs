@@ -2,6 +2,12 @@ import Config
 
 test_partition = System.get_env("MIX_TEST_PARTITION")
 
+dev_instance_suffix =
+  case File.read(Path.join(File.cwd!(), ".micelio-dev-instance")) do
+    {:ok, content} -> content |> String.trim() |> String.to_integer()
+    {:error, _} -> nil
+  end
+
 # Configure your database
 #
 # The MIX_TEST_PARTITION environment variable can be used
@@ -30,11 +36,11 @@ config :micelio, Micelio.Repo,
   username: "postgres",
   password: "postgres",
   hostname: "localhost",
-  database: System.get_env("MICELIO_TEST_POSTGRES_DB") || "micelio_test#{test_partition}",
+  database: if(dev_instance_suffix, do: "micelio_test#{test_partition}_#{dev_instance_suffix}", else: "micelio_test#{test_partition}"),
   pool: Ecto.Adapters.SQL.Sandbox,
   pool_size: System.schedulers_online() * 2
 
-test_port = String.to_integer(System.get_env("MICELIO_TEST_PORT") || "4002")
+test_port = if(dev_instance_suffix, do: 4002 + dev_instance_suffix, else: 4002)
 
 config :micelio, MicelioWeb.Endpoint,
   http: [ip: {127, 0, 0, 1}, port: test_port],
