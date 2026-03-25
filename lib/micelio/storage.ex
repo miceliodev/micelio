@@ -393,14 +393,12 @@ defmodule Micelio.Storage do
     scoped_key = apply_repository_key_prefix(key, repository)
 
     scoped_opts =
-      if Keyword.has_key?(opts, :repository) or Keyword.has_key?(opts, :repository_id) do
+      if repository do
         opts
+        |> Keyword.delete(:repository_id)
+        |> Keyword.put(:repository, repository)
       else
-        if repository do
-          Keyword.put_new(opts, :repository, repository)
-        else
-          opts
-        end
+        opts
       end
 
     {scoped_key, scoped_opts}

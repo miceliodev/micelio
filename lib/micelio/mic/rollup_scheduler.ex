@@ -49,7 +49,7 @@ defmodule Micelio.Mic.RollupScheduler do
   defp rebuild_recent_rollups(%{lookback: lookback}) do
     Repositories.list_repositories()
     |> Enum.each(fn repository ->
-      storage_opts = [repository_id: repository.id]
+      storage_opts = [repository: repository]
 
       case RollupRebuilder.head_position(repository.id, storage_opts) do
         {:ok, position} ->
