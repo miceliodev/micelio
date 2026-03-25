@@ -49,10 +49,12 @@ defmodule Micelio.Mic.RollupScheduler do
   defp rebuild_recent_rollups(%{lookback: lookback}) do
     Repositories.list_repositories()
     |> Enum.each(fn repository ->
-      case RollupRebuilder.head_position(repository.id) do
+      storage_opts = [repository_id: repository.id]
+
+      case RollupRebuilder.head_position(repository.id, storage_opts) do
         {:ok, position} ->
           from_position = max(1, position - lookback + 1)
-          _ = RollupRebuilder.rebuild(repository.id, from_position, position)
+          _ = RollupRebuilder.rebuild(repository.id, from_position, position, storage_opts)
 
         {:error, reason} ->
           Logger.debug("mic.rollup_scheduler error=#{inspect(reason)} project=#{repository.id}")
