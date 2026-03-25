@@ -30,12 +30,14 @@ config :micelio, Micelio.Repo,
   username: "postgres",
   password: "postgres",
   hostname: "localhost",
-  database: "micelio_test#{test_partition}",
+  database: System.get_env("MICELIO_TEST_POSTGRES_DB") || "micelio_test#{test_partition}",
   pool: Ecto.Adapters.SQL.Sandbox,
   pool_size: System.schedulers_online() * 2
 
+test_port = String.to_integer(System.get_env("MICELIO_TEST_PORT") || "4002")
+
 config :micelio, MicelioWeb.Endpoint,
-  http: [ip: {127, 0, 0, 1}, port: 4002],
+  http: [ip: {127, 0, 0, 1}, port: test_port],
   secret_key_base: "7CasJHWDMv4jqFHNq+m+JV10UTi5t6g4FH0RJBPjOPwTEbBg2vI/VDZknktJ4B4/",
   server: false
 

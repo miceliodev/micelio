@@ -3,6 +3,7 @@
 # DO NOT use this key in production - generate a unique key with: openssl rand -base64 32
 ENCRYPTION_KEY = "qzyRtI6urxJU7CID/s/OI9/hE6lkWGVu+g31nk6Grdg="
 _.path = ['{{config_root}}/mic/target/release/']
+_.source = "{{config_root}}/mise/utilities/dev_instance_env.sh"
 
 [tools]
 elixir = "1.19.4-otp-28"
