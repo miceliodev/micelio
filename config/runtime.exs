@@ -553,8 +553,17 @@ else
   end
 end
 
+runtime_dev_instance_suffix =
+  case File.read(Path.join(Path.dirname(__DIR__), ".micelio-dev-instance")) do
+    {:ok, content} -> content |> String.trim() |> String.to_integer()
+    {:error, _} -> nil
+  end
+
+runtime_default_port =
+  if runtime_dev_instance_suffix, do: "#{4000 + runtime_dev_instance_suffix}", else: "4000"
+
 config :micelio, MicelioWeb.Endpoint,
-  http: [port: String.to_integer(System.get_env("PORT", "4000"))]
+  http: [port: String.to_integer(System.get_env("PORT", runtime_default_port))]
 
 if config_env() == :prod do
   database_url =

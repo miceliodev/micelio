@@ -3,7 +3,7 @@ import Config
 # Read the dev instance suffix from .micelio-dev-instance file (created by mise/utilities/dev_instance_env.sh).
 # This scopes databases and ports per clone so multiple clones can run simultaneously.
 dev_instance_suffix =
-  case File.read(Path.join(File.cwd!(), ".micelio-dev-instance")) do
+  case File.read(Path.join(Path.dirname(__DIR__), ".micelio-dev-instance")) do
     {:ok, content} -> content |> String.trim() |> String.to_integer()
     {:error, _} -> nil
   end

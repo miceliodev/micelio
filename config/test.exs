@@ -3,7 +3,7 @@ import Config
 test_partition = System.get_env("MIX_TEST_PARTITION")
 
 dev_instance_suffix =
-  case File.read(Path.join(File.cwd!(), ".micelio-dev-instance")) do
+  case File.read(Path.join(Path.dirname(__DIR__), ".micelio-dev-instance")) do
     {:ok, content} -> content |> String.trim() |> String.to_integer()
     {:error, _} -> nil
   end
