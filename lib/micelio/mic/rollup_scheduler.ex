@@ -1,12 +1,12 @@
 defmodule Micelio.Mic.RollupScheduler do
   @moduledoc """
-  Periodic rollup rebuild scheduler.
+  Periodic rollup rebuild scheduler (disabled by default).
 
-  NOTE: This GenServer runs independently on every node. When scaling to
-  multiple nodes, every instance will redundantly rebuild rollups for all
-  repositories. Consider migrating to Oban (which uses Postgres advisory
-  locks for single-execution guarantees) or a distributed singleton
-  (e.g. `:global`, Horde) to avoid redundant work.
+  Rollups are built inline during landings via `RollupWorker`. This scheduler
+  exists only as a repair mechanism to rebuild rollups that were missed or
+  corrupted. Enable it explicitly via config when needed:
+
+      config :micelio, Micelio.Mic.RollupScheduler, enabled: true
   """
 
   use GenServer
@@ -26,7 +26,7 @@ defmodule Micelio.Mic.RollupScheduler do
   @impl true
   def init(_state) do
     config = Application.get_env(:micelio, __MODULE__, [])
-    enabled = Keyword.get(config, :enabled, true)
+    enabled = Keyword.get(config, :enabled, false)
     interval_ms = Keyword.get(config, :interval_ms, @default_interval_ms)
     lookback = Keyword.get(config, :lookback_positions, @default_lookback)
 
