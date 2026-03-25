@@ -1,13 +1,5 @@
 import Config
 
-# Read the dev instance suffix from .micelio-dev-instance file (created by mise/utilities/dev_instance_env.sh).
-# This scopes databases and ports per clone so multiple clones can run simultaneously.
-dev_instance_suffix =
-  case File.read(Path.join(Path.dirname(__DIR__), ".micelio-dev-instance")) do
-    {:ok, content} -> content |> String.trim() |> String.to_integer()
-    {:error, _} -> nil
-  end
-
 # Reload browser tabs when matching files change.
 
 is_mix_run =
@@ -26,11 +18,7 @@ grpc_enabled =
     value -> value == "true"
   end
 
-grpc_port =
-  String.to_integer(
-    System.get_env("MICELIO_GRPC_PORT") ||
-      if(dev_instance_suffix, do: "#{50051 + dev_instance_suffix}", else: "50051")
-  )
+grpc_port = String.to_integer(System.get_env("MICELIO_GRPC_PORT") || "50051")
 
 grpc_tls_mode =
   case System.get_env("MICELIO_GRPC_TLS_MODE") do
@@ -52,7 +40,7 @@ config :micelio, Micelio.Repo,
   username: "postgres",
   password: "postgres",
   hostname: "localhost",
-  database: if(dev_instance_suffix, do: "micelio_dev_#{dev_instance_suffix}", else: "micelio_dev"),
+  database: "micelio_dev",
   stacktrace: true,
   show_sensitive_data_on_connection_error: true,
   pool_size: 10
@@ -66,10 +54,8 @@ config :micelio, Micelio.Storage,
   #
   local_path: Path.join(System.tmp_dir(), "micelio/storage")
 
-dev_port = if(dev_instance_suffix, do: 4000 + dev_instance_suffix, else: 4000)
-
 config :micelio, MicelioWeb.Endpoint,
-  http: [ip: {127, 0, 0, 1}, port: dev_port],
+  http: [ip: {127, 0, 0, 1}],
   check_origin: false,
   # Router, Controllers, LiveViews and LiveComponents
   #     mix phx.gen.cert
