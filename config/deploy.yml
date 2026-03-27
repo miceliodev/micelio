@@ -40,15 +40,13 @@ proxy:
   app_port: 4000
 
 registry:
-  server: localhost:5555
+  server: localhost:5050
 
 deploy_timeout: 600
 
 
 builder:
   arch: arm64
-  remote: ssh://root@89.167.26.150
-  local: false
   context: .
 
 env:
