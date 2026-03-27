@@ -2,7 +2,9 @@
 
 use crate::error::{MicError, Result};
 use crate::output;
-use crate::workspace::{collect_changes, session::Session, ChangeType, WorkspaceManifest};
+use crate::workspace::{
+    collect_changes, session::Session, workspace_root, ChangeType, WorkspaceManifest,
+};
 use colored::Colorize;
 use serde::Serialize;
 
@@ -40,11 +42,11 @@ pub(crate) struct StatusOutput {
 
 /// Run the status command.
 pub async fn run() -> Result<()> {
-    let cwd = std::env::current_dir()?;
     let json_output = output::use_json();
 
     // Check if we're in a workspace
     let manifest = WorkspaceManifest::load()?.ok_or(MicError::NoWorkspace)?;
+    let root = workspace_root()?;
 
     if !json_output {
         output::ui_line(format!(
@@ -55,7 +57,7 @@ pub async fn run() -> Result<()> {
     }
 
     // Get workspace changes from disk
-    let disk_changes = collect_changes(&cwd, &manifest)?;
+    let disk_changes = collect_changes(&root, &manifest)?;
 
     if json_output {
         let workspace = StatusWorkspaceOutput {

@@ -59,7 +59,11 @@ defmodule MicelioWeb.Api.SessionEventController do
   end
 
   defp authorize_session(conn, session) do
-    case Authorization.authorize(:repository_read, conn.assigns[:current_user], session.project) do
+    case Authorization.authorize(
+           :repository_read,
+           conn.assigns[:current_user],
+           session.repository
+         ) do
       :ok -> :ok
       _ -> {:error, :forbidden}
     end

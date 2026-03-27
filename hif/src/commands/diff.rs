@@ -3,7 +3,7 @@
 use crate::cli::{parse_repository_ref, DiffCommand};
 use crate::config::Config;
 use crate::error::{MicError, Result};
-use crate::grpc::hif_v1::{call, pb, repository_ref};
+use crate::grpc::hif_v1::{call_optional_auth, pb, repository_ref};
 use crate::grpc::{Endpoint, GrpcClient};
 use crate::output;
 use crate::workspace::{parse_position, PositionOrLatest};
@@ -60,7 +60,7 @@ pub async fn run(cmd: DiffCommand) -> Result<()> {
         None
     };
 
-    let response: pb::DiffResponse = call(
+    let response: pb::DiffResponse = call_optional_auth(
         &client,
         "/hif.v1.ContentService/Diff",
         &pb::DiffRequest {

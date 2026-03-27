@@ -1,21 +1,19 @@
 defmodule MicelioWeb.ThemeTokensTest do
   use ExUnit.Case, async: true
 
-  test "Turbopuffer-inspired theme colors are defined in tokens.css" do
+  test "theme colors are defined in tokens.css" do
     tokens = File.read!("assets/css/theme/tokens.css")
 
-    # Light mode colors (nature-inspired)
-    assert tokens =~ "--theme-ui-colors-background: #f8f5ef;"
-    assert tokens =~ "--theme-ui-colors-text: #1f3324;"
+    assert tokens =~ "--theme-ui-colors-background: #ffffff;"
+    assert tokens =~ "--theme-ui-colors-text: #1f2d23;"
     assert tokens =~ "--theme-ui-colors-accent: #2f7c4c;"
-    assert tokens =~ "--theme-ui-colors-border: #c6d1c4;"
+    assert tokens =~ "--theme-ui-colors-border: #d0d7ce;"
   end
 
-  test "Turbopuffer activity graph colors" do
+  test "activity graph colors are defined in tokens.css" do
     tokens = File.read!("assets/css/theme/tokens.css")
 
-    # Green activity colors
-    assert tokens =~ "--theme-ui-colors-activity-0: #e6ede4;"
+    assert tokens =~ "--theme-ui-colors-activity-0: #eaefea;"
     assert tokens =~ "--theme-ui-colors-activity-1: #bcd7b8;"
     assert tokens =~ "--theme-ui-colors-activity-2: #8abf8c;"
     assert tokens =~ "--theme-ui-colors-activity-3: #4f995d;"

@@ -7,13 +7,21 @@
 use crate::core::Bloom;
 use crate::error::{MicError, Result};
 use crate::workspace::{
-    clear_overlay, ensure_hif_dir, ensure_overlay_dir, hif_dir, is_safe_path, OVERLAY_DIR,
-    SESSION_FILE,
+    clear_overlay, ensure_hif_dir, ensure_overlay_dir, hif_dir, is_safe_path,
+    is_workspace_metadata_path, workspace_root, OVERLAY_DIR, SESSION_FILE,
 };
 use base64::Engine;
 use serde::{Deserialize, Serialize};
 use std::fs;
-use std::path::PathBuf;
+use std::io::ErrorKind;
+use std::path::{Path, PathBuf};
+use std::thread;
+use std::time::{Duration, SystemTime};
+
+const SESSION_LOCK_FILE: &str = "session.lock";
+const SESSION_LOCK_STALE_AFTER: Duration = Duration::from_secs(30);
+const SESSION_LOCK_RETRY: Duration = Duration::from_millis(10);
+const SESSION_LOCK_TIMEOUT: Duration = Duration::from_secs(2);
 
 /// Session state stored on disk.
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -37,6 +45,9 @@ pub struct SessionState {
     /// File changes.
     #[serde(default)]
     pub files: Vec<FileChange>,
+    /// Last successfully synced draft epoch.
+    #[serde(default)]
+    pub sync_epoch: u32,
     /// Base64-encoded bloom filter for path tracking.
     pub bloom_data: Option<String>,
     /// Number of hash functions used in bloom filter.
@@ -71,7 +82,7 @@ pub struct Decision {
 }
 
 /// A file change in the session.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct FileChange {
     /// File path.
     pub path: String,
@@ -111,21 +122,19 @@ impl Session {
 
     /// Save the session state.
     pub fn save(state: &SessionState) -> Result<()> {
-        ensure_hif_dir()?;
-        let path = Self::session_path()?;
-        let data = Self::serialize(state)?;
-        fs::write(&path, data)?;
-        Ok(())
+        Self::with_session_lock(|| Self::save_unlocked(state))
     }
 
     /// Delete the current session.
     pub fn delete() -> Result<()> {
-        let path = Self::session_path()?;
-        if path.exists() {
-            fs::remove_file(&path)?;
-        }
-        clear_overlay()?;
-        Ok(())
+        Self::with_session_lock(|| {
+            let path = Self::session_path()?;
+            if path.exists() {
+                fs::remove_file(&path)?;
+            }
+            clear_overlay()?;
+            Ok(())
+        })
     }
 
     /// Start a new session.
@@ -141,100 +150,154 @@ impl Session {
         goal: &str,
         session_id: &str,
     ) -> Result<SessionState> {
-        if Self::exists()? {
-            return Err(MicError::SessionAlreadyActive);
-        }
+        Self::with_session_lock(|| {
+            if Self::session_path()?.exists() {
+                return Err(MicError::SessionAlreadyActive);
+            }
 
-        let now = chrono::Utc::now().timestamp().to_string();
+            let now = chrono::Utc::now().timestamp().to_string();
 
-        // Create bloom filter for path tracking
-        let bloom = Bloom::new(1000, 0.01).unwrap();
-        let bloom_data = base64::engine::general_purpose::STANDARD.encode(bloom.serialize());
+            let bloom = Bloom::new(1000, 0.01).unwrap();
+            let bloom_data = base64::engine::general_purpose::STANDARD.encode(bloom.serialize());
 
-        let state = SessionState {
-            id: session_id.to_string(),
-            goal: goal.to_string(),
-            repository_org: org.to_string(),
-            repository_handle: repository.to_string(),
-            started_at: now,
-            conversation: Vec::new(),
-            decisions: Vec::new(),
-            files: Vec::new(),
-            bloom_data: Some(bloom_data),
-            bloom_hashes: bloom.num_hashes(),
-        };
+            let state = SessionState {
+                id: session_id.to_string(),
+                goal: goal.to_string(),
+                repository_org: org.to_string(),
+                repository_handle: repository.to_string(),
+                started_at: now,
+                conversation: Vec::new(),
+                decisions: Vec::new(),
+                files: Vec::new(),
+                sync_epoch: 0,
+                bloom_data: Some(bloom_data),
+                bloom_hashes: bloom.num_hashes(),
+            };
 
-        // Clear and create overlay directory
-        clear_overlay()?;
-        ensure_overlay_dir()?;
-
-        Self::save(&state)?;
-        Ok(state)
+            clear_overlay()?;
+            ensure_overlay_dir()?;
+            Self::save_unlocked(&state)?;
+            Ok(state)
+        })
     }
 
     /// Add a note to the current session.
     pub fn add_note(role: &str, message: &str) -> Result<()> {
-        let mut state = Self::load()?.ok_or(MicError::NoActiveSession)?;
+        Self::update_state(|state| {
+            let now = chrono::Utc::now().timestamp().to_string();
+            state.conversation.push(Conversation {
+                role: role.to_string(),
+                message: message.to_string(),
+                timestamp: now,
+            });
+            Ok(())
+        })
+    }
 
-        let now = chrono::Utc::now().timestamp().to_string();
-        state.conversation.push(Conversation {
-            role: role.to_string(),
-            message: message.to_string(),
-            timestamp: now,
-        });
-
-        Self::save(&state)?;
-        Ok(())
+    /// Add a decision to the current session.
+    pub fn add_decision(description: &str, reasoning: &str) -> Result<()> {
+        Self::update_state(|state| {
+            let now = chrono::Utc::now().timestamp().to_string();
+            state.decisions.push(Decision {
+                description: description.to_string(),
+                reasoning: reasoning.to_string(),
+                timestamp: now,
+            });
+            Ok(())
+        })
     }
 
     /// Write a file and stage the change.
     pub fn write_file(path: &str, content: &[u8]) -> Result<()> {
-        if !is_safe_path(path) {
+        if !is_safe_path(path) || is_workspace_metadata_path(path) {
             return Err(MicError::InvalidPath(path.to_string()));
         }
 
-        let mut state = Self::load()?.ok_or(MicError::NoActiveSession)?;
+        let workspace_path = workspace_file_path(path)?;
+        ensure_parent_dir(&workspace_path)?;
+        fs::write(&workspace_path, content)?;
+        Self::stage_file_change(path, Some(content), "modified")
+    }
 
-        // Write to actual file
-        ensure_parent_dir(path)?;
-        fs::write(path, content)?;
-
-        // Write to overlay
-        let overlay_path = overlay_file_path(path)?;
-        ensure_parent_dir(&overlay_path.to_string_lossy())?;
-        fs::write(&overlay_path, content)?;
-
-        // Update file changes
-        let content_str = String::from_utf8_lossy(content).to_string();
-        let change = FileChange {
-            path: path.to_string(),
-            content: content_str,
-            change_type: "modified".to_string(),
-        };
-
-        // Upsert the change
-        if let Some(existing) = state.files.iter_mut().find(|f| f.path == path) {
-            *existing = change;
-        } else {
-            state.files.push(change);
+    /// Stage a file change from the current workspace.
+    pub fn stage_file_change(path: &str, content: Option<&[u8]>, change_type: &str) -> Result<()> {
+        if !is_safe_path(path) || is_workspace_metadata_path(path) {
+            return Err(MicError::InvalidPath(path.to_string()));
         }
 
-        // Update bloom filter
-        if let Some(ref bloom_data) = state.bloom_data {
-            if let Ok(bloom_bytes) = base64::engine::general_purpose::STANDARD.decode(bloom_data) {
-                if let Some(mut bloom) = Bloom::deserialize(&bloom_bytes) {
-                    bloom.add(path);
-                    state.bloom_data =
-                        Some(base64::engine::general_purpose::STANDARD.encode(bloom.serialize()));
+        Self::update_state(|state| {
+            let content_str = match content {
+                Some(bytes) => {
+                    let overlay_path = overlay_file_path(path)?;
+                    ensure_parent_dir(&overlay_path)?;
+                    fs::write(&overlay_path, bytes)?;
+                    String::from_utf8_lossy(bytes).to_string()
                 }
+                None => {
+                    remove_overlay_file(path)?;
+                    String::new()
+                }
+            };
+
+            let change = FileChange {
+                path: path.to_string(),
+                content: content_str,
+                change_type: change_type.to_string(),
+            };
+
+            if let Some(existing) = state.files.iter_mut().find(|file| file.path == path) {
+                *existing = change;
+            } else {
+                state.files.push(change);
+            }
+
+            update_bloom(state, path);
+            Ok(())
+        })
+    }
+
+    /// Replace the session file list with the current workspace snapshot.
+    pub fn replace_file_changes(files: Vec<FileChange>) -> Result<()> {
+        for file in &files {
+            if !is_safe_path(&file.path) || is_workspace_metadata_path(&file.path) {
+                return Err(MicError::InvalidPath(file.path.clone()));
             }
         }
 
-        Self::save(&state)?;
-        Ok(())
+        Self::update_state(move |state| {
+            let previous_paths = state
+                .files
+                .iter()
+                .map(|file| file.path.clone())
+                .collect::<std::collections::HashSet<_>>();
+            let next_paths = files
+                .iter()
+                .map(|file| file.path.clone())
+                .collect::<std::collections::HashSet<_>>();
+
+            for removed_path in previous_paths.difference(&next_paths) {
+                remove_overlay_file(removed_path)?;
+            }
+
+            for file in &files {
+                sync_overlay_file(file)?;
+            }
+
+            state.files = files;
+            rebuild_bloom(state);
+            Ok(())
+        })
     }
 
-    /// Get files from the overlay for landing.
+    /// Persist the latest synced draft epoch.
+    pub fn set_sync_epoch(epoch: u32) -> Result<()> {
+        Self::update_state(|state| {
+            state.sync_epoch = epoch;
+            Ok(())
+        })
+    }
+
+    /// Get files from the overlay for landing or draft sync.
     pub fn get_overlay_files() -> Result<Vec<FileChange>> {
         let state = Self::load()?.ok_or(MicError::NoActiveSession)?;
 
@@ -275,17 +338,55 @@ impl Session {
         Ok(None)
     }
 
-    /// Serialize session state to binary.
+    /// Serialize session state to disk.
     fn serialize(state: &SessionState) -> Result<Vec<u8>> {
-        // Using JSON for simplicity - could use binary format for efficiency
-        let json = serde_json::to_vec(state)?;
-        Ok(json)
+        Ok(serde_json::to_vec(state)?)
     }
 
-    /// Deserialize session state from binary.
+    /// Deserialize session state from disk.
     fn deserialize(data: &[u8]) -> Result<SessionState> {
-        let state: SessionState = serde_json::from_slice(data)?;
-        Ok(state)
+        Ok(serde_json::from_slice(data)?)
+    }
+
+    fn update_state<F>(mutate: F) -> Result<()>
+    where
+        F: FnOnce(&mut SessionState) -> Result<()>,
+    {
+        Self::with_session_lock(|| {
+            let path = Self::session_path()?;
+            if !path.exists() {
+                return Err(MicError::NoActiveSession);
+            }
+
+            let data = fs::read(&path)?;
+            let mut state = Self::deserialize(&data)?;
+            mutate(&mut state)?;
+            Self::save_unlocked(&state)
+        })
+    }
+
+    fn save_unlocked(state: &SessionState) -> Result<()> {
+        ensure_hif_dir()?;
+        let path = Self::session_path()?;
+        let data = Self::serialize(state)?;
+        let temp_path = path.with_extension(format!("tmp.{}", std::process::id()));
+        fs::write(&temp_path, data)?;
+
+        #[cfg(windows)]
+        if path.exists() {
+            fs::remove_file(&path)?;
+        }
+
+        fs::rename(&temp_path, &path)?;
+        Ok(())
+    }
+
+    fn with_session_lock<T, F>(operation: F) -> Result<T>
+    where
+        F: FnOnce() -> Result<T>,
+    {
+        let _guard = SessionLockGuard::acquire()?;
+        operation()
     }
 }
 
@@ -300,6 +401,10 @@ fn overlay_file_path(path: &str) -> Result<PathBuf> {
     Ok(hif_dir()?.join(OVERLAY_DIR).join(path))
 }
 
+fn workspace_file_path(path: &str) -> Result<PathBuf> {
+    Ok(workspace_root()?.join(path))
+}
+
 /// Read a file from the overlay.
 fn read_overlay_file(path: &str) -> Result<Option<String>> {
     let overlay_path = overlay_file_path(path)?;
@@ -312,14 +417,123 @@ fn read_overlay_file(path: &str) -> Result<Option<String>> {
     Ok(Some(content))
 }
 
+fn sync_overlay_file(file: &FileChange) -> Result<()> {
+    match file.change_type.as_str() {
+        "deleted" => remove_overlay_file(&file.path),
+        _ => {
+            let overlay_path = overlay_file_path(&file.path)?;
+            ensure_parent_dir(&overlay_path)?;
+            fs::write(overlay_path, file.content.as_bytes())?;
+            Ok(())
+        }
+    }
+}
+
+fn remove_overlay_file(path: &str) -> Result<()> {
+    let overlay_path = overlay_file_path(path)?;
+
+    if overlay_path.exists() {
+        fs::remove_file(overlay_path)?;
+    }
+
+    Ok(())
+}
+
+fn update_bloom(state: &mut SessionState, path: &str) {
+    if let Some(ref bloom_data) = state.bloom_data {
+        if let Ok(bloom_bytes) = base64::engine::general_purpose::STANDARD.decode(bloom_data) {
+            if let Some(mut bloom) = Bloom::deserialize(&bloom_bytes) {
+                bloom.add(path);
+                state.bloom_data =
+                    Some(base64::engine::general_purpose::STANDARD.encode(bloom.serialize()));
+            }
+        }
+    }
+}
+
+fn rebuild_bloom(state: &mut SessionState) {
+    let bloom = Bloom::new(1000, 0.01).unwrap();
+
+    let bloom = state.files.iter().fold(bloom, |mut bloom, change| {
+        bloom.add(&change.path);
+        bloom
+    });
+
+    state.bloom_data = Some(base64::engine::general_purpose::STANDARD.encode(bloom.serialize()));
+    state.bloom_hashes = bloom.num_hashes();
+}
+
 /// Ensure the parent directory exists for a path.
-fn ensure_parent_dir(path: &str) -> Result<()> {
-    if let Some(parent) = std::path::Path::new(path).parent() {
+fn ensure_parent_dir(path: &Path) -> Result<()> {
+    if let Some(parent) = path.parent() {
         if !parent.as_os_str().is_empty() && !parent.exists() {
             fs::create_dir_all(parent)?;
         }
     }
     Ok(())
+}
+
+struct SessionLockGuard {
+    path: PathBuf,
+}
+
+impl SessionLockGuard {
+    fn acquire() -> Result<Self> {
+        ensure_hif_dir()?;
+        let path = hif_dir()?.join(SESSION_LOCK_FILE);
+        let start = SystemTime::now();
+
+        loop {
+            if try_create_lock(&path)? {
+                return Ok(Self { path });
+            }
+
+            if is_stale_lock(&path, SESSION_LOCK_STALE_AFTER) {
+                let _ = fs::remove_file(&path);
+                continue;
+            }
+
+            let waited = SystemTime::now().duration_since(start).unwrap_or_default();
+            if waited >= SESSION_LOCK_TIMEOUT {
+                return Err(MicError::Other(
+                    "Timed out waiting for session state lock".to_string(),
+                ));
+            }
+
+            thread::sleep(SESSION_LOCK_RETRY);
+        }
+    }
+}
+
+impl Drop for SessionLockGuard {
+    fn drop(&mut self) {
+        let _ = fs::remove_file(&self.path);
+    }
+}
+
+fn try_create_lock(path: &Path) -> Result<bool> {
+    match fs::OpenOptions::new()
+        .create_new(true)
+        .write(true)
+        .open(path)
+    {
+        Ok(mut file) => {
+            use std::io::Write;
+            writeln!(file, "{}", std::process::id())?;
+            Ok(true)
+        }
+        Err(error) if error.kind() == ErrorKind::AlreadyExists => Ok(false),
+        Err(error) => Err(error.into()),
+    }
+}
+
+fn is_stale_lock(path: &Path, stale_after: Duration) -> bool {
+    fs::metadata(path)
+        .ok()
+        .and_then(|metadata| metadata.modified().ok())
+        .and_then(|modified| SystemTime::now().duration_since(modified).ok())
+        .map(|age| age >= stale_after)
+        .unwrap_or(false)
 }
 
 #[cfg(test)]
@@ -349,6 +563,7 @@ mod tests {
             }],
             decisions: Vec::new(),
             files: Vec::new(),
+            sync_epoch: 0,
             bloom_data: None,
             bloom_hashes: 7,
         };
@@ -360,5 +575,25 @@ mod tests {
         assert_eq!(loaded.goal, state.goal);
         assert_eq!(loaded.repository_org, state.repository_org);
         assert_eq!(loaded.conversation.len(), 1);
+        assert_eq!(loaded.sync_epoch, 0);
+    }
+
+    #[test]
+    fn session_state_defaults_missing_sync_epoch() {
+        let data = br#"{
+            "id": "test-id",
+            "goal": "Test goal",
+            "repository_org": "acme",
+            "repository_handle": "app",
+            "started_at": "1234567890",
+            "conversation": [],
+            "decisions": [],
+            "files": [],
+            "bloom_data": null,
+            "bloom_hashes": 7
+        }"#;
+
+        let loaded = Session::deserialize(data).unwrap();
+        assert_eq!(loaded.sync_epoch, 0);
     }
 }

@@ -23,6 +23,7 @@ defmodule Micelio.Protocol.HifV1ContractTest do
                  "OpenSession",
                  "AppendSessionConversation",
                  "AppendSessionChange",
+                 "ReplaceSessionChanges",
                  "LandSession",
                  "AbandonSession",
                  "GetSession"
@@ -45,6 +46,7 @@ defmodule Micelio.Protocol.HifV1ContractTest do
         {"SessionOpen", "goal", "REQUIRED"},
         {"SessionOpenRequest", "repository", "REQUIRED"},
         {"SessionOpenRequest", "open", "REQUIRED"},
+        {"SessionChangesReplaceRequest", "session_id", "REQUIRED"},
         {"LandSessionRequest", "session_id", "REQUIRED"},
         {"LandSessionRequest", "finalize", "REQUIRED"}
       ]
@@ -58,6 +60,7 @@ defmodule Micelio.Protocol.HifV1ContractTest do
         {"SessionOpen", "requested_workspace", "OPTIONAL"},
         {"SessionInfo", "conversation", "OPTIONAL"},
         {"SessionInfo", "decisions", "OPTIONAL"},
+        {"SessionChangesReplaceRequest", "operations", "OPTIONAL"},
         {"TextQueryResponse", "next_page_token", "OPTIONAL"},
         {"TextQueryRequest", "page_token", "OPTIONAL"}
       ]

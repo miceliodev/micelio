@@ -408,7 +408,7 @@ defmodule MicelioWeb.Browser.ApiTryController do
                inner_hex = Base.encode16(hash, case: :lower)
                inner_prefix = String.slice(inner_hex, 0, 2)
                Storage.get("repositories/#{repository_id}/blobs/#{inner_prefix}/#{inner_hex}.bin")
-            end) do
+             end) do
           {:ok, decoded} -> {:ok, decoded}
           _ -> {:error, :not_found}
         end

@@ -58,6 +58,8 @@ bytes = "1"
 futures-util = "0.3"
 dav-server = "0.7"
 sha2 = "0.10"
+notify = "8"
+libc = "0.2"
 
 [build-dependencies]
 tonic-build = "0.12"

@@ -107,9 +107,12 @@ defmodule Micelio.GRPC.VirtualSearchServerTest do
         Binary.encode_head(Binary.new_head(2, second_tree_hash))
       )
 
-    stale = SearchServer.query_text(request, stream)
-    assert {:error, %GRPC.RPCError{message: message}} = stale
-    assert message =~ "stale"
+    # When the index is stale, the server falls back to scanning the tree.
+    fallback = SearchServer.query_text(request, stream)
+    assert %V1.TextQueryResponse{} = fallback
+    assert fallback.total == 1
+    assert length(fallback.matches) == 1
+    assert hd(fallback.matches).path == "src/second.txt"
   end
 
   test "query_text returns invalid argument for malformed regex" do

@@ -4,7 +4,7 @@
 #![allow(dead_code)]
 
 use crate::error::Result;
-use crate::workspace::{is_safe_path, WorkspaceManifest};
+use crate::workspace::{is_safe_path, is_workspace_metadata_path, WorkspaceManifest};
 use sha2::{Digest, Sha256};
 use std::collections::HashMap;
 use std::fs;
@@ -77,8 +77,7 @@ pub fn collect_changes(
             continue;
         }
 
-        // Skip .hif directory
-        if relative.starts_with(".hif") || relative.starts_with(".hif/") {
+        if is_workspace_metadata_path(&relative) {
             continue;
         }
 

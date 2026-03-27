@@ -3,7 +3,6 @@ defmodule Micelio.Authorization.ProjectVisibilityTest do
 
   alias Micelio.Accounts
   alias Micelio.Authorization
-  alias Micelio.Repositories
 
   setup do
     unique = System.unique_integer([:positive])

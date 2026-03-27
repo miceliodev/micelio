@@ -173,6 +173,14 @@ defmodule Micelio.GRPC.Hif.V1.SessionChangeAppendRequest do
   field :operation, 2, type: Micelio.GRPC.Hif.V1.FileOperation
 end
 
+defmodule Micelio.GRPC.Hif.V1.SessionChangesReplaceRequest do
+  use Protobuf, syntax: :proto3
+
+  field :session_id, 1, type: :string, json_name: "sessionId"
+  field :operations, 2, repeated: true, type: Micelio.GRPC.Hif.V1.FileOperation
+  field :epoch, 3, type: :uint32
+end
+
 defmodule Micelio.GRPC.Hif.V1.LandSessionRequest do
   use Protobuf, syntax: :proto3
 
@@ -363,6 +371,12 @@ defmodule Micelio.GRPC.Hif.V1.VersioningService.Service do
   rpc(
     :AppendSessionChange,
     Micelio.GRPC.Hif.V1.SessionChangeAppendRequest,
+    Micelio.GRPC.Hif.V1.SessionInfo
+  )
+
+  rpc(
+    :ReplaceSessionChanges,
+    Micelio.GRPC.Hif.V1.SessionChangesReplaceRequest,
     Micelio.GRPC.Hif.V1.SessionInfo
   )
 

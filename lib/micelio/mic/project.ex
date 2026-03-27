@@ -117,7 +117,8 @@ defmodule Micelio.Mic.Project do
   end
 
   @spec head_key(binary()) :: String.t()
-  def head_key(repository_id) when is_binary(repository_id), do: "repositories/#{repository_id}/head"
+  def head_key(repository_id) when is_binary(repository_id),
+    do: "repositories/#{repository_id}/head"
 
   @spec tree_key(binary(), binary()) :: String.t()
   def tree_key(repository_id, tree_hash) when is_binary(repository_id) and is_binary(tree_hash) do

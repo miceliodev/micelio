@@ -2,7 +2,7 @@ defmodule MicelioWeb.Api.SessionEventControllerTest do
   use MicelioWeb.ConnCase
 
   alias Micelio.StorageHelper
-  alias Micelio.{Accounts, Projects, Sessions}
+  alias Micelio.{Accounts, Sessions}
 
   setup :setup_storage
   setup :assign_storage_config

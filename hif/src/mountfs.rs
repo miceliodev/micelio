@@ -97,14 +97,6 @@ impl LazyMountState {
         self.workspace_hif_root().join(MANIFEST_FILE)
     }
 
-    pub fn mount_info_path(&self) -> PathBuf {
-        self.workspace_hif_root().join(MOUNT_INFO_FILE)
-    }
-
-    pub fn state_info_path(&self) -> PathBuf {
-        self.state_dir().join(MOUNT_INFO_FILE)
-    }
-
     pub fn ready_path(&self) -> PathBuf {
         self.state_dir().join(READY_FILE)
     }

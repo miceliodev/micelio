@@ -28,9 +28,8 @@ defmodule Micelio.Mic.RollupRebuilder do
     :ok
   end
 
-  def rebuild(_repository_id, from_position, to_position, _opts)
-      when from_position > to_position,
-      do: :ok
+  def rebuild(_repository_id, from_position, to_position, _opts) when from_position > to_position,
+    do: :ok
 
   def rebuild_from_head(repository_id, from_position \\ 1, opts \\ []) do
     case Storage.get(head_key(repository_id), opts) do

@@ -32,8 +32,36 @@ use std::future::Future;
 use std::io::{ErrorKind, Write};
 use std::path::Path;
 use std::path::PathBuf;
+use std::sync::OnceLock;
 use std::thread;
 use std::time::{Duration, Instant};
+
+// =============================================================================
+// CLI Overrides (--server / --token flags)
+// =============================================================================
+
+static SERVER_OVERRIDE: OnceLock<String> = OnceLock::new();
+static TOKEN_OVERRIDE: OnceLock<String> = OnceLock::new();
+
+/// Set the gRPC server URL override (from --server flag).
+pub fn set_server_override(url: String) {
+    let _ = SERVER_OVERRIDE.set(url);
+}
+
+/// Set the bearer token override (from --token flag).
+pub fn set_token_override(token: String) {
+    let _ = TOKEN_OVERRIDE.set(token);
+}
+
+/// Get the gRPC server URL override, if set.
+pub fn server_override() -> Option<&'static str> {
+    SERVER_OVERRIDE.get().map(|s| s.as_str())
+}
+
+/// Get the bearer token override, if set.
+pub fn token_override() -> Option<&'static str> {
+    TOKEN_OVERRIDE.get().map(|s| s.as_str())
+}
 
 // =============================================================================
 // Configuration Types
@@ -215,7 +243,13 @@ impl Config {
     }
 
     /// Resolve the default gRPC server URL, using discovery when needed.
+    ///
+    /// If `--server` was passed on the CLI, returns that URL directly
+    /// without touching the config file.
     pub async fn resolve_default_grpc_url(&mut self) -> Result<String> {
+        if let Some(url) = server_override() {
+            return Ok(url.to_string());
+        }
         let (_name, server) = self.resolve_default_server().await?;
         server.grpc_url.ok_or(MicError::NoGrpcUrl)
     }
@@ -521,7 +555,21 @@ pub fn delete_tokens() -> Result<()> {
 }
 
 /// Require valid authentication tokens, refreshing if needed.
+///
+/// If `--token` was passed on the CLI, returns a synthetic `StoredTokens`
+/// with that token directly, skipping disk-based token management.
 pub fn require_tokens() -> Result<StoredTokens> {
+    if let Some(token) = token_override() {
+        return Ok(StoredTokens {
+            session_id: None,
+            server: server_override().unwrap_or_default().to_string(),
+            access_token: token.to_string(),
+            refresh_token: None,
+            token_type: "Bearer".to_string(),
+            expires_at: None,
+        });
+    }
+
     let mut tokens = read_tokens()?.ok_or(MicError::NotAuthenticated)?;
 
     if tokens.server.is_empty() {
@@ -602,7 +650,7 @@ struct FileLockGuard {
 
 impl Drop for FileLockGuard {
     fn drop(&mut self) {
-        let _ = self.file.unlock();
+        let _ = fs2::FileExt::unlock(&self.file);
     }
 }
 

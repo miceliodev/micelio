@@ -1,9 +1,9 @@
 defmodule MicelioWeb.Browser.AccountControllerTest do
   use MicelioWeb.ConnCase, async: true
 
-  alias Micelio.{Accounts, Plans, Projects, Sessions}
+  alias Micelio.{Accounts, Plans, Sessions}
 
-  test "shows activity and projects for user accounts", %{conn: conn} do
+  test "shows activity and repositories for user accounts", %{conn: conn} do
     {:ok, user} = Accounts.get_or_create_user_by_email("public-user@example.com")
 
     {:ok, organization} =
@@ -77,9 +77,9 @@ defmodule MicelioWeb.Browser.AccountControllerTest do
     assert html =~ "AI-assisted"
     assert html =~ "id=\"account-reputation\""
     assert html =~ "Trust"
-    assert html =~ "Projects"
+    assert html =~ "Repositories"
     assert html =~ "id=\"account-owned-repositories\""
-    assert html =~ "id=\"account-repositorys-list\""
+    assert html =~ "id=\"account-repositories-list\""
     assert html =~ "account-repository-#{public_repository.id}"
     assert html =~ "/#{organization.account.handle}/#{public_repository.handle}"
     refute html =~ "/#{organization.account.handle}/#{private_repository.handle}"

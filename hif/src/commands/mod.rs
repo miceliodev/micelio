@@ -1,5 +1,6 @@
 //! Command implementations.
 
+pub mod activate;
 pub mod auth;
 pub mod blame;
 pub mod checkout;
@@ -18,6 +19,7 @@ pub mod status;
 pub mod sync;
 pub mod tree;
 pub mod unmount;
+pub mod watch;
 
 #[cfg(test)]
 pub(crate) mod ui_test_support;

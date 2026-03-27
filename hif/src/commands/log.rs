@@ -3,7 +3,7 @@
 use crate::cli::{parse_repository_ref, LogCommand};
 use crate::config::Config;
 use crate::error::{MicError, Result};
-use crate::grpc::hif_v1::{call, pb, repository_ref};
+use crate::grpc::hif_v1::{call_optional_auth, pb, repository_ref};
 use crate::grpc::{Endpoint, GrpcClient};
 use crate::output;
 use serde::Serialize;
@@ -49,7 +49,7 @@ pub async fn run(cmd: LogCommand) -> Result<()> {
     let endpoint = Endpoint::parse(&server)?;
     let client = GrpcClient::new(endpoint);
 
-    let response: pb::ListSessionsResponse = call(
+    let response: pb::ListSessionsResponse = call_optional_auth(
         &client,
         "/hif.v1.VersioningService/ListSessions",
         &pb::ListSessionsRequest {
@@ -138,12 +138,12 @@ mod tests {
     use crate::commands::ui_test_support::assert_output_snapshot;
 
     #[test]
-    fn ui_snapshot_log_requires_auth() {
+    fn ui_snapshot_log_missing_repository_arg() {
         assert_output_snapshot(
-            &["log", "acme/repo"],
-            1,
+            &["log"],
+            2,
             "",
-            "error: Not authenticated. Run 'hif auth login' first.\n",
+            "error: the following required arguments were not provided:\n  <ACCOUNT/REPOSITORY>\n\nUsage: hif log <ACCOUNT/REPOSITORY>\n\nFor more information, try '--help'.\n",
         );
     }
 }

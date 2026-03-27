@@ -19,8 +19,8 @@ defmodule MicelioWeb.RepositoryLive.Edit do
             |> Repositories.change_repository()
             |> to_form(as: :repository)
 
-    socket =
-      socket
+          socket =
+            socket
             |> assign(:page_title, "Edit Repository")
             |> assign(:base_path, base_path)
             |> PageMeta.assign(
@@ -42,7 +42,7 @@ defmodule MicelioWeb.RepositoryLive.Edit do
       _ ->
         {:ok,
          socket
-        |> put_flash(:error, "Repository not found.")
+         |> put_flash(:error, "Repository not found.")
          |> push_navigate(to: ~p"/repositories")}
     end
   end
@@ -71,7 +71,7 @@ defmodule MicelioWeb.RepositoryLive.Edit do
         {:ok, _repository} ->
           {:noreply,
            socket
-              |> put_flash(:info, "Repository updated successfully!")
+           |> put_flash(:info, "Repository updated successfully!")
            |> push_navigate(to: socket.assigns.base_path)}
 
         {:error, changeset} ->
@@ -91,8 +91,8 @@ defmodule MicelioWeb.RepositoryLive.Edit do
       current_user={@current_user}
     >
       <div class="repository-form-container">
-            <.header>
-              Edit repository
+        <.header>
+          Edit repository
           <:subtitle>
             <p>
               {@organization.account.handle}/{@repository.handle}
@@ -127,7 +127,7 @@ defmodule MicelioWeb.RepositoryLive.Edit do
               class="repository-input"
               error_class="repository-input repository-input-error"
             />
-              <p class="repository-form-hint">Handles appear in repository URLs.</p>
+            <p class="repository-form-hint">Handles appear in repository URLs.</p>
           </div>
 
           <div class="repository-form-group">
@@ -195,7 +195,7 @@ defmodule MicelioWeb.RepositoryLive.Edit do
               field={@form[:push_repository]}
               type="text"
               label={gettext("Push repository")}
-                  placeholder={@form[:handle].value || gettext("repository-name")}
+              placeholder={@form[:handle].value || gettext("repository-name")}
               class="repository-input"
               error_class="repository-input repository-input-error"
             />
@@ -227,9 +227,9 @@ defmodule MicelioWeb.RepositoryLive.Edit do
           </div>
 
           <div class="repository-form-actions">
-              <button type="submit" class="repository-button" id="repository-submit">
-                Save changes
-              </button>
+            <button type="submit" class="repository-button" id="repository-submit">
+              Save changes
+            </button>
             <.link
               navigate={@base_path}
               class="repository-button repository-button-secondary"

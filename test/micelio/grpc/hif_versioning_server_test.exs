@@ -2,6 +2,7 @@ defmodule Micelio.GRPC.VirtualVersioningServerTest do
   use Micelio.DataCase, async: true
 
   alias Boruta.Oauth.ResourceOwner
+  alias GRPC.RPCError
   alias GRPC.Server.Stream
   alias Micelio.Accounts
   alias Micelio.GRPC.Hif.V1
@@ -107,6 +108,109 @@ defmodule Micelio.GRPC.VirtualVersioningServerTest do
     assert loaded.session_id == session_id
     assert length(loaded.conversation) == 1
     assert length(loaded.changes) == 1
+  end
+
+  test "replace_session_changes keeps only the latest draft snapshot and enforces epochs" do
+    unique = System.unique_integer([:positive])
+
+    {:ok, user} = Accounts.get_or_create_user_by_email("replace-versioning-#{unique}@example.com")
+
+    {:ok, organization} =
+      Accounts.create_organization_for_user(user, %{
+        handle: "replace-versioning-org-#{unique}",
+        name: "Replace Versioning Org #{unique}"
+      })
+
+    {:ok, repository} =
+      Repositories.create_repository(%{
+        handle: "replace-versioning-repo-#{unique}",
+        name: "Replace Versioning Repo #{unique}",
+        organization_id: organization.id
+      })
+
+    token = create_access_token(user)
+    stream = token_stream(token)
+    session_id = "replace-session-#{unique}"
+
+    %V1.SessionInfo{} =
+      VersioningServer.open_session(
+        %V1.SessionOpenRequest{
+          repository: %V1.RepositoryRef{
+            account_handle: organization.account.handle,
+            repository_handle: repository.handle
+          },
+          open: %V1.SessionOpen{
+            session_id: session_id,
+            goal: "Validate replace draft workflow",
+            base_position: %V1.Position{hash: <<0::size(256)>>}
+          }
+        },
+        stream
+      )
+
+    replaced =
+      VersioningServer.replace_session_changes(
+        %V1.SessionChangesReplaceRequest{
+          session_id: session_id,
+          operations: [
+            %V1.FileOperation{
+              action: :ACTION_CREATE,
+              path: "docs/one.txt",
+              content: "one\n"
+            },
+            %V1.FileOperation{
+              action: :ACTION_CREATE,
+              path: "docs/two.txt",
+              content: "two\n"
+            }
+          ],
+          epoch: 1
+        },
+        stream
+      )
+
+    assert %V1.SessionInfo{} = replaced
+    assert Enum.map(replaced.changes, & &1.path) == ["docs/one.txt", "docs/two.txt"]
+
+    replaced_again =
+      VersioningServer.replace_session_changes(
+        %V1.SessionChangesReplaceRequest{
+          session_id: session_id,
+          operations: [
+            %V1.FileOperation{
+              action: :ACTION_UPDATE,
+              path: "docs/two.txt",
+              content: "two updated\n"
+            }
+          ],
+          epoch: 2
+        },
+        stream
+      )
+
+    assert %V1.SessionInfo{} = replaced_again
+    assert length(replaced_again.changes) == 1
+    assert hd(replaced_again.changes).path == "docs/two.txt"
+    assert hd(replaced_again.changes).content == "two updated\n"
+
+    assert {:error, %RPCError{message: "Epoch already processed."}} =
+             VersioningServer.replace_session_changes(
+               %V1.SessionChangesReplaceRequest{
+                 session_id: session_id,
+                 operations: [],
+                 epoch: 2
+               },
+               stream
+             )
+
+    loaded =
+      VersioningServer.get_session(
+        %V1.SessionRequest{session_id: session_id},
+        stream
+      )
+
+    assert %V1.SessionInfo{} = loaded
+    assert Enum.map(loaded.changes, & &1.path) == ["docs/two.txt"]
   end
 
   test "get_repository_head allows anonymous reads for public repositories" do

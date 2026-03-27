@@ -10,7 +10,8 @@ use crate::grpc::{Endpoint, GrpcClient};
 use crate::output;
 use crate::workspace::manifest::Manifest;
 use crate::workspace::session::{Conversation, Decision, FileChange, Session, SessionState};
-use crate::workspace::{collect_changes, ChangeType, WorkspaceManifest};
+use crate::workspace::watch;
+use crate::workspace::{collect_changes, workspace_root, ChangeType, WorkspaceManifest};
 use serde::Serialize;
 use std::fs;
 
@@ -119,7 +120,7 @@ pub async fn run(cmd: SessionCommand) -> Result<()> {
             start(&org, &repository, &goal).await
         }
         SessionSubcommand::Status => status().await,
-        SessionSubcommand::Note { message, role } => note(&role, &message),
+        SessionSubcommand::Note { message, role } => note(&role, &message).await,
         SessionSubcommand::Land => land().await,
         SessionSubcommand::Abandon => abandon().await,
         SessionSubcommand::Resolve { strategy } => resolve(&strategy),
@@ -323,7 +324,25 @@ async fn status() -> Result<()> {
 }
 
 /// Add a note to the session.
-fn note(role: &str, message: &str) -> Result<()> {
+async fn note(role: &str, message: &str) -> Result<()> {
+    let state = Session::load()?.ok_or(MicError::NoActiveSession)?;
+    let event = session_note_event_from_values(role, message, chrono::Utc::now().timestamp());
+
+    let mut config = Config::load()?;
+    let server = config.resolve_default_grpc_url().await?;
+    let endpoint = Endpoint::parse(&server)?;
+    let client = GrpcClient::new(endpoint);
+
+    let _response: pb::SessionInfo = call(
+        &client,
+        "/hif.v1.VersioningService/AppendSessionConversation",
+        &pb::SessionEventAppendRequest {
+            session_id: state.id,
+            event: Some(event),
+        },
+    )
+    .await?;
+
     Session::add_note(role, message)?;
     if output::use_json() {
         output::print_ok(
@@ -341,14 +360,13 @@ fn note(role: &str, message: &str) -> Result<()> {
 
 /// Land the current session.
 async fn land() -> Result<()> {
+    sync_active_session_draft().await?;
+
     let state = Session::load()?.ok_or(MicError::NoActiveSession)?;
     let mut config = Config::load()?;
     let server = config.resolve_default_grpc_url().await?;
     let endpoint = Endpoint::parse(&server)?;
     let client = GrpcClient::new(endpoint);
-
-    upload_conversation(&client, &state).await?;
-    upload_changes(&client, &state.id).await?;
 
     let decisions = state
         .decisions
@@ -428,6 +446,7 @@ async fn land() -> Result<()> {
         output::set_success_message(message);
     }
 
+    request_watcher_stop();
     Session::delete()?;
     Ok(())
 }
@@ -479,6 +498,7 @@ async fn abandon() -> Result<()> {
         ));
     }
 
+    request_watcher_stop();
     Session::delete()?;
     if output::use_json() {
         output::print_ok(
@@ -567,79 +587,139 @@ async fn fetch_remote_session_status(state: &SessionState) -> Result<pb::Session
     .await
 }
 
-async fn upload_conversation(client: &GrpcClient, state: &SessionState) -> Result<()> {
-    for note in &state.conversation {
-        let event = session_note_event(note);
-        let _response: pb::SessionInfo = call(
-            client,
-            "/hif.v1.VersioningService/AppendSessionConversation",
-            &pb::SessionEventAppendRequest {
+pub(crate) async fn sync_active_session_draft() -> Result<()> {
+    for _attempt in 0..3 {
+        let files = sync_session_files_from_workspace()?;
+        let state = Session::load()?.ok_or(MicError::NoActiveSession)?;
+        let epoch = state.sync_epoch.saturating_add(1);
+
+        let mut config = Config::load()?;
+        let server = config.resolve_default_grpc_url().await?;
+        let endpoint = Endpoint::parse(&server)?;
+        let client = GrpcClient::new(endpoint);
+
+        let operations = files
+            .iter()
+            .map(file_change_to_operation)
+            .collect::<Vec<_>>();
+
+        let response: Result<pb::SessionInfo> = call(
+            &client,
+            "/hif.v1.VersioningService/ReplaceSessionChanges",
+            &pb::SessionChangesReplaceRequest {
                 session_id: state.id.clone(),
-                event: Some(event),
+                operations,
+                epoch,
             },
         )
-        .await?;
+        .await;
+
+        match response {
+            Ok(_info) => {
+                Session::set_sync_epoch(epoch)?;
+                return Ok(());
+            }
+            Err(MicError::GrpcError(message)) if message.contains("Epoch already processed") => {
+                continue;
+            }
+            Err(error) => return Err(error),
+        }
     }
 
-    Ok(())
+    Err(MicError::Other(
+        "Failed to sync the session draft because another sync kept advancing the epoch."
+            .to_string(),
+    ))
 }
 
-async fn upload_changes(client: &GrpcClient, session_id: &str) -> Result<()> {
-    let manifest = WorkspaceManifest::load()?.ok_or(MicError::NoWorkspace)?;
-    let workspace_root = std::env::current_dir()?;
-    let changes = collect_changes(&workspace_root, &manifest)?;
+fn sync_session_files_from_workspace() -> Result<Vec<FileChange>> {
+    let files = match WorkspaceManifest::load()? {
+        Some(manifest) => {
+            let root = workspace_root()?;
+            let changes = collect_changes(&root, &manifest)?;
 
-    for change in changes {
-        let content = match change.change_type {
-            ChangeType::Deleted => Vec::new(),
-            ChangeType::Added | ChangeType::Modified => fs::read(&change.path)?,
-        };
-        let operation = to_file_operation(&change.path, change.change_type, content);
-        let _response: pb::SessionInfo = call(
-            client,
-            "/hif.v1.VersioningService/AppendSessionChange",
-            &pb::SessionChangeAppendRequest {
-                session_id: session_id.to_string(),
-                operation: Some(operation),
-            },
-        )
-        .await?;
-    }
+            changes
+                .into_iter()
+                .map(|change| {
+                    let content = match change.change_type {
+                        ChangeType::Deleted => String::new(),
+                        ChangeType::Added | ChangeType::Modified => {
+                            let bytes = fs::read(root.join(&change.path))?;
+                            String::from_utf8_lossy(&bytes).to_string()
+                        }
+                    };
 
-    Ok(())
+                    Ok(FileChange {
+                        path: change.path,
+                        content,
+                        change_type: change.change_type.as_str().to_string(),
+                    })
+                })
+                .collect::<Result<Vec<_>>>()?
+        }
+        None => Vec::new(),
+    };
+
+    Session::replace_file_changes(files.clone())?;
+    Ok(files)
 }
 
-fn session_note_event(note: &Conversation) -> pb::SessionEvent {
+fn session_note_event_from_values(
+    role: &str,
+    message: &str,
+    timestamp_seconds: i64,
+) -> pb::SessionEvent {
     pb::SessionEvent {
-        role: note.role.clone(),
+        role: role.to_string(),
         kind: "note".to_string(),
-        text: note.message.clone(),
+        text: message.to_string(),
         metadata: Vec::new(),
-        at_ms: parse_timestamp_ms(&note.timestamp),
+        at_ms: if timestamp_seconds > 0 {
+            (timestamp_seconds as u64).saturating_mul(1_000)
+        } else {
+            chrono::Utc::now().timestamp_millis().max(0) as u64
+        },
     }
 }
 
-fn to_file_operation(path: &str, change_type: ChangeType, content: Vec<u8>) -> pb::FileOperation {
-    let action = match change_type {
-        ChangeType::Added => pb::file_operation::Action::Create,
-        ChangeType::Modified => pb::file_operation::Action::Update,
-        ChangeType::Deleted => pb::file_operation::Action::Delete,
+fn file_change_to_operation(file: &FileChange) -> pb::FileOperation {
+    let action = match file.change_type.as_str() {
+        "added" => pb::file_operation::Action::Create,
+        "modified" => pb::file_operation::Action::Update,
+        "deleted" => pb::file_operation::Action::Delete,
+        _ => pb::file_operation::Action::Unspecified,
     };
 
     pb::FileOperation {
         action: action as i32,
-        path: path.to_string(),
-        content,
+        path: file.path.clone(),
+        content: if file.change_type == "deleted" {
+            Vec::new()
+        } else {
+            file.content.as_bytes().to_vec()
+        },
         old_path: String::new(),
         content_hash: String::new(),
     }
 }
 
 fn parse_timestamp_ms(timestamp: &str) -> u64 {
-    timestamp
-        .parse::<u64>()
-        .map(|seconds| seconds.saturating_mul(1_000))
-        .unwrap_or_else(|_| chrono::Utc::now().timestamp_millis().max(0) as u64)
+    let seconds = parse_timestamp(timestamp);
+    if seconds > 0 {
+        (seconds as u64).saturating_mul(1_000)
+    } else {
+        chrono::Utc::now().timestamp_millis().max(0) as u64
+    }
+}
+
+fn parse_timestamp(timestamp: &str) -> i64 {
+    timestamp.parse::<i64>().unwrap_or_default()
+}
+
+fn request_watcher_stop() {
+    if let Ok(root) = workspace_root() {
+        let _ = watch::request_stop(&root);
+    }
 }
 
 /// Generate a random session ID.

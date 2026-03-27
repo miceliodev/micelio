@@ -161,6 +161,23 @@ async fn async_main() -> i32 {
         return 0;
     }
 
+    // Apply --server / --token overrides
+    if cli.token.is_some() && cli.server.is_none() {
+        print_error(
+            "--token requires --server to be specified",
+            "invalid_flags",
+            use_structured,
+            &[],
+        );
+        return 1;
+    }
+    if let Some(ref server) = cli.server {
+        config::set_server_override(server.clone());
+    }
+    if let Some(ref token) = cli.token {
+        config::set_token_override(token.clone());
+    }
+
     let verbose = cli.verbose;
     let use_structured = cli.output_mode().is_structured();
     if use_structured && color_enabled {
@@ -168,26 +185,28 @@ async fn async_main() -> i32 {
     }
 
     let original_cwd = std::env::current_dir().unwrap_or_else(|_| std::path::PathBuf::from("."));
-    match diagnostics::init(
-        &args,
-        &original_cwd,
-        cli.cwd.as_deref(),
-        verbose,
-        output_mode_label(cli.output_mode()),
-        cli.command.as_ref().map(command_name),
-    ) {
-        Ok(info) => {
-            if verbose && !use_structured {
-                eprintln!(
-                    "info: diagnostics session {} -> {}",
-                    info.id,
-                    info.dir.display()
-                );
+    if should_capture_diagnostics(cli.command.as_ref()) {
+        match diagnostics::init(
+            &args,
+            &original_cwd,
+            cli.cwd.as_deref(),
+            verbose,
+            output_mode_label(cli.output_mode()),
+            cli.command.as_ref().map(command_name),
+        ) {
+            Ok(info) => {
+                if verbose && !use_structured {
+                    eprintln!(
+                        "info: diagnostics session {} -> {}",
+                        info.id,
+                        info.dir.display()
+                    );
+                }
             }
-        }
-        Err(error) => {
-            if verbose && !use_structured {
-                eprintln!("warning: diagnostics disabled: {}", error);
+            Err(error) => {
+                if verbose && !use_structured {
+                    eprintln!("warning: diagnostics disabled: {}", error);
+                }
             }
         }
     }
@@ -396,9 +415,11 @@ fn command_name(command: &Commands) -> &'static str {
         Commands::Link(_) => "link",
         Commands::Status => "status",
         Commands::Sync(_) => "sync",
+        Commands::Activate(_) => "activate",
         Commands::Session(_) => "session",
         Commands::Land(_) => "land",
         Commands::Debug(_) => "debug",
+        Commands::Watch(_) => "watch",
         Commands::Show(_) => "show",
         Commands::Tree(_) => "tree",
         Commands::Grep(_) => "grep",
@@ -426,11 +447,13 @@ async fn run(command: Commands) -> Result<()> {
         Commands::Link(cmd) => commands::link::run(cmd).await,
         Commands::Status => commands::status::run().await,
         Commands::Sync(cmd) => commands::sync::run(cmd).await,
+        Commands::Activate(cmd) => commands::activate::run(cmd).await,
 
         // Sessions
         Commands::Session(cmd) => commands::session::run(cmd).await,
         Commands::Land(cmd) => commands::land::run(cmd).await,
         Commands::Debug(cmd) => commands::debug::run(cmd).await,
+        Commands::Watch(cmd) => commands::watch::run(cmd).await,
 
         // Content (read from forge)
         Commands::Show(cmd) => commands::show::run(cmd).await,
@@ -447,6 +470,13 @@ async fn run(command: Commands) -> Result<()> {
         Commands::MountServe(cmd) => mountfs::serve(cmd).await,
         Commands::Unmount(cmd) => commands::unmount::run(cmd).await,
     }
+}
+
+fn should_capture_diagnostics(command: Option<&Commands>) -> bool {
+    !matches!(
+        command,
+        Some(Commands::Watch(_)) | Some(Commands::MountServe(_))
+    )
 }
 
 #[cfg(test)]

@@ -3,7 +3,6 @@ defmodule MicelioWeb.Browser.AdminControllerTest do
 
   alias Micelio.Accounts
   alias Micelio.Plans
-  alias Micelio.Repositories
   alias Micelio.Sessions
 
   test "denies access to non-admin users", %{conn: conn} do

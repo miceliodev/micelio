@@ -93,6 +93,7 @@ defmodule MicelioWeb.AdminPromptRegistryLive.Index do
           <% else %>
             <div class="admin-prompts-list">
               <%= for plan <- @plans do %>
+                <% plan_template = Map.get(plan, :plan_template) %>
                 <article class="admin-prompts-card" id={"admin-prompt-#{plan.id}"}>
                   <div class="admin-prompts-card-main">
                     <div class="admin-prompts-card-header">
@@ -118,9 +119,9 @@ defmodule MicelioWeb.AdminPromptRegistryLive.Index do
                     </div>
                     <div class="admin-prompts-card-meta">
                       <span>Model: {plan.model || "n/a"}</span>
-                      <%= if plan.prompt_template do %>
+                      <%= if plan_template do %>
                         <span>·</span>
-                        <span>Template: {plan.prompt_template.name}</span>
+                        <span>Template: {plan_template.name}</span>
                       <% end %>
                       <%= if plan.curated_at do %>
                         <span>·</span>

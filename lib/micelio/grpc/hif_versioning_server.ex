@@ -122,6 +122,19 @@ defmodule Micelio.GRPC.Hif.V1.VersioningService.Server do
     end
   end
 
+  def replace_session_changes(%V1.SessionChangesReplaceRequest{} = request, stream) do
+    with :ok <- require_field(request.session_id, "session_id"),
+         {:ok, user} <- fetch_user(stream),
+         {:ok, session, repository} <- load_writable_session(request.session_id, user),
+         :ok <- ensure_session_active(session),
+         {:ok, session_with_epoch} <- update_epoch_batch(session, request.epoch),
+         {:ok, files} <- operations_to_change_payloads(request.operations, session_with_epoch),
+         {:ok, updated_session, _stats} <-
+           ChangeStore.replace_session_changes(session_with_epoch, files) do
+      session_to_proto(updated_session, repository)
+    end
+  end
+
   def land_session(%V1.LandSessionRequest{} = request, stream) do
     with :ok <- require_field(request.session_id, "session_id"),
          {:ok, user} <- fetch_user(stream),
@@ -162,9 +175,8 @@ defmodule Micelio.GRPC.Hif.V1.VersioningService.Server do
 
   def list_sessions(%V1.ListSessionsRequest{} = request, stream) do
     with :ok <- require_repository_ref(request.repository),
-         {:ok, user} <- fetch_user(stream),
          {:ok, organization, repository} <- load_repository(request.repository),
-         true <- Accounts.user_in_organization?(user, organization.id) do
+         :ok <- authorize_repository_read(organization, repository, stream) do
       sessions =
         repository
         |> Sessions.list_sessions_for_repository_with_details(status: "landed")
@@ -175,7 +187,6 @@ defmodule Micelio.GRPC.Hif.V1.VersioningService.Server do
         sessions: Enum.map(sessions, &session_summary/1)
       }
     else
-      false -> {:error, forbidden_status("You do not have access to this organization.")}
       nil -> {:error, not_found_status("Repository not found.")}
       {:error, status} -> {:error, status}
     end
@@ -461,6 +472,18 @@ defmodule Micelio.GRPC.Hif.V1.VersioningService.Server do
         {:error, invalid_status("operation.action is required.")}
     end
   end
+
+  defp operations_to_change_payloads(operations, session) when is_list(operations) do
+    Enum.reduce_while(operations, {:ok, []}, fn operation, {:ok, acc} ->
+      case operation_to_change_payloads(operation, session) do
+        {:ok, files} -> {:cont, {:ok, acc ++ files}}
+        {:error, status} -> {:halt, {:error, status}}
+      end
+    end)
+  end
+
+  defp operations_to_change_payloads(_operations, _session),
+    do: {:error, invalid_status("operations must be a list.")}
 
   defp resolve_rename_content(content, _session, _old_path) when is_binary(content),
     do: {:ok, content}

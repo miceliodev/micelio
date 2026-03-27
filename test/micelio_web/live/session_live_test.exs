@@ -221,7 +221,7 @@ defmodule MicelioWeb.SessionLiveTest do
       assert html =~ "Prompt to PR"
 
       assert html =~
-               "/#{organization.account.handle}/#{repository.handle}/plans/#{plan.id}"
+               "/#{organization.account.handle}/#{repository.handle}/prompt-requests/#{plan.id}"
     end
 
     test "renders session event viewer controls", %{

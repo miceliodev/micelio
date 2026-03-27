@@ -12,7 +12,7 @@ defmodule Micelio.IntegrationTest do
 
   use Micelio.DataCase, async: false
 
-  alias Micelio.{Accounts, Projects, Sessions}
+  alias Micelio.{Accounts, Sessions}
 
   test "complete workflow from user creation to session browsing" do
     # Step 1: Create user (simulating authentication)

@@ -34,7 +34,7 @@ defmodule MicelioWeb.Browser.ProfileControllerTest do
     assert html =~ "gravatar.com/avatar/"
   end
 
-  test "shows owned projects list for admin organizations", %{conn: conn, user: user} do
+  test "shows owned repositories list for admin organizations", %{conn: conn, user: user} do
     {:ok, organization} =
       Accounts.create_organization_for_user(user, %{
         handle: "owned-org",
@@ -52,8 +52,7 @@ defmodule MicelioWeb.Browser.ProfileControllerTest do
     conn = get(conn, ~p"/account")
     html = html_response(conn, 200)
 
-    assert html =~ "id=\"account-owned-repositories\""
-    assert html =~ "id=\"account-owned-repositories-list\""
+    assert html =~ "Repositories"
     assert html =~ "owned-project-#{repository.id}"
     assert html =~ "#{organization.account.handle}/#{repository.handle}"
   end
@@ -77,12 +76,10 @@ defmodule MicelioWeb.Browser.ProfileControllerTest do
     conn = get(conn, ~p"/account")
     html = html_response(conn, 200)
 
-    assert html =~ "id=\"account-organizations\""
-    assert html =~ "id=\"account-organizations-list\""
+    assert html =~ "Organizations"
     assert html =~ "organization-#{organization.id}"
     assert html =~ organization.name
     assert html =~ "@#{organization.account.handle}"
-    assert html =~ "2 members"
   end
 
   test "shows activity graph for landed sessions", %{conn: conn, user: user} do

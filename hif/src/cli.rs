@@ -32,6 +32,7 @@ impl OutputMode {
 QUICK START:
     hif auth login
     hif checkout <account/repository>
+    eval \"$(hif activate zsh)\"
     hif session start \"<goal>\"
     hif session land
 ")]
@@ -71,6 +72,14 @@ pub struct Cli {
     /// Run as if started in <PATH> instead of current directory
     #[arg(short = 'C', long, global = true, value_name = "PATH", env = "HIF_CWD")]
     pub cwd: Option<std::path::PathBuf>,
+
+    /// Override the gRPC server URL (skips config file resolution)
+    #[arg(long, global = true, value_name = "URL", env = "HIF_SERVER")]
+    pub server: Option<String>,
+
+    /// Override the bearer token (skips stored OAuth tokens)
+    #[arg(long, global = true, value_name = "TOKEN", env = "HIF_TOKEN")]
+    pub token: Option<String>,
 
     /// Output full CLI documentation as JSON (for website generation)
     #[arg(long, hide = true, env = "HIF_DOCS")]
@@ -209,6 +218,20 @@ EXAMPLES:
 ")]
     Sync(SyncCommand),
 
+    /// Emit shell hooks that auto-manage the session draft watcher
+    #[command(after_help = "\
+EXAMPLES:
+    $ eval \"$(hif activate zsh)\"
+    $ eval \"$(hif activate bash)\"
+    $ hif activate fish | source
+
+NOTES:
+    Activation installs shell hooks that keep one watcher per workspace.
+    When you enter a workspace with an active session, hif batches filesystem
+    events and syncs the remote draft automatically.
+")]
+    Activate(ActivateCommand),
+
     // =========================================================================
     // Session Commands
     // =========================================================================
@@ -218,14 +241,14 @@ WORKFLOW:
     $ hif session start \"Add feature\"    # Start (repository inferred from workspace)
     $ # ... make changes ...
     $ hif session note \"Decided X\"       # Document decisions
-    $ hif session land                    # Push to forge
+    $ hif session land                    # Land onto trunk
 
 EXAMPLES:
     $ hif session start \"Fix bug\"              # In a workspace
     $ hif session start acme/myapp \"Fix bug\"   # Outside workspace
     $ hif session status                        # View current session
     $ hif session note \"Found root cause\"     # Add context
-    $ hif session land                          # Push changes
+    $ hif session land                          # Land the session
     $ hif session abandon                       # Discard session
 
 WHY SESSIONS?
@@ -269,6 +292,10 @@ NOTES:
     Omitting SESSION defaults to the most recent non-debug invocation.
 ")]
     Debug(DebugCommand),
+
+    /// Internal workspace watcher commands
+    #[command(hide = true)]
+    Watch(WatchCommand),
 
     // =========================================================================
     // Content Commands (no checkout needed)
@@ -499,6 +526,13 @@ pub struct SyncCommand {
     pub strategy: String,
 }
 
+#[derive(Parser, Debug)]
+pub struct ActivateCommand {
+    /// Shell to generate hooks for
+    #[arg(value_name = "SHELL", value_parser = ["bash", "zsh", "fish"])]
+    pub shell: String,
+}
+
 // =============================================================================
 // Session Commands
 // =============================================================================
@@ -534,7 +568,7 @@ pub enum SessionSubcommand {
         #[arg(short, long, default_value = "human", env = "HIF_SESSION_NOTE_ROLE")]
         role: String,
     },
-    /// Land the session (push to forge)
+    /// Land the session onto trunk
     Land,
     /// Abandon the session (discard changes)
     Abandon,
@@ -548,6 +582,39 @@ pub enum SessionSubcommand {
             env = "HIF_SESSION_RESOLVE_STRATEGY"
         )]
         strategy: String,
+    },
+}
+
+#[derive(Parser, Debug)]
+pub struct WatchCommand {
+    #[command(subcommand)]
+    pub command: WatchSubcommand,
+}
+
+#[derive(Subcommand, Debug)]
+pub enum WatchSubcommand {
+    /// Ensure there is a watcher for the current workspace
+    Ensure {
+        #[arg(long, hide = true)]
+        shell_pid: u32,
+        #[arg(long, hide = true)]
+        print_root: bool,
+        #[arg(long, hide = true)]
+        workspace_root: Option<std::path::PathBuf>,
+    },
+    /// Mark a shell client as having left the workspace
+    Leave {
+        #[arg(long, hide = true)]
+        workspace_root: std::path::PathBuf,
+        #[arg(long, hide = true)]
+        shell_pid: u32,
+    },
+    /// Run the watcher loop
+    Run {
+        #[arg(long, hide = true)]
+        workspace_root: std::path::PathBuf,
+        #[arg(long, hide = true)]
+        session_id: String,
     },
 }
 
@@ -769,16 +836,17 @@ pub fn generate_help_json() -> serde_json::Value {
             "session": "A unit of work with a goal, conversation, and changes (replaces Git commits)",
             "workspace": "A local directory linked to a repository on the forge",
             "forge": "The server that stores all repository data (source of truth)",
-            "landing": "Pushing session changes to the forge",
+            "landing": "Publishing the session draft onto trunk",
             "revision": "A point in repository history identified by a content hash (like Git commit SHA)"
         },
 
         "workflow": [
             {"step": 1, "command": "hif auth login", "description": "Authenticate with the forge"},
             {"step": 2, "command": "hif checkout <account/repository>", "description": "Create local workspace"},
-            {"step": 3, "command": "hif session start \"<goal>\"", "description": "Start a session (repository inferred)"},
-            {"step": 4, "action": "Edit files normally", "description": "Make your changes"},
-            {"step": 5, "command": "hif session land", "description": "Push changes to forge"}
+            {"step": 3, "command": "eval \"$(hif activate zsh)\"", "description": "Install shell hooks for automatic draft sync"},
+            {"step": 4, "command": "hif session start \"<goal>\"", "description": "Start a session (repository inferred)"},
+            {"step": 5, "action": "Edit files normally", "description": "Make your changes"},
+            {"step": 6, "command": "hif session land", "description": "Land the session onto trunk"}
         ],
 
         "commands": {
@@ -829,6 +897,11 @@ pub fn generate_help_json() -> serde_json::Value {
                 "requires_auth": true,
                 "requires_workspace": true
             },
+            "activate": {
+                "description": "Emit shell hooks for automatic draft sync",
+                "args": ["shell"],
+                "requires_auth": false
+            },
             "session": {
                 "description": "Session management",
                 "subcommands": {
@@ -840,7 +913,7 @@ pub fn generate_help_json() -> serde_json::Value {
                     },
                     "status": {"description": "Show session status"},
                     "note": {"description": "Add note", "args": ["message"], "requires_session": true},
-                    "land": {"description": "Push to forge", "requires_auth": true, "requires_session": true},
+                    "land": {"description": "Land onto trunk", "requires_auth": true, "requires_session": true},
                     "abandon": {"description": "Discard session", "requires_session": true},
                     "resolve": {"description": "Resolve conflicts", "requires_session": true}
                 }
@@ -1083,7 +1156,7 @@ pub fn generate_docs() -> serde_json::Value {
             },
             {
                 "name": "Landing",
-                "description": "Pushing your session changes to the forge. Similar to Git push, but includes all session context.",
+                "description": "Publishing your already-synced session draft onto trunk. Similar to landing a reviewed branch, but the session context is part of the unit of work.",
                 "example": "hif session land"
             },
             {
@@ -1098,9 +1171,10 @@ pub fn generate_docs() -> serde_json::Value {
             "steps": [
                 {"step": 1, "title": "Authenticate", "command": "hif auth login", "description": "Opens browser for OAuth authentication"},
                 {"step": 2, "title": "Create workspace", "command": "hif checkout acme/myapp", "description": "Downloads repository and creates local workspace"},
-                {"step": 3, "title": "Start session", "command": "hif session start \"Add feature\"", "description": "Begin tracking your work with a goal"},
-                {"step": 4, "title": "Make changes", "command": "# Edit files normally", "description": "Use your favorite editor, no staging needed"},
-                {"step": 5, "title": "Land changes", "command": "hif session land", "description": "Push your session to the forge"}
+                {"step": 3, "title": "Activate shell hooks", "command": "eval \"$(hif activate zsh)\"", "description": "Enable automatic draft sync when you enter a workspace"},
+                {"step": 4, "title": "Start session", "command": "hif session start \"Add feature\"", "description": "Begin tracking your work with a goal"},
+                {"step": 5, "title": "Make changes", "command": "# Edit files normally", "description": "Use your favorite editor, no staging needed"},
+                {"step": 6, "title": "Land changes", "command": "hif session land", "description": "Publish the session draft onto trunk"}
             ],
             "quick_land": {
                 "description": "For small changes, combine session start and land:",
@@ -1317,6 +1391,22 @@ pub fn generate_docs() -> serde_json::Value {
                 ]
             },
             {
+                "name": "activate",
+                "category": "Workspace",
+                "description": "Emit shell hooks that auto-manage the session draft watcher",
+                "usage": "hif activate <SHELL>",
+                "args": [
+                    {"name": "shell", "description": "Target shell: bash, zsh, or fish", "required": true}
+                ],
+                "options": [],
+                "examples": [
+                    {"command": "eval \"$(hif activate zsh)\"", "description": "Enable shell hooks for zsh"},
+                    {"command": "eval \"$(hif activate bash)\"", "description": "Enable shell hooks for bash"},
+                    {"command": "hif activate fish | source", "description": "Enable shell hooks for fish"}
+                ],
+                "notes": "The generated hooks start one watcher per workspace and batch filesystem events into remote draft syncs while a session is active."
+            },
+            {
                 "name": "session",
                 "category": "Sessions",
                 "description": "Manage work sessions",
@@ -1364,14 +1454,14 @@ pub fn generate_docs() -> serde_json::Value {
                     },
                     {
                         "name": "land",
-                        "description": "Land the session (push changes to forge)",
+                        "description": "Land the session onto trunk",
                         "usage": "hif session land",
                         "args": [],
                         "options": [],
                         "examples": [
-                            {"command": "hif session land", "description": "Push all changes to forge"}
+                            {"command": "hif session land", "description": "Publish the session draft onto trunk"}
                         ],
-                        "notes": "If conflicts are detected, you'll be prompted to resolve them."
+                        "notes": "Landing publishes the already-synced draft. If conflicts are detected, you'll be prompted to resolve them."
                     },
                     {
                         "name": "abandon",

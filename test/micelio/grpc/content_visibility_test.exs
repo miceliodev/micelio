@@ -5,7 +5,6 @@ defmodule Micelio.GRPC.ContentVisibilityTest do
   alias Micelio.Accounts
   alias Micelio.GRPC.Content.V1.ContentService.Server, as: ContentServer
   alias Micelio.GRPC.Content.V1.GetHeadTreeRequest
-  alias Micelio.Repositories
 
   test "public project content is accessible without authentication" do
     unique = System.unique_integer([:positive])

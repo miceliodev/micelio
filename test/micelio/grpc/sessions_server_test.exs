@@ -12,7 +12,6 @@ defmodule Micelio.GRPC.SessionsServerTest do
   alias Micelio.GRPC.Sessions.V1.SessionResponse
   alias Micelio.GRPC.Sessions.V1.SessionService.Server, as: SessionsServer
   alias Micelio.Mic.Landing
-  alias Micelio.Repositories
   alias Micelio.Sessions
   alias Micelio.Storage
   alias Micelio.StorageHelper

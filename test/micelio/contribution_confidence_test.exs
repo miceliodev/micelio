@@ -5,7 +5,6 @@ defmodule Micelio.ContributionConfidenceTest do
   alias Micelio.ContributionConfidence
   alias Micelio.Plans
   alias Micelio.Repo
-  alias Micelio.Repositories
   alias Micelio.ValidationEnvironments.ValidationRun
 
   defp setup_plan(attrs) do

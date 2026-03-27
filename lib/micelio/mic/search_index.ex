@@ -141,6 +141,21 @@ defmodule Micelio.Mic.SearchIndex do
             offset,
             opts
           )
+        else
+          {:error, :stale_index} ->
+            scan_repository(
+              repository_id,
+              query_revision_hash,
+              matcher,
+              path_prefix,
+              path_glob,
+              limit,
+              offset,
+              opts
+            )
+
+          {:error, reason} ->
+            {:error, reason}
         end
       end
     end

@@ -62,9 +62,6 @@ pub enum MicError {
     #[error("No active session. Start one with 'hif session start'.")]
     NoActiveSession,
 
-    #[error("Landing failed: {0}")]
-    LandingFailed(String),
-
     #[error("Conflicts detected during landing")]
     ConflictsDetected,
 
@@ -148,7 +145,6 @@ impl MicError {
             // Session
             MicError::SessionAlreadyActive => "session_already_active",
             MicError::NoActiveSession => "no_active_session",
-            MicError::LandingFailed(_) => "landing_failed",
             MicError::ConflictsDetected => "conflicts_detected",
 
             // Workspace

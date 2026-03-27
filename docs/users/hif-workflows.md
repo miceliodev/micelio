@@ -41,6 +41,9 @@ hif land "Describe the goal"
 ## Start a session and land changes
 
 ```bash
+# Install shell hooks once so filesystem changes sync automatically
+eval "$(hif activate zsh)"
+
 # Start a new session with a goal
 hif session start <account>/<repository> "Describe the goal"
 
@@ -50,7 +53,7 @@ hif status
 # Add a note about your progress
 hif session note "Explain what changed" [--role human|agent]
 
-# Land your changes
+# Land the synced session draft onto trunk
 hif session land
 ```
 

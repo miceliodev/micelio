@@ -6,7 +6,6 @@ defmodule MicelioWeb.Api.Mobile.RepositoryControllerTest do
   alias Micelio.OAuth
   alias Micelio.OAuth.AccessTokens
   alias Micelio.OAuth.Clients
-  alias Micelio.Repositories
 
   setup do
     {:ok, user} =
@@ -48,7 +47,7 @@ defmodule MicelioWeb.Api.Mobile.RepositoryControllerTest do
     }
   end
 
-  test "lists public projects for anonymous users", %{
+  test "lists public repositories for anonymous users", %{
     conn: conn,
     public_repository: public_repository
   } do
@@ -63,7 +62,7 @@ defmodule MicelioWeb.Api.Mobile.RepositoryControllerTest do
     assert Enum.all?(body["data"], fn repository -> repository["visibility"] == "public" end)
   end
 
-  test "lists private projects for authenticated users", %{
+  test "lists private repositories for authenticated users", %{
     conn: conn,
     user: user,
     private_repository: private_repository
@@ -81,7 +80,7 @@ defmodule MicelioWeb.Api.Mobile.RepositoryControllerTest do
     assert Enum.any?(body["data"], fn repository -> repository["id"] == private_repository.id end)
   end
 
-  test "paginates project results", %{conn: conn} do
+  test "paginates repository results", %{conn: conn} do
     conn =
       conn
       |> put_req_header("accept", "application/json")
@@ -93,7 +92,7 @@ defmodule MicelioWeb.Api.Mobile.RepositoryControllerTest do
     assert body["pagination"]["offset"] == 0
   end
 
-  test "shows public project details", %{
+  test "shows public repository details", %{
     conn: conn,
     organization: organization,
     public_repository: repository
@@ -109,7 +108,7 @@ defmodule MicelioWeb.Api.Mobile.RepositoryControllerTest do
     assert body["data"]["organization"]["handle"] == organization.account.handle
   end
 
-  test "blocks private projects for anonymous users", %{
+  test "blocks private repositories for anonymous users", %{
     conn: conn,
     organization: organization,
     private_repository: repository
@@ -121,7 +120,7 @@ defmodule MicelioWeb.Api.Mobile.RepositoryControllerTest do
 
     body = json_response(conn, 403)
 
-    assert body["error"] == "Project is private"
+    assert body["error"] == "Repository is private"
   end
 
   defp create_access_token(user) do

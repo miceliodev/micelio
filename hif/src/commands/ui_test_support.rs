@@ -1,6 +1,7 @@
 use std::path::Path;
 use std::process::Output;
 
+#[allow(deprecated)]
 fn run_hif_snapshot(home: &Path, cwd: &Path, args: &[&str]) -> Output {
     let binary = assert_cmd::cargo::cargo_bin("hif");
 

@@ -2,7 +2,6 @@ defmodule Micelio.Sessions.ChangeStoreTest do
   use Micelio.DataCase, async: true
 
   alias Micelio.Accounts
-  alias Micelio.Repositories
   alias Micelio.Sessions
   alias Micelio.Sessions.ChangeStore
 

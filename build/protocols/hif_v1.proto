@@ -10,6 +10,7 @@ service VersioningService {
   rpc OpenSession(SessionOpenRequest) returns (SessionInfo);
   rpc AppendSessionConversation(SessionEventAppendRequest) returns (SessionInfo);
   rpc AppendSessionChange(SessionChangeAppendRequest) returns (SessionInfo);
+  rpc ReplaceSessionChanges(SessionChangesReplaceRequest) returns (SessionInfo);
   rpc LandSession(LandSessionRequest) returns (SessionInfo);
   rpc AbandonSession(AbandonSessionRequest) returns (SessionInfo);
   rpc GetSession(SessionRequest) returns (SessionInfo);
@@ -154,6 +155,12 @@ message SessionEventAppendRequest {
 message SessionChangeAppendRequest {
   string session_id = 1;     // REQUIRED
   FileOperation operation = 2; // REQUIRED
+}
+
+message SessionChangesReplaceRequest {
+  string session_id = 1;           // REQUIRED
+  repeated FileOperation operations = 2; // OPTIONAL full draft snapshot, may be empty
+  uint32 epoch = 3;                // OPTIONAL
 }
 
 message LandSessionRequest {

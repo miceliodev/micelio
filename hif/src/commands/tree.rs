@@ -3,7 +3,7 @@
 use crate::cli::{parse_repository_ref, TreeCommand};
 use crate::config::Config;
 use crate::error::{MicError, Result};
-use crate::grpc::hif_v1::{call, pb, repository_ref};
+use crate::grpc::hif_v1::{call_optional_auth, pb, repository_ref};
 use crate::grpc::{Endpoint, GrpcClient};
 use crate::output;
 use crate::workspace::{parse_position, PositionOrLatest};
@@ -41,7 +41,7 @@ pub async fn run(cmd: TreeCommand) -> Result<()> {
         None
     };
 
-    let response: pb::TreeResponse = call(
+    let response: pb::TreeResponse = call_optional_auth(
         &client,
         "/hif.v1.ContentService/GetTree",
         &pb::GetTreeRequest {
@@ -81,12 +81,12 @@ mod tests {
     use crate::commands::ui_test_support::assert_output_snapshot;
 
     #[test]
-    fn ui_snapshot_tree_requires_auth() {
+    fn ui_snapshot_tree_missing_repository_arg() {
         assert_output_snapshot(
-            &["tree", "acme/repo"],
-            1,
+            &["tree"],
+            2,
             "",
-            "error: Not authenticated. Run 'hif auth login' first.\n",
+            "error: the following required arguments were not provided:\n  <ACCOUNT/REPOSITORY>\n\nUsage: hif tree <ACCOUNT/REPOSITORY> [PATH]\n\nFor more information, try '--help'.\n",
         );
     }
 }

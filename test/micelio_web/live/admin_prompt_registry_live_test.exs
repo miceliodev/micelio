@@ -5,7 +5,6 @@ defmodule MicelioWeb.AdminPromptRegistryLiveTest do
 
   alias Micelio.Accounts
   alias Micelio.Plans
-  alias Micelio.Repositories
 
   test "shows prompt registry for admins", %{conn: conn} do
     {:ok, admin} = Accounts.get_or_create_user_by_email("admin@example.com")

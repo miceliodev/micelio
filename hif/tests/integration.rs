@@ -6,6 +6,7 @@ use assert_cmd::Command;
 use predicates::prelude::*;
 
 /// Get a command for the hif binary.
+#[allow(deprecated)]
 fn hif() -> Command {
     Command::cargo_bin("hif").unwrap()
 }
@@ -45,6 +46,17 @@ fn subcommand_help_works() {
         .stdout(predicate::str::contains("login"))
         .stdout(predicate::str::contains("status"))
         .stdout(predicate::str::contains("logout"));
+}
+
+#[test]
+fn activate_outputs_shell_hooks() {
+    hif()
+        .args(["activate", "zsh"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("hif watch ensure"))
+        .stdout(predicate::str::contains("hif watch leave"))
+        .stdout(predicate::str::contains("HIF_WATCH_WORKSPACE"));
 }
 
 #[test]
@@ -177,6 +189,19 @@ fn debug_defaults_skip_debug_sessions() {
     let stdout = String::from_utf8(assert.get_output().stdout.clone()).unwrap();
     let payload: serde_json::Value = serde_json::from_str(&stdout).unwrap();
     assert_eq!(payload["data"]["session_id"], first_session);
+}
+
+#[test]
+fn watch_commands_do_not_persist_diagnostics_sessions() {
+    let temp_dir = tempfile::tempdir().unwrap();
+
+    hif()
+        .env("HIF_HOME", temp_dir.path())
+        .args(["watch", "ensure", "--shell-pid", "123", "--print-root"])
+        .assert()
+        .success();
+
+    assert!(!temp_dir.path().join("state/sessions").exists());
 }
 
 // =============================================================================

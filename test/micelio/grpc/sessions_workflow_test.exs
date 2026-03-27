@@ -20,7 +20,6 @@ defmodule Micelio.GRPC.SessionsWorkflowTest do
 
   alias Micelio.Mic.Landing
   alias Micelio.Notifications
-  alias Micelio.Repositories
   alias Micelio.Sessions
   alias Micelio.Webhooks
 

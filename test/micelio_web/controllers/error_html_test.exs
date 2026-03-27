@@ -5,11 +5,18 @@ defmodule MicelioWeb.Browser.ErrorHTMLTest do
   import Phoenix.Template, only: [render_to_string: 4]
 
   test "renders 404.html" do
-    assert render_to_string(MicelioWeb.Browser.ErrorHTML, "404", "html", []) == "Not Found"
+    html = render_to_string(MicelioWeb.Browser.ErrorHTML, "404", "html", [])
+
+    assert html =~ "Page not found"
+    assert html =~ "Go home"
+    assert html =~ "Go back"
   end
 
   test "renders 500.html" do
-    assert render_to_string(MicelioWeb.Browser.ErrorHTML, "500", "html", []) ==
-             "Internal Server Error"
+    html = render_to_string(MicelioWeb.Browser.ErrorHTML, "500", "html", [])
+
+    assert html =~ "Something went wrong"
+    assert html =~ "Go home"
+    assert html =~ "Go back"
   end
 end

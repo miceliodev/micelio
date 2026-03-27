@@ -6,6 +6,7 @@
 pub mod changes;
 pub mod manifest;
 pub mod session;
+pub mod watch;
 
 pub use changes::{collect_changes, ChangeType};
 
@@ -16,8 +17,8 @@ pub use manifest::{Manifest, WorkspaceEntry, WorkspaceManifest};
 #[allow(unused_imports)]
 pub use session::{Session, SessionState};
 
-use crate::error::Result;
-use std::path::PathBuf;
+use crate::error::{MicError, Result};
+use std::path::{Path, PathBuf};
 
 /// The hif directory name.
 pub const HIF_DIR: &str = ".hif";
@@ -31,10 +32,29 @@ pub const MANIFEST_FILE: &str = "manifest.json";
 /// The overlay directory name.
 pub const OVERLAY_DIR: &str = "overlay";
 
-/// Get the .hif directory for the current working directory.
+/// Find the nearest parent directory that contains workspace metadata.
+pub(crate) fn find_hif_root_from(start: &Path) -> Option<PathBuf> {
+    find_parent_with(start, |candidate| candidate.join(HIF_DIR).is_dir())
+}
+
+/// Find the nearest parent directory that contains a workspace manifest.
+pub(crate) fn find_workspace_root_from(start: &Path) -> Option<PathBuf> {
+    find_parent_with(start, |candidate| {
+        candidate.join(HIF_DIR).join(MANIFEST_FILE).is_file()
+    })
+}
+
+/// Get the workspace root for the current working directory.
+pub fn workspace_root() -> Result<PathBuf> {
+    let cwd = std::env::current_dir()?;
+    find_workspace_root_from(&cwd).ok_or(MicError::NoWorkspace)
+}
+
+/// Get the .hif directory for the current working directory or workspace root.
 pub fn hif_dir() -> Result<PathBuf> {
     let cwd = std::env::current_dir()?;
-    Ok(cwd.join(HIF_DIR))
+    let root = find_hif_root_from(&cwd).unwrap_or(cwd);
+    Ok(metadata_dir_for_root(&root))
 }
 
 /// Ensure the .hif directory exists.
@@ -103,6 +123,38 @@ pub fn parse_repository_ref(value: &str) -> Option<(String, String)> {
     let repository = &value[slash_index + 1..];
 
     Some((account.to_string(), repository.to_string()))
+}
+
+/// Resolve the metadata directory for a workspace root.
+pub fn metadata_dir_for_root(root: &Path) -> PathBuf {
+    root.join(HIF_DIR)
+}
+
+/// Check whether a path refers to workspace metadata.
+pub fn is_workspace_metadata_path(path: &str) -> bool {
+    path == HIF_DIR || path.starts_with(&format!("{}/", HIF_DIR))
+}
+
+fn find_parent_with<F>(start: &Path, predicate: F) -> Option<PathBuf>
+where
+    F: Fn(&Path) -> bool,
+{
+    let mut current = if start.is_dir() {
+        start.to_path_buf()
+    } else {
+        start.parent()?.to_path_buf()
+    };
+
+    loop {
+        if predicate(&current) {
+            return Some(current);
+        }
+
+        match current.parent() {
+            Some(parent) => current = parent.to_path_buf(),
+            None => return None,
+        }
+    }
 }
 
 /// Parse a revision reference like "@<hex-hash>", "<hex-hash>", "@latest", or "HEAD".
@@ -193,5 +245,25 @@ mod tests {
         assert_eq!(parse_position("@"), None);
         assert_eq!(parse_position("10"), None);
         assert_eq!(parse_position("invalid"), None);
+    }
+
+    #[test]
+    fn test_find_workspace_root_from_subdirectory() {
+        let dir = tempfile::tempdir().unwrap();
+        let workspace = dir.path().join("workspace");
+        let nested = workspace.join("src/nested");
+
+        std::fs::create_dir_all(workspace.join(".hif")).unwrap();
+        std::fs::write(workspace.join(".hif/manifest.json"), "{}").unwrap();
+        std::fs::create_dir_all(&nested).unwrap();
+
+        assert_eq!(find_workspace_root_from(&nested), Some(workspace));
+    }
+
+    #[test]
+    fn test_is_workspace_metadata_path() {
+        assert!(is_workspace_metadata_path(".hif"));
+        assert!(is_workspace_metadata_path(".hif/session.bin"));
+        assert!(!is_workspace_metadata_path("src/main.rs"));
     }
 }

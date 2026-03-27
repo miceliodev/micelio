@@ -4,7 +4,7 @@ defmodule Micelio.SessionsTest do
   import ExUnit.CaptureLog
 
   alias Micelio.Sessions.{OGSummary, Session}
-  alias Micelio.{Sessions, Projects, Accounts}
+  alias Micelio.{Sessions, Accounts}
 
   describe "sessions" do
     setup do

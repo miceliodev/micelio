@@ -5,7 +5,10 @@
 #![allow(dead_code)]
 
 use crate::error::{MicError, Result};
-use crate::workspace::{ensure_hif_dir, hif_dir, HIF_DIR, MANIFEST_FILE};
+use crate::workspace::{
+    ensure_hif_dir, find_workspace_root_from, hif_dir, metadata_dir_for_root, workspace_root,
+    MANIFEST_FILE,
+};
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::Path;
@@ -33,28 +36,18 @@ impl Manifest {
 
     /// Find and load the manifest by searching up the directory tree.
     pub fn find_and_load() -> Result<Self> {
-        let mut current = std::env::current_dir()?;
+        let current = std::env::current_dir()?;
+        let workspace_root = find_workspace_root_from(&current).ok_or(MicError::NoWorkspace)?;
+        let manifest_path = metadata_dir_for_root(&workspace_root).join(MANIFEST_FILE);
+        let data = fs::read_to_string(&manifest_path)?;
+        let workspace: WorkspaceManifest = serde_json::from_str(&data)
+            .map_err(|e| MicError::ConfigError(format!("failed to parse manifest: {}", e)))?;
 
-        loop {
-            let manifest_path = current.join(HIF_DIR).join(MANIFEST_FILE);
-            if manifest_path.exists() {
-                let data = fs::read_to_string(&manifest_path)?;
-                let workspace: WorkspaceManifest = serde_json::from_str(&data).map_err(|e| {
-                    MicError::ConfigError(format!("failed to parse manifest: {}", e))
-                })?;
-
-                return Ok(Self {
-                    server: workspace.server,
-                    organization: workspace.account,
-                    repository: workspace.repository,
-                });
-            }
-
-            match current.parent() {
-                Some(parent) => current = parent.to_path_buf(),
-                None => return Err(MicError::NoWorkspace),
-            }
-        }
+        Ok(Self {
+            server: workspace.server,
+            organization: workspace.account,
+            repository: workspace.repository,
+        })
     }
 
     /// Save the manifest to the current directory.
@@ -115,8 +108,11 @@ impl WorkspaceManifest {
 
     /// Load workspace manifest from the current directory.
     pub fn load() -> Result<Option<Self>> {
-        let path = hif_dir()?.join(MANIFEST_FILE);
-        Self::load_from(&path)
+        match workspace_root() {
+            Ok(root) => Self::load_from(&metadata_dir_for_root(&root).join(MANIFEST_FILE)),
+            Err(MicError::NoWorkspace) => Ok(None),
+            Err(error) => Err(error),
+        }
     }
 
     /// Load workspace manifest from a specific path.

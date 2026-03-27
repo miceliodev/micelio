@@ -184,8 +184,8 @@ hif auth login              # Device flow auth
 hif auth status             # Check auth status
 
 # Repositories
-hif project create <org/repository> "<name>"
-hif project list <org>
+hif repository create <account/repository> "<name>"
+hif repository list <account>
 
 # Working with content (no checkout needed)
 hif show <org/repository> <path>       # Read file
@@ -195,14 +195,15 @@ hif log <org/repository>               # List sessions
 hif blame <org/repository> <path>      # Session attribution
 
 # Local workspace
-hif checkout <org/repository>          # Create local workspace
+hif checkout <account/repository>      # Create local workspace
+hif activate zsh                       # Enable automatic draft sync in your shell
 hif status                             # Show workspace changes
 hif land "goal"                        # Quick land
 
 # Sessions (explicit workflow)
-hif session start <org/repository> "goal"
+hif session start <account/repository> "goal"
 hif session note "message"             # Add conversation entry
-hif session land                       # Push to forge
+hif session land                       # Land onto trunk
 hif session abandon                    # Discard session
 
 # Sync
@@ -249,9 +250,8 @@ mix phx.server
 ### Verify Installation
 
 ```bash
-# Run all tests
-mix test
-cd hif && cargo test
+# Run the canonical verification suite
+mise run check
 ```
 
 ### Important Files
@@ -269,12 +269,15 @@ cd hif && cargo test
 Before making changes:
 
 1. **Pull latest**: `git pull origin main`
-2. **Check tests pass**: `mix test`
+2. **Run the canonical check**: `mise run check`
 3. **Review recent commits**: `git log --oneline -10`
 
 ### Quick Reference
 
 ```bash
+# Canonical verification
+mise run check
+
 # Build
 mix compile --warnings-as-errors
 cd hif && cargo build --release
@@ -288,16 +291,15 @@ mix format --check-formatted
 cd hif && cargo fmt --check
 
 # Pre-commit (run before pushing)
-mix compile --warnings-as-errors && mix format --check-formatted && mix test
-cd hif && cargo build --release && cargo fmt --check && cargo test
+mise run check
 ```
 
 ### Shortcut
 
-Use the precommit alias when done with all changes:
+Use `mise run check` when done with changes. `mix precommit` still exists for Phoenix-side checks only:
 
 ```bash
-mix precommit
+mise run check
 ```
 
 ---
@@ -319,6 +321,7 @@ mix precommit
 | `mix ecto.gen.migration name` | Generate migration |
 | `mix help task_name` | Get task docs |
 | `mix precommit` | Run all pre-commit checks |
+| `mise run check` | Run the full forge + hif verification suite |
 
 ### Rust (hif CLI)
 

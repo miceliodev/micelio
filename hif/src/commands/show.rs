@@ -3,7 +3,7 @@
 use crate::cli::{parse_repository_ref, ShowCommand};
 use crate::config::Config;
 use crate::error::{MicError, Result};
-use crate::grpc::hif_v1::{call, pb, repository_ref};
+use crate::grpc::hif_v1::{call_optional_auth, pb, repository_ref};
 use crate::grpc::{Endpoint, GrpcClient};
 use crate::output;
 use crate::workspace::{parse_position, PositionOrLatest};
@@ -44,7 +44,7 @@ pub async fn run(cmd: ShowCommand) -> Result<()> {
         None
     };
 
-    let response: pb::PathResponse = call(
+    let response: pb::PathResponse = call_optional_auth(
         &client,
         "/hif.v1.ContentService/GetPath",
         &pb::GetPathRequest {
@@ -90,12 +90,12 @@ mod tests {
     use crate::commands::ui_test_support::assert_output_snapshot;
 
     #[test]
-    fn ui_snapshot_show_requires_auth() {
+    fn ui_snapshot_show_missing_repository_arg() {
         assert_output_snapshot(
-            &["show", "acme/repo", "README.md"],
-            1,
+            &["show"],
+            2,
             "",
-            "error: Not authenticated. Run 'hif auth login' first.\n",
+            "error: the following required arguments were not provided:\n  <ACCOUNT/REPOSITORY>\n  <PATH>\n\nUsage: hif show <ACCOUNT/REPOSITORY> <PATH>\n\nFor more information, try '--help'.\n",
         );
     }
 }

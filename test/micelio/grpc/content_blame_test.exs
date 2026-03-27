@@ -6,7 +6,6 @@ defmodule Micelio.GRPC.ContentBlameTest do
   alias Micelio.GRPC.Content.V1.ContentService.Server, as: ContentServer
   alias Micelio.GRPC.Content.V1.GetBlameRequest
   alias Micelio.Mic.{Binary, Repository, Tree}
-  alias Micelio.Repositories
   alias Micelio.Sessions
   alias Micelio.Storage
 
