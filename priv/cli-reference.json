@@ -1,230 +1,361 @@
 {
+  "name": "hif",
+  "version": "0.1.0",
+  "description": "The hif CLI - a forge-first version control system for the agent era",
+  "tagline": "Version control designed for AI-assisted development",
+  "introduction": {
+    "what": "hif is an alternative to Git designed for the agent era. Instead of commits, you work in sessions that capture not just what changed, but why.",
+    "why": [
+      "Sessions capture goals, conversations, and decisions alongside code changes",
+      "Forge-first design means the server is the source of truth",
+      "Built for AI agents to understand and contribute to codebases",
+      "Simpler mental model: no staging area, no rebasing, no merge commits"
+    ],
+    "key_differences_from_git": {
+      "unit_of_work": {
+        "git": "Commit (snapshot)",
+        "hif": "Session (goal + context + changes)"
+      },
+      "storage": {
+        "git": "Distributed (.git folder)",
+        "hif": "Forge-first (server is source of truth)"
+      },
+      "history": {
+        "git": "DAG of commits",
+        "hif": "Hash-addressed revision history"
+      },
+      "conflicts": {
+        "git": "3-way merge",
+        "hif": "Bloom filter detection + explicit resolution"
+      }
+    }
+  },
+  "installation": {
+    "methods": [
+      {
+        "name": "Download binary",
+        "platforms": [
+          "macOS",
+          "Linux",
+          "Windows"
+        ]
+      },
+      {
+        "name": "Build from source",
+        "command": "cargo install hif"
+      }
+    ],
+    "requirements": [
+      "Micelio account (sign up at micelio.dev)"
+    ]
+  },
+  "concepts": [
+    {
+      "name": "Session",
+      "description": "A unit of work with a goal, conversation, and file changes. Sessions replace Git commits but capture much more context.",
+      "example": "hif session start \"Add user authentication\""
+    },
+    {
+      "name": "Workspace",
+      "description": "A local directory linked to a repository on the forge. Created with `hif checkout`.",
+      "example": "hif checkout acme/myapp"
+    },
+    {
+      "name": "Forge",
+      "description": "The Micelio server that stores all repository data. Unlike Git, the forge is the source of truth.",
+      "example": "https://micelio.dev"
+    },
+    {
+      "name": "Landing",
+      "description": "Publishing your already-synced session draft onto trunk. Similar to landing a reviewed branch, but the session context is part of the unit of work.",
+      "example": "hif session land"
+    },
+    {
+      "name": "Revision",
+      "description": "A point in repository history, referenced by hash (e.g., @012345...abcd).",
+      "example": "hif show acme/myapp README.md --ref @012345...abcd"
+    }
+  ],
+  "quick_start": {
+    "title": "Quick Start",
+    "steps": [
+      {
+        "step": 1,
+        "title": "Authenticate",
+        "command": "hif auth login",
+        "description": "Opens browser for OAuth authentication"
+      },
+      {
+        "step": 2,
+        "title": "Create workspace",
+        "command": "hif checkout acme/myapp",
+        "description": "Downloads repository and creates local workspace"
+      },
+      {
+        "step": 3,
+        "title": "Activate shell hooks",
+        "command": "eval \"$(hif activate zsh)\"",
+        "description": "Enable automatic draft sync when you enter a workspace"
+      },
+      {
+        "step": 4,
+        "title": "Start session",
+        "command": "hif session start \"Add feature\"",
+        "description": "Begin tracking your work with a goal"
+      },
+      {
+        "step": 5,
+        "title": "Make changes",
+        "command": "# Edit files normally",
+        "description": "Use your favorite editor, no staging needed"
+      },
+      {
+        "step": 6,
+        "title": "Land changes",
+        "command": "hif session land",
+        "description": "Publish the session draft onto trunk"
+      }
+    ],
+    "quick_land": {
+      "description": "For small changes, combine session start and land:",
+      "command": "hif land \"Fix typo in README\""
+    }
+  },
   "commands": [
     {
+      "name": "auth",
       "category": "Authentication",
       "description": "Authenticate with a Micelio forge",
-      "name": "auth",
       "subcommands": [
         {
-          "args": [],
+          "name": "login",
           "description": "Authenticate via OAuth device flow",
+          "usage": "hif auth login",
+          "args": [],
+          "options": [],
           "examples": [
             {
               "command": "hif auth login",
               "description": "Start authentication flow"
             }
           ],
-          "name": "login",
-          "notes": "Opens your browser to complete authentication. The CLI will wait for you to authorize.",
-          "options": [],
-          "usage": "hif auth login"
+          "notes": "Opens your browser to complete authentication. The CLI will wait for you to authorize."
         },
         {
-          "args": [],
+          "name": "status",
           "description": "Check current authentication status",
+          "usage": "hif auth status",
+          "args": [],
+          "options": [],
           "examples": [
             {
               "command": "hif auth status",
               "description": "Show if logged in and token expiry"
             }
-          ],
-          "name": "status",
-          "options": [],
-          "usage": "hif auth status"
+          ]
         },
         {
-          "args": [],
+          "name": "logout",
           "description": "Remove stored credentials",
+          "usage": "hif auth logout",
+          "args": [],
+          "options": [],
           "examples": [
             {
               "command": "hif auth logout",
               "description": "Clear all stored tokens"
             }
-          ],
-          "name": "logout",
-          "options": [],
-          "usage": "hif auth logout"
+          ]
         }
       ]
     },
     {
+      "name": "org",
       "category": "Organizations",
       "description": "Manage organizations",
-      "name": "org",
       "subcommands": [
         {
-          "args": [],
+          "name": "list",
           "description": "List organizations you belong to",
+          "usage": "hif org list",
+          "args": [],
+          "options": [],
           "examples": [
             {
               "command": "hif org list",
               "description": "Show all your organizations"
             }
-          ],
-          "name": "list",
-          "options": [],
-          "usage": "hif org list"
+          ]
         },
         {
+          "name": "info",
+          "description": "Get organization details",
+          "usage": "hif org info <ORG>",
           "args": [
             {
-              "description": "Organization handle",
               "name": "org",
+              "description": "Organization handle",
               "required": true
             }
           ],
-          "description": "Get organization details",
+          "options": [],
           "examples": [
             {
               "command": "hif org info acme",
               "description": "Show details for 'acme' organization"
             }
-          ],
-          "name": "info",
-          "options": [],
-          "usage": "hif org info <ORG>"
+          ]
         }
       ]
     },
     {
-      "category": "Projects",
-      "description": "Manage projects",
-      "name": "project",
+      "name": "repository",
+      "category": "Repositories",
+      "description": "Manage repositories",
       "subcommands": [
         {
+          "name": "list",
+          "description": "List repositories in an account",
+          "usage": "hif repository list <ACCOUNT>",
           "args": [
             {
-              "description": "Organization handle",
-              "name": "org",
+              "name": "account",
+              "description": "Account handle (personal or organization)",
               "required": true
             }
           ],
-          "description": "List projects in an organization",
+          "options": [],
           "examples": [
             {
-              "command": "hif project list acme",
-              "description": "List all projects in 'acme'"
+              "command": "hif repository list acme",
+              "description": "List all repositories in 'acme'"
             }
-          ],
-          "name": "list",
-          "options": [],
-          "usage": "hif project list <ORG>"
+          ]
         },
         {
+          "name": "create",
+          "description": "Create a new repository",
+          "usage": "hif repository create <ACCOUNT/REPOSITORY> <NAME>",
           "args": [
             {
-              "description": "Project reference (e.g., acme/myapp)",
-              "name": "org/project",
+              "name": "account/repository",
+              "description": "Repository reference (e.g., acme/myapp)",
               "required": true
             },
             {
-              "description": "Display name for the project",
               "name": "name",
+              "description": "Display name for the repository",
               "required": true
             }
           ],
-          "description": "Create a new project",
+          "options": [
+            {
+              "name": "--description, -d",
+              "description": "Repository description",
+              "required": false
+            }
+          ],
           "examples": [
             {
-              "command": "hif project create acme/api \"API Server\"",
-              "description": "Create new project"
+              "command": "hif repository create acme/api \"API Server\"",
+              "description": "Create new repository"
             },
             {
-              "command": "hif project create acme/api \"API Server\" -d \"REST API for mobile app\"",
+              "command": "hif repository create acme/api \"API Server\" -d \"REST API for mobile app\"",
               "description": "Create with description"
             }
-          ],
-          "name": "create",
-          "options": [
-            {
-              "description": "Project description",
-              "name": "--description, -d",
-              "required": false
-            }
-          ],
-          "usage": "hif project create <ORG/PROJECT> <NAME>"
+          ]
         },
         {
-          "args": [
-            {
-              "description": "Project reference",
-              "name": "org/project",
-              "required": true
-            }
-          ],
-          "description": "Get project details",
-          "examples": [
-            {
-              "command": "hif project info acme/myapp",
-              "description": "Show project details"
-            }
-          ],
           "name": "info",
-          "options": [],
-          "usage": "hif project info <ORG/PROJECT>"
-        },
-        {
+          "description": "Get repository details",
+          "usage": "hif repository info <ACCOUNT/REPOSITORY>",
           "args": [
             {
-              "description": "Project reference",
-              "name": "org/project",
+              "name": "account/repository",
+              "description": "Repository reference",
               "required": true
             }
           ],
-          "description": "Update project settings",
+          "options": [],
           "examples": [
             {
-              "command": "hif project update acme/myapp --name \"My App v2\"",
-              "description": "Rename project"
+              "command": "hif repository info acme/myapp",
+              "description": "Show repository details"
+            }
+          ]
+        },
+        {
+          "name": "update",
+          "description": "Update repository settings",
+          "usage": "hif repository update <ACCOUNT/REPOSITORY>",
+          "args": [
+            {
+              "name": "account/repository",
+              "description": "Repository reference",
+              "required": true
             }
           ],
-          "name": "update",
           "options": [
             {
-              "description": "New display name",
               "name": "--name, -n",
+              "description": "New display name",
               "required": false
             },
             {
-              "description": "New description",
               "name": "--description, -d",
+              "description": "New description",
               "required": false
             }
           ],
-          "usage": "hif project update <ORG/PROJECT>"
+          "examples": [
+            {
+              "command": "hif repository update acme/myapp --name \"My App v2\"",
+              "description": "Rename repository"
+            }
+          ]
         },
         {
+          "name": "delete",
+          "description": "Delete a repository (cannot be undone)",
+          "usage": "hif repository delete <ACCOUNT/REPOSITORY>",
           "args": [
             {
-              "description": "Project reference",
-              "name": "org/project",
+              "name": "account/repository",
+              "description": "Repository reference",
               "required": true
             }
           ],
-          "description": "Delete a project (cannot be undone)",
+          "options": [],
           "examples": [
             {
-              "command": "hif project delete acme/old-project",
-              "description": "Permanently delete project"
+              "command": "hif repository delete acme/old-repository",
+              "description": "Permanently delete repository"
             }
           ],
-          "name": "delete",
-          "options": [],
-          "usage": "hif project delete <ORG/PROJECT>",
-          "warning": "This action cannot be undone. All project data will be permanently deleted."
+          "warning": "This action cannot be undone. All repository data will be permanently deleted."
         }
       ]
     },
     {
+      "name": "checkout",
+      "category": "Workspace",
+      "description": "Create a local workspace from a repository",
+      "usage": "hif checkout <ACCOUNT/REPOSITORY>",
       "args": [
         {
-          "description": "Project reference (e.g., acme/myapp)",
-          "name": "org/project",
+          "name": "account/repository",
+          "description": "Repository reference (e.g., acme/myapp)",
           "required": true
         }
       ],
-      "category": "Workspace",
-      "description": "Create a local workspace from a project",
+      "options": [
+        {
+          "name": "--path, -p",
+          "description": "Local directory path (defaults to repository name)",
+          "required": false
+        }
+      ],
       "examples": [
         {
           "command": "hif checkout acme/myapp",
@@ -235,66 +366,71 @@
           "description": "Checkout to ./code"
         }
       ],
-      "name": "checkout",
-      "notes": "After checkout, cd into the directory and start a session to begin working.",
-      "options": [
-        {
-          "description": "Local directory path (defaults to project name)",
-          "name": "--path, -p",
-          "required": false
-        }
-      ],
-      "usage": "hif checkout <ORG/PROJECT>"
+      "notes": "After checkout, cd into the directory and start a session to begin working."
     },
     {
+      "name": "link",
+      "category": "Workspace",
+      "description": "Link current directory to an existing repository",
+      "usage": "hif link <ACCOUNT/REPOSITORY>",
       "args": [
         {
-          "description": "Project reference",
-          "name": "org/project",
+          "name": "account/repository",
+          "description": "Repository reference",
           "required": true
         }
       ],
-      "category": "Workspace",
-      "description": "Link current directory to an existing project",
+      "options": [],
       "examples": [
         {
           "command": "cd my-existing-code && hif link acme/myapp",
-          "description": "Link existing directory to project"
+          "description": "Link existing directory to repository"
         }
       ],
-      "name": "link",
-      "notes": "Use this when you have existing code you want to track. Unlike checkout, link doesn't download files.",
-      "options": [],
-      "usage": "hif link <ORG/PROJECT>"
+      "notes": "Use this when you have existing code you want to track. Unlike checkout, link doesn't download files."
     },
     {
-      "args": [],
+      "name": "status",
       "category": "Workspace",
       "description": "Show workspace status and local changes",
+      "usage": "hif status",
+      "args": [],
+      "options": [],
       "examples": [
         {
           "command": "hif status",
           "description": "Show all local changes"
         },
         {
-          "command": "hif status --json",
+          "command": "hif status --format json",
           "description": "Output as JSON"
+        },
+        {
+          "command": "hif status --format toon",
+          "description": "Output as TOON"
         }
       ],
-      "name": "status",
-      "notes": "Must be run from within a workspace (created by checkout or link).",
-      "options": [],
       "output_format": {
         "A": "Added - new file",
-        "D": "Deleted - removed file",
-        "M": "Modified - changed file"
+        "M": "Modified - changed file",
+        "D": "Deleted - removed file"
       },
-      "usage": "hif status"
+      "notes": "Must be run from within a workspace (created by checkout or link)."
     },
     {
-      "args": [],
+      "name": "sync",
       "category": "Workspace",
       "description": "Sync workspace with latest changes from forge",
+      "usage": "hif sync",
+      "args": [],
+      "options": [
+        {
+          "name": "--strategy, -s",
+          "description": "Conflict resolution strategy: ours, theirs, or interactive (default)",
+          "required": false,
+          "default": "interactive"
+        }
+      ],
       "examples": [
         {
           "command": "hif sync",
@@ -308,32 +444,55 @@
           "command": "hif sync --strategy theirs",
           "description": "Use remote changes on conflict"
         }
-      ],
-      "name": "sync",
-      "options": [
-        {
-          "default": "interactive",
-          "description": "Conflict resolution strategy: ours, theirs, or interactive (default)",
-          "name": "--strategy, -s",
-          "required": false
-        }
-      ],
-      "usage": "hif sync"
+      ]
     },
     {
+      "name": "activate",
+      "category": "Workspace",
+      "description": "Emit shell hooks that auto-manage the session draft watcher",
+      "usage": "hif activate <SHELL>",
+      "args": [
+        {
+          "name": "shell",
+          "description": "Target shell: bash, zsh, or fish",
+          "required": true
+        }
+      ],
+      "options": [],
+      "examples": [
+        {
+          "command": "eval \"$(hif activate zsh)\"",
+          "description": "Enable shell hooks for zsh"
+        },
+        {
+          "command": "eval \"$(hif activate bash)\"",
+          "description": "Enable shell hooks for bash"
+        },
+        {
+          "command": "hif activate fish | source",
+          "description": "Enable shell hooks for fish"
+        }
+      ],
+      "notes": "The generated hooks start one watcher per workspace and batch filesystem events into remote draft syncs while a session is active."
+    },
+    {
+      "name": "session",
       "category": "Sessions",
       "description": "Manage work sessions",
-      "name": "session",
       "subcommands": [
         {
+          "name": "start",
+          "description": "Start a new session",
+          "usage": "hif session start <GOAL>",
+          "usage_outside_workspace": "hif session start <ACCOUNT/REPOSITORY> <GOAL>",
           "args": [
             {
-              "description": "What you're trying to accomplish",
               "name": "goal",
+              "description": "What you're trying to accomplish",
               "required": true
             }
           ],
-          "description": "Start a new session",
+          "options": [],
           "examples": [
             {
               "command": "hif session start \"Add user authentication\"",
@@ -344,34 +503,40 @@
               "description": "Start session (outside workspace)"
             }
           ],
-          "name": "start",
-          "notes": "When run inside a workspace, the project is inferred automatically.",
-          "options": [],
-          "usage": "hif session start <GOAL>",
-          "usage_outside_workspace": "hif session start <ORG/PROJECT> <GOAL>"
+          "notes": "When run inside a workspace, the repository is inferred automatically."
         },
         {
-          "args": [],
+          "name": "status",
           "description": "Show current session status",
+          "usage": "hif session status",
+          "args": [],
+          "options": [],
           "examples": [
             {
               "command": "hif session status",
               "description": "Show active session details"
             }
-          ],
-          "name": "status",
-          "options": [],
-          "usage": "hif session status"
+          ]
         },
         {
+          "name": "note",
+          "description": "Add a note to the current session",
+          "usage": "hif session note <MESSAGE>",
           "args": [
             {
-              "description": "Note content",
               "name": "message",
+              "description": "Note content",
               "required": true
             }
           ],
-          "description": "Add a note to the current session",
+          "options": [
+            {
+              "name": "--role, -r",
+              "description": "Who is adding the note: human or agent",
+              "required": false,
+              "default": "human"
+            }
+          ],
           "examples": [
             {
               "command": "hif session note \"Decided to use JWT for auth\"",
@@ -382,78 +547,72 @@
               "description": "Add note from AI agent"
             }
           ],
-          "name": "note",
-          "notes": "Notes help capture context and decisions that will help future developers understand the code.",
-          "options": [
-            {
-              "default": "human",
-              "description": "Who is adding the note: human or agent",
-              "name": "--role, -r",
-              "required": false
-            }
-          ],
-          "usage": "hif session note <MESSAGE>"
+          "notes": "Notes help capture context and decisions that will help future developers understand the code."
         },
         {
+          "name": "land",
+          "description": "Land the session onto trunk",
+          "usage": "hif session land",
           "args": [],
-          "description": "Land the session (push changes to forge)",
+          "options": [],
           "examples": [
             {
               "command": "hif session land",
-              "description": "Push all changes to forge"
+              "description": "Publish the session draft onto trunk"
             }
           ],
-          "name": "land",
-          "notes": "If conflicts are detected, you'll be prompted to resolve them.",
-          "options": [],
-          "usage": "hif session land"
+          "notes": "Landing publishes the already-synced draft. If conflicts are detected, you'll be prompted to resolve them."
         },
         {
-          "args": [],
+          "name": "abandon",
           "description": "Abandon the session (discard all changes)",
+          "usage": "hif session abandon",
+          "args": [],
+          "options": [],
           "examples": [
             {
               "command": "hif session abandon",
               "description": "Discard current session"
             }
           ],
-          "name": "abandon",
-          "options": [],
-          "usage": "hif session abandon",
           "warning": "This will discard all uncommitted changes in the session."
         },
         {
-          "args": [],
+          "name": "resolve",
           "description": "Resolve conflicts interactively",
+          "usage": "hif session resolve",
+          "args": [],
+          "options": [
+            {
+              "name": "--strategy, -s",
+              "description": "Resolution strategy",
+              "required": false,
+              "default": "interactive"
+            }
+          ],
           "examples": [
             {
               "command": "hif session resolve",
               "description": "Interactively resolve conflicts"
             }
-          ],
-          "name": "resolve",
-          "options": [
-            {
-              "default": "interactive",
-              "description": "Resolution strategy",
-              "name": "--strategy, -s",
-              "required": false
-            }
-          ],
-          "usage": "hif session resolve"
+          ]
         }
       ]
     },
     {
+      "name": "land",
+      "category": "Sessions",
+      "description": "Quick land: start session + land in one step",
+      "usage": "hif land <GOAL>",
+      "usage_outside_workspace": "hif land <ACCOUNT/REPOSITORY> <GOAL>",
       "args": [
         {
-          "description": "What you accomplished",
           "name": "goal",
+          "description": "What you accomplished",
           "required": true
         }
       ],
-      "category": "Sessions",
-      "description": "Quick land: start session + land in one step",
+      "options": [],
       "examples": [
         {
           "command": "hif land \"Fix typo in README\"",
@@ -464,102 +623,133 @@
           "description": "Quick land (outside workspace)"
         }
       ],
-      "name": "land",
-      "notes": "Use for small, self-explanatory changes. For larger work, use `hif session start` to add notes along the way.",
-      "options": [],
-      "usage": "hif land <GOAL>",
-      "usage_outside_workspace": "hif land <ORG/PROJECT> <GOAL>"
+      "notes": "Use for small, self-explanatory changes. For larger work, use `hif session start` to add notes along the way."
     },
     {
+      "name": "show",
+      "category": "Content",
+      "description": "Show file contents from the forge (no checkout needed)",
+      "usage": "hif show <ACCOUNT/REPOSITORY> <PATH>",
       "args": [
         {
-          "description": "Project reference",
-          "name": "org/project",
+          "name": "account/repository",
+          "description": "Repository reference",
           "required": true
         },
         {
-          "description": "File path",
           "name": "path",
+          "description": "File path",
           "required": true
         }
       ],
-      "category": "Content",
-      "description": "Show file contents from the forge (no checkout needed)",
+      "options": [
+        {
+          "name": "--ref, -r",
+          "description": "Revision reference (64-hex hash, @latest, or HEAD)",
+          "required": false
+        }
+      ],
       "examples": [
         {
           "command": "hif show acme/myapp README.md",
           "description": "Show current README"
         },
         {
-          "command": "hif show acme/myapp src/main.rs --ref @10",
-          "description": "Show file at position 10"
+          "command": "hif show acme/myapp src/main.rs --ref @012345...abcd",
+          "description": "Show file at a specific revision"
         }
       ],
-      "name": "show",
-      "notes": "Reads directly from the forge without creating a local workspace.",
-      "options": [
-        {
-          "description": "Position reference (e.g., @10, @latest)",
-          "name": "--ref, -r",
-          "required": false
-        }
-      ],
-      "usage": "hif show <ORG/PROJECT> <PATH>"
+      "notes": "Reads directly from the forge without creating a local workspace."
     },
     {
+      "name": "tree",
+      "category": "Content",
+      "description": "List directory contents from the forge",
+      "usage": "hif tree <ACCOUNT/REPOSITORY> [PATH]",
       "args": [
         {
-          "description": "Project reference",
-          "name": "org/project",
+          "name": "account/repository",
+          "description": "Repository reference",
           "required": true
         },
         {
-          "description": "Directory path (defaults to root)",
           "name": "path",
+          "description": "Directory path (defaults to root)",
           "required": false
         }
       ],
-      "category": "Content",
-      "description": "List directory contents from the forge",
+      "options": [
+        {
+          "name": "--ref, -r",
+          "description": "Revision hash reference",
+          "required": false
+        }
+      ],
       "examples": [
         {
           "command": "hif tree acme/myapp",
-          "description": "List project root"
+          "description": "List repository root"
         },
         {
           "command": "hif tree acme/myapp src",
           "description": "List src/ directory"
         },
         {
-          "command": "hif tree acme/myapp --ref @5",
-          "description": "List at position 5"
+          "command": "hif tree acme/myapp --ref @012345...abcd",
+          "description": "List at a specific revision"
         }
-      ],
-      "name": "tree",
-      "options": [
-        {
-          "description": "Position reference",
-          "name": "--ref, -r",
-          "required": false
-        }
-      ],
-      "usage": "hif tree <ORG/PROJECT> [PATH]"
+      ]
     },
     {
+      "name": "grep",
+      "category": "Content",
+      "description": "Search repository content",
+      "usage": "hif grep <ACCOUNT/REPOSITORY> <QUERY>",
       "args": [
         {
-          "description": "Project reference",
-          "name": "org/project",
+          "name": "account/repository",
+          "description": "Repository reference",
           "required": true
         },
         {
-          "description": "Search query or regex pattern",
           "name": "query",
+          "description": "Search query or regex pattern",
           "required": true
         }
       ],
-      "category": "Content",
-      "description": "Search repository content",
+      "options": [
+        {
+          "name": "--position",
+          "description": "Revision reference (64-hex hash, @latest, or HEAD)",
+          "required": false
+        },
+        {
+          "name": "--path",
+          "description": "Restrict to path prefix",
+          "required": false
+        },
+        {
+          "name": "--regex",
+          "description": "Treat query as regex",
+          "required": false
+        },
+        {
+          "name": "--case-sensitive",
+          "description": "Case-sensitive matching",
+          "required": false
+        },
+        {
+          "name": "--local",
+          "description": "Use local fallback when remote search fails",
+          "required": false
+        },
+        {
+          "name": "-n, --limit",
+          "description": "Maximum number of matches",
+          "required": false,
+          "default": "20"
+        }
+      ],
       "examples": [
         {
           "command": "hif grep acme/myapp \"TODO\"",
@@ -578,53 +768,33 @@
           "description": "Use local fallback on remote failure"
         }
       ],
-      "name": "grep",
-      "notes": "Uses forge search index by default and supports local fallback with --local.",
-      "options": [
-        {
-          "description": "Position reference (e.g., @10, @latest)",
-          "name": "--position",
-          "required": false
-        },
-        {
-          "description": "Restrict to path prefix",
-          "name": "--path",
-          "required": false
-        },
-        {
-          "description": "Treat query as regex",
-          "name": "--regex",
-          "required": false
-        },
-        {
-          "description": "Case-sensitive matching",
-          "name": "--case-sensitive",
-          "required": false
-        },
-        {
-          "description": "Use local fallback when remote search fails",
-          "name": "--local",
-          "required": false
-        },
-        {
-          "default": "20",
-          "description": "Maximum number of matches",
-          "name": "-n, --limit",
-          "required": false
-        }
-      ],
-      "usage": "hif grep <ORG/PROJECT> <QUERY>"
+      "notes": "Uses forge search index by default, supports anonymous access to public repositories, and falls back locally with --local."
     },
     {
+      "name": "log",
+      "category": "History",
+      "description": "Show session history for a repository",
+      "usage": "hif log <ACCOUNT/REPOSITORY>",
       "args": [
         {
-          "description": "Project reference",
-          "name": "org/project",
+          "name": "account/repository",
+          "description": "Repository reference",
           "required": true
         }
       ],
-      "category": "History",
-      "description": "Show session history for a project",
+      "options": [
+        {
+          "name": "--path, -p",
+          "description": "Filter by file path",
+          "required": false
+        },
+        {
+          "name": "-n",
+          "description": "Maximum number of sessions to show",
+          "required": false,
+          "default": "20"
+        }
+      ],
       "examples": [
         {
           "command": "hif log acme/myapp",
@@ -638,122 +808,130 @@
           "command": "hif log acme/myapp --path src/",
           "description": "Sessions that touched src/"
         }
-      ],
-      "name": "log",
-      "options": [
-        {
-          "description": "Filter by file path",
-          "name": "--path, -p",
-          "required": false
-        },
-        {
-          "default": "20",
-          "description": "Maximum number of sessions to show",
-          "name": "-n",
-          "required": false
-        }
-      ],
-      "usage": "hif log <ORG/PROJECT>"
+      ]
     },
     {
+      "name": "blame",
+      "category": "History",
+      "description": "Show who changed each line (session attribution)",
+      "usage": "hif blame <ACCOUNT/REPOSITORY> <PATH>",
       "args": [
         {
-          "description": "Project reference",
-          "name": "org/project",
+          "name": "account/repository",
+          "description": "Repository reference",
           "required": true
         },
         {
-          "description": "File path",
           "name": "path",
+          "description": "File path",
           "required": true
         }
       ],
-      "category": "History",
-      "description": "Show who changed each line (session attribution)",
+      "options": [],
       "examples": [
         {
           "command": "hif blame acme/myapp src/main.rs",
           "description": "Show line-by-line attribution"
         }
       ],
-      "name": "blame",
-      "notes": "Shows which session last modified each line, along with the session goal.",
-      "options": [],
-      "usage": "hif blame <ORG/PROJECT> <PATH>"
+      "notes": "Shows which session last modified each line, along with the session goal."
     },
     {
+      "name": "diff",
+      "category": "History",
+      "description": "Show changes between two revisions",
+      "usage": "hif diff <ACCOUNT/REPOSITORY> <FROM> [TO]",
       "args": [
         {
-          "description": "Project reference",
-          "name": "org/project",
+          "name": "account/repository",
+          "description": "Repository reference",
           "required": true
         },
         {
-          "description": "Starting position (e.g., @5)",
           "name": "from",
+          "description": "Starting revision hash (e.g., @0123...abcd)",
           "required": true
         },
         {
-          "description": "Ending position (defaults to HEAD)",
           "name": "to",
+          "description": "Ending revision hash (defaults to HEAD)",
           "required": false
         }
       ],
-      "category": "History",
-      "description": "Show changes between two positions",
+      "options": [],
       "examples": [
         {
-          "command": "hif diff acme/myapp @5 @10",
-          "description": "Changes from position 5 to 10"
+          "command": "hif diff acme/myapp @012345...abcd @89ab...cdef",
+          "description": "Changes between two revisions"
         },
         {
-          "command": "hif diff acme/myapp @5",
-          "description": "Changes from position 5 to HEAD"
+          "command": "hif diff acme/myapp @012345...abcd",
+          "description": "Changes from revision to HEAD"
         }
-      ],
-      "name": "diff",
-      "options": [],
-      "usage": "hif diff <ORG/PROJECT> <FROM> [TO]"
+      ]
     }
   ],
-  "concepts": [
+  "global_options": [
     {
-      "description": "A unit of work with a goal, conversation, and file changes. Sessions replace Git commits but capture much more context.",
-      "example": "hif session start \"Add user authentication\"",
-      "name": "Session"
+      "name": "--format",
+      "description": "Output format: human, json, or toon"
     },
     {
-      "description": "A local directory linked to a project on the forge. Created with `hif checkout`.",
-      "example": "hif checkout acme/myapp",
-      "name": "Workspace"
+      "name": "--verbose, -v",
+      "description": "Show additional details"
     },
     {
-      "description": "The Micelio server that stores all project data. Unlike Git, the forge is the source of truth.",
-      "example": "https://micelio.dev",
-      "name": "Forge"
+      "name": "--no-color",
+      "description": "Disable colored output"
     },
     {
-      "description": "Pushing your session changes to the forge. Similar to Git push, but includes all session context.",
-      "example": "hif session land",
-      "name": "Landing"
+      "name": "--cwd, -C",
+      "description": "Run as if started in <PATH> instead of current directory"
     },
     {
-      "description": "A point in project history, referenced as @N (e.g., @10). Similar to Git commit SHA but sequential.",
-      "example": "hif show acme/myapp README.md --ref @5",
-      "name": "Position"
+      "name": "--help, -h",
+      "description": "Show help information"
+    },
+    {
+      "name": "--version, -V",
+      "description": "Show version information"
     }
   ],
-  "description": "The hif CLI - a forge-first version control system for the agent era",
   "environment_variables": [
     {
-      "default": "~/.hif",
+      "name": "HIF_HOME",
       "description": "Override config directory",
-      "name": "HIF_HOME"
+      "default": "~/.hif"
     },
     {
-      "default": "",
+      "name": "HIF_FORMAT",
+      "description": "Default output format: human|json|toon",
+      "default": "human"
+    },
+    {
+      "name": "HIF_VERBOSE",
+      "description": "Enable verbose mode (true/false)",
+      "default": "false"
+    },
+    {
+      "name": "HIF_NO_COLOR",
+      "description": "Disable color output (true/false)",
+      "default": "false"
+    },
+    {
+      "name": "HIF_CWD",
+      "description": "Working directory override",
+      "default": ""
+    },
+    {
+      "name": "NO_COLOR",
       "description": "Disable colored output",
-      "name": "NO_COLOR"
+      "default": ""
+    },
+    {
+      "name": "HIF_<COMMAND>_<ARG>",
+      "description": "Every command argument/option has an env var (e.g., HIF_GREP_QUERY, HIF_SYNC_STRATEGY, HIF_SESSION_NOTE_MESSAGE)",
+      "default": ""
     }
   ],
   "error_codes": [
@@ -770,7 +948,7 @@
     {
       "code": "not_in_workspace",
       "message": "Not in a workspace directory",
-      "resolution": "Run `hif checkout <org/project>` first, or specify project explicitly"
+      "resolution": "Run `hif checkout <account/repository>` first, or specify repository explicitly"
     },
     {
       "code": "no_active_session",
@@ -783,9 +961,9 @@
       "resolution": "Run `hif session land` or `hif session abandon` first"
     },
     {
-      "code": "invalid_project_ref",
-      "message": "Invalid project reference format",
-      "resolution": "Use format: org/project (e.g., 'acme/myapp')"
+      "code": "invalid_repository_ref",
+      "message": "Invalid repository reference format",
+      "resolution": "Use format: account/repository (e.g., 'acme/myapp')"
     },
     {
       "code": "conflicts_detected",
@@ -793,123 +971,9 @@
       "resolution": "Run `hif session resolve` or `hif sync`"
     }
   ],
-  "global_options": [
-    {
-      "description": "Output in JSON format (for scripting and agents)",
-      "name": "--json"
-    },
-    {
-      "description": "Show additional details",
-      "name": "--verbose, -v"
-    },
-    {
-      "description": "Disable colored output",
-      "name": "--no-color"
-    },
-    {
-      "description": "Run as if started in <PATH> instead of current directory",
-      "name": "--cwd, -C"
-    },
-    {
-      "description": "Show help information",
-      "name": "--help, -h"
-    },
-    {
-      "description": "Show version information",
-      "name": "--version, -V"
-    }
-  ],
-  "installation": {
-    "methods": [
-      {
-        "name": "Download binary",
-        "platforms": [
-          "macOS",
-          "Linux",
-          "Windows"
-        ]
-      },
-      {
-        "command": "cargo install hif",
-        "name": "Build from source"
-      }
-    ],
-    "requirements": [
-      "Micelio account (sign up at micelio.dev)"
-    ]
-  },
-  "introduction": {
-    "key_differences_from_git": {
-      "conflicts": {
-        "git": "3-way merge",
-        "hif": "Bloom filter detection + explicit resolution"
-      },
-      "history": {
-        "git": "DAG of commits",
-        "hif": "Append-only log of landing positions"
-      },
-      "storage": {
-        "git": "Distributed (.git folder)",
-        "hif": "Forge-first (server is source of truth)"
-      },
-      "unit_of_work": {
-        "git": "Commit (snapshot)",
-        "hif": "Session (goal + context + changes)"
-      }
-    },
-    "what": "hif is an alternative to Git designed for the agent era. Instead of commits, you work in sessions that capture not just what changed, but why.",
-    "why": [
-      "Sessions capture goals, conversations, and decisions alongside code changes",
-      "Forge-first design means the server is the source of truth",
-      "Built for AI agents to understand and contribute to codebases",
-      "Simpler mental model: no staging area, no rebasing, no merge commits"
-    ]
-  },
-  "name": "hif",
-  "quick_start": {
-    "quick_land": {
-      "command": "hif land \"Fix typo in README\"",
-      "description": "For small changes, combine session start and land:"
-    },
-    "steps": [
-      {
-        "command": "hif auth login",
-        "description": "Opens browser for OAuth authentication",
-        "step": 1,
-        "title": "Authenticate"
-      },
-      {
-        "command": "hif checkout acme/myapp",
-        "description": "Downloads project and creates local workspace",
-        "step": 2,
-        "title": "Create workspace"
-      },
-      {
-        "command": "hif session start \"Add feature\"",
-        "description": "Begin tracking your work with a goal",
-        "step": 3,
-        "title": "Start session"
-      },
-      {
-        "command": "# Edit files normally",
-        "description": "Use your favorite editor, no staging needed",
-        "step": 4,
-        "title": "Make changes"
-      },
-      {
-        "command": "hif session land",
-        "description": "Push your session to the forge",
-        "step": 5,
-        "title": "Land changes"
-      }
-    ],
-    "title": "Quick Start"
-  },
   "see_also": {
-    "api": "https://micelio.dev/docs/api",
+    "website": "https://micelio.dev",
     "docs": "https://micelio.dev/docs",
-    "website": "https://micelio.dev"
-  },
-  "tagline": "Version control designed for AI-assisted development",
-  "version": "0.1.0"
+    "api": "https://micelio.dev/docs/api"
+  }
 }
