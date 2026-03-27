@@ -51,6 +51,22 @@ or rewritten.
 - A session can start locally or in a sandbox and move between those environments
   before landing.
 - Session portability is a core requirement, not an optimization.
+- A session is a continuable unit of work, not just a diff. It contains live draft
+  state, file changes, command runs, diagnostics, decisions, and visible
+  conversation.
+- Decisions should be linked to concrete file changes and command results, not
+  stored as free-floating notes.
+- The full visible agent conversation should be persisted alongside structured
+  events and extracted decisions so another human or agent can resume from the
+  forge.
+
+### Workspaces
+
+- The local workspace should remain a normal filesystem so editors, build tools,
+  and local coding agents can work without special indirection.
+- Landing should remain explicit and forge-mediated.
+- The recommended agent interoperability model is normal filesystem access for code
+  and tools, plus a runtime API (ideally MCP) for session semantics.
 
 ### Local and Sandbox Execution
 
@@ -75,6 +91,32 @@ or rewritten.
 - Not every remote task needs a session. Short-lived debugging or user-request
   investigation may run without creating one.
 - The exact workflow DSL design is intentionally deferred.
+
+### Sandbox Profiles
+
+Sandbox profiles define isolation, network, filesystem, and runtime limits:
+
+- **Isolation**: microVM by default (Firecracker or cloud-hypervisor), with
+  container or process alternatives.
+- **Network policy**: egress-only by default; `none`, `restricted` (allowlist),
+  or `full` for trusted workloads.
+- **Filesystem policy**: immutable root with a writable workspace volume.
+- **Identity**: non-root execution inside the sandbox.
+- **Limits**: process and file descriptor caps in addition to CPU, memory, and
+  disk limits.
+
+The profile is validated at plan construction time and normalized into provider
+requests so every provider receives a consistent specification.
+
+### Storage
+
+- S3-compatible object storage is the source of truth.
+- Tiered caching (RAM, SSD, CDN, S3) minimizes read latency while keeping costs
+  low.
+- Storage backends must maintain compatibility across tiers and self-hosted
+  deployments.
+- Credentials are encrypted at rest (Cloak) and in transit (HTTPS).
+- Server-side encryption (SSE-S3 or SSE-KMS) should be enabled on buckets.
 
 ## Accepted Decisions
 
@@ -120,6 +162,42 @@ or rewritten.
    - Keep protocol docs and help output aligned so agents can understand `hif`
      from first-party surfaces.
 
+## Deployment
+
+### Required Services
+
+- PostgreSQL (auth and metadata)
+- S3-compatible object storage (sessions, trees, blobs)
+
+### Environment Variables
+
+Core: `SECRET_KEY_BASE`, `PHX_HOST`, `PORT` (default 4000).
+Storage: `STORAGE_BACKEND` (`local` or `s3`), `S3_BUCKET`, `S3_REGION`,
+`S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`.
+gRPC (TLS required): `MICELIO_GRPC_ENABLED`, `MICELIO_GRPC_PORT` (default
+50051), `MICELIO_GRPC_TLS_CERTFILE`, `MICELIO_GRPC_TLS_KEYFILE`.
+Database: `DATABASE_URL`, `POOL_SIZE` (default 10).
+
+### Storage IAM
+
+Use dedicated credentials scoped to a single bucket. Minimum permissions:
+`s3:ListBucket`, `s3:GetObject`, `s3:PutObject`, `s3:DeleteObject`. Enable
+bucket versioning, disable public access, and rotate keys regularly. Micelio
+rate-limits S3 validation attempts (default 10/min/user) and logs configuration
+changes for audit.
+
+## Ideas
+
+Exploratory directions not yet committed to:
+
+- Fediverse/ActivityPub integration for cross-instance federation
+- PR stacking workflow
+- Store issues and PRs in the repository itself for portability
+- Static site hosting (GitHub Pages equivalent)
+- Tags and releases as first-class session-linked objects
+- OAuth2 dynamic registration for MCP clients
+- Desktop app for workspace management
+
 ## Deferred or Later
 
 - ActivityPub federation
@@ -132,14 +210,14 @@ or rewritten.
 
 - Older docs may use `mic` where the current system is `hif`.
 - Older docs may use `project` where the current system is `repository`.
+- The CLI was originally written in Zig before being rewritten in Rust.
 - Older plan files may describe completed implementation steps or intermediate
   designs. Use this file as the current source of truth when they conflict.
 
 ## Source Material Folded Here
 
-- `docs/contributors/next.md`
-- `docs/refactoring-plan.md`
-- `docs/compute/mic-integration-design.md`
-- `docs/adr/*.md`
+- `docs/` (removed) — ADRs, plans, benchmarks, compute design, user guides,
+  refactoring plan, and contributor roadmap
+- `session.md` (removed) — session implementation log and product direction
 - `build/adr/0005-session-native-repo-protocol.md`
 - `build/plans/2026-02-27-virtual-vcs-build-plan.md`
