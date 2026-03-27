@@ -2,7 +2,7 @@ defmodule Micelio.Docs.MicIntegrationDesignTest do
   use ExUnit.Case, async: true
 
   test "mic integration design doc has required sections" do
-    path = Path.expand("../../docs/compute/mic-integration-design.md", __DIR__)
+    path = Path.expand("../../../docs/compute/mic-integration-design.md", __DIR__)
     contents = File.read!(path)
 
     assert String.contains?(contents, "# mic Integration Design")

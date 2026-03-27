@@ -2,7 +2,7 @@ defmodule Micelio.Docs.GitHubActionsBenchmarkTest do
   use ExUnit.Case, async: true
 
   test "benchmark doc captures required sections" do
-    path = Path.expand("../../docs/benchmarks/github_actions_vs_ephemeral_vms.md", __DIR__)
+    path = Path.expand("../../../docs/benchmarks/github_actions_vs_ephemeral_vms.md", __DIR__)
     contents = File.read!(path)
 
     assert String.contains?(

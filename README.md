@@ -19,6 +19,8 @@ The documentation for _users_, _contributors_, and _hosters_ is available at [`/
 > The `mic` CLI vendors gRPC C core version `v1.76.0` in `mic/vendor/grpc`.
 > Building the CLI fetches gRPC dependencies into `mic/vendor/grpc/third_party` (no git submodules).
 
+The Phoenix server lives in `app/`. The Rust CLI lives in `hif/`.
+
 ## mic CLI (early access)
 
 ```
@@ -30,8 +32,8 @@ mic land "your goal"
 
 To start your Phoenix server:
 
-* Run `mix setup` to install and setup dependencies
-* Start Phoenix endpoint with `mix phx.server` or inside IEx with `iex -S mix phx.server`
+* Run `cd app && mix setup` to install and setup dependencies
+* Start Phoenix endpoint with `cd app && mix phx.server` or inside IEx with `cd app && iex -S mix phx.server`
 
 Now you can visit [`localhost:4000`](http://localhost:4000) from your browser.
 

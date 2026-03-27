@@ -11,11 +11,11 @@ Micelio is a forge platform built with Elixir/Phoenix, Rust for CLI (`hif`), and
 **All user-facing strings must use gettext.** When adding or modifying UI text:
 
 1. Wrap strings with `gettext("...")` in templates and modules
-2. Run `mix gettext.extract` to extract new strings to POT files
-3. Run `mix gettext.merge priv/gettext` to update all locale PO files
+2. Run `cd app && mix gettext.extract` to extract new strings to POT files
+3. Run `cd app && mix gettext.merge priv/gettext` to update all locale PO files
 4. Ensure translations are provided for all supported locales: English (en), Korean (ko), Simplified Chinese (zh_CN), Traditional Chinese (zh_TW), Japanese (ja)
 
-Translation files are located in `priv/gettext/{locale}/LC_MESSAGES/`.
+Translation files are located in `app/priv/gettext/{locale}/LC_MESSAGES/`.
 
 ## IMPORTANT: Icons
 
@@ -74,6 +74,8 @@ Micelio is a monorepo containing:
 
 - **Forge** (Elixir/Phoenix) - The web application and gRPC server
 - **hif** (Rust) - The `hif` command-line interface
+
+The Phoenix server lives in `app/`. Unless noted otherwise, `assets/`, `config/`, `lib/`, `priv/`, `rel/`, and `test/` paths below are relative to `app/`.
 
 ### Tech Stack
 
@@ -235,16 +237,16 @@ Install the following dependencies:
 
 ```bash
 # Install Elixir dependencies
-mix deps.get
+cd app && mix deps.get
 
 # Setup database
-mix ecto.setup
+cd app && mix ecto.setup
 
 # Build Rust CLI
 cd hif && cargo build --release && cd ..
 
 # Start development server
-mix phx.server
+cd app && mix phx.server
 ```
 
 ### Verify Installation
@@ -259,8 +261,8 @@ mise run check
 | File | Purpose |
 |------|---------|
 | `AGENTS.md` | This guide (root hub) |
-| `priv/static/skill.md` | Agent guide served at `/skill.md` - keep in sync with AGENTS.md |
-| `priv/static/SKILL.md` | hif CLI docs served at `/SKILL.md` |
+| `app/priv/static/skill.md` | Agent guide served at `/skill.md` - keep in sync with AGENTS.md |
+| `app/priv/static/SKILL.md` | hif CLI docs served at `/SKILL.md` |
 
 ---
 
@@ -279,15 +281,15 @@ Before making changes:
 mise run check
 
 # Build
-mix compile --warnings-as-errors
+cd app && mix compile --warnings-as-errors
 cd hif && cargo build --release
 
 # Test
-mix test
+cd app && mix test
 cd hif && cargo test
 
 # Format
-mix format --check-formatted
+cd app && mix format --check-formatted
 cd hif && cargo fmt --check
 
 # Pre-commit (run before pushing)
@@ -296,7 +298,7 @@ mise run check
 
 ### Shortcut
 
-Use `mise run check` when done with changes. `mix precommit` still exists for Phoenix-side checks only:
+Use `mise run check` when done with changes. `cd app && mix precommit` still exists for Phoenix-side checks only:
 
 ```bash
 mise run check
@@ -310,17 +312,17 @@ mise run check
 
 | Command | Purpose |
 |---------|---------|
-| `mix compile --warnings-as-errors` | Compile with strict warnings |
-| `mix phx.server` | Start dev server |
-| `mix test` | Run tests |
-| `mix test --failed` | Re-run failed tests |
-| `mix test test/path.exs` | Run specific test file |
-| `mix format` | Format code |
-| `mix format --check-formatted` | Check formatting |
-| `mix ecto.migrate` | Run migrations |
-| `mix ecto.gen.migration name` | Generate migration |
-| `mix help task_name` | Get task docs |
-| `mix precommit` | Run all pre-commit checks |
+| `cd app && mix compile --warnings-as-errors` | Compile with strict warnings |
+| `cd app && mix phx.server` | Start dev server |
+| `cd app && mix test` | Run tests |
+| `cd app && mix test --failed` | Re-run failed tests |
+| `cd app && mix test test/path.exs` | Run specific test file |
+| `cd app && mix format` | Format code |
+| `cd app && mix format --check-formatted` | Check formatting |
+| `cd app && mix ecto.migrate` | Run migrations |
+| `cd app && mix ecto.gen.migration name` | Generate migration |
+| `cd app && mix help task_name` | Get task docs |
+| `cd app && mix precommit` | Run all pre-commit checks |
 | `mise run check` | Run the full forge + hif verification suite |
 
 ### Rust (hif CLI)
@@ -338,8 +340,8 @@ mise run check
 
 | File | Served At | Purpose |
 |------|-----------|---------|
-| `priv/static/SKILL.md` | `/SKILL.md` | hif CLI documentation |
-| `priv/static/skill.md` | `/skill.md` | Agent guide (keep aligned with AGENTS.md) |
+| `app/priv/static/SKILL.md` | `/SKILL.md` | hif CLI documentation |
+| `app/priv/static/skill.md` | `/skill.md` | Agent guide (keep aligned with AGENTS.md) |
 
 ### HTTP Requests
 
@@ -353,10 +355,10 @@ Use `:req` (`Req`) for HTTP requests. It's included by default.
 
 When making changes to CLI commands or agent capabilities, update the corresponding static files:
 
-- **SKILL.md** (`priv/static/SKILL.md`) - Documentation for the hif CLI served at `/SKILL.md`
-- **skill.md** (`priv/static/skill.md`) - Agent guide served at `/skill.md`, keep aligned with `AGENTS.md`
+- **SKILL.md** (`app/priv/static/SKILL.md`) - Documentation for the hif CLI served at `/SKILL.md`
+- **skill.md** (`app/priv/static/skill.md`) - Agent guide served at `/skill.md`, keep aligned with `AGENTS.md`
 
-When you update `AGENTS.md`, also update `priv/static/skill.md` so `/skill.md` stays in sync.
+When you update `AGENTS.md`, also update `app/priv/static/skill.md` so `/skill.md` stays in sync.
 
 ---
 
@@ -454,7 +456,7 @@ Look for:
 ### 3. Reproduce Locally
 
 ```bash
-mix phx.server
+cd app && mix phx.server
 # Navigate to the problematic page
 # Check local logs for similar errors
 ```
@@ -482,11 +484,11 @@ mix phx.server
 ```bash
 # 1. Make fix locally
 # 2. Run tests
-mix test
+cd app && mix test
 # 3. Format
-mix format
+cd app && mix format
 # 4. Check warnings
-mix compile --warnings-as-errors
+cd app && mix compile --warnings-as-errors
 # 5. Commit and push
 git add . && git commit -m "fix: description" && git push
 # 6. Verify CI passes
@@ -519,7 +521,7 @@ fnox exec kamal rollback
 ### Remember
 
 - Production is stricter than development
-- `mix compile --warnings-as-errors` catches issues that work in dev
+- `cd app && mix compile --warnings-as-errors` catches issues that work in dev
 - Always check logs first - they contain the stacktrace
 
 ---
@@ -539,9 +541,9 @@ fnox exec kamal rollback
 ### Elixir Tests
 
 ```bash
-mix test                    # Run all tests
-mix test --failed           # Re-run failed tests
-mix test test/path.exs      # Run specific file
+cd app && mix test                    # Run all tests
+cd app && mix test --failed           # Re-run failed tests
+cd app && mix test test/path.exs      # Run specific file
 ```
 
 #### Test Module Setup
@@ -637,8 +639,8 @@ socket =
 
 #### Mix
 
-- Read docs with `mix help task_name` before using tasks
-- **Avoid** `mix deps.clean --all` unless necessary
+- Read docs with `cd app && mix help task_name` before using tasks
+- **Avoid** `cd app && mix deps.clean --all` unless necessary
 
 ### Ecto
 
@@ -648,7 +650,7 @@ socket =
 - `Ecto.Schema` fields use `:string` type even for `:text` columns
 - `validate_number/2` does not support `:allow_nil`
 - Fields set programmatically (like `user_id`) must not be in `cast` calls
-- **Always** use `mix ecto.gen.migration name` for migrations
+- **Always** use `cd app && mix ecto.gen.migration name` for migrations
 
 ### Phoenix
 

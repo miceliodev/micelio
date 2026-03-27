@@ -8,7 +8,7 @@ defmodule MicelioWeb.Browser.SkillMdTest do
   end
 
   test "agent guide stays aligned with AGENTS.md" do
-    agents_path = Path.expand("AGENTS.md", File.cwd!())
+    agents_path = Path.expand("../AGENTS.md", File.cwd!())
     skill_path = Path.expand("priv/static/skill.md", File.cwd!())
 
     assert File.exists?(agents_path)

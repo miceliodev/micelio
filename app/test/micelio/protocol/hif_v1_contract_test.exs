@@ -3,7 +3,7 @@ defmodule Micelio.Protocol.HifV1ContractTest do
 
   alias Micelio.Docs.ProtoParser
 
-  @proto_path Path.expand("../../../build/protocols/hif_v1.proto", __DIR__)
+  @proto_path Path.expand("../../../../build/protocols/hif_v1.proto", __DIR__)
 
   describe "hif_v1 protocol contract" do
     test "services and RPC names are frozen" do

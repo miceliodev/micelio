@@ -2,11 +2,11 @@ defmodule Micelio.Ops.NomadFirecrackerPrototypeTest do
   use ExUnit.Case, async: true
 
   test "prototype docs and artifacts exist" do
-    readme = Path.expand("../../ops/nomad-firecracker/README.md", __DIR__)
-    job_spec = Path.expand("../../ops/nomad-firecracker/nomad-firecracker-agent.hcl", __DIR__)
+    readme = Path.expand("../../../ops/nomad-firecracker/README.md", __DIR__)
+    job_spec = Path.expand("../../../ops/nomad-firecracker/nomad-firecracker-agent.hcl", __DIR__)
 
     firecracker_config =
-      Path.expand("../../ops/nomad-firecracker/firecracker-micelio.json", __DIR__)
+      Path.expand("../../../ops/nomad-firecracker/firecracker-micelio.json", __DIR__)
 
     assert File.exists?(readme)
     assert File.exists?(job_spec)

@@ -29,11 +29,17 @@
 /doc/
 /test/
 /tmp/
+/app/cover/
+/app/doc/
+/app/test/
+/app/tmp/
 .elixir_ls
 
 # Mix artifacts
 /_build/
 /deps/
+/app/_build/
+/app/deps/
 *.ez
 
 # Generated on crash by the VM
@@ -44,3 +50,6 @@ erl_crash.dump
 /assets/node_modules/
 /priv/static/assets/
 /priv/static/cache_manifest.json
+/app/assets/node_modules/
+/app/priv/static/assets/
+/app/priv/static/cache_manifest.json

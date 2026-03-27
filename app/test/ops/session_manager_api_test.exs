@@ -2,7 +2,7 @@ defmodule Micelio.Ops.SessionManagerApiTest do
   use ExUnit.Case, async: true
 
   test "session manager API design doc exists" do
-    readme = Path.expand("../../ops/session-manager-api/README.md", __DIR__)
+    readme = Path.expand("../../../ops/session-manager-api/README.md", __DIR__)
 
     assert File.exists?(readme)
 

@@ -2,7 +2,7 @@ defmodule Micelio.Docs.SessionManagerApiDocTest do
   use ExUnit.Case, async: true
 
   test "session manager API compute doc covers the contract" do
-    doc = Path.expand("../../docs/compute/session-manager-api.md", __DIR__)
+    doc = Path.expand("../../../docs/compute/session-manager-api.md", __DIR__)
 
     assert File.exists?(doc)
 
