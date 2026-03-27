@@ -2,7 +2,7 @@
 # Development-only encryption key (32 bytes, base64 encoded)
 # DO NOT use this key in production - generate a unique key with: openssl rand -base64 32
 ENCRYPTION_KEY = "qzyRtI6urxJU7CID/s/OI9/hE6lkWGVu+g31nk6Grdg="
-_.path = ['{{config_root}}/mic/target/release/']
+_.path = ['{{config_root}}/hif/target/release/']
 _.source = "{{config_root}}/mise/utilities/dev_instance_env.sh"
 
 [tools]
@@ -12,5 +12,24 @@ fnox = "latest"
 "gem:kamal" = "2.9.0"
 ruby = "3.4.7"
 rust = "1.87.0"
+usage = "3.0.0"
 zig = "0.15.2"
 git-cliff = "2.7.0"
+
+[tasks.check]
+description = "Run the full Micelio verification suite for the forge and hif CLI"
+run = """
+(
+  cd app
+  mix deps.unlock --check-unused
+  mix compile --warnings-as-errors
+  mix format --check-formatted
+  mix test
+)
+(
+  cd hif
+  cargo fmt --check
+  cargo test
+  cargo build --release
+)
+"""

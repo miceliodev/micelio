@@ -1,0 +1,125 @@
+//! Tree command - list directory contents from the forge.
+
+use crate::cli::{parse_repository_ref, TreeCommand};
+use crate::config::Config;
+use crate::error::{MicError, Result};
+use crate::grpc::hif_v1::{call_optional_auth, pb, repository_ref};
+use crate::grpc::{Endpoint, GrpcClient};
+use crate::output;
+use crate::workspace::{parse_position, PositionOrLatest};
+use serde::Serialize;
+use std::collections::BTreeSet;
+
+#[derive(Serialize)]
+pub(crate) struct TreeOutput {
+    repository: String,
+    path: String,
+    entries: Vec<String>,
+}
+
+/// Run the tree command.
+pub async fn run(cmd: TreeCommand) -> Result<()> {
+    let (org, repository) = parse_repository_ref(&cmd.repository).ok_or_else(|| {
+        MicError::InvalidRepositoryRef(format!(
+            "Invalid repository reference '{}'. Use format: account/repository",
+            cmd.repository
+        ))
+    })?;
+
+    let mut config = Config::load()?;
+    let server = config.resolve_default_grpc_url().await?;
+    let endpoint = Endpoint::parse(&server)?;
+    let client = GrpcClient::new(endpoint);
+
+    let position = if let Some(ref pos_str) = cmd.r#ref {
+        match parse_position(pos_str) {
+            Some(PositionOrLatest::Revision(value)) => Some(value),
+            Some(PositionOrLatest::Latest) => None,
+            None => return Err(MicError::Other("Invalid revision format".to_string())),
+        }
+    } else {
+        None
+    };
+
+    let response: pb::TreeResponse = call_optional_auth(
+        &client,
+        "/hif.v1.ContentService/GetTree",
+        &pb::GetTreeRequest {
+            repository: Some(repository_ref(org, repository)),
+            revision_hash: position.unwrap_or_default(),
+        },
+    )
+    .await?;
+
+    let entries = response
+        .entries
+        .into_iter()
+        .map(|entry| entry.path)
+        .collect::<Vec<_>>();
+
+    let listed = list_directory_entries(&entries, cmd.path.as_deref().unwrap_or(""));
+    if output::use_json() {
+        output::print_ok(
+            "tree",
+            TreeOutput {
+                repository: cmd.repository,
+                path: cmd.path.unwrap_or_default(),
+                entries: listed,
+            },
+        )?;
+    } else {
+        for entry in listed {
+            output::ui_line(entry);
+        }
+    }
+
+    Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::commands::ui_test_support::assert_output_snapshot;
+
+    #[test]
+    fn ui_snapshot_tree_missing_repository_arg() {
+        assert_output_snapshot(
+            &["tree"],
+            2,
+            "",
+            "error: the following required arguments were not provided:\n  <ACCOUNT/REPOSITORY>\n\nUsage: hif tree <ACCOUNT/REPOSITORY> [PATH]\n\nFor more information, try '--help'.\n",
+        );
+    }
+}
+
+fn list_directory_entries(entries: &[String], directory: &str) -> Vec<String> {
+    let normalized = directory.trim_matches('/');
+    let prefix = if normalized.is_empty() {
+        String::new()
+    } else {
+        format!("{}/", normalized)
+    };
+
+    let mut directories = BTreeSet::new();
+    let mut files = BTreeSet::new();
+
+    for path in entries {
+        if !path.starts_with(&prefix) {
+            continue;
+        }
+
+        let remainder = &path[prefix.len()..];
+        if remainder.is_empty() {
+            continue;
+        }
+
+        if let Some((dir, _)) = remainder.split_once('/') {
+            if !dir.is_empty() {
+                directories.insert(format!("{}/", dir));
+            }
+        } else {
+            files.insert(remainder.to_string());
+        }
+    }
+
+    directories.into_iter().chain(files).collect::<Vec<_>>()
+}

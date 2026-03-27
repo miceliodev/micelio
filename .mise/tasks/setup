@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-mix deps.get
-mix ecto.setup
+(
+  cd app
+  mix deps.get
+  mix ecto.setup
+)

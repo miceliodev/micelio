@@ -1,17 +1,17 @@
 # The directory Mix will write compiled artifacts to.
-/_build/
+/app/_build/
 
 # If you run "mix test --cover", coverage assets end up here.
-/cover/
+/app/cover/
 
 # The directory Mix downloads your dependencies sources to.
-/deps/
+/app/deps/
 
 # Where 3rd-party dependencies like ExDoc output generated docs.
-/doc/
+/app/doc/
 
 # Ignore .fetch files in case you like to edit your project deps locally.
-/.fetch
+/app/.fetch
 
 # If the VM crashes, it generates a dump, let's ignore it too.
 erl_crash.dump
@@ -20,7 +20,7 @@ erl_crash.dump
 *.ez
 
 # Temporary files, for example, from tests.
-/tmp/
+/app/tmp/
 
 # Local seed workspaces
 /seeds/
@@ -29,16 +29,16 @@ erl_crash.dump
 micelio-*.tar
 
 # Ignore assets that are produced by build tools.
-/priv/static/assets/
+/app/priv/static/assets/
 
 # Ignore digested assets cache.
-/priv/static/cache_manifest.json
+/app/priv/static/cache_manifest.json
 
 # In case you use Node.js/npm, you want to ignore these.
 npm-debug.log
-/assets/node_modules/
+/app/assets/node_modules/
 
-/priv/lib/
+/app/priv/lib/
 
 .env
 .direnv/
@@ -48,6 +48,7 @@ npm-debug.log
 
 # Rust build artifacts
 /mic/target/
+/hif/target/
 
 # Rust vendor/third-party
 /mic/vendor/grpc/third_party/abseil-cpp/

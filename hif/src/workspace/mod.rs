@@ -1,0 +1,269 @@
+//! Workspace management for hif.
+//!
+//! A workspace is a local directory linked to a Micelio repository.
+//! It contains a `.hif` directory with metadata and overlay files.
+
+pub mod changes;
+pub mod manifest;
+pub mod session;
+pub mod watch;
+
+pub use changes::{collect_changes, ChangeType};
+
+#[allow(unused_imports)]
+pub use manifest::{Manifest, WorkspaceEntry, WorkspaceManifest};
+
+// Re-exports for library API
+#[allow(unused_imports)]
+pub use session::{Session, SessionState};
+
+use crate::error::{MicError, Result};
+use std::path::{Path, PathBuf};
+
+/// The hif directory name.
+pub const HIF_DIR: &str = ".hif";
+
+/// The session file name.
+pub const SESSION_FILE: &str = "session.bin";
+
+/// The manifest file name.
+pub const MANIFEST_FILE: &str = "manifest.json";
+
+/// The overlay directory name.
+pub const OVERLAY_DIR: &str = "overlay";
+
+/// Find the nearest parent directory that contains workspace metadata.
+pub(crate) fn find_hif_root_from(start: &Path) -> Option<PathBuf> {
+    find_parent_with(start, |candidate| candidate.join(HIF_DIR).is_dir())
+}
+
+/// Find the nearest parent directory that contains a workspace manifest.
+pub(crate) fn find_workspace_root_from(start: &Path) -> Option<PathBuf> {
+    find_parent_with(start, |candidate| {
+        candidate.join(HIF_DIR).join(MANIFEST_FILE).is_file()
+    })
+}
+
+/// Get the workspace root for the current working directory.
+pub fn workspace_root() -> Result<PathBuf> {
+    let cwd = std::env::current_dir()?;
+    find_workspace_root_from(&cwd).ok_or(MicError::NoWorkspace)
+}
+
+/// Get the .hif directory for the current working directory or workspace root.
+pub fn hif_dir() -> Result<PathBuf> {
+    let cwd = std::env::current_dir()?;
+    let root = find_hif_root_from(&cwd).unwrap_or(cwd);
+    Ok(metadata_dir_for_root(&root))
+}
+
+/// Ensure the .hif directory exists.
+pub fn ensure_hif_dir() -> Result<PathBuf> {
+    let dir = hif_dir()?;
+    if !dir.exists() {
+        std::fs::create_dir_all(&dir)?;
+    }
+    Ok(dir)
+}
+
+/// Ensure the overlay directory exists.
+pub fn ensure_overlay_dir() -> Result<PathBuf> {
+    let dir = hif_dir()?.join(OVERLAY_DIR);
+    if !dir.exists() {
+        std::fs::create_dir_all(&dir)?;
+    }
+    Ok(dir)
+}
+
+/// Clear the overlay directory.
+pub fn clear_overlay() -> Result<()> {
+    let dir = hif_dir()?.join(OVERLAY_DIR);
+    if dir.exists() {
+        std::fs::remove_dir_all(&dir)?;
+    }
+    Ok(())
+}
+
+/// Check if a path is safe (no path traversal).
+pub fn is_safe_path(path: &str) -> bool {
+    if path.is_empty() {
+        return false;
+    }
+
+    // Reject absolute paths
+    if path.starts_with('/') || path.starts_with('\\') {
+        return false;
+    }
+
+    // Check for path traversal
+    for segment in path.split(&['/', '\\'][..]) {
+        if segment == ".." {
+            return false;
+        }
+    }
+
+    true
+}
+
+/// Parse a repository reference (account/repository).
+#[allow(dead_code)]
+pub fn parse_repository_ref(value: &str) -> Option<(String, String)> {
+    let slash_index = value.find('/')?;
+
+    if slash_index == 0 || slash_index + 1 >= value.len() {
+        return None;
+    }
+
+    // Check for multiple slashes
+    if value[slash_index + 1..].contains('/') {
+        return None;
+    }
+
+    let account = &value[..slash_index];
+    let repository = &value[slash_index + 1..];
+
+    Some((account.to_string(), repository.to_string()))
+}
+
+/// Resolve the metadata directory for a workspace root.
+pub fn metadata_dir_for_root(root: &Path) -> PathBuf {
+    root.join(HIF_DIR)
+}
+
+/// Check whether a path refers to workspace metadata.
+pub fn is_workspace_metadata_path(path: &str) -> bool {
+    path == HIF_DIR || path.starts_with(&format!("{}/", HIF_DIR))
+}
+
+fn find_parent_with<F>(start: &Path, predicate: F) -> Option<PathBuf>
+where
+    F: Fn(&Path) -> bool,
+{
+    let mut current = if start.is_dir() {
+        start.to_path_buf()
+    } else {
+        start.parent()?.to_path_buf()
+    };
+
+    loop {
+        if predicate(&current) {
+            return Some(current);
+        }
+
+        match current.parent() {
+            Some(parent) => current = parent.to_path_buf(),
+            None => return None,
+        }
+    }
+}
+
+/// Parse a revision reference like "@<hex-hash>", "<hex-hash>", "@latest", or "HEAD".
+#[derive(Debug, Clone, PartialEq)]
+pub enum PositionOrLatest {
+    Revision(Vec<u8>),
+    Latest,
+}
+
+pub fn parse_position(value: &str) -> Option<PositionOrLatest> {
+    // Handle @<hash> or <hash> format.
+    let trimmed = value.strip_prefix('@').unwrap_or(value);
+
+    if trimmed.is_empty() {
+        return None;
+    }
+
+    // Check for latest/head
+    let lower = trimmed.to_lowercase();
+    if lower == "latest" || lower == "head" {
+        return Some(PositionOrLatest::Latest);
+    }
+
+    // Hash-only references: 64 hex chars (32 bytes).
+    if trimmed.len() != 64 || !trimmed.chars().all(|ch| ch.is_ascii_hexdigit()) {
+        return None;
+    }
+
+    let mut hash = Vec::with_capacity(32);
+    for idx in (0..trimmed.len()).step_by(2) {
+        let byte = u8::from_str_radix(&trimmed[idx..idx + 2], 16).ok()?;
+        hash.push(byte);
+    }
+
+    Some(PositionOrLatest::Revision(hash))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_is_safe_path() {
+        assert!(is_safe_path("src/main.rs"));
+        assert!(is_safe_path("README.md"));
+        assert!(is_safe_path("path/to/file.txt"));
+
+        assert!(!is_safe_path(""));
+        assert!(!is_safe_path("/etc/passwd"));
+        assert!(!is_safe_path("../secret"));
+        assert!(!is_safe_path("path/../secret"));
+    }
+
+    #[test]
+    fn test_parse_repository_ref() {
+        assert_eq!(
+            parse_repository_ref("acme/app"),
+            Some(("acme".to_string(), "app".to_string()))
+        );
+        assert_eq!(
+            parse_repository_ref("account/repository-name"),
+            Some(("account".to_string(), "repository-name".to_string()))
+        );
+
+        assert_eq!(parse_repository_ref("noSlash"), None);
+        assert_eq!(parse_repository_ref("/repository"), None);
+        assert_eq!(parse_repository_ref("account/"), None);
+        assert_eq!(parse_repository_ref("a/b/c"), None);
+    }
+
+    #[test]
+    fn test_parse_position() {
+        let hash = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
+        assert_eq!(
+            parse_position(hash),
+            Some(PositionOrLatest::Revision(vec![
+                0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef, 0x01, 0x23, 0x45, 0x67, 0x89, 0xab,
+                0xcd, 0xef, 0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef, 0x01, 0x23, 0x45, 0x67,
+                0x89, 0xab, 0xcd, 0xef
+            ]))
+        );
+        assert_eq!(parse_position("@latest"), Some(PositionOrLatest::Latest));
+        assert_eq!(parse_position("latest"), Some(PositionOrLatest::Latest));
+        assert_eq!(parse_position("HEAD"), Some(PositionOrLatest::Latest));
+        assert_eq!(parse_position("@head"), Some(PositionOrLatest::Latest));
+
+        assert_eq!(parse_position(""), None);
+        assert_eq!(parse_position("@"), None);
+        assert_eq!(parse_position("10"), None);
+        assert_eq!(parse_position("invalid"), None);
+    }
+
+    #[test]
+    fn test_find_workspace_root_from_subdirectory() {
+        let dir = tempfile::tempdir().unwrap();
+        let workspace = dir.path().join("workspace");
+        let nested = workspace.join("src/nested");
+
+        std::fs::create_dir_all(workspace.join(".hif")).unwrap();
+        std::fs::write(workspace.join(".hif/manifest.json"), "{}").unwrap();
+        std::fs::create_dir_all(&nested).unwrap();
+
+        assert_eq!(find_workspace_root_from(&nested), Some(workspace));
+    }
+
+    #[test]
+    fn test_is_workspace_metadata_path() {
+        assert!(is_workspace_metadata_path(".hif"));
+        assert!(is_workspace_metadata_path(".hif/session.bin"));
+        assert!(!is_workspace_metadata_path("src/main.rs"));
+    }
+}

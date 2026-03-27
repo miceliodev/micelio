@@ -74,11 +74,10 @@ landing records. Search and file reads are index-driven, never full-object scans
 - If index is unavailable, clients get actionable fallback:
   - "index stale" + optional `--local` mode when workspace is materialized.
 
-### 6) Protocol compatibility
+### 6) Protocol cutover
 
-- Legacy service behavior remains available during rollout.
-- Mapping between existing gRPC surfaces and `micelio.virtual.v1` is documented in
-  `../protocols/micelio_virtual_vcs_v1.compatibility.md`.
+- `hif.v1` is the only supported session/content/search protocol surface.
+- Legacy session/content compatibility endpoints are not part of the runtime contract.
 
 ### 5) Conflict model
 

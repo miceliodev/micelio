@@ -4,9 +4,9 @@ This directory contains documentation for users, contributors, and hosters of Mi
 
 ## Users
 
-For people using mic and Micelio day-to-day:
+For people using hif and Micelio day-to-day:
 
-- [mic Workflows](./users/mic-workflows.md)
+- [hif Workflows](./users/hif-workflows.md)
 - [Storage Security and IAM Policies](./users/storage-security.md)
 
 ## Hosters
@@ -19,6 +19,5 @@ For people interested in running their own Micelio instance:
 
 For people interested in contributing to Micelio:
 
-- [Design](../priv/docs/shapers/design.md) - Architecture and vision
-- [What's Next](./contributors/next.md) - Roadmap and upcoming work
-- [Architecture Decision Records](./adr/README.md) - Key design choices
+- [PLAN](../PLAN.md) - Canonical product direction, architecture, accepted decisions, and active work
+- Historical contributor docs remain under `docs/` and `build/` until they are pruned or rewritten

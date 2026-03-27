@@ -1,0 +1,343 @@
+<Layouts.app
+  flash={@flash}
+  current_scope={assigns[:current_scope]}
+  current_user={assigns[:current_user]}
+  locale={assigns[:locale] || "en"}
+  current_path={assigns[:current_path] || "/"}
+>
+  <div class="docs-container docs-cli-reference">
+    <aside class="docs-sidebar">
+      <h4 class="docs-sidebar-title">{gettext("CLI Reference")}</h4>
+      <nav class="docs-sidebar-nav">
+        <a href="#quick-start" class="docs-sidebar-link">{gettext("Quick Start")}</a>
+        <a href="#concepts" class="docs-sidebar-link">{gettext("Concepts")}</a>
+        <%= for {category, _commands} <- @commands_by_category do %>
+          <a href={"##{String.downcase(category)}"} class="docs-sidebar-link">{category}</a>
+        <% end %>
+        <a href="#global-options" class="docs-sidebar-link">{gettext("Global Options")}</a>
+        <a href="#environment" class="docs-sidebar-link">{gettext("Environment")}</a>
+        <a href="#errors" class="docs-sidebar-link">{gettext("Error Codes")}</a>
+      </nav>
+      <div class="docs-sidebar-back">
+        <a href={~p"/docs"}>{gettext("All documentation")}</a>
+      </div>
+    </aside>
+
+    <article class="docs-content">
+      <nav class="docs-breadcrumb" aria-label={gettext("Breadcrumb")}>
+        <a href={~p"/docs"}>{gettext("Documentation")}</a>
+        <span class="docs-breadcrumb-separator">/</span>
+        <span class="docs-breadcrumb-current">{gettext("CLI Reference")}</span>
+      </nav>
+
+      <.header>
+        hif {@docs["version"]}
+        <:subtitle>
+          {@docs["tagline"]}
+        </:subtitle>
+      </.header>
+
+      <div class="docs-page-content cli-reference">
+        <%!-- Quick Start --%>
+        <section id="quick-start" class="cli-section">
+          <h2>{@docs["quick_start"]["title"]}</h2>
+
+          <ol class="cli-steps">
+            <%= for step <- @docs["quick_start"]["steps"] do %>
+              <li class="cli-step">
+                <div class="cli-step-header">
+                  <span class="cli-step-number">{step["step"]}</span>
+                  <strong>{step["title"]}</strong>
+                </div>
+                <p class="cli-step-description">{step["description"]}</p>
+                <pre class="cli-code"><code>{step["command"]}</code></pre>
+              </li>
+            <% end %>
+          </ol>
+
+          <div class="cli-tip">
+            <strong>{gettext("Quick land:")}</strong>
+            <p>{@docs["quick_start"]["quick_land"]["description"]}</p>
+            <pre class="cli-code"><code>{@docs["quick_start"]["quick_land"]["command"]}</code></pre>
+          </div>
+        </section>
+
+        <%!-- Concepts --%>
+        <section id="concepts" class="cli-section">
+          <h2>{gettext("Concepts")}</h2>
+
+          <dl class="cli-concepts">
+            <%= for concept <- @docs["concepts"] do %>
+              <div class="cli-concept">
+                <dt>{concept["name"]}</dt>
+                <dd>
+                  <p>{concept["description"]}</p>
+                  <pre class="cli-code"><code>{concept["example"]}</code></pre>
+                </dd>
+              </div>
+            <% end %>
+          </dl>
+        </section>
+
+        <%!-- Commands by Category --%>
+        <%= for {category, commands} <- @commands_by_category do %>
+          <section id={String.downcase(category)} class="cli-section">
+            <h2>{category}</h2>
+
+            <%= for cmd <- commands do %>
+              <div class="cli-command" id={"cmd-#{cmd["name"]}"}>
+                <h3 class="cli-command-name">
+                  <code>hif {cmd["name"]}</code>
+                </h3>
+                <p class="cli-command-description">{cmd["description"]}</p>
+
+                <%= if cmd["subcommands"] do %>
+                  <%!-- Command with subcommands --%>
+                  <%= for subcmd <- cmd["subcommands"] do %>
+                    <div class="cli-subcommand" id={"cmd-#{cmd["name"]}-#{subcmd["name"]}"}>
+                      <h4 class="cli-subcommand-name">
+                        <code>hif {cmd["name"]} {subcmd["name"]}</code>
+                      </h4>
+                      <p>{subcmd["description"]}</p>
+
+                      <div class="cli-usage">
+                        <strong>{gettext("Usage:")}</strong>
+                        <pre class="cli-code"><code>{subcmd["usage"]}</code></pre>
+                        <%= if subcmd["usage_outside_workspace"] do %>
+                          <p class="cli-usage-note">{gettext("Outside workspace:")}</p>
+                          <pre class="cli-code"><code>{subcmd["usage_outside_workspace"]}</code></pre>
+                        <% end %>
+                      </div>
+
+                      <%= if subcmd["args"] && length(subcmd["args"]) > 0 do %>
+                        <div class="cli-args">
+                          <strong>{gettext("Arguments:")}</strong>
+                          <dl>
+                            <%= for arg <- subcmd["args"] do %>
+                              <dt>
+                                <code>&lt;{arg["name"]}&gt;</code>
+                                <%= if arg["required"] do %>
+                                  <span class="cli-required">{gettext("required")}</span>
+                                <% end %>
+                              </dt>
+                              <dd>{arg["description"]}</dd>
+                            <% end %>
+                          </dl>
+                        </div>
+                      <% end %>
+
+                      <%= if subcmd["options"] && length(subcmd["options"]) > 0 do %>
+                        <div class="cli-options">
+                          <strong>{gettext("Options:")}</strong>
+                          <dl>
+                            <%= for opt <- subcmd["options"] do %>
+                              <dt><code>{opt["name"]}</code></dt>
+                              <dd>
+                                {opt["description"]}
+                                <%= if opt["default"] do %>
+                                  <span class="cli-default">
+                                    {gettext("Default:")} {opt["default"]}
+                                  </span>
+                                <% end %>
+                              </dd>
+                            <% end %>
+                          </dl>
+                        </div>
+                      <% end %>
+
+                      <%= if subcmd["examples"] && length(subcmd["examples"]) > 0 do %>
+                        <div class="cli-examples">
+                          <strong>{gettext("Examples:")}</strong>
+                          <%= for ex <- subcmd["examples"] do %>
+                            <div class="cli-example">
+                              <pre class="cli-code"><code>{ex["command"]}</code></pre>
+                              <p class="cli-example-desc">{ex["description"]}</p>
+                            </div>
+                          <% end %>
+                        </div>
+                      <% end %>
+
+                      <%= if subcmd["notes"] do %>
+                        <div class="cli-notes">
+                          <strong>{gettext("Notes:")}</strong>
+                          <p>{subcmd["notes"]}</p>
+                        </div>
+                      <% end %>
+
+                      <%= if subcmd["warning"] do %>
+                        <div class="cli-warning">
+                          <strong>{gettext("Warning:")}</strong>
+                          <p>{subcmd["warning"]}</p>
+                        </div>
+                      <% end %>
+                    </div>
+                  <% end %>
+                <% else %>
+                  <%!-- Simple command without subcommands --%>
+                  <div class="cli-usage">
+                    <strong>{gettext("Usage:")}</strong>
+                    <pre class="cli-code"><code>{cmd["usage"]}</code></pre>
+                    <%= if cmd["usage_outside_workspace"] do %>
+                      <p class="cli-usage-note">{gettext("Outside workspace:")}</p>
+                      <pre class="cli-code"><code>{cmd["usage_outside_workspace"]}</code></pre>
+                    <% end %>
+                  </div>
+
+                  <%= if cmd["args"] && length(cmd["args"]) > 0 do %>
+                    <div class="cli-args">
+                      <strong>{gettext("Arguments:")}</strong>
+                      <dl>
+                        <%= for arg <- cmd["args"] do %>
+                          <dt>
+                            <code>&lt;{arg["name"]}&gt;</code>
+                            <%= if arg["required"] do %>
+                              <span class="cli-required">{gettext("required")}</span>
+                            <% end %>
+                          </dt>
+                          <dd>{arg["description"]}</dd>
+                        <% end %>
+                      </dl>
+                    </div>
+                  <% end %>
+
+                  <%= if cmd["options"] && length(cmd["options"]) > 0 do %>
+                    <div class="cli-options">
+                      <strong>{gettext("Options:")}</strong>
+                      <dl>
+                        <%= for opt <- cmd["options"] do %>
+                          <dt><code>{opt["name"]}</code></dt>
+                          <dd>
+                            {opt["description"]}
+                            <%= if opt["default"] do %>
+                              <span class="cli-default">
+                                {gettext("Default:")} {opt["default"]}
+                              </span>
+                            <% end %>
+                          </dd>
+                        <% end %>
+                      </dl>
+                    </div>
+                  <% end %>
+
+                  <%= if cmd["examples"] && length(cmd["examples"]) > 0 do %>
+                    <div class="cli-examples">
+                      <strong>{gettext("Examples:")}</strong>
+                      <%= for ex <- cmd["examples"] do %>
+                        <div class="cli-example">
+                          <pre class="cli-code"><code>{ex["command"]}</code></pre>
+                          <p class="cli-example-desc">{ex["description"]}</p>
+                        </div>
+                      <% end %>
+                    </div>
+                  <% end %>
+
+                  <%= if cmd["notes"] do %>
+                    <div class="cli-notes">
+                      <strong>{gettext("Notes:")}</strong>
+                      <p>{cmd["notes"]}</p>
+                    </div>
+                  <% end %>
+
+                  <%= if cmd["output_format"] do %>
+                    <div class="cli-output-format">
+                      <strong>{gettext("Output format:")}</strong>
+                      <dl>
+                        <%= for {code, meaning} <- cmd["output_format"] do %>
+                          <dt><code>{code}</code></dt>
+                          <dd>{meaning}</dd>
+                        <% end %>
+                      </dl>
+                    </div>
+                  <% end %>
+
+                  <%= if cmd["warning"] do %>
+                    <div class="cli-warning">
+                      <strong>{gettext("Warning:")}</strong>
+                      <p>{cmd["warning"]}</p>
+                    </div>
+                  <% end %>
+                <% end %>
+              </div>
+            <% end %>
+          </section>
+        <% end %>
+
+        <%!-- Global Options --%>
+        <section id="global-options" class="cli-section">
+          <h2>{gettext("Global Options")}</h2>
+          <p>{gettext("These options can be used with any command:")}</p>
+          <dl class="cli-global-options">
+            <%= for opt <- @docs["global_options"] do %>
+              <dt><code>{opt["name"]}</code></dt>
+              <dd>{opt["description"]}</dd>
+            <% end %>
+          </dl>
+        </section>
+
+        <%!-- Environment Variables --%>
+        <section id="environment" class="cli-section">
+          <h2>{gettext("Environment Variables")}</h2>
+          <dl class="cli-env-vars">
+            <%= for var <- @docs["environment_variables"] do %>
+              <dt><code>{var["name"]}</code></dt>
+              <dd>
+                {var["description"]}
+                <span class="cli-default">
+                  {gettext("Default:")} <code>{var["default"]}</code>
+                </span>
+              </dd>
+            <% end %>
+          </dl>
+        </section>
+
+        <%!-- Error Codes --%>
+        <section id="errors" class="cli-section">
+          <h2>{gettext("Error Codes")}</h2>
+          <p>
+            {gettext(
+              "When an error occurs, hif returns a JSON error with a code. Here's how to resolve common errors:"
+            )}
+          </p>
+          <table class="cli-error-table">
+            <thead>
+              <tr>
+                <th>{gettext("Code")}</th>
+                <th>{gettext("Message")}</th>
+                <th>{gettext("Resolution")}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <%= for err <- @docs["error_codes"] do %>
+                <tr>
+                  <td><code>{err["code"]}</code></td>
+                  <td>{err["message"]}</td>
+                  <td>{err["resolution"]}</td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </section>
+
+        <%!-- See Also --%>
+        <section class="cli-section cli-see-also">
+          <h2>{gettext("See Also")}</h2>
+          <ul>
+            <li>
+              <a href={@docs["see_also"]["website"]} target="_blank">
+                {gettext("Micelio Website")}
+              </a>
+            </li>
+            <li>
+              <a href={@docs["see_also"]["docs"]} target="_blank">
+                {gettext("Full Documentation")}
+              </a>
+            </li>
+            <li>
+              <a href={@docs["see_also"]["api"]} target="_blank">{gettext("API Reference")}</a>
+            </li>
+          </ul>
+        </section>
+      </div>
+    </article>
+  </div>
+</Layouts.app>

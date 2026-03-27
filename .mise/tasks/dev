@@ -1,4 +1,4 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-mix phx.server
+cd app && mix phx.server
