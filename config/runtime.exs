@@ -553,8 +553,37 @@ else
   end
 end
 
+# Read the dev instance suffix from .micelio-dev-instance file (created by mise/utilities/dev_instance_env.sh).
+# This scopes databases, ports, and gRPC ports per clone so multiple clones can run simultaneously.
+dev_instance_suffix =
+  case File.read(Path.join(Path.dirname(__DIR__), ".micelio-dev-instance")) do
+    {:ok, content} -> content |> String.trim() |> String.to_integer()
+    {:error, _} -> nil
+  end
+
+default_port =
+  case config_env() do
+    :test -> if dev_instance_suffix, do: 4002 + dev_instance_suffix, else: 4002
+    _ -> if dev_instance_suffix, do: 4000 + dev_instance_suffix, else: 4000
+  end
+
 config :micelio, MicelioWeb.Endpoint,
-  http: [port: String.to_integer(System.get_env("PORT", "4000"))]
+  http: [port: String.to_integer(System.get_env("PORT", "#{default_port}"))]
+
+if config_env() in [:dev, :test] and dev_instance_suffix do
+  test_partition = System.get_env("MIX_TEST_PARTITION")
+
+  db_name =
+    case config_env() do
+      :dev -> "micelio_dev_#{dev_instance_suffix}"
+      :test -> "micelio_test#{test_partition}_#{dev_instance_suffix}"
+    end
+
+  config :micelio, Micelio.Repo, database: db_name
+
+  grpc_port = 50051 + dev_instance_suffix
+  config :micelio, Micelio.GRPC, port: grpc_port
+end
 
 if config_env() == :prod do
   database_url =

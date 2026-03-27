@@ -1,12 +1,12 @@
 defmodule Micelio.Mic.RollupScheduler do
   @moduledoc """
-  Periodic rollup rebuild scheduler.
+  Periodic rollup rebuild scheduler (disabled by default).
 
-  NOTE: This GenServer runs independently on every node. When scaling to
-  multiple nodes, every instance will redundantly rebuild rollups for all
-  repositories. Consider migrating to Oban (which uses Postgres advisory
-  locks for single-execution guarantees) or a distributed singleton
-  (e.g. `:global`, Horde) to avoid redundant work.
+  Rollups are built inline during landings via `RollupWorker`. This scheduler
+  exists only as a repair mechanism to rebuild rollups that were missed or
+  corrupted. Enable it explicitly via config when needed:
+
+      config :micelio, Micelio.Mic.RollupScheduler, enabled: true
   """
 
   use GenServer
@@ -26,12 +26,12 @@ defmodule Micelio.Mic.RollupScheduler do
   @impl true
   def init(_state) do
     config = Application.get_env(:micelio, __MODULE__, [])
-    enabled = Keyword.get(config, :enabled, true)
+    enabled = Keyword.get(config, :enabled, false)
     interval_ms = Keyword.get(config, :interval_ms, @default_interval_ms)
     lookback = Keyword.get(config, :lookback_positions, @default_lookback)
 
     if enabled do
-      send(self(), :run)
+      Process.send_after(self(), :run, interval_ms)
       {:ok, %{interval_ms: interval_ms, lookback: lookback}}
     else
       {:ok, %{interval_ms: interval_ms, lookback: lookback, disabled: true}}
@@ -49,10 +49,12 @@ defmodule Micelio.Mic.RollupScheduler do
   defp rebuild_recent_rollups(%{lookback: lookback}) do
     Repositories.list_repositories()
     |> Enum.each(fn repository ->
-      case RollupRebuilder.head_position(repository.id) do
+      storage_opts = [repository: repository]
+
+      case RollupRebuilder.head_position(repository.id, storage_opts) do
         {:ok, position} ->
           from_position = max(1, position - lookback + 1)
-          _ = RollupRebuilder.rebuild(repository.id, from_position, position)
+          _ = RollupRebuilder.rebuild(repository.id, from_position, position, storage_opts)
 
         {:error, reason} ->
           Logger.debug("mic.rollup_scheduler error=#{inspect(reason)} project=#{repository.id}")

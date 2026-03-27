@@ -8,7 +8,10 @@ defmodule Micelio.Mic.RollupRebuilder do
 
   require Logger
 
-  def rebuild(repository_id, from_position, to_position) when from_position <= to_position do
+  def rebuild(repository_id, from_position, to_position, opts \\ [])
+
+  def rebuild(repository_id, from_position, to_position, opts)
+      when from_position <= to_position do
     Logger.debug(
       "mic.rollup_rebuild project=#{repository_id} from=#{from_position} to=#{to_position}"
     )
@@ -18,21 +21,22 @@ defmodule Micelio.Mic.RollupRebuilder do
         ConflictIndex.rollup_starts(ConflictIndex.rollup_size(level), from_position, to_position)
 
       Enum.each(starts, fn start_position ->
-        _ = ConflictIndex.build_rollup(repository_id, level, start_position)
+        _ = ConflictIndex.build_rollup(repository_id, level, start_position, opts)
       end)
     end)
 
     :ok
   end
 
-  def rebuild(_repository_id, from_position, to_position) when from_position > to_position,
-    do: :ok
+  def rebuild(_repository_id, from_position, to_position, _opts)
+      when from_position > to_position,
+      do: :ok
 
-  def rebuild_from_head(repository_id, from_position \\ 1) do
-    case Storage.get(head_key(repository_id)) do
+  def rebuild_from_head(repository_id, from_position \\ 1, opts \\ []) do
+    case Storage.get(head_key(repository_id), opts) do
       {:ok, content} ->
         with {:ok, head} <- Binary.decode_head(content) do
-          rebuild(repository_id, from_position, head.position)
+          rebuild(repository_id, from_position, head.position, opts)
         end
 
       {:error, :not_found} ->
@@ -43,8 +47,8 @@ defmodule Micelio.Mic.RollupRebuilder do
     end
   end
 
-  def head_position(repository_id) do
-    case Storage.get(head_key(repository_id)) do
+  def head_position(repository_id, opts \\ []) do
+    case Storage.get(head_key(repository_id), opts) do
       {:ok, content} ->
         case Binary.decode_head(content) do
           {:ok, head} -> {:ok, head.position}

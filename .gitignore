@@ -44,6 +44,7 @@ npm-debug.log
 .direnv/
 .devenv/
 .mise.local.toml
+.micelio-dev-instance
 
 # Rust build artifacts
 /mic/target/
