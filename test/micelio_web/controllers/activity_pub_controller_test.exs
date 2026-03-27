@@ -3,7 +3,6 @@ defmodule MicelioWeb.ActivityPubControllerTest do
 
   alias Micelio.Accounts
   alias Micelio.Fediverse
-  alias Micelio.Repositories
 
   defp create_handle do
     email = "ap#{System.unique_integer()}@example.com"
@@ -71,14 +70,14 @@ defmodule MicelioWeb.ActivityPubControllerTest do
     assert response["describes"] == Fediverse.actor_url(handle)
   end
 
-  test "project returns activitypub payload", %{conn: conn} do
+  test "repository returns activitypub payload", %{conn: conn} do
     {organization, repository} = create_repository()
     account_handle = organization.account.handle
 
     conn = get(conn, ~p"/ap/repositories/#{account_handle}/#{repository.handle}")
     response = json_response(conn, 200)
 
-    assert response["id"] == Fediverse.project_activity_url(account_handle, repository.handle)
+    assert response["id"] == Fediverse.repository_activity_url(account_handle, repository.handle)
     assert response["type"] == "Project"
     assert response["name"] == repository.name
     assert response["summary"] == repository.description

@@ -7,7 +7,6 @@ defmodule MicelioWeb.Api.TokenContributionControllerTest do
   alias Micelio.OAuth
   alias Micelio.OAuth.AccessTokens
   alias Micelio.OAuth.Clients
-  alias Micelio.Repositories
 
   setup do
     {:ok, user} = Accounts.get_or_create_user_by_email("token-contrib-api@example.com")
@@ -30,7 +29,7 @@ defmodule MicelioWeb.Api.TokenContributionControllerTest do
   test "creates token contribution and updates pool", %{
     conn: conn,
     token: token,
-    project: repository,
+    repository: repository,
     organization: organization
   } do
     conn =
@@ -55,7 +54,7 @@ defmodule MicelioWeb.Api.TokenContributionControllerTest do
   test "rejects invalid contribution amounts", %{
     conn: conn,
     token: token,
-    project: repository,
+    repository: repository,
     organization: organization
   } do
     conn =
@@ -76,7 +75,7 @@ defmodule MicelioWeb.Api.TokenContributionControllerTest do
   test "rejects missing token contribution payload", %{
     conn: conn,
     token: token,
-    project: repository,
+    repository: repository,
     organization: organization
   } do
     conn =

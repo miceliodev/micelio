@@ -4,7 +4,6 @@ defmodule MicelioWeb.RepositoryWebhooksLiveTest do
   import Phoenix.LiveViewTest
 
   alias Micelio.Accounts
-  alias Micelio.Repositories
   alias Micelio.Webhooks
 
   defp login_user(conn, user) do
@@ -165,6 +164,6 @@ defmodule MicelioWeb.RepositoryWebhooksLiveTest do
                ~p"/#{organization.account.handle}/#{repository.handle}/settings/webhooks"
              )
 
-    assert redirect_to == ~p"/#{organization.account.handle}/#{repository.handle}"
+    assert redirect_to == ~p"/repositories"
   end
 end

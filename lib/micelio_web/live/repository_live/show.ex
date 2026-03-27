@@ -99,7 +99,7 @@ defmodule MicelioWeb.RepositoryLive.Show do
               <p class="repository-show-description">{@repository.description}</p>
             <% end %>
             <%= if @repository.url do %>
-                <p class="repository-show-url">
+              <p class="repository-show-url">
                 <a href={@repository.url} target="_blank" rel="noopener noreferrer">
                   {@repository.url}
                 </a>

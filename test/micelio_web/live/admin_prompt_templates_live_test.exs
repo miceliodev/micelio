@@ -13,7 +13,7 @@ defmodule MicelioWeb.AdminPromptTemplatesLiveTest do
 
     form =
       form(view, "#prompt-template-form",
-        prompt_template: %{
+        plan_template: %{
           name: "Release notes",
           description: "Summarize changes for release",
           category: "Docs",

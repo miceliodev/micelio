@@ -2,7 +2,6 @@ defmodule MicelioWeb.Browser.SearchControllerTest do
   use MicelioWeb.ConnCase, async: true
 
   alias Micelio.Accounts
-  alias Micelio.Repositories
 
   test "renders results for public repositories", %{conn: conn} do
     unique = System.unique_integer([:positive])

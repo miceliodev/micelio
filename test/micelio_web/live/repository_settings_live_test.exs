@@ -164,7 +164,7 @@ defmodule MicelioWeb.RepositorySettingsLiveTest do
              }}} =
              live(conn, ~p"/#{organization.account.handle}/#{repository.handle}/settings")
 
-    assert redirect_to == ~p"/#{organization.account.handle}/#{repository.handle}"
+    assert redirect_to == ~p"/repositories"
   end
 
   test "shows validation errors when required fields are missing", %{conn: conn} do
@@ -228,7 +228,7 @@ defmodule MicelioWeb.RepositorySettingsLiveTest do
       live(conn, ~p"/#{organization.account.handle}/#{repository.handle}/settings")
 
     form =
-    form(view, "#repository-settings-form",
+      form(view, "#repository-settings-form",
         repository: %{
           name: ""
         }

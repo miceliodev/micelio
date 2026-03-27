@@ -18,7 +18,7 @@ surface changes so clients and services do not diverge while scaling.
 
 - `build/adr/0005-session-native-repo-protocol.md` was created and outlines session/position
   semantics, landing strategy, and search model.
-- `build/protocols/micelio_virtual_vcs_v1.proto` and `build/adr/0005...` were moved under
+- `build/protocols/hif_v1.proto` and `build/adr/0005...` were moved under
   `build/` to keep build artifacts separate from user-facing docs.
 - Existing gRPC modules remain on legacy `micelio.sessions.v1` and `micelio.content.v1`
   contracts and are still in active use.
@@ -72,8 +72,8 @@ Proceed with Option 1. Create an explicit protocol freeze by:
 
 Affected files:
 - `build/adr/0005-session-native-repo-protocol.md`
-- `build/protocols/micelio_virtual_vcs_v1.proto`
-- `build/protocols/micelio_virtual_vcs_v1.compatibility.md` (new)
+- `build/protocols/hif_v1.proto`
+- Compatibility mapping artifact was later removed after hard-cutting to `hif.v1` only.
 - `test/micelio/protocol/virtual_vcs_contract_test.exs` (new)
 
 Related components:
@@ -111,12 +111,11 @@ Related components:
 **By:** Claude Code
 
 **Actions:**
-- Added `build/protocols/micelio_virtual_vcs_v1.compatibility.md` and updated
-  `build/protocols/README.md` with the mapping.
+- Added compatibility mapping during initial migration planning (later removed after hard cut).
 - Moved ADR status to Accepted in `build/adr/0005-session-native-repo-protocol.md`
   and added a compatibility subsection.
 - Added required/optional field annotations plus `SessionConflict` payload in
-  `build/protocols/micelio_virtual_vcs_v1.proto`.
+  `build/protocols/hif_v1.proto`.
 - Added `test/micelio/protocol/virtual_vcs_contract_test.exs` with service/field/conflict/paging
   coverage and verified with `mix test`.
 

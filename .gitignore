@@ -48,6 +48,7 @@ npm-debug.log
 
 # Rust build artifacts
 /mic/target/
+/hif/target/
 
 # Rust vendor/third-party
 /mic/vendor/grpc/third_party/abseil-cpp/

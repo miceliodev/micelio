@@ -9,6 +9,7 @@ defmodule Micelio.Activity do
   alias Micelio.Accounts.User
   alias Micelio.Plans.Plan
   alias Micelio.Repo
+  alias Micelio.Repositories.Repository
   alias Micelio.Sessions.Session
 
   @doc """
@@ -72,6 +73,7 @@ defmodule Micelio.Activity do
       %{
         id: session.id,
         type: :session_landed,
+        repository: session.repository,
         project: session.repository,
         occurred_at: session.landed_at
       }
@@ -94,6 +96,7 @@ defmodule Micelio.Activity do
       %{
         id: plan.id,
         type: :plan_submitted,
+        repository: plan.repository,
         project: plan.repository,
         origin: plan.origin,
         occurred_at: plan.inserted_at
@@ -104,7 +107,7 @@ defmodule Micelio.Activity do
   defp list_repository_activity([], _before, _limit), do: []
 
   defp list_repository_activity(organization_ids, before, limit) do
-    Project
+    Repository
     |> join(:left, [p], o in assoc(p, :organization))
     |> join(:left, [p, o], a in assoc(o, :account))
     |> where([p], p.organization_id in ^organization_ids)
@@ -118,6 +121,7 @@ defmodule Micelio.Activity do
       %{
         id: repository.id,
         type: :repository_created,
+        repository: repository,
         project: repository,
         occurred_at: repository.inserted_at
       }

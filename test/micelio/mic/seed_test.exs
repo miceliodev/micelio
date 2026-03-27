@@ -3,7 +3,6 @@ defmodule Micelio.Mic.SeedTest do
 
   alias Micelio.Accounts
   alias Micelio.Mic.{Project, Seed}
-  alias Micelio.Repositories
   alias Micelio.Storage
   alias Micelio.StorageHelper
 

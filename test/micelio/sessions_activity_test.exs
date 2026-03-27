@@ -1,7 +1,7 @@
 defmodule Micelio.SessionsActivityTest do
   use Micelio.DataCase, async: true
 
-  alias Micelio.{Accounts, Projects, Sessions}
+  alias Micelio.{Accounts, Sessions}
 
   test "activity_counts_for_user_public/2 counts landed sessions on public repositories" do
     {:ok, user} = Accounts.get_or_create_user_by_email("activity-user@example.com")

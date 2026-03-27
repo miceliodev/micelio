@@ -13,7 +13,6 @@ defmodule Micelio.GRPC.AuthRequiredTest do
   alias Micelio.OAuth
   alias Micelio.OAuth.AccessTokens
   alias Micelio.OAuth.Clients
-  alias Micelio.Repositories
   alias Micelio.Sessions
 
   test "gRPC requests require bearer token when configured" do

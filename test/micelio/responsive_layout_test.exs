@@ -8,15 +8,15 @@ defmodule Micelio.ResponsiveLayoutTest do
   test "sessions css includes mobile layout adjustments" do
     css = File.read!(css_path("assets/css/routes/sessions.css"))
 
-    assert css =~ "@media (max-width: 40rem)"
-    assert css =~ ".session-show-actions"
+    assert css =~ "@media (max-width: 60rem)"
+    assert css =~ ".session-layout"
   end
 
-  test "projects css includes mobile layout adjustments" do
-    css = File.read!(css_path("assets/css/routes/projects.css"))
+  test "repositories css includes mobile layout adjustments" do
+    css = File.read!(css_path("assets/css/routes/repositories.css"))
 
     assert css =~ "@media (max-width: 40rem)"
-    assert css =~ ".project-show-navigation"
+    assert css =~ ".repository-show-navigation"
     assert css =~ ".session-card-content"
   end
 
@@ -24,7 +24,7 @@ defmodule Micelio.ResponsiveLayoutTest do
     css = File.read!(css_path("assets/css/routes/account_profile.css"))
 
     assert css =~ "@media (max-width: 40rem)"
-    assert css =~ ".account-profile-header"
+    assert css =~ ".account-profile-section-header"
     assert css =~ ".account-passkey-entry"
   end
 
@@ -35,8 +35,8 @@ defmodule Micelio.ResponsiveLayoutTest do
     assert css =~ "gap: 0;"
   end
 
-  test "project show css includes mobile tree adjustments" do
-    css = File.read!(css_path("assets/css/routes/project_show.css"))
+  test "repository show css includes mobile tree adjustments" do
+    css = File.read!(css_path("assets/css/routes/repository_show.css"))
 
     assert css =~ "@media (max-width: 40rem)"
     assert css =~ ".repository-tree-link"

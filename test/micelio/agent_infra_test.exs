@@ -5,7 +5,6 @@ defmodule Micelio.AgentInfraTest do
   alias Micelio.AgentInfra
   alias Micelio.AITokens
   alias Micelio.Plans
-  alias Micelio.Repositories
 
   defp setup_plan do
     {:ok, user} = Accounts.get_or_create_user_by_email("agent-runner@example.com")

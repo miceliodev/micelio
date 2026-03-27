@@ -2,7 +2,7 @@ defmodule Micelio.Sessions.EventStreamTest do
   use Micelio.DataCase
 
   alias Micelio.StorageHelper
-  alias Micelio.{Accounts, Projects, Sessions}
+  alias Micelio.{Accounts, Sessions}
 
   setup :setup_storage
 

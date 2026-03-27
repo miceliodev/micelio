@@ -5,7 +5,6 @@ defmodule Micelio.WebhooksTest do
   import Mimic
 
   alias Micelio.Accounts
-  alias Micelio.Repositories
   alias Micelio.Sessions
   alias Micelio.Webhooks
 
@@ -56,7 +55,7 @@ defmodule Micelio.WebhooksTest do
         decoded = Jason.decode!(body)
 
         assert decoded["event"] == "push"
-        assert decoded["project"]["id"] == repository.id
+        assert decoded["repository"]["id"] == repository.id
         assert decoded["payload"] == payload
 
         assert headers["x-micelio-signature"] == "sha256=" <> sign("super-secret", body)
@@ -69,7 +68,7 @@ defmodule Micelio.WebhooksTest do
     end
 
     test "delivers only active webhooks with matching events", %{
-      project: repository,
+      repository: repository,
       webhook: webhook
     } do
       {:ok, _inactive} =

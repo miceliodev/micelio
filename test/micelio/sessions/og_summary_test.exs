@@ -4,7 +4,7 @@ defmodule Micelio.Sessions.OGSummaryTest do
   import Mimic
 
   alias Micelio.Sessions.Session
-  alias Micelio.{Accounts, Projects, Repo, Sessions}
+  alias Micelio.{Accounts, Repo, Sessions}
 
   setup :verify_on_exit!
   setup :set_mimic_global

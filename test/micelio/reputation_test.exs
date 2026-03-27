@@ -7,7 +7,6 @@ defmodule Micelio.ReputationTest do
   alias Micelio.Plans
   alias Micelio.Plans.Plan
   alias Micelio.Repo
-  alias Micelio.Repositories
   alias Micelio.Reputation
   alias Micelio.Sessions
   alias Micelio.ValidationEnvironments

@@ -5,7 +5,6 @@ defmodule Micelio.NotificationsTest do
 
   alias Micelio.Accounts
   alias Micelio.Notifications
-  alias Micelio.Repositories
   alias Micelio.Sessions
 
   defp unique_handle(prefix) do

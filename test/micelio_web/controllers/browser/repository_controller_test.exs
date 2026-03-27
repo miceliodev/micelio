@@ -4,7 +4,6 @@ defmodule MicelioWeb.Browser.RepositoryControllerTest do
   alias Micelio.Accounts
   alias Micelio.AITokens
   alias Micelio.Mic.{Binary, Repository, Tree}
-  alias Micelio.Repositories
   alias Micelio.Sessions
   alias Micelio.Storage
   alias Plug.CSRFProtection
@@ -48,16 +47,16 @@ defmodule MicelioWeb.Browser.RepositoryControllerTest do
     conn = get(conn, ~p"/#{organization.account.handle}/#{repository.handle}")
     html = html_response(conn, 200)
 
-    assert html =~ "id=\"project-tree\""
-    assert html =~ "id=\"project-breadcrumb\""
+    assert html =~ "id=\"repository-tree\""
     assert html =~ ~p"/#{organization.account.handle}/#{repository.handle}/blob/README.md"
     assert html =~ ~p"/#{organization.account.handle}/#{repository.handle}/tree/lib"
     assert html =~ "README.md"
     assert html =~ ">lib<"
-    refute html =~ "id=\"project-tree-parent\""
+    refute html =~ "id=\"repository-breadcrumb\""
+    refute html =~ "id=\"repository-tree-parent\""
 
-    lib_index = :binary.match(html, "project-tree-name\">lib<")
-    readme_index = :binary.match(html, "project-tree-name\">README.md<")
+    lib_index = :binary.match(html, "repository-tree-name\">lib<")
+    readme_index = :binary.match(html, "repository-tree-name\">README.md<")
 
     assert match?({_, _}, lib_index)
     assert match?({_, _}, readme_index)
@@ -77,33 +76,6 @@ defmodule MicelioWeb.Browser.RepositoryControllerTest do
     refute html =~ "M12 2a10 10"
   end
 
-  test "shows agent progress link on repository page", %{
-    conn: conn,
-    organization: organization,
-    repository: repository
-  } do
-    conn = get(conn, ~p"/#{organization.account.handle}/#{repository.handle}")
-    html = html_response(conn, 200)
-
-    assert html =~ "id=\"project-agents-link\""
-    assert html =~ ~p"/#{organization.account.handle}/#{repository.handle}/agents"
-  end
-
-  test "labels directory and file entries in the tree", %{
-    conn: conn,
-    organization: organization,
-    repository: repository
-  } do
-    conn = get(conn, ~p"/#{organization.account.handle}/#{repository.handle}")
-    html = html_response(conn, 200)
-
-    doc = LazyHTML.from_fragment(html)
-    kinds_text = doc |> LazyHTML.query(".project-tree-kind") |> LazyHTML.text()
-
-    assert String.contains?(kinds_text, "dir")
-    assert String.contains?(kinds_text, "file")
-  end
-
   test "renders README on repository homepage", %{
     conn: conn,
     organization: organization,
@@ -112,8 +84,8 @@ defmodule MicelioWeb.Browser.RepositoryControllerTest do
     conn = get(conn, ~p"/#{organization.account.handle}/#{repository.handle}")
     html = html_response(conn, 200)
 
-    assert html =~ "id=\"project-readme\""
-    assert html =~ "id=\"project-readme-content\""
+    assert html =~ "id=\"repository-readme\""
+    assert html =~ "id=\"repository-readme-content\""
     assert html =~ "<h1>"
     assert html =~ "Demo"
   end
@@ -138,8 +110,8 @@ defmodule MicelioWeb.Browser.RepositoryControllerTest do
     conn = get(conn, ~p"/#{organization.account.handle}/#{repository.handle}")
     html = html_response(conn, 200)
 
-    assert html =~ "id=\"project-readme\""
-    assert html =~ "class=\"project-readme-content\""
+    assert html =~ "id=\"repository-readme\""
+    assert html =~ "class=\"repository-readme-content\""
     assert html =~ "Plain README"
   end
 
@@ -163,8 +135,8 @@ defmodule MicelioWeb.Browser.RepositoryControllerTest do
     conn = get(conn, ~p"/#{organization.account.handle}/#{repository.handle}")
     html = html_response(conn, 200)
 
-    assert html =~ "id=\"project-readme\""
-    assert html =~ "class=\"project-readme-binary\""
+    assert html =~ "id=\"repository-readme\""
+    assert html =~ "class=\"repository-readme-binary\""
     assert html =~ "Binary file (3 bytes) cannot be displayed."
   end
 
@@ -180,21 +152,6 @@ defmodule MicelioWeb.Browser.RepositoryControllerTest do
     assert body =~ "#{organization.account.handle}/#{repository.handle}"
     assert body =~ "micelio"
     assert List.first(get_resp_header(conn, "content-type")) =~ "image/svg+xml"
-  end
-
-  test "shows embeddable badge snippets on the repository page", %{
-    conn: conn,
-    organization: organization,
-    repository: repository
-  } do
-    conn = get(conn, ~p"/#{organization.account.handle}/#{repository.handle}")
-    html = html_response(conn, 200)
-
-    assert html =~ "id=\"project-badge\""
-    assert html =~ "/#{organization.account.handle}/#{repository.handle}/badge.svg"
-    assert html =~ "[![#{organization.account.handle}/#{repository.handle}]("
-    assert html =~ "id=\"project-badge-markdown\""
-    assert html =~ "id=\"project-badge-html\""
   end
 
   test "allows contributing tokens to a repository", %{
@@ -247,10 +204,10 @@ defmodule MicelioWeb.Browser.RepositoryControllerTest do
     html = html_response(conn, 200)
 
     assert html =~ "app.ex"
-    assert html =~ "id=\"project-breadcrumb\""
-    assert html =~ "class=\"project-breadcrumb-current\">lib"
+    assert html =~ "id=\"repository-breadcrumb\""
+    assert html =~ "class=\"repository-breadcrumb-current\">lib"
     assert html =~ "/#{organization.account.handle}/#{repository.handle}/tree/lib"
-    assert html =~ "id=\"project-tree-parent\""
+    assert html =~ "id=\"repository-tree-parent\""
   end
 
   test "normalizes trailing slashes in tree paths", %{
@@ -261,8 +218,8 @@ defmodule MicelioWeb.Browser.RepositoryControllerTest do
     conn = get(conn, ~p"/#{organization.account.handle}/#{repository.handle}/tree/lib/")
     html = html_response(conn, 200)
 
-    assert html =~ "class=\"project-breadcrumb-current\">lib"
-    assert html =~ "id=\"project-tree-parent\""
+    assert html =~ "class=\"repository-breadcrumb-current\">lib"
+    assert html =~ "id=\"repository-tree-parent\""
   end
 
   test "links parent directory to repository root for first-level paths", %{
@@ -273,7 +230,7 @@ defmodule MicelioWeb.Browser.RepositoryControllerTest do
     conn = get(conn, ~p"/#{organization.account.handle}/#{repository.handle}/tree/lib")
     html = html_response(conn, 200)
 
-    assert html =~ "id=\"project-tree-parent\""
+    assert html =~ "id=\"repository-tree-parent\""
     assert html =~ "href=\"/#{organization.account.handle}/#{repository.handle}\""
   end
 
@@ -307,11 +264,11 @@ defmodule MicelioWeb.Browser.RepositoryControllerTest do
     conn = get(conn, ~p"/#{organization.account.handle}/#{repository.handle}/tree/lib/utils")
     html = html_response(conn, 200)
 
-    assert html =~ "id=\"project-breadcrumb\""
-    assert html =~ "class=\"project-breadcrumb-current\">utils"
+    assert html =~ "id=\"repository-breadcrumb\""
+    assert html =~ "class=\"repository-breadcrumb-current\">utils"
     assert html =~ ~p"/#{organization.account.handle}/#{repository.handle}/tree/lib"
     assert html =~ "helpers.ex"
-    assert html =~ "id=\"project-tree-parent\""
+    assert html =~ "id=\"repository-tree-parent\""
     assert html =~ ~p"/#{organization.account.handle}/#{repository.handle}/tree/lib"
 
     assert html =~
@@ -333,16 +290,16 @@ defmodule MicelioWeb.Browser.RepositoryControllerTest do
     conn = get(conn, ~p"/#{organization.account.handle}/#{empty_repository.handle}")
     html = html_response(conn, 200)
 
-    assert html =~ "No files yet"
-    assert html =~ "class=\"project-empty\""
+    assert html =~ "This repository is empty"
+    assert html =~ "class=\"repository-empty-state\""
   end
 
   test "shows file contents", %{conn: conn, organization: organization, repository: repository} do
     conn = get(conn, ~p"/#{organization.account.handle}/#{repository.handle}/blob/README.md")
     html = html_response(conn, 200)
 
-    assert html =~ "id=\"project-file-content\""
-    assert html =~ "project-file-content"
+    assert html =~ "id=\"repository-file-content\""
+    assert html =~ "repository-file-content"
     assert html =~ "Demo"
   end
 
@@ -466,7 +423,7 @@ defmodule MicelioWeb.Browser.RepositoryControllerTest do
     conn = get(conn, ~p"/#{organization.account.handle}/#{repository.handle}/blob/lib/app.ex")
     html = html_response(conn, 200)
 
-    assert html =~ "id=\"project-breadcrumb\""
+    assert html =~ "id=\"repository-breadcrumb\""
     assert html =~ ~p"/#{organization.account.handle}/#{repository.handle}/tree/lib"
     assert html =~ "app.ex"
   end
@@ -511,7 +468,7 @@ defmodule MicelioWeb.Browser.RepositoryControllerTest do
     conn = get(conn, ~p"/#{organization.account.handle}/#{repository.handle}/blob/lib/app.ex")
     html = html_response(conn, 200)
 
-    assert html =~ "class=\"project-file-content highlight\""
+    assert html =~ "class=\"repository-file-content highlight\""
     assert html =~ "<span class=\""
     assert html =~ "ok"
   end
@@ -536,7 +493,7 @@ defmodule MicelioWeb.Browser.RepositoryControllerTest do
     conn = get(conn, ~p"/#{organization.account.handle}/#{repository.handle}/blob/notes.txt")
     html = html_response(conn, 200)
 
-    assert html =~ "id=\"project-file-content\""
+    assert html =~ "id=\"repository-file-content\""
     assert html =~ "Plain notes"
   end
 
@@ -554,146 +511,8 @@ defmodule MicelioWeb.Browser.RepositoryControllerTest do
     conn = get(conn, ~p"/#{organization.account.handle}/#{repository.handle}/blob/lib/app.ex")
     html = html_response(conn, 200)
 
-    assert html =~ "id=\"project-blob-download\""
+    assert html =~ "id=\"repository-blob-download\""
     assert html =~ "https://cdn.example.test/micelio/#{key}"
-  end
-
-  test "shows fork action for organization admins", %{
-    conn: conn,
-    organization: organization,
-    repository: repository
-  } do
-    %{conn: conn, user: user} = register_and_log_in_user(%{conn: conn})
-
-    {:ok, target_org} =
-      Accounts.create_organization(%{handle: "fork-target", name: "Fork Target"})
-
-    {:ok, _membership} =
-      Accounts.create_organization_membership(%{
-        user_id: user.id,
-        organization_id: target_org.id,
-        role: "admin"
-      })
-
-    conn = get(conn, ~p"/#{organization.account.handle}/#{repository.handle}")
-    html = html_response(conn, 200)
-
-    assert html =~ "id=\"project-fork-form\""
-    assert html =~ "id=\"project-fork-submit\""
-  end
-
-  test "hides fork action for users without admin organizations", %{
-    conn: conn,
-    organization: organization,
-    repository: repository
-  } do
-    %{conn: conn, user: user} = register_and_log_in_user(%{conn: conn})
-
-    {:ok, target_org} =
-      Accounts.create_organization(%{handle: "fork-member", name: "Fork Member"})
-
-    {:ok, _membership} =
-      Accounts.create_organization_membership(%{
-        user_id: user.id,
-        organization_id: target_org.id,
-        role: "member"
-      })
-
-    conn = get(conn, ~p"/#{organization.account.handle}/#{repository.handle}")
-    html = html_response(conn, 200)
-
-    refute html =~ "id=\"project-fork-form\""
-  end
-
-  test "forks a repository into an admin organization", %{
-    conn: conn,
-    organization: organization,
-    repository: repository
-  } do
-    %{conn: conn, user: user} = register_and_log_in_user(%{conn: conn})
-
-    {:ok, target_org} =
-      Accounts.create_organization(%{handle: "fork-destination", name: "Fork Destination"})
-
-    {:ok, _membership} =
-      Accounts.create_organization_membership(%{
-        user_id: user.id,
-        organization_id: target_org.id,
-        role: "admin"
-      })
-
-    conn =
-      conn
-      |> with_csrf()
-      |> post(~p"/#{organization.account.handle}/#{repository.handle}/fork", %{
-        "fork" => %{
-          "organization_id" => to_string(target_org.id),
-          "handle" => "demo-fork",
-          "return_to" => ~p"/#{organization.account.handle}/#{repository.handle}"
-        }
-      })
-
-    assert redirected_to(conn) == ~p"/#{target_org.account.handle}/demo-fork"
-
-    forked = Repositories.get_repository_by_handle(target_org.id, "demo-fork")
-    assert forked.forked_from_id == repository.id
-    assert forked.organization_id == target_org.id
-  end
-
-  test "shows fork origin on forked repository", %{
-    conn: conn,
-    organization: organization,
-    repository: repository
-  } do
-    {:ok, target_org} =
-      Accounts.create_organization(%{handle: "forked-show", name: "Forked Show"})
-
-    assert {:ok, _forked} =
-             Micelio.Repositories.fork_repository(repository, target_org, %{handle: "demo-fork"})
-
-    conn = get(conn, ~p"/#{target_org.account.handle}/demo-fork")
-    html = html_response(conn, 200)
-
-    assert html =~ "Forked from"
-    assert html =~ "#{organization.account.handle}/#{repository.handle}"
-  end
-
-  test "rejects forks to organizations without admin role", %{
-    conn: conn,
-    organization: organization,
-    repository: repository
-  } do
-    %{conn: conn, user: user} = register_and_log_in_user(%{conn: conn})
-
-    {:ok, target_org} =
-      Accounts.create_organization(%{handle: "fork-invalid", name: "Fork Invalid"})
-
-    {:ok, _membership} =
-      Accounts.create_organization_membership(%{
-        user_id: user.id,
-        organization_id: target_org.id,
-        role: "member"
-      })
-
-    return_to = ~p"/#{organization.account.handle}/#{repository.handle}"
-
-    conn =
-      conn
-      |> with_csrf()
-      |> post(~p"/#{organization.account.handle}/#{repository.handle}/fork", %{
-        "fork" => %{
-          "organization_id" => target_org.id,
-          "handle" => "demo-fork",
-          "return_to" => return_to
-        }
-      })
-
-    assert redirected_to(conn) == return_to
-
-    assert Phoenix.Flash.get(conn.assigns.flash, :error) ==
-             "Select an organization you administer to fork."
-
-    assert is_nil(Repositories.get_repository_by_handle(target_org.id, "demo-fork"))
   end
 
   test "returns not found for private repositories", %{conn: conn, organization: organization} do

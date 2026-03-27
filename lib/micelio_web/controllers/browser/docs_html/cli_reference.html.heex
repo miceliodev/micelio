@@ -31,7 +31,7 @@
       </nav>
 
       <.header>
-        mic {@docs["version"]}
+        hif {@docs["version"]}
         <:subtitle>
           {@docs["tagline"]}
         </:subtitle>
@@ -87,7 +87,7 @@
             <%= for cmd <- commands do %>
               <div class="cli-command" id={"cmd-#{cmd["name"]}"}>
                 <h3 class="cli-command-name">
-                  <code>mic {cmd["name"]}</code>
+                  <code>hif {cmd["name"]}</code>
                 </h3>
                 <p class="cli-command-description">{cmd["description"]}</p>
 
@@ -96,7 +96,7 @@
                   <%= for subcmd <- cmd["subcommands"] do %>
                     <div class="cli-subcommand" id={"cmd-#{cmd["name"]}-#{subcmd["name"]}"}>
                       <h4 class="cli-subcommand-name">
-                        <code>mic {cmd["name"]} {subcmd["name"]}</code>
+                        <code>hif {cmd["name"]} {subcmd["name"]}</code>
                       </h4>
                       <p>{subcmd["description"]}</p>
 
@@ -295,7 +295,7 @@
           <h2>{gettext("Error Codes")}</h2>
           <p>
             {gettext(
-              "When an error occurs, mic returns a JSON error with a code. Here's how to resolve common errors:"
+              "When an error occurs, hif returns a JSON error with a code. Here's how to resolve common errors:"
             )}
           </p>
           <table class="cli-error-table">

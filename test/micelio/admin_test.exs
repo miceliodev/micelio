@@ -4,7 +4,7 @@ defmodule Micelio.AdminTest do
   alias Micelio.Accounts.{Account, User}
   alias Micelio.Admin
   alias Micelio.Repo
-  alias Micelio.{Accounts, Plans, Projects, Sessions}
+  alias Micelio.{Accounts, Sessions}
 
   setup do
     Repo.delete_all(Account)

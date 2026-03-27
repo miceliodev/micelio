@@ -7,7 +7,6 @@ defmodule MicelioWeb.Api.TokenPoolControllerTest do
   alias Micelio.OAuth
   alias Micelio.OAuth.AccessTokens
   alias Micelio.OAuth.Clients
-  alias Micelio.Repositories
 
   setup do
     {:ok, user} = Accounts.get_or_create_user_by_email("token-pool-api@example.com")
@@ -31,7 +30,7 @@ defmodule MicelioWeb.Api.TokenPoolControllerTest do
   test "shows token pool for authorized user", %{
     conn: conn,
     token: token,
-    project: repository,
+    repository: repository,
     pool: pool,
     organization: organization
   } do
@@ -50,7 +49,7 @@ defmodule MicelioWeb.Api.TokenPoolControllerTest do
   test "updates token pool", %{
     conn: conn,
     token: token,
-    project: repository,
+    repository: repository,
     organization: organization
   } do
     conn =
@@ -72,7 +71,7 @@ defmodule MicelioWeb.Api.TokenPoolControllerTest do
   test "rejects invalid token pool updates", %{
     conn: conn,
     token: token,
-    project: repository,
+    repository: repository,
     organization: organization
   } do
     conn =
@@ -93,7 +92,7 @@ defmodule MicelioWeb.Api.TokenPoolControllerTest do
   test "rejects missing token pool payload", %{
     conn: conn,
     token: token,
-    project: repository,
+    repository: repository,
     organization: organization
   } do
     conn =

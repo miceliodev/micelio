@@ -21,7 +21,7 @@ Deliver a session-native versioning system for monorepo scale where:
 
 ### Milestone 0 — Protocol freeze (days 1-2)
 
-1. Finalize `build/protocols/micelio_virtual_vcs_v1.proto`.
+1. Finalize `build/protocols/hif_v1.proto`.
 2. Define RPC mapping to existing services:
    - `micelio.sessions.v1` => session lifecycle compatibility layer,
    - `micelio.content.v1` => tree/blob/blame/grep reads,

@@ -579,10 +579,10 @@ if config_env() in [:dev, :test] and dev_instance_suffix do
       :test -> "micelio_test#{test_partition}_#{dev_instance_suffix}"
     end
 
-  config :micelio, Micelio.Repo, database: db_name
-
   grpc_port = 50051 + dev_instance_suffix
+
   config :micelio, Micelio.GRPC, port: grpc_port
+  config :micelio, Micelio.Repo, database: db_name
 end
 
 if config_env() == :prod do

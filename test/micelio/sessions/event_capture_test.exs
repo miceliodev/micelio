@@ -4,7 +4,7 @@ defmodule Micelio.Sessions.EventCaptureTest do
   alias Micelio.Sessions.EventCapture
   alias Micelio.Storage
   alias Micelio.StorageHelper
-  alias Micelio.{Accounts, Projects, Sessions}
+  alias Micelio.{Accounts, Sessions}
 
   setup :setup_storage
 

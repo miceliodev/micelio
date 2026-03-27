@@ -6,7 +6,6 @@ defmodule Micelio.AITokensTest do
   alias Micelio.AITokens.TokenContribution
   alias Micelio.Plans
   alias Micelio.Repo
-  alias Micelio.Repositories
 
   setup do
     {:ok, organization} =
@@ -44,7 +43,7 @@ defmodule Micelio.AITokensTest do
     assert "cannot exceed balance" in errors_on(changeset).reserved
   end
 
-  test "project_usage_summary/1 aggregates usage metrics", %{repository: repository} do
+  test "repository_usage_summary/1 aggregates usage metrics", %{repository: repository} do
     {:ok, user} = Accounts.get_or_create_user_by_email("usage@example.com")
 
     {:ok, plan} =
@@ -105,7 +104,7 @@ defmodule Micelio.AITokensTest do
         user: user
       )
 
-    summary = AITokens.project_usage_summary(repository)
+    summary = AITokens.repository_usage_summary(repository)
 
     assert summary.tokens_spent == 150
     assert summary.accepted_plans == 1

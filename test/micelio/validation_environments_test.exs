@@ -4,7 +4,6 @@ defmodule Micelio.ValidationEnvironmentsTest do
   alias Micelio.Accounts
   alias Micelio.AITokens
   alias Micelio.Plans
-  alias Micelio.Repositories
   alias Micelio.ValidationEnvironments
 
   defmodule TestProvider do

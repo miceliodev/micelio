@@ -44,11 +44,11 @@ defmodule Micelio.Admin do
       repositories: Repo.aggregate(Repository, :count),
       sessions: Repo.aggregate(Session, :count),
       public_repositories:
-        Project
+        Repository
         |> where([p], p.visibility == "public")
         |> Repo.aggregate(:count),
       private_repositories:
-        Project
+        Repository
         |> where([p], p.visibility == "private")
         |> Repo.aggregate(:count)
     }
@@ -82,7 +82,7 @@ defmodule Micelio.Admin do
   Lists the most recently created repositories with organization/account preloaded.
   """
   def list_recent_repositories(limit \\ 10) when is_integer(limit) and limit > 0 do
-    Project
+    Repository
     |> join(:left, [p], o in assoc(p, :organization))
     |> join(:left, [p, o], a in assoc(o, :account))
     |> preload([_p, o, a], organization: {o, account: a})

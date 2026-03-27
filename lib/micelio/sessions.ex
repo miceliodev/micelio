@@ -460,6 +460,15 @@ defmodule Micelio.Sessions do
   end
 
   @doc """
+  Deletes all draft changes for a session.
+  """
+  def delete_session_changes(%Session{} = session) do
+    SessionChange
+    |> where([c], c.session_id == ^session.id)
+    |> Repo.delete_all()
+  end
+
+  @doc """
   Lists landed session changes for a file, ordered by landing time.
   """
   def list_landed_changes_for_file(repository_id, file_path)

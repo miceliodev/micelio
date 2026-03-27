@@ -1,6 +1,6 @@
 # Micelio for AI Agents
 
-Micelio is a forge platform built with Elixir/Phoenix, Rust for CLI (`mic`), Zig for NIFs, and vanilla CSS for web UI.
+Micelio is a forge platform built with Elixir/Phoenix, Rust for CLI (`hif`), and vanilla CSS for web UI.
 
 ## IMPORTANT: Terminology
 
@@ -25,17 +25,21 @@ Use open source icons from https://icones.js.org/ and embed them as inline SVG i
 
 When adding new user interactions that should influence "recent repositories", add them to the repository interaction tracking in the Repositories context and update the relevant controllers/live views to record them.
 
+## IMPORTANT: Command Execution
+
+Use `MuonTrap.cmd/3` instead of `System.cmd/3` for running external commands.
+
 ## IMPORTANT: CLI Design for Agents
 
-**The `mic` CLI must be self-documenting for AI agents.** Agents should be able to learn how to use the CLI just from help output, without needing separate documentation files.
+**The `hif` CLI must be self-documenting for AI agents.** Agents should be able to learn how to use the CLI just from help output, without needing separate documentation files.
 
 Design principles:
 1. **Rich help with examples**: Every command includes `after_help` with EXAMPLES, WORKFLOW, and NOTES sections
 2. **Main help has quick start**: The root `--help` shows a complete workflow from auth to landing
-3. **`--help --json` for agents**: Machine-readable help that agents can parse programmatically
-4. **Actionable error messages**: Errors should suggest next steps (e.g., "Run 'mic auth login' first")
+3. **`--help --json` / `--help --toon` for agents**: Machine-readable help that agents can parse programmatically
+4. **Actionable error messages**: Errors should suggest next steps (e.g., "Run 'hif auth login' first")
 
-The `--help --json` output includes:
+The `--help --json` / `--help --toon` output includes:
 - `concepts`: Definitions of Session, Workspace, Forge, Landing, Position
 - `workflow`: Numbered steps for the typical flow
 - `commands`: Full command tree with args, options, and requirements (`requires_auth`, `requires_workspace`, `requires_session`)
@@ -43,7 +47,7 @@ The `--help --json` output includes:
 
 When adding new commands:
 1. Add `after_help` with examples
-2. Update `generate_help_json()` in `mic/src/cli.rs`
+2. Update `generate_help_json()` in `hif/src/cli.rs`
 3. Include `requires_auth`, `requires_workspace`, `requires_session` metadata
 4. Add error recovery guidance to `error_codes`
 
@@ -69,32 +73,32 @@ If a translation is not available for a locale, the English version is used as f
 Micelio is a monorepo containing:
 
 - **Forge** (Elixir/Phoenix) - The web application and gRPC server
-- **mic** (Rust) - The `mic` command-line interface
+- **hif** (Rust) - The `hif` command-line interface
 
 ### Tech Stack
 
 | Component | Technology | Location |
 |-----------|------------|----------|
 | Web App | Elixir/Phoenix 1.8 | `/` (root) |
-| CLI | Rust | `/mic` |
+| CLI | Rust | `/hif` |
 | Database | PostgreSQL + Ecto | - |
 | Frontend | LiveView + vanilla CSS | - |
 
 ### Key Modules
 
-#### mic (Rust CLI)
+#### hif (Rust CLI)
 
-Located in `mic/`, organized as:
+Located in `hif/`, organized as:
 
-- `mic/src/core/hash.rs` - Blake3 hashing for content-addressed storage
-- `mic/src/core/bloom.rs` - Bloom filters for conflict detection
-- `mic/src/core/hlc.rs` - Hybrid Logical Clocks for distributed timestamps
-- `mic/src/core/tree.rs` - B+ tree for directory structures
-- `mic/src/main.rs` - CLI entry point
-- `mic/src/cli.rs` - Command definitions (clap)
-- `mic/src/grpc/` - gRPC client for forge communication
-- `mic/src/workspace/` - Local workspace management
-- `mic/src/commands/` - Command implementations
+- `hif/src/core/hash.rs` - Blake3 hashing for content-addressed storage
+- `hif/src/core/bloom.rs` - Bloom filters for conflict detection
+- `hif/src/core/hlc.rs` - Hybrid Logical Clocks for distributed timestamps
+- `hif/src/core/tree.rs` - B+ tree for directory structures
+- `hif/src/main.rs` - CLI entry point
+- `hif/src/cli.rs` - Command definitions (clap)
+- `hif/src/grpc/` - gRPC client for forge communication
+- `hif/src/workspace/` - Local workspace management
+- `hif/src/commands/` - Command implementations
 
 #### Zig NIFs
 
@@ -119,11 +123,11 @@ See [docs/contributors/next.md](./docs/contributors/next.md) for upcoming featur
 
 ---
 
-## Architecture: mic is NOT Git
+## Architecture: hif is NOT Git
 
-**mic is an alternative to Git, not a wrapper around it.** It uses a completely different model:
+**hif is an alternative to Git, not a wrapper around it.** It uses a completely different model:
 
-| Aspect | Git | mic + Micelio |
+| Aspect | Git | hif + Micelio |
 |--------|-----|---------------|
 | **Unit of work** | Commit (snapshot) | Session (goal + context + changes) |
 | **Storage model** | Distributed (.git folder) | Forge-first (S3 is source of truth) |
@@ -141,7 +145,7 @@ Every unit of work is a **session** containing:
 
 ### CLI to Forge Communication
 
-mic CLI communicates with Micelio via **gRPC** (not HTTP REST, not Git protocol):
+hif CLI communicates with Micelio via **gRPC** (not HTTP REST, not Git protocol):
 
 - `micelio.auth.v1.AuthService` - Device flow login
 - `micelio.repositories.v1.RepositoryService` - Repository CRUD
@@ -172,45 +176,39 @@ repositories/{repository_id}/
 └── blobs/{hash}.bin        # File content (zstd compressed)
 ```
 
-### mic CLI Commands
+### hif CLI Commands
 
 ```bash
 # Authentication
-mic auth login              # Device flow auth
-mic auth status             # Check auth status
+hif auth login              # Device flow auth
+hif auth status             # Check auth status
 
 # Repositories
-mic repo create <org> <handle> <name>
-mic repo list <org>
+hif repository create <account/repository> "<name>"
+hif repository list <account>
 
 # Working with content (no checkout needed)
-mic cat <org> <repository> <path>      # Read file
-mic ls <org> <repository>              # List directory
-mic log <org/repository>               # List sessions
-mic blame <org> <repository> <path>    # Session attribution
+hif show <org/repository> <path>       # Read file
+hif tree <org/repository> [path]       # List directory
+hif grep <org/repository> "<query>"    # Search repository text
+hif log <org/repository>               # List sessions
+hif blame <org/repository> <path>      # Session attribution
 
 # Local workspace
-mic checkout <org/repository>          # Create local workspace
-mic status                             # Show workspace changes
-mic write <path>                       # Stage file (reads from stdin)
-mic land "goal"                        # Quick land
+hif checkout <account/repository>      # Create local workspace
+hif activate zsh                       # Enable automatic draft sync in your shell
+hif status                             # Show workspace changes
+hif land "goal"                        # Quick land
 
 # Sessions (explicit workflow)
-mic session start <org> <repository> "goal"
-mic session note "message"             # Add conversation entry
-mic session land                       # Push to forge
-mic session abandon                    # Discard session
+hif session start <account/repository> "goal"
+hif session note "message"             # Add conversation entry
+hif session land                       # Land onto trunk
+hif session abandon                    # Discard session
 
 # Sync
-mic sync                               # Pull latest from forge
+hif sync                               # Pull latest from forge
 ```
-
-### mic CLI Global Options
-
-- `--json` - Output in JSON format (for scripts/agents)
-- `--verbose` / `-v` - Show additional details
-- `--no-color` - Disable colored output (also respects `NO_COLOR`)
-- `--cwd` / `-C` - Run as if started in a different directory
 
 ### Importing from Git
 
@@ -243,7 +241,7 @@ mix deps.get
 mix ecto.setup
 
 # Build Rust CLI
-cd mic && cargo build --release && cd ..
+cd hif && cargo build --release && cd ..
 
 # Start development server
 mix phx.server
@@ -252,9 +250,8 @@ mix phx.server
 ### Verify Installation
 
 ```bash
-# Run all tests
-mix test
-cd mic && cargo test
+# Run the canonical verification suite
+mise run check
 ```
 
 ### Important Files
@@ -263,7 +260,7 @@ cd mic && cargo test
 |------|---------|
 | `AGENTS.md` | This guide (root hub) |
 | `priv/static/skill.md` | Agent guide served at `/skill.md` - keep in sync with AGENTS.md |
-| `priv/static/SKILL.md` | mic CLI docs served at `/SKILL.md` |
+| `priv/static/SKILL.md` | hif CLI docs served at `/SKILL.md` |
 
 ---
 
@@ -272,35 +269,37 @@ cd mic && cargo test
 Before making changes:
 
 1. **Pull latest**: `git pull origin main`
-2. **Check tests pass**: `mix test`
+2. **Run the canonical check**: `mise run check`
 3. **Review recent commits**: `git log --oneline -10`
 
 ### Quick Reference
 
 ```bash
+# Canonical verification
+mise run check
+
 # Build
 mix compile --warnings-as-errors
-cd mic && cargo build --release
+cd hif && cargo build --release
 
 # Test
 mix test
-cd mic && cargo test
+cd hif && cargo test
 
 # Format
 mix format --check-formatted
-cd mic && cargo fmt --check
+cd hif && cargo fmt --check
 
 # Pre-commit (run before pushing)
-mix compile --warnings-as-errors && mix format --check-formatted && mix test
-cd mic && cargo build --release && cargo fmt --check && cargo test
+mise run check
 ```
 
 ### Shortcut
 
-Use the precommit alias when done with all changes:
+Use `mise run check` when done with changes. `mix precommit` still exists for Phoenix-side checks only:
 
 ```bash
-mix precommit
+mise run check
 ```
 
 ---
@@ -322,8 +321,9 @@ mix precommit
 | `mix ecto.gen.migration name` | Generate migration |
 | `mix help task_name` | Get task docs |
 | `mix precommit` | Run all pre-commit checks |
+| `mise run check` | Run the full forge + hif verification suite |
 
-### Rust (mic CLI)
+### Rust (hif CLI)
 
 | Command | Purpose |
 |---------|---------|
@@ -338,7 +338,7 @@ mix precommit
 
 | File | Served At | Purpose |
 |------|-----------|---------|
-| `priv/static/SKILL.md` | `/SKILL.md` | mic CLI documentation |
+| `priv/static/SKILL.md` | `/SKILL.md` | hif CLI documentation |
 | `priv/static/skill.md` | `/skill.md` | Agent guide (keep aligned with AGENTS.md) |
 
 ### HTTP Requests
@@ -353,7 +353,7 @@ Use `:req` (`Req`) for HTTP requests. It's included by default.
 
 When making changes to CLI commands or agent capabilities, update the corresponding static files:
 
-- **SKILL.md** (`priv/static/SKILL.md`) - Documentation for the mic CLI served at `/SKILL.md`
+- **SKILL.md** (`priv/static/SKILL.md`) - Documentation for the hif CLI served at `/SKILL.md`
 - **skill.md** (`priv/static/skill.md`) - Agent guide served at `/skill.md`, keep aligned with `AGENTS.md`
 
 When you update `AGENTS.md`, also update `priv/static/skill.md` so `/skill.md` stays in sync.
@@ -389,7 +389,7 @@ The app is deployed using [Kamal](https://kamal-deploy.org/) via **Continuous In
 
 **Manual deployment (if needed):**
 ```bash
-source .env && kamal deploy
+fnox exec kamal deploy
 ```
 
 ### Code Quality Standards
@@ -438,10 +438,10 @@ When encountering 500 errors or unexpected behavior in production:
 
 ```bash
 # View live logs
-kamal logs
+fnox exec kamal logs
 
 # Follow logs in real-time
-kamal logs -f
+fnox exec fnox exec kamal logs -f
 ```
 
 ### 2. Identify the Error Pattern
@@ -491,29 +491,29 @@ mix compile --warnings-as-errors
 git add . && git commit -m "fix: description" && git push
 # 6. Verify CI passes
 # 7. Check logs
-kamal logs
+fnox exec kamal logs
 ```
 
 ### 7. Useful Commands
 
 ```bash
 # Check production logs
-kamal logs
+fnox exec kamal logs
 
 # SSH into production container
-kamal ssh
+fnox exec kamal ssh
 
 # Check deployment status
-kamal status
+fnox exec kamal status
 
 # Check app health
-kamal healthcheck
+fnox exec kamal healthcheck
 
 # Deploy to production
-kamal deploy
+fnox exec kamal deploy
 
 # Rollback to previous version
-kamal rollback
+fnox exec kamal rollback
 ```
 
 ### Remember
@@ -576,7 +576,7 @@ _ = :sys.get_state(pid)
 ### Zig Tests
 
 ```bash
-cd mic && zig build test
+zig build test
 ```
 
 Tests are organized by module. Each core module includes comprehensive unit tests covering normal operation, edge cases, and error conditions.
@@ -795,16 +795,99 @@ All styling uses CSS variables in `assets/css/theme/tokens.css`:
 
 #### Typography Scale
 
-| Element | Size | Weight | Usage |
-|---------|------|--------|-------|
-| h1 | 24px | 600 (semibold) | Page titles |
-| h2 | 20px | 600 | Section headers |
-| h3 | 16px | 600 | Subsections |
-| h4-h6 | 14px | 600 | Minor headers |
-| body | 14px | 400 | All body text |
-| small | 12px | 400 | Hints, labels |
+| Element | Size Variable | Actual Size | Weight | Usage |
+|---------|---------------|-------------|--------|-------|
+| h1 | `font-size-2xl` | 28px | 700 (bold) | Page titles |
+| h2 | `font-size-xl` | 24px | 600 (semibold) | Section headers |
+| h3 | `font-size-lg` | 20px | 600 | Subsections |
+| h4 | `font-size-md` | 16px | 600 | Card titles, minor headers |
+| body | `font-size-base` | 15px | 400 | All body text |
+| small/label | `font-size-sm` | 14px | 400-500 | Labels, secondary text |
+| caption | `font-size-xs` | 12px | 400 | Hints, timestamps |
 
-Font stack: `-apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif`
+#### Typography Rules (MUST follow)
+
+**Micelio uses system sans-serif throughout for a clean, technical feel:**
+
+| Font | Variable | When to Use |
+|------|----------|-------------|
+| **System sans-serif** | `--theme-ui-fonts-heading` | Page titles, section headers, card titles, any "title" text |
+| **System sans-serif** | `--theme-ui-fonts-body` | Body text, labels, descriptions, navigation, buttons |
+| **Monospace** | `--theme-ui-fonts-mono` | Code, CLI commands, technical values |
+
+##### Heading Font (System sans-serif) - Use for:
+
+- `<h1>` through `<h6>` elements (automatic)
+- Card titles (`.card-title`, `.repository-card-name`)
+- List item titles (`.session-goal`, `.docs-category-title`)
+- Step/item titles in instructional content
+- Any text that names or identifies something
+
+```css
+/* ✓ CORRECT: Title uses heading font */
+.card-title {
+  font-family: var(--theme-ui-fonts-heading);
+  font-size: var(--theme-ui-font-size-md);
+  font-weight: var(--theme-ui-font-weights-semibold);
+}
+
+/* ❌ WRONG: Title using body font (inherits sans-serif) */
+.card-title {
+  font-weight: bold;  /* Missing font-family! */
+}
+```
+
+##### Body Font (System) - Use for:
+
+- Paragraphs and descriptions
+- Navigation links
+- Button text
+- Form labels and inputs
+- Table content
+- Metadata (dates, counts, status)
+
+```css
+/* Body font is the default, no need to specify */
+.description {
+  color: var(--theme-ui-colors-muted);
+}
+```
+
+##### Common Mistakes to Avoid
+
+```css
+/* ❌ WRONG: Using <strong> for a title without heading font */
+<strong>Step Title</strong>
+
+/* ✓ CORRECT: Style the strong as a title */
+.step-header strong {
+  font-family: var(--theme-ui-fonts-heading);
+  font-weight: var(--theme-ui-font-weights-semibold);
+}
+
+/* ❌ WRONG: Mixing fonts inconsistently */
+.card-a .title { font-family: var(--theme-ui-fonts-heading); }
+.card-b .title { /* no font-family, uses body */ }
+
+/* ✓ CORRECT: All titles use heading font */
+.card .title {
+  font-family: var(--theme-ui-fonts-heading);
+}
+```
+
+##### Quick Reference: "Is this a title?"
+
+Ask yourself: **"Does this text name or identify something?"**
+
+| Text | Is it a title? | Font |
+|------|----------------|------|
+| "hif 0.1.0" | Yes (product name) | Heading |
+| "Quick Start" | Yes (section name) | Heading |
+| "Authenticate" | Yes (step name) | Heading |
+| "Opens browser for OAuth..." | No (description) | Body |
+| "Create Project" (button) | No (action) | Body |
+| "3 sessions" | No (metadata) | Body |
+| "test-project" | Depends on context | Mono if code, Heading if name |
 
 #### Spacing Scale (8px grid)
 
@@ -815,6 +898,199 @@ Font stack: `-apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helveti
 | `--theme-ui-space-2` | 16px | Section padding |
 | `--theme-ui-space-3` | 24px | Large gaps |
 | `--theme-ui-space-4` | 32px | Page margins |
+
+#### Layout & Spacing Model
+
+**This model ensures consistent vertical rhythm and spacing across all pages.**
+
+##### Page Structure
+
+Every page follows this vertical structure:
+
+```
+┌─────────────────────────────────────────┐
+│ .page-content (padding: space-2)        │
+│ ┌─────────────────────────────────────┐ │
+│ │ PAGE HEADER                         │ │
+│ │ (margin-bottom: space-3)            │ │
+│ │ (padding-bottom: space-2)           │ │
+│ │ (border-bottom)                     │ │
+│ └─────────────────────────────────────┘ │
+│                                         │
+│ ┌─────────────────────────────────────┐ │
+│ │ SECTION 1                           │ │
+│ │ (margin-bottom: space-4)            │ │
+│ └─────────────────────────────────────┘ │
+│                                         │
+│ ┌─────────────────────────────────────┐ │
+│ │ SECTION 2                           │ │
+│ │ (margin-bottom: space-4)            │ │
+│ └─────────────────────────────────────┘ │
+└─────────────────────────────────────────┘
+```
+
+##### Spacing Rules (MUST follow)
+
+| Context | Spacing | Variable | Example |
+|---------|---------|----------|---------|
+| **Between page sections** | 32px | `space-4` | Between "Recent Sessions" and "Files" sections |
+| **After page header** | 24px | `space-3` | Below `.page-header` border |
+| **Inside cards/containers** | 16px | `space-2` | Padding inside `.card`, `.repository-card` |
+| **Between list items** | 16px | `space-2` | Gap in session lists, project lists |
+| **Between form fields** | 16px | `space-2` | Gap between label+input groups |
+| **Between related elements** | 8px | `space-1` | Between label and input, title and subtitle |
+| **Tight groupings** | 4px | `space-0` | Icon and text, badge clusters |
+
+##### Section Anatomy
+
+Each section within a page:
+
+```css
+.section {
+  margin-bottom: var(--theme-ui-space-4);  /* 32px - separation from next section */
+}
+
+.section-header {
+  margin-bottom: var(--theme-ui-space-2);  /* 16px - space before content */
+}
+
+.section-title {
+  /* No margin-top (handled by section spacing) */
+  margin-bottom: var(--theme-ui-space-1);  /* 8px - tight to subtitle/description */
+}
+
+.section-content {
+  /* Lists, cards, forms go here */
+}
+```
+
+##### Component Spacing Patterns
+
+**Cards in a list:**
+```css
+.card-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--theme-ui-space-2);  /* 16px between cards */
+}
+```
+
+**Card internal spacing:**
+```css
+.card {
+  padding: var(--theme-ui-space-2);  /* 16px padding */
+}
+
+.card-title {
+  margin-bottom: var(--theme-ui-space-1);  /* 8px to description */
+}
+
+.card-description {
+  margin-bottom: var(--theme-ui-space-1);  /* 8px to meta */
+}
+
+.card-meta {
+  margin-top: var(--theme-ui-space-2);  /* 16px - visual separation */
+}
+```
+
+**Form spacing:**
+```css
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--theme-ui-space-2);  /* 16px between field groups */
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--theme-ui-space-1);  /* 8px between label and input */
+}
+
+.form-actions {
+  margin-top: var(--theme-ui-space-3);  /* 24px - emphasize actions */
+  display: flex;
+  gap: var(--theme-ui-space-1);  /* 8px between buttons */
+}
+```
+
+##### Grid Layouts
+
+**Two-column layouts:**
+```css
+.two-column {
+  display: grid;
+  grid-template-columns: 2fr 1fr;  /* Main content + sidebar */
+  gap: var(--theme-ui-space-3);    /* 24px between columns */
+}
+
+@media (max-width: 60rem) {
+  .two-column {
+    grid-template-columns: 1fr;    /* Stack on mobile */
+    gap: var(--theme-ui-space-4);  /* 32px when stacked */
+  }
+}
+```
+
+**Card grids:**
+```css
+.card-grid {
+  display: grid;
+  gap: var(--theme-ui-space-2);  /* 16px between cards */
+}
+
+@media (min-width: 60rem) {
+  .card-grid {
+    grid-template-columns: repeat(2, 1fr);  /* 2 columns on desktop */
+  }
+}
+```
+
+##### Anti-patterns (NEVER do)
+
+```css
+/* ❌ WRONG: Arbitrary pixel values */
+.bad { margin-bottom: 20px; }
+
+/* ✓ CORRECT: Use spacing variables */
+.good { margin-bottom: var(--theme-ui-space-2); }
+
+/* ❌ WRONG: Inconsistent section spacing */
+.section-a { margin-bottom: var(--theme-ui-space-2); }
+.section-b { margin-bottom: var(--theme-ui-space-3); }
+
+/* ✓ CORRECT: All sections use space-4 */
+.section-a { margin-bottom: var(--theme-ui-space-4); }
+.section-b { margin-bottom: var(--theme-ui-space-4); }
+
+/* ❌ WRONG: Both margin-top and margin-bottom on same element */
+.bad { margin-top: var(--theme-ui-space-2); margin-bottom: var(--theme-ui-space-2); }
+
+/* ✓ CORRECT: Use margin-bottom only (except for first-child resets) */
+.good { margin-bottom: var(--theme-ui-space-2); }
+
+/* ❌ WRONG: Padding for spacing between siblings */
+.item { padding-bottom: var(--theme-ui-space-2); }
+
+/* ✓ CORRECT: Use gap on parent container */
+.list { display: flex; flex-direction: column; gap: var(--theme-ui-space-2); }
+```
+
+##### Quick Reference
+
+| What you're spacing | Use this |
+|---------------------|----------|
+| Page sections | `margin-bottom: space-4` |
+| After page header | `margin-bottom: space-3` |
+| Inside containers | `padding: space-2` |
+| List items | `gap: space-2` on parent |
+| Form fields | `gap: space-2` on parent |
+| Label to input | `gap: space-1` |
+| Title to subtitle | `margin-bottom: space-1` |
+| Icon to text | `gap: space-0` or `space-1` |
+| Form actions from form | `margin-top: space-3` |
+| Buttons in a row | `gap: space-1` |
 
 #### Border Radii
 
@@ -938,6 +1214,65 @@ assets/css/
 3. Use existing component classes (`.repository-button`, `.repository-input`, etc.)
 4. Only add new styles if existing ones don't fit
 5. Follow the naming pattern: `.<page>-<element>` (e.g., `.import-repo-list`)
+6. **Verify CSS classes exist** - If you add a class in a template, ensure it's defined in CSS
+
+##### Common Classes Checklist
+
+When creating a list page, ensure these classes are styled:
+
+```css
+/* Container for the page */
+.<page>-container { }
+
+/* List of cards/items - MUST have gap */
+.<page>-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--theme-ui-space-2);
+}
+
+/* Individual card - MUST have internal spacing */
+.<page>-card {
+  padding: var(--theme-ui-space-2);
+  border: var(--theme-ui-borders-thin);
+  border-radius: var(--theme-ui-radii-default);
+}
+
+/* Card title - MUST use heading font */
+.<page>-card-name {
+  font-family: var(--theme-ui-fonts-heading);
+  font-size: var(--theme-ui-font-size-md);
+  font-weight: var(--theme-ui-font-weights-semibold);
+  margin-bottom: var(--theme-ui-space-0);
+}
+
+/* Card subtitle/handle */
+.<page>-card-handle {
+  color: var(--theme-ui-colors-muted);
+  font-size: var(--theme-ui-font-size-sm);
+  margin-bottom: var(--theme-ui-space-2);
+}
+
+/* Card description */
+.<page>-card-description {
+  color: var(--theme-ui-colors-text);
+  margin-bottom: var(--theme-ui-space-1);
+}
+
+/* Card actions */
+.<page>-card-actions {
+  display: flex;
+  gap: var(--theme-ui-space-1);
+  margin-top: var(--theme-ui-space-2);
+}
+
+/* Empty state */
+.<page>-empty {
+  text-align: center;
+  padding: var(--theme-ui-space-4);
+  color: var(--theme-ui-colors-muted);
+}
+```
 
 #### Dark Mode
 

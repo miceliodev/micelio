@@ -6,6 +6,7 @@ defmodule MicelioWeb.Api.V1.PlanController do
   alias Micelio.Plans
   alias MicelioWeb.Api.Helpers
   alias MicelioWeb.Api.Schemas
+  alias OpenApiSpex.Schema
 
   plug MicelioWeb.Plugs.ApiScopePlug,
        ["plans:read"] when action in [:index, :show, :create, :comments_index, :comments_create]
@@ -230,6 +231,44 @@ defmodule MicelioWeb.Api.V1.PlanController do
     end
   end
 
+  operation(:comments_index,
+    summary: "List plan comments",
+    description: "Lists comments for a plan.",
+    parameters: [
+      org: [in: :path, type: :string, description: "Organization handle", required: true],
+      repo: [in: :path, type: :string, description: "Repository handle", required: true],
+      number: [in: :path, type: :integer, description: "Plan number", required: true]
+    ],
+    security: [%{"bearer" => ["plans:read"]}],
+    responses: %{
+      200 => {
+        "Plan comments",
+        "application/json",
+        %Schema{
+          type: :object,
+          properties: %{
+            data: %Schema{
+              type: :array,
+              items: %Schema{
+                type: :object,
+                properties: %{
+                  id: %Schema{type: :string, format: :uuid},
+                  role: %Schema{type: :string},
+                  content: %Schema{type: :string},
+                  author: %Schema{type: :string, nullable: true},
+                  inserted_at: %Schema{type: :string, format: :"date-time"}
+                }
+              }
+            }
+          },
+          required: [:data]
+        }
+      },
+      401 => {"Unauthorized", "application/json", Schemas.Error},
+      404 => {"Not found", "application/json", Schemas.Error}
+    }
+  )
+
   def comments_index(conn, %{"org" => org_handle, "repo" => repo_handle, "number" => number}) do
     with {:ok, user} <- Helpers.fetch_user(conn),
          {:ok, _org, repository} <- Helpers.fetch_repository(org_handle, repo_handle),
@@ -248,6 +287,49 @@ defmodule MicelioWeb.Api.V1.PlanController do
         Helpers.handle_error(conn, error)
     end
   end
+
+  operation(:comments_create,
+    summary: "Create plan comment",
+    description: "Creates a comment on a plan.",
+    parameters: [
+      org: [in: :path, type: :string, description: "Organization handle", required: true],
+      repo: [in: :path, type: :string, description: "Repository handle", required: true],
+      number: [in: :path, type: :integer, description: "Plan number", required: true]
+    ],
+    request_body:
+      {"Comment params", "application/json",
+       %Schema{
+         type: :object,
+         properties: %{content: %Schema{type: :string}},
+         required: [:content]
+       }},
+    security: [%{"bearer" => ["plans:read"]}],
+    responses: %{
+      201 => {
+        "Created comment",
+        "application/json",
+        %Schema{
+          type: :object,
+          properties: %{
+            data: %Schema{
+              type: :object,
+              properties: %{
+                id: %Schema{type: :string, format: :uuid},
+                role: %Schema{type: :string},
+                content: %Schema{type: :string},
+                author: %Schema{type: :string, nullable: true},
+                inserted_at: %Schema{type: :string, format: :"date-time"}
+              }
+            }
+          },
+          required: [:data]
+        }
+      },
+      401 => {"Unauthorized", "application/json", Schemas.Error},
+      404 => {"Not found", "application/json", Schemas.Error},
+      422 => {"Validation error", "application/json", Schemas.Error}
+    }
+  )
 
   def comments_create(
         conn,
@@ -273,6 +355,23 @@ defmodule MicelioWeb.Api.V1.PlanController do
     end
   end
 
+  operation(:start_session,
+    summary: "Start plan session",
+    description: "Starts an agentic sandbox session for a plan.",
+    parameters: [
+      org: [in: :path, type: :string, description: "Organization handle", required: true],
+      repo: [in: :path, type: :string, description: "Repository handle", required: true],
+      number: [in: :path, type: :integer, description: "Plan number", required: true]
+    ],
+    security: [%{"bearer" => ["plans:write"]}],
+    responses: %{
+      200 => {"Updated plan", "application/json", Schemas.Plan},
+      401 => {"Unauthorized", "application/json", Schemas.Error},
+      403 => {"Forbidden", "application/json", Schemas.Error},
+      404 => {"Not found", "application/json", Schemas.Error}
+    }
+  )
+
   def start_session(conn, %{"org" => org_handle, "repo" => repo_handle, "number" => number}) do
     with {:ok, user} <- Helpers.fetch_user(conn),
          {:ok, organization, repository} <- Helpers.fetch_repository(org_handle, repo_handle),
@@ -291,6 +390,23 @@ defmodule MicelioWeb.Api.V1.PlanController do
     end
   end
 
+  operation(:stop_session,
+    summary: "Stop plan session",
+    description: "Stops an active agentic sandbox session for a plan.",
+    parameters: [
+      org: [in: :path, type: :string, description: "Organization handle", required: true],
+      repo: [in: :path, type: :string, description: "Repository handle", required: true],
+      number: [in: :path, type: :integer, description: "Plan number", required: true]
+    ],
+    security: [%{"bearer" => ["plans:write"]}],
+    responses: %{
+      200 => {"Updated plan", "application/json", Schemas.Plan},
+      401 => {"Unauthorized", "application/json", Schemas.Error},
+      403 => {"Forbidden", "application/json", Schemas.Error},
+      404 => {"Not found", "application/json", Schemas.Error}
+    }
+  )
+
   def stop_session(conn, %{"org" => org_handle, "repo" => repo_handle, "number" => number}) do
     with {:ok, user} <- Helpers.fetch_user(conn),
          {:ok, _organization, repository} <- Helpers.fetch_repository(org_handle, repo_handle),
@@ -303,6 +419,52 @@ defmodule MicelioWeb.Api.V1.PlanController do
       error -> Helpers.handle_error(conn, error)
     end
   end
+
+  operation(:send_session_message,
+    summary: "Send plan session message",
+    description: "Sends a message into an active agentic plan session.",
+    parameters: [
+      org: [in: :path, type: :string, description: "Organization handle", required: true],
+      repo: [in: :path, type: :string, description: "Repository handle", required: true],
+      number: [in: :path, type: :integer, description: "Plan number", required: true]
+    ],
+    request_body:
+      {"Session message", "application/json",
+       %Schema{
+         type: :object,
+         properties: %{content: %Schema{type: :string}},
+         required: [:content]
+       }},
+    security: [%{"bearer" => ["plans:write"]}],
+    responses: %{
+      200 => {
+        "Created message",
+        "application/json",
+        %Schema{
+          type: :object,
+          properties: %{
+            data: %Schema{
+              type: :object,
+              properties: %{
+                id: %Schema{type: :string, format: :uuid},
+                role: %Schema{type: :string},
+                content: %Schema{type: :string},
+                author: %Schema{type: :string, nullable: true},
+                status: %Schema{type: :string},
+                sequence: %Schema{type: :integer},
+                inserted_at: %Schema{type: :string, format: :"date-time"}
+              }
+            }
+          },
+          required: [:data]
+        }
+      },
+      401 => {"Unauthorized", "application/json", Schemas.Error},
+      403 => {"Forbidden", "application/json", Schemas.Error},
+      404 => {"Not found", "application/json", Schemas.Error},
+      422 => {"Validation error", "application/json", Schemas.Error}
+    }
+  )
 
   def send_session_message(
         conn,

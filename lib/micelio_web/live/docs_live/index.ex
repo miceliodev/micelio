@@ -155,7 +155,7 @@ defmodule MicelioWeb.DocsLive.Index do
         <.header>
           {gettext("Documentation")}
           <:subtitle>
-            {gettext("Learn how to use mic and Micelio, or how to host your own instance.")}
+            {gettext("Learn how to use hif and Micelio, or how to host your own instance.")}
           </:subtitle>
         </.header>
 
@@ -293,7 +293,7 @@ defmodule MicelioWeb.DocsLive.Index do
                 </div>
                 <h3 class="docs-category-title">{gettext("CLI Reference")}</h3>
                 <p class="docs-category-description">
-                  {gettext("Complete reference for the mic command-line interface.")}
+                  {gettext("Complete reference for the hif command-line interface.")}
                 </p>
               </.link>
               <%= for {category_id, category_info} <- @reference_categories do %>
