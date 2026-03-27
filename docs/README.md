@@ -19,6 +19,5 @@ For people interested in running their own Micelio instance:
 
 For people interested in contributing to Micelio:
 
-- [Design](../priv/docs/shapers/design.md) - Architecture and vision
-- [What's Next](./contributors/next.md) - Roadmap and upcoming work
-- [Architecture Decision Records](./adr/README.md) - Key design choices
+- [PLAN](../PLAN.md) - Canonical product direction, architecture, accepted decisions, and active work
+- Historical contributor docs remain under `docs/` and `build/` until they are pruned or rewritten

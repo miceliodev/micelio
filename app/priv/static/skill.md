@@ -121,7 +121,8 @@ The Elixir module `Micelio.Git` exposes:
 
 All functions return `{:ok, result}` or `{:error, reason}` tuples.
 
-See [docs/contributors/next.md](./docs/contributors/next.md) for upcoming features and [docs/contributors/design.md](./docs/contributors/design.md) for architecture.
+See `PLAN.md` in the repository root for the current product direction,
+architecture, and active work.
 
 ---
 
@@ -368,8 +369,7 @@ When you update `AGENTS.md`, also update `app/priv/static/skill.md` so `/skill.m
 
 Key places to check for project state:
 
-- `docs/contributors/next.md` - Upcoming features and roadmap
-- `docs/contributors/design.md` - Architecture decisions
+- `PLAN.md` - Canonical product direction, architecture, and active work
 - Recent git commits: `git log --oneline -20`
 
 ### Session Notes
