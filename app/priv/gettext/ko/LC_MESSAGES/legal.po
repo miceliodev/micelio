@@ -1,0 +1,52 @@
+## "msgid"s in this file come from POT (.pot) files.
+###
+### Do not add, change, or remove "msgid"s manually here as
+### they're tied to the ones in the corresponding POT file
+### (with the same domain).
+###
+### Use "mix gettext.extract --merge" or "mix gettext.merge"
+### to merge POT files into PO files.
+msgid ""
+msgstr ""
+"Language: ko\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+#: lib/micelio_web/controllers/browser/legal_html/cookies.html.heex:10
+#, elixir-autogen, elixir-format
+msgid "Cookie Policy"
+msgstr "쿠키 정책"
+
+#: lib/micelio_web/controllers/browser/legal_html/cookies.html.heex:12
+#, elixir-autogen, elixir-format
+msgid "Cookie policy for a service operated from Germany. This references GDPR and § 25 TTDSG (device storage/access consent rules)."
+msgstr "독일에서 운영되는 서비스의 쿠키 정책. GDPR 및 § 25 TTDSG(기기 저장/접근 동의 규정)를 참조합니다."
+
+#: lib/micelio_web/controllers/browser/legal_html/impressum.html.heex:10
+#, elixir-autogen, elixir-format
+msgid "Impressum"
+msgstr "임프레숨"
+
+#: lib/micelio_web/controllers/browser/legal_html/privacy.html.heex:10
+#, elixir-autogen, elixir-format
+msgid "Privacy Policy"
+msgstr "개인정보 보호정책"
+
+#: lib/micelio_web/controllers/browser/legal_html/impressum.html.heex:12
+#, elixir-autogen, elixir-format
+msgid "Provider identification for a service operated from Germany. Required under § 5 DDG and, where applicable, § 18 MStV."
+msgstr "독일에서 운영되는 서비스의 제공자 정보. § 5 DDG 및 해당되는 경우 § 18 MStV에 따라 필수입니다."
+
+#: lib/micelio_web/controllers/browser/legal_html/terms.html.heex:12
+#, elixir-autogen, elixir-format
+msgid "Terms for a service operated from Germany."
+msgstr "독일에서 운영되는 서비스의 이용약관."
+
+#: lib/micelio_web/controllers/browser/legal_html/terms.html.heex:10
+#, elixir-autogen, elixir-format
+msgid "Terms of Service"
+msgstr "서비스 이용약관"
+
+#: lib/micelio_web/controllers/browser/legal_html/privacy.html.heex:12
+#, elixir-autogen, elixir-format
+msgid "This policy applies to a service operated from Germany. It references GDPR (EU) and German data protection and cookie rules."
+msgstr "이 정책은 독일에서 운영되는 서비스에 적용됩니다. GDPR(EU) 및 독일 데이터 보호 및 쿠키 규정을 참조합니다."

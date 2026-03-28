@@ -95,6 +95,22 @@ defmodule MicelioWeb do
 
       # Routes generation with the ~p sigil
       unquote(verified_routes())
+
+      @non_english_locales ~w(es ko zh_CN zh_TW ja)
+
+      @doc """
+      Builds a locale-aware path for marketing pages.
+      Prefixes the path with the locale for non-English locales.
+      """
+      def locale_path(assigns, path) do
+        locale = assigns[:locale] || "en"
+
+        if locale in @non_english_locales do
+          "/#{locale}#{path}"
+        else
+          path
+        end
+      end
     end
   end
 

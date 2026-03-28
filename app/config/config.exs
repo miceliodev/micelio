@@ -103,7 +103,7 @@ config :micelio, MicelioWeb.Endpoint,
 # Gettext configuration
 config :micelio, MicelioWeb.Gettext,
   default_locale: "en",
-  locales: ~w(en ko zh_CN zh_TW ja)
+  locales: ~w(en es ko zh_CN zh_TW ja)
 
 config :micelio, MicelioWeb.Plugs.Metrics, bearer_token: nil
 config :micelio, :admin_emails, []

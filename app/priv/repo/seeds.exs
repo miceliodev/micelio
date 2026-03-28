@@ -1,4 +1,7 @@
 # Seeds for local development
+#
+# Creates a simple Node.js repository and materializes it into seeds/workspace/
+# so the hif CLI can interact with the server locally.
 alias Micelio.Accounts
 alias Micelio.Accounts.OrganizationMembership
 alias Micelio.Mic.Project, as: MicProject
@@ -11,13 +14,18 @@ alias Micelio.Sessions
 user_email = "test@micelio.dev"
 org_handle = "micelio"
 org_name = "Micelio"
-repo_handle = "micelio"
-repo_name = "Micelio"
-repo_description = "Forge platform for AI-native development"
-repo_url = "https://micelio.dev/docs"
+repo_handle = "cli-seed"
+repo_name = "cli-seed"
+repo_description = "A simple Node.js starter project"
+repo_url = "https://micelio.dev"
 repo_visibility = "public"
-workspace_root = Path.join([File.cwd!(), "seeds", "cli"])
 grpc_url = System.get_env("MICELIO_GRPC_URL") || "http://localhost:50051"
+
+workspace_root = Path.join([File.cwd!(), "..", "seeds", "workspace"])
+
+# ---------------------------------------------------------------------------
+# 1. Ensure user, organization, and membership
+# ---------------------------------------------------------------------------
 
 organization_result =
   case Accounts.get_organization_by_handle(org_handle) do
@@ -49,6 +57,10 @@ with {:ok, user} <- Accounts.get_or_create_user_by_email(user_email),
         |> Repo.update()
   end
 
+  # ---------------------------------------------------------------------------
+  # 2. Ensure repository record
+  # ---------------------------------------------------------------------------
+
   repo_attrs = %{
     handle: repo_handle,
     name: repo_name,
@@ -67,93 +79,112 @@ with {:ok, user} <- Accounts.get_or_create_user_by_email(user_email),
         end
 
       %Repository{} = repo ->
-        update_attrs =
-          Enum.reduce([:name, :description, :url], %{}, fn key, acc ->
-            value = Map.get(repo, key)
-            desired = Map.get(repo_attrs, key)
-
-            if value in [nil, ""], do: Map.put(acc, key, desired), else: acc
-          end)
-
-        update_attrs =
-          if repo.visibility == repo_visibility do
-            update_attrs
-          else
-            Map.put(update_attrs, :visibility, repo_visibility)
-          end
-
-        if update_attrs == %{} do
-          repo
-        else
-          case Repositories.update_repository_settings(repo, update_attrs) do
-            {:ok, repo} -> repo
-            {:error, reason} -> raise "Failed to update repository: #{inspect(reason)}"
-          end
-        end
+        repo
     end
 
   IO.puts("Ensured repository: #{org_handle}/#{repository.handle}")
 
-  # Seed workspace files
+  # ---------------------------------------------------------------------------
+  # 3. Write seed files into workspace and seed storage
+  # ---------------------------------------------------------------------------
+
+  File.rm_rf!(workspace_root)
   File.mkdir_p!(workspace_root)
 
-  readme_path = Path.join(workspace_root, "README.md")
-  package_path = Path.join(workspace_root, "package.json")
-  index_path = Path.join(workspace_root, "index.js")
-  micignore_path = Path.join(workspace_root, ".micignore")
+  seed_files = %{
+    "package.json" => ~s|{
+  "name": "hello",
+  "version": "1.0.0",
+  "description": "A simple Node.js starter project",
+  "main": "main.js",
+  "scripts": {
+    "start": "node main.js"
+  },
+  "license": "MIT"
+}
+|,
+    "main.js" => ~s|#!/usr/bin/env node
 
-  if not File.exists?(readme_path) do
-    File.write!(readme_path, """
-    # micelio-cli
+function greet(name) {
+  return `Hello, ${name}!`;
+}
 
-    Minimal Node CLI for Micelio local development.
+console.log(greet("world"));
+|,
+    "README.md" => ~s|# hello
 
-    ## Usage
+A simple Node.js starter project.
 
-    ```bash
-    node index.js
-    ```
-    """)
+## Usage
+
+```bash
+npm start
+```
+|,
+    "AGENTS.md" => ~s|# Agent Guide
+
+This repository is a minimal Node.js project.
+
+## Structure
+
+- `main.js` - Entry point
+- `package.json` - Project metadata
+
+## Running
+
+```bash
+node main.js
+```
+|,
+    "LICENSE.md" => ~s|MIT License
+
+Copyright (c) 2026 Micelio
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+|
+  }
+
+  for {path, content} <- seed_files do
+    full_path = Path.join(workspace_root, path)
+    File.write!(full_path, content)
   end
 
-  if not File.exists?(package_path) do
-    File.write!(package_path, """
-    {
-      "name": "micelio-cli",
-      "version": "0.1.0",
-      "description": "Node CLI example for Micelio",
-      "type": "module",
-      "bin": {
-        "micelio-cli": "./index.js"
-      },
-      "scripts": {
-        "start": "node index.js"
-      }
-    }
-    """)
-  end
+  IO.puts("Wrote #{map_size(seed_files)} files to #{workspace_root}")
 
-  if not File.exists?(index_path) do
-    File.write!(index_path, """
-    #!/usr/bin/env node
-    console.log("micelio-cli ready");
-    """)
-  end
-
-  if not File.exists?(micignore_path) do
-    File.write!(micignore_path, """
-    node_modules/
-    .mic/
-    """)
-  end
-
+  # Seed storage from the workspace directory
   seed_result =
     case Seed.seed_repository_from_path(repository.id, workspace_root) do
       {:ok, %{tree_hash: tree_hash} = result} ->
+        IO.puts("Seeded #{result.file_count} files into storage")
         {:seeded, tree_hash, result}
 
       {:error, :already_seeded} ->
-        {:already_seeded, nil, %{}}
+        IO.puts("Repository already seeded, updating tree...")
+
+        case Seed.store_tree_from_path(repository.id, workspace_root) do
+          {:ok, %{tree_hash: tree_hash} = result} ->
+            IO.puts("Updated tree with #{result.file_count} files")
+            {:updated, tree_hash, result}
+
+          {:error, reason} ->
+            raise "Failed to update tree: #{inspect(reason)}"
+        end
 
       {:error, reason} ->
         raise "Failed to seed workspace: #{inspect(reason)}"
@@ -175,13 +206,17 @@ with {:ok, user} <- Accounts.get_or_create_user_by_email(user_email),
     raise "Failed to resolve workspace tree hash"
   end
 
+  # ---------------------------------------------------------------------------
+  # 4. Write .hif/workspace.json manifest for CLI interaction
+  # ---------------------------------------------------------------------------
+
   {:ok, tree} = MicProject.get_tree(repository.id, tree_hash)
 
   manifest = %{
     "version" => 1,
     "server" => grpc_url,
     "account" => org_handle,
-    "project" => repository.handle,
+    "repository" => repository.handle,
     "position" => position,
     "tree_hash" => Base.encode16(tree_hash, case: :lower),
     "entries" =>
@@ -192,398 +227,84 @@ with {:ok, user} <- Accounts.get_or_create_user_by_email(user_email),
       end)
   }
 
-  File.mkdir_p!(Path.join(workspace_root, ".mic"))
-  File.write!(Path.join([workspace_root, ".mic", "workspace.json"]), Jason.encode!(manifest))
+  hif_dir = Path.join(workspace_root, ".hif")
+  File.mkdir_p!(hif_dir)
+  File.write!(Path.join(hif_dir, "workspace.json"), Jason.encode!(manifest, pretty: true))
 
-  IO.puts("Linked local workspace: #{workspace_root} -> #{org_handle}/#{repository.handle}")
+  IO.puts("Wrote .hif/workspace.json (position=#{position})")
 
-  # ============ Seed sessions with rich data ============
+  # ---------------------------------------------------------------------------
+  # 5. Seed sample sessions
+  # ---------------------------------------------------------------------------
 
   IO.puts("\nSeeding sessions...")
 
-  # Session 1: Landed, AI contributor - dark mode feature
   {:ok, session1} =
     Sessions.create_session(%{
-      session_id: "seed-session-dark-mode-#{System.unique_integer([:positive])}",
-      goal: "Add dark mode support to the design system",
+      session_id: "seed-add-greeting-#{System.unique_integer([:positive])}",
+      goal: "Add configurable greeting",
       repository_id: repository.id,
       user_id: user.id,
       conversation: [
         %{
           "role" => "user",
-          "content" =>
-            "We need dark mode support for the design system. The tokens should switch based on prefers-color-scheme and a manual toggle.",
+          "content" => "Make the greeting configurable via a command-line argument.",
           "timestamp" => DateTime.utc_now() |> DateTime.add(-3600) |> DateTime.to_iso8601()
         },
         %{
           "role" => "assistant",
           "content" =>
-            "I will add dark mode by creating CSS custom properties that respond to both prefers-color-scheme media query and a data-theme attribute on :root. This gives us automatic system preference detection plus manual override.",
-          "timestamp" => DateTime.utc_now() |> DateTime.add(-3540) |> DateTime.to_iso8601()
-        },
-        %{
-          "role" => "user",
-          "content" =>
-            "Make sure all the semantic colors have dark variants. The contrast ratios need to meet WCAG AA.",
-          "timestamp" => DateTime.utc_now() |> DateTime.add(-3000) |> DateTime.to_iso8601()
-        },
-        %{
-          "role" => "assistant",
-          "content" =>
-            "Done. I have added dark mode variants for all semantic colors (text, background, surface, border, muted, primary, danger, success). All combinations pass WCAG AA contrast requirements. The toggle uses data-theme attribute on the root element.",
-          "timestamp" => DateTime.utc_now() |> DateTime.add(-2700) |> DateTime.to_iso8601()
-        }
-      ],
-      decisions: [
-        %{
-          "decision" => "Use CSS custom properties with media query and data-theme",
-          "reasoning" =>
-            "Custom properties allow runtime switching without JavaScript class toggling on every element. The media query provides automatic detection, while data-theme allows manual override."
-        },
-        %{
-          "decision" => "WCAG AA contrast ratios for all color pairs",
-          "reasoning" =>
-            "Accessibility compliance is non-negotiable. All foreground/background combinations were tested with contrast ratio tools."
+            "Updated main.js to read the name from process.argv. Defaults to \"world\" when no argument is provided.",
+          "timestamp" => DateTime.utc_now() |> DateTime.add(-3500) |> DateTime.to_iso8601()
         }
       ],
       metadata: %{
         "contributor_type" => "ai",
         "model_id" => "claude-sonnet-4-20250514",
         "tool_name" => "Claude Code",
-        "tool_version" => "1.2.0"
+        "tool_version" => "1.0.0"
       }
     })
 
-  {:ok, session1} = Sessions.land_session(session1)
+  {:ok, _session1} = Sessions.land_session(session1)
 
   Sessions.create_session_change(%{
     session_id: session1.id,
-    file_path: "assets/css/theme/tokens.css",
+    file_path: "main.js",
     change_type: "modified",
-    content:
-      ":root { --color-text: #1f2328; } @media (prefers-color-scheme: dark) { :root { --color-text: #f0f6fc; } }",
-    metadata: %{"size" => 2480}
+    content: "const name = process.argv[2] || \"world\";\nconsole.log(greet(name));",
+    metadata: %{"size" => 120}
   })
 
-  Sessions.create_session_change(%{
-    session_id: session1.id,
-    file_path: "assets/css/theme/tokens-dark.css",
-    change_type: "added",
-    content: ":root[data-theme='dark'] { --color-bg: #0d1117; --color-surface: #151b23; }",
-    metadata: %{"size" => 1240}
-  })
+  IO.puts("  Created session: #{session1.goal} (landed)")
 
-  Sessions.create_session_change(%{
-    session_id: session1.id,
-    file_path: "assets/css/app.css",
-    change_type: "modified",
-    content: "@import 'theme/tokens-dark.css';",
-    metadata: %{"size" => 580}
-  })
-
-  Sessions.capture_session_event(session1.session_id, %{
-    "type" => "status",
-    "payload" => %{"state" => "running", "message" => "Analyzing existing token structure"},
-    "timestamp" => DateTime.utc_now() |> DateTime.add(-3600) |> DateTime.to_iso8601()
-  })
-
-  Sessions.capture_session_event(session1.session_id, %{
-    "type" => "progress",
-    "payload" => %{"percent" => 50, "message" => "Dark mode tokens generated"},
-    "timestamp" => DateTime.utc_now() |> DateTime.add(-3000) |> DateTime.to_iso8601()
-  })
-
-  Sessions.capture_session_event(session1.session_id, %{
-    "type" => "status",
-    "payload" => %{"state" => "completed", "message" => "All dark mode tokens applied"},
-    "timestamp" => DateTime.utc_now() |> DateTime.add(-2400) |> DateTime.to_iso8601()
-  })
-
-  IO.puts("  Created session: #{session1.goal} (landed, AI)")
-
-  # Session 2: Landed, human contributor - auth fix
   {:ok, session2} =
     Sessions.create_session(%{
-      session_id: "seed-session-auth-fix-#{System.unique_integer([:positive])}",
-      goal: "Fix authentication redirect loop on expired tokens",
+      session_id: "seed-add-tests-#{System.unique_integer([:positive])}",
+      goal: "Add unit tests",
       repository_id: repository.id,
       user_id: user.id,
       conversation: [
         %{
           "role" => "user",
-          "content" =>
-            "Users are getting stuck in a redirect loop when their session token expires. The browser keeps bouncing between /auth/login and the protected page.",
-          "timestamp" => DateTime.utc_now() |> DateTime.add(-7200) |> DateTime.to_iso8601()
-        },
-        %{
-          "role" => "assistant",
-          "content" =>
-            "I can see the issue. The authentication plug checks for a valid token and redirects to login, but the login page also checks for an existing token and redirects back. When the token is expired but present, both redirects fire.",
-          "timestamp" => DateTime.utc_now() |> DateTime.add(-7080) |> DateTime.to_iso8601()
-        },
-        %{
-          "role" => "user",
-          "content" =>
-            "Right. The fix should clear the expired token before redirecting to login.",
-          "timestamp" => DateTime.utc_now() |> DateTime.add(-6600) |> DateTime.to_iso8601()
-        },
-        %{
-          "role" => "assistant",
-          "content" =>
-            "I have updated the authentication plug to check token expiry explicitly. If the token exists but is expired, it gets cleared from the session before the redirect to login. This breaks the loop.",
-          "timestamp" => DateTime.utc_now() |> DateTime.add(-6000) |> DateTime.to_iso8601()
-        },
-        %{
-          "role" => "user",
-          "content" => "Also add a flash message so users know why they were logged out.",
-          "timestamp" => DateTime.utc_now() |> DateTime.add(-5700) |> DateTime.to_iso8601()
-        },
-        %{
-          "role" => "assistant",
-          "content" =>
-            "Added. The flash message says 'Your session has expired. Please sign in again.' Users will see it on the login page after the redirect.",
-          "timestamp" => DateTime.utc_now() |> DateTime.add(-5500) |> DateTime.to_iso8601()
-        }
-      ],
-      decisions: [
-        %{
-          "decision" => "Clear expired tokens in the auth plug before redirect",
-          "reasoning" =>
-            "The root cause was an expired-but-present token triggering both the 'has token, redirect to app' and 'invalid token, redirect to login' paths. Clearing it before redirect ensures a clean state."
-        }
-      ],
-      metadata: %{
-        "contributor_type" => "human"
-      }
-    })
-
-  {:ok, session2} = Sessions.land_session(session2)
-
-  Sessions.create_session_change(%{
-    session_id: session2.id,
-    file_path: "lib/micelio_web/plugs/authentication_plug.ex",
-    change_type: "modified",
-    content:
-      ~s{defp handle_expired_token(conn) do\n  conn |> clear_session() |> put_flash(:info, "Your session has expired.") |> redirect(to: ~p"/auth/login")\nend},
-    metadata: %{"size" => 890}
-  })
-
-  Sessions.create_session_change(%{
-    session_id: session2.id,
-    file_path: "test/micelio_web/plugs/authentication_plug_test.exs",
-    change_type: "modified",
-    content: "test \"redirects with flash on expired token\" do\n  # ...\nend",
-    metadata: %{"size" => 1560}
-  })
-
-  Sessions.capture_session_event(session2.session_id, %{
-    "type" => "status",
-    "payload" => %{"state" => "running", "message" => "Investigating redirect loop"},
-    "timestamp" => DateTime.utc_now() |> DateTime.add(-7200) |> DateTime.to_iso8601()
-  })
-
-  Sessions.capture_session_event(session2.session_id, %{
-    "type" => "status",
-    "payload" => %{"state" => "completed", "message" => "Fix applied and tests passing"},
-    "timestamp" => DateTime.utc_now() |> DateTime.add(-5400) |> DateTime.to_iso8601()
-  })
-
-  IO.puts("  Created session: #{session2.goal} (landed, human)")
-
-  # Session 3: Active, mixed contributor - search feature
-  {:ok, session3} =
-    Sessions.create_session(%{
-      session_id: "seed-session-search-#{System.unique_integer([:positive])}",
-      goal: "Implement repository search with full-text indexing",
-      repository_id: repository.id,
-      user_id: user.id,
-      conversation: [
-        %{
-          "role" => "user",
-          "content" =>
-            "We need full-text search across repositories. Users should be able to search by name, description, and file contents.",
+          "content" => "Add a test file for the greet function.",
           "timestamp" => DateTime.utc_now() |> DateTime.add(-900) |> DateTime.to_iso8601()
-        },
-        %{
-          "role" => "assistant",
-          "content" =>
-            "I will implement this using PostgreSQL's built-in tsvector full-text search. This avoids external dependencies while giving us ranked results with highlights.",
-          "timestamp" => DateTime.utc_now() |> DateTime.add(-840) |> DateTime.to_iso8601()
-        },
-        %{
-          "role" => "user",
-          "content" =>
-            "Good approach. Start with name and description, we can add file content search later.",
-          "timestamp" => DateTime.utc_now() |> DateTime.add(-600) |> DateTime.to_iso8601()
         }
       ],
-      decisions: [
-        %{
-          "decision" => "Use PostgreSQL tsvector for full-text search",
-          "reasoning" =>
-            "PostgreSQL FTS is built-in, supports ranking and highlights, and avoids the operational overhead of Elasticsearch or similar. We can always migrate later if needed."
-        }
-      ],
-      metadata: %{
-        "contributor_type" => "mixed",
-        "model_id" => "claude-sonnet-4-20250514",
-        "tool_name" => "Claude Code",
-        "tool_version" => "1.3.0"
-      }
+      metadata: %{"contributor_type" => "human"}
     })
 
-  Sessions.create_session_change(%{
-    session_id: session3.id,
-    file_path: "lib/micelio/search.ex",
-    change_type: "added",
-    content:
-      "defmodule Micelio.Search do\n  @moduledoc \"Full-text search across repositories.\"\n  # ...\nend",
-    metadata: %{"size" => 3200}
-  })
+  IO.puts("  Created session: #{session2.goal} (active)")
 
-  Sessions.capture_session_event(session3.session_id, %{
-    "type" => "status",
-    "payload" => %{"state" => "running", "message" => "Generating search module"},
-    "timestamp" => DateTime.utc_now() |> DateTime.add(-600) |> DateTime.to_iso8601()
-  })
-
-  Sessions.capture_session_event(session3.session_id, %{
-    "type" => "output",
-    "payload" => %{
-      "text" =>
-        "$ mix ecto.gen.migration add_search_index\n* creating priv/repo/migrations/20260209_add_search_index.exs\n\n$ mix ecto.migrate\n[info] == Running migration\n[info] create index repositories_search_idx\n[info] == Migrated in 0.1s",
-      "stream" => "stdout"
-    },
-    "timestamp" => DateTime.utc_now() |> DateTime.add(-300) |> DateTime.to_iso8601()
-  })
-
-  IO.puts("  Created session: #{session3.goal} (active, mixed)")
-
-  # Session 4: Abandoned, AI contributor - failed migration attempt
-  {:ok, session4} =
-    Sessions.create_session(%{
-      session_id: "seed-session-cockroach-#{System.unique_integer([:positive])}",
-      goal: "Migrate database to CockroachDB",
-      repository_id: repository.id,
-      user_id: user.id,
-      conversation: [
-        %{
-          "role" => "user",
-          "content" =>
-            "Can we migrate from PostgreSQL to CockroachDB for better horizontal scaling?",
-          "timestamp" => DateTime.utc_now() |> DateTime.add(-1800) |> DateTime.to_iso8601()
-        },
-        %{
-          "role" => "assistant",
-          "content" =>
-            "I will evaluate CockroachDB compatibility. Let me check our query patterns and Ecto usage for any PostgreSQL-specific features.",
-          "timestamp" => DateTime.utc_now() |> DateTime.add(-1740) |> DateTime.to_iso8601()
-        },
-        %{
-          "role" => "assistant",
-          "content" =>
-            "After analysis, I found several blockers: we use PostgreSQL-specific features like tsvector for search, advisory locks for Oban job processing, and JSONB operators that CockroachDB does not fully support.",
-          "timestamp" => DateTime.utc_now() |> DateTime.add(-1500) |> DateTime.to_iso8601()
-        },
-        %{
-          "role" => "user",
-          "content" =>
-            "That sounds like too many incompatibilities. Let's abandon this for now and revisit if we hit actual scaling limits.",
-          "timestamp" => DateTime.utc_now() |> DateTime.add(-1320) |> DateTime.to_iso8601()
-        }
-      ],
-      metadata: %{
-        "contributor_type" => "ai",
-        "model_id" => "claude-sonnet-4-20250514",
-        "tool_name" => "Claude Code",
-        "tool_version" => "1.2.0"
-      }
-    })
-
-  {:ok, _session4} = Sessions.abandon_session(session4)
-
-  Sessions.capture_session_event(session4.session_id, %{
-    "type" => "status",
-    "payload" => %{"state" => "running", "message" => "Analyzing PostgreSQL compatibility"},
-    "timestamp" => DateTime.utc_now() |> DateTime.add(-1800) |> DateTime.to_iso8601()
-  })
-
-  Sessions.capture_session_event(session4.session_id, %{
-    "type" => "error",
-    "payload" => %{
-      "message" =>
-        "Incompatible query patterns detected: tsvector, advisory locks, JSONB containment operators"
-    },
-    "timestamp" => DateTime.utc_now() |> DateTime.add(-1200) |> DateTime.to_iso8601()
-  })
-
-  IO.puts("  Created session: #{session4.goal} (abandoned, AI)")
-
-  # ============ Seed forge-imported repository ============
-
-  IO.puts("\nSeeding forge-imported repository...")
-
-  forge_org_handle = "github-miceliodev"
-  forge_org_name = "miceliodev (GitHub)"
-
-  {:ok, forge_organization} =
-    case Accounts.get_organization_by_handle(forge_org_handle) do
-      {:ok, org} ->
-        {:ok, org}
-
-      {:error, :not_found} ->
-        Accounts.create_organization(
-          %{handle: forge_org_handle, name: forge_org_name},
-          allow_reserved: true
-        )
-    end
-
-  case Accounts.get_organization_membership(user.id, forge_organization.id) do
-    nil ->
-      {:ok, _membership} =
-        Accounts.create_organization_membership(%{
-          user_id: user.id,
-          organization_id: forge_organization.id,
-          role: :admin
-        })
-
-    _ ->
-      :ok
-  end
-
-  forge_repo_attrs = %{
-    handle: "micelio",
-    name: "Micelio",
-    description: "Forge platform for AI-native development",
-    url: "https://github.com/miceliodev/micelio",
-    visibility: "public",
-    organization_id: forge_organization.id,
-    forge_provider: "github",
-    forge_host: "github.com",
-    forge_owner: "miceliodev",
-    forge_repo: "micelio",
-    forge_external_id: "seed-github-miceliodev-micelio",
-    forge_default_branch: "main"
-  }
-
-  forge_repository =
-    case Repositories.get_repository_by_forge_reference("github.com", "miceliodev", "micelio") do
-      nil ->
-        case Repositories.create_repository(forge_repo_attrs) do
-          {:ok, repo} -> repo
-          {:error, reason} -> raise "Failed to create forge repository: #{inspect(reason)}"
-        end
-
-      %Repository{} = repo ->
-        repo
-    end
-
-  IO.puts(
-    "Ensured forge repository: github.com/miceliodev/micelio (internal: #{forge_org_handle}/#{forge_repository.handle})"
-  )
+  # ---------------------------------------------------------------------------
+  # Done
+  # ---------------------------------------------------------------------------
 
   IO.puts("\nLocal development setup complete!")
-  IO.puts("Login with: #{user.email}")
+  IO.puts("  Repository: #{org_handle}/#{repository.handle}")
+  IO.puts("  Workspace:  #{workspace_root}")
+  IO.puts("  Login with: #{user.email}")
+  IO.puts("  gRPC:       #{grpc_url}")
 else
   {:error, reason} ->
     raise "Failed to ensure Micelio seed data: #{inspect(reason)}"

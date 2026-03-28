@@ -1,0 +1,48 @@
+## "msgid"s in this file come from POT (.pot) files.
+###
+### Do not add, change, or remove "msgid"s manually here as
+### they're tied to the ones in the corresponding POT file
+### (with the same domain).
+###
+### Use "mix gettext.extract --merge" or "mix gettext.merge"
+### to merge POT files into PO files.
+msgid ""
+msgstr ""
+"Language: ja\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+#: lib/micelio_web/controllers/browser/search_html/index.html.heex:35
+#, elixir-autogen, elixir-format
+msgid "%{count} result for \"%{query}\""
+msgid_plural "%{count} results for \"%{query}\""
+msgstr[0] "\"%{query}\" の検索結果 %{count} 件"
+
+#: lib/micelio_web/controllers/browser/search_html/index.html.heex:58
+#, elixir-autogen, elixir-format
+msgid "No description provided."
+msgstr "説明はありません。"
+
+#: lib/micelio_web/controllers/browser/search_html/index.html.heex:41
+#, elixir-autogen, elixir-format
+msgid "No repositories matched your query."
+msgstr "検索条件に一致するリポジトリはありません。"
+
+#: lib/micelio_web/controllers/browser/search_html/index.html.heex:10
+#, elixir-autogen, elixir-format
+msgid "Repository search"
+msgstr "リポジトリ検索"
+
+#: lib/micelio_web/controllers/browser/search_html/index.html.heex:29
+#, elixir-autogen, elixir-format
+msgid "Search"
+msgstr "検索"
+
+#: lib/micelio_web/controllers/browser/search_html/index.html.heex:11
+#, elixir-autogen, elixir-format
+msgid "Search public repositories by name or description."
+msgstr "名前または説明で公開リポジトリを検索します。"
+
+#: lib/micelio_web/controllers/browser/search_html/index.html.heex:25
+#, elixir-autogen, elixir-format
+msgid "Search repositories"
+msgstr "リポジトリを検索"

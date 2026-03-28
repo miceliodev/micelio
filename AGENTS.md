@@ -8,14 +8,35 @@ Micelio is a forge platform built with Elixir/Phoenix, Rust for CLI (`hif`), and
 
 ## IMPORTANT: Internationalization (i18n)
 
-**All user-facing strings must use gettext.** When adding or modifying UI text:
+**All user-facing strings must use `dgettext` with a domain.** When adding or modifying UI text:
 
-1. Wrap strings with `gettext("...")` in templates and modules
+1. Wrap strings with `dgettext("domain", "...")` in templates and modules. Use **domain-specific** gettext so translations are organized into separate `.po` files per domain — not one giant `default.po`.
 2. Run `cd app && mix gettext.extract` to extract new strings to POT files
 3. Run `cd app && mix gettext.merge priv/gettext` to update all locale PO files
-4. Ensure translations are provided for all supported locales: English (en), Korean (ko), Simplified Chinese (zh_CN), Traditional Chinese (zh_TW), Japanese (ja)
+4. Ensure translations are provided for all supported locales: English (en), Spanish (es), Korean (ko), Simplified Chinese (zh_CN), Traditional Chinese (zh_TW), Japanese (ja)
 
-Translation files are located in `app/priv/gettext/{locale}/LC_MESSAGES/`.
+Translation files are located in `app/priv/gettext/{locale}/LC_MESSAGES/{domain}.po`.
+
+### Gettext Domains
+
+| Domain | Usage |
+|--------|-------|
+| `layouts` | Shared layout: navbar, sidebar, footer, theme toggle |
+| `blog` | Blog pages (index, show) |
+| `changelog` | Changelog pages (index, category, version, show) |
+| `docs` | Documentation pages |
+| `search` | Search page |
+| `legal` | Legal pages (terms, privacy, cookies, impressum) |
+| `auth` | Authentication pages (login, register, TOTP, passkeys) |
+| `repositories` | Repository pages (list, show, edit, settings) |
+| `sessions` | Session pages |
+| `plans` | Plan/prompt-request pages |
+| `account` | Account/profile pages |
+| `admin` | Admin pages |
+| `organizations` | Organization pages |
+| `errors` | Ecto validation and error messages (keep existing `errors` domain) |
+
+**Do not use plain `gettext("...")`.** Always use `dgettext("domain", "...")` so strings go to the right domain PO file.
 
 ## IMPORTANT: Icons
 
@@ -757,6 +778,35 @@ For `phx-hook`, always set `phx-update="ignore"` if the hook manages its own DOM
 - Use vanilla modern CSS only
 - Design inspiration: GitHub Primer design system
 - **No emojis** in UI or content
+
+#### Selector Strategy
+
+CSS selectors must follow this pattern:
+
+1. **Use `#id` selectors** to identify pages and reusable Phoenix LiveView components (e.g., `#blog-page`, `#language-selector`)
+2. **Nest child selectors using `data-part`** attribute (e.g., `#blog-page [data-part="empty-state"]`, `#blog-page [data-part="post-list"]`)
+3. **Do not reuse CSS classes** across components — the only shared layer is theme CSS variables from `tokens.css`
+
+Each page/component gets its own self-contained styles scoped by its `#id`. This keeps styles isolated and avoids coupling between components.
+
+```css
+/* ✓ CORRECT */
+#blog-page [data-part="empty-state"] {
+  text-align: center;
+  padding: var(--theme-ui-space-4);
+}
+
+/* ❌ WRONG: shared utility class */
+.page-empty-state {
+  text-align: center;
+  padding: var(--theme-ui-space-4);
+}
+
+/* ❌ WRONG: class-based nesting */
+.blog-container .blog-empty {
+  text-align: center;
+}
+```
 
 #### Design System Overview
 

@@ -1,0 +1,52 @@
+## "msgid"s in this file come from POT (.pot) files.
+###
+### Do not add, change, or remove "msgid"s manually here as
+### they're tied to the ones in the corresponding POT file
+### (with the same domain).
+###
+### Use "mix gettext.extract --merge" or "mix gettext.merge"
+### to merge POT files into PO files.
+msgid ""
+msgstr ""
+"Language: es\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: lib/micelio_web/controllers/browser/legal_html/cookies.html.heex:10
+#, elixir-autogen, elixir-format
+msgid "Cookie Policy"
+msgstr "Politica de cookies"
+
+#: lib/micelio_web/controllers/browser/legal_html/cookies.html.heex:12
+#, elixir-autogen, elixir-format
+msgid "Cookie policy for a service operated from Germany. This references GDPR and § 25 TTDSG (device storage/access consent rules)."
+msgstr "Politica de cookies para un servicio operado desde Alemania. Hace referencia al RGPD y al § 25 TTDSG (normas de consentimiento para almacenamiento y acceso en dispositivos)."
+
+#: lib/micelio_web/controllers/browser/legal_html/impressum.html.heex:10
+#, elixir-autogen, elixir-format
+msgid "Impressum"
+msgstr "Impressum"
+
+#: lib/micelio_web/controllers/browser/legal_html/privacy.html.heex:10
+#, elixir-autogen, elixir-format
+msgid "Privacy Policy"
+msgstr "Politica de privacidad"
+
+#: lib/micelio_web/controllers/browser/legal_html/impressum.html.heex:12
+#, elixir-autogen, elixir-format
+msgid "Provider identification for a service operated from Germany. Required under § 5 DDG and, where applicable, § 18 MStV."
+msgstr "Identificacion del proveedor de un servicio operado desde Alemania. Requerido segun el § 5 DDG y, en su caso, el § 18 MStV."
+
+#: lib/micelio_web/controllers/browser/legal_html/terms.html.heex:12
+#, elixir-autogen, elixir-format
+msgid "Terms for a service operated from Germany."
+msgstr "Terminos para un servicio operado desde Alemania."
+
+#: lib/micelio_web/controllers/browser/legal_html/terms.html.heex:10
+#, elixir-autogen, elixir-format
+msgid "Terms of Service"
+msgstr "Terminos de servicio"
+
+#: lib/micelio_web/controllers/browser/legal_html/privacy.html.heex:12
+#, elixir-autogen, elixir-format
+msgid "This policy applies to a service operated from Germany. It references GDPR (EU) and German data protection and cookie rules."
+msgstr "Esta politica se aplica a un servicio operado desde Alemania. Hace referencia al RGPD (UE) y a las normas alemanas de proteccion de datos y cookies."

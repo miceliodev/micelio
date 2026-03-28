@@ -7,8 +7,8 @@
 >
   <section class="search-page" id="repository-search">
     <header class="search-header">
-      <h1>Repository search</h1>
-      <p>Search public repositories by name or description.</p>
+      <h1>{dgettext("search", "Repository search")}</h1>
+      <p>{dgettext("search", "Search public repositories by name or description.")}</p>
     </header>
 
     <.form
@@ -22,23 +22,32 @@
         field={@form[:q]}
         id="repository-search-query"
         type="search"
-        placeholder="Search repositories"
+        placeholder={dgettext("search", "Search repositories")}
         class="search-input"
         autocomplete="off"
       />
-      <button type="submit" class="search-submit" id="repository-search-submit">Search</button>
+      <button type="submit" class="search-submit" id="repository-search-submit">
+        {dgettext("search", "Search")}
+      </button>
     </.form>
 
     <div class="search-results" id="repository-search-results">
       <%= if @query != "" do %>
         <p class="search-results-count" id="repository-search-count">
-          {length(@results)} result(s) for "{@query}"
+          {dngettext(
+            "search",
+            "%{count} result for \"%{query}\"",
+            "%{count} results for \"%{query}\"",
+            length(@results),
+            query: @query,
+            count: length(@results)
+          )}
         </p>
       <% end %>
 
       <%= if @query != "" and @results == [] do %>
         <p class="search-empty" id="repository-search-empty">
-          No repositories matched your query.
+          {dgettext("search", "No repositories matched your query.")}
         </p>
       <% end %>
 
@@ -55,7 +64,7 @@
               <span class="search-result-title">{repository.name}</span>
             </a>
             <p class="search-result-description">
-              {repository.description || "No description provided."}
+              {repository.description || dgettext("search", "No description provided.")}
             </p>
             <span class="search-result-visibility badge badge--caps">
               {repository.visibility}

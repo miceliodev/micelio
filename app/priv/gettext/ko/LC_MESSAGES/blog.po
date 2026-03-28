@@ -1,0 +1,37 @@
+## "msgid"s in this file come from POT (.pot) files.
+###
+### Do not add, change, or remove "msgid"s manually here as
+### they're tied to the ones in the corresponding POT file
+### (with the same domain).
+###
+### Use "mix gettext.extract --merge" or "mix gettext.merge"
+### to merge POT files into PO files.
+msgid ""
+msgstr ""
+"Language: ko\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+#: lib/micelio_web/controllers/browser/blog_html/index.html.heex:10
+#, elixir-autogen, elixir-format
+msgid "Blog"
+msgstr "블로그"
+
+#: lib/micelio_web/controllers/browser/blog_html/index.html.heex:34
+#, elixir-autogen, elixir-format
+msgid "Check back soon for updates!"
+msgstr "곧 업데이트를 확인해 주세요!"
+
+#: lib/micelio_web/controllers/browser/blog_html/index.html.heex:33
+#, elixir-autogen, elixir-format
+msgid "No blog posts yet"
+msgstr "아직 블로그 게시물이 없습니다"
+
+#: lib/micelio_web/controllers/browser/blog_html/index.html.heex:12
+#, elixir-autogen, elixir-format
+msgid "Updates and insights from the Micelio team about building the future of agent-first software development."
+msgstr "에이전트 우선 소프트웨어 개발의 미래를 구축하는 Micelio 팀의 최신 소식과 인사이트."
+
+#: lib/micelio_web/controllers/browser/blog_html/index.html.heex:43
+#, elixir-autogen, elixir-format
+msgid "by %{author}"
+msgstr "%{author} 작성"

@@ -3,7 +3,7 @@ defmodule Micelio.Accounts.User do
 
   import Ecto.Changeset
 
-  @supported_locales ~w(en ko zh_CN zh_TW ja)
+  @supported_locales ~w(en es ko zh_CN zh_TW ja)
   @profile_fields [
     :bio,
     :locale,

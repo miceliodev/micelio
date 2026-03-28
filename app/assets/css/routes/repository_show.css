@@ -3,6 +3,7 @@
 /* ============ Page container ============ */
 
 .repository-page {
+  width: 100%;
   max-width: 1280px;
   margin: 0 auto;
 }
@@ -353,11 +354,14 @@
 }
 
 .repository-sidebar-stat {
-  display: flex;
   align-items: center;
   gap: var(--theme-ui-space-1);
   color: var(--theme-ui-colors-muted);
   font-size: var(--theme-ui-font-size-sm);
+}
+
+.repository-sidebar-stat:not([hidden]) {
+  display: flex;
 }
 
 .repository-sidebar-stat-icon {

@@ -1,0 +1,79 @@
+## "msgid"s in this file come from POT (.pot) files.
+###
+### Do not add, change, or remove "msgid"s manually here as
+### they're tied to the ones in the corresponding POT file
+### (with the same domain).
+###
+### Use "mix gettext.extract --merge" or "mix gettext.merge"
+### to merge POT files into PO files.
+msgid ""
+msgstr ""
+"Language: ko\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+#: lib/micelio_web/controllers/browser/changelog_html/category.html.heex:19
+#: lib/micelio_web/controllers/browser/changelog_html/index.html.heex:24
+#, elixir-autogen, elixir-format
+msgid "All"
+msgstr "전체"
+
+#: lib/micelio_web/controllers/browser/changelog_html/category.html.heex:12
+#, elixir-autogen, elixir-format
+msgid "All changelog entries categorized under \"%{category}\"."
+msgstr "\"%{category}\" 카테고리의 모든 변경 로그 항목."
+
+#: lib/micelio_web/controllers/browser/changelog_html/version.html.heex:11
+#, elixir-autogen, elixir-format
+msgid "All changes included in version %{version}."
+msgstr "버전 %{version}에 포함된 모든 변경 사항."
+
+#: lib/micelio_web/controllers/browser/changelog_html/index.html.heex:10
+#, elixir-autogen, elixir-format
+msgid "Changelog"
+msgstr "변경 로그"
+
+#: lib/micelio_web/controllers/browser/changelog_html/index.html.heex:63
+#, elixir-autogen, elixir-format
+msgid "Check back soon for updates!"
+msgstr "곧 업데이트를 확인해 주세요!"
+
+#: lib/micelio_web/controllers/browser/changelog_html/category.html.heex:18
+#: lib/micelio_web/controllers/browser/changelog_html/index.html.heex:23
+#, elixir-autogen, elixir-format
+msgid "Filter by category:"
+msgstr "카테고리별 필터:"
+
+#: lib/micelio_web/controllers/browser/changelog_html/category.html.heex:64
+#, elixir-autogen, elixir-format
+msgid "No changelog entries found for the \"%{category}\" category."
+msgstr "\"%{category}\" 카테고리에 변경 로그 항목이 없습니다."
+
+#: lib/micelio_web/controllers/browser/changelog_html/version.html.heex:46
+#, elixir-autogen, elixir-format
+msgid "No changelog entries found for version %{version}."
+msgstr "버전 %{version}에 변경 로그 항목이 없습니다."
+
+#: lib/micelio_web/controllers/browser/changelog_html/index.html.heex:62
+#, elixir-autogen, elixir-format
+msgid "No changelog entries yet"
+msgstr "아직 변경 로그 항목이 없습니다"
+
+#: lib/micelio_web/controllers/browser/changelog_html/version.html.heex:44
+#, elixir-autogen, elixir-format
+msgid "No entries for this version"
+msgstr "이 버전에 항목이 없습니다"
+
+#: lib/micelio_web/controllers/browser/changelog_html/category.html.heex:62
+#, elixir-autogen, elixir-format
+msgid "No entries in this category"
+msgstr "이 카테고리에 항목이 없습니다"
+
+#: lib/micelio_web/controllers/browser/changelog_html/index.html.heex:12
+#, elixir-autogen, elixir-format
+msgid "Stay up to date with the latest changes, improvements, and new features in Micelio."
+msgstr "Micelio의 최신 변경 사항, 개선 사항 및 새로운 기능을 확인하세요."
+
+#: lib/micelio_web/controllers/browser/changelog_html/version.html.heex:10
+#, elixir-autogen, elixir-format
+msgid "Version %{version}"
+msgstr "버전 %{version}"

@@ -1,0 +1,79 @@
+## "msgid"s in this file come from POT (.pot) files.
+###
+### Do not add, change, or remove "msgid"s manually here as
+### they're tied to the ones in the corresponding POT file
+### (with the same domain).
+###
+### Use "mix gettext.extract --merge" or "mix gettext.merge"
+### to merge POT files into PO files.
+msgid ""
+msgstr ""
+"Language: es\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: lib/micelio_web/controllers/browser/changelog_html/category.html.heex:19
+#: lib/micelio_web/controllers/browser/changelog_html/index.html.heex:24
+#, elixir-autogen, elixir-format
+msgid "All"
+msgstr "Todas"
+
+#: lib/micelio_web/controllers/browser/changelog_html/category.html.heex:12
+#, elixir-autogen, elixir-format
+msgid "All changelog entries categorized under \"%{category}\"."
+msgstr "Todas las entradas del registro de cambios en la categoria \"%{category}\"."
+
+#: lib/micelio_web/controllers/browser/changelog_html/version.html.heex:11
+#, elixir-autogen, elixir-format
+msgid "All changes included in version %{version}."
+msgstr "Todos los cambios incluidos en la version %{version}."
+
+#: lib/micelio_web/controllers/browser/changelog_html/index.html.heex:10
+#, elixir-autogen, elixir-format
+msgid "Changelog"
+msgstr "Registro de cambios"
+
+#: lib/micelio_web/controllers/browser/changelog_html/index.html.heex:63
+#, elixir-autogen, elixir-format
+msgid "Check back soon for updates!"
+msgstr "Vuelva pronto para ver las novedades."
+
+#: lib/micelio_web/controllers/browser/changelog_html/category.html.heex:18
+#: lib/micelio_web/controllers/browser/changelog_html/index.html.heex:23
+#, elixir-autogen, elixir-format
+msgid "Filter by category:"
+msgstr "Filtrar por categoria:"
+
+#: lib/micelio_web/controllers/browser/changelog_html/category.html.heex:64
+#, elixir-autogen, elixir-format
+msgid "No changelog entries found for the \"%{category}\" category."
+msgstr "No se encontraron entradas en el registro de cambios para la categoria \"%{category}\"."
+
+#: lib/micelio_web/controllers/browser/changelog_html/version.html.heex:46
+#, elixir-autogen, elixir-format
+msgid "No changelog entries found for version %{version}."
+msgstr "No se encontraron entradas en el registro de cambios para la version %{version}."
+
+#: lib/micelio_web/controllers/browser/changelog_html/index.html.heex:62
+#, elixir-autogen, elixir-format
+msgid "No changelog entries yet"
+msgstr "Aun no hay entradas en el registro de cambios"
+
+#: lib/micelio_web/controllers/browser/changelog_html/version.html.heex:44
+#, elixir-autogen, elixir-format
+msgid "No entries for this version"
+msgstr "No hay entradas para esta version"
+
+#: lib/micelio_web/controllers/browser/changelog_html/category.html.heex:62
+#, elixir-autogen, elixir-format
+msgid "No entries in this category"
+msgstr "No hay entradas en esta categoria"
+
+#: lib/micelio_web/controllers/browser/changelog_html/index.html.heex:12
+#, elixir-autogen, elixir-format
+msgid "Stay up to date with the latest changes, improvements, and new features in Micelio."
+msgstr "Mantengase al dia con los ultimos cambios, mejoras y nuevas funcionalidades de Micelio."
+
+#: lib/micelio_web/controllers/browser/changelog_html/version.html.heex:10
+#, elixir-autogen, elixir-format
+msgid "Version %{version}"
+msgstr "Version %{version}"

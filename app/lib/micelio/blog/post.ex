@@ -14,7 +14,7 @@ defmodule Micelio.Blog.Post do
   @enforce_keys [:id, :author, :title, :body, :description, :tags, :date, :locale]
   defstruct [:id, :author, :title, :body, :description, :tags, :date, :locale]
 
-  @supported_locales ~w(en ko zh_CN zh_TW ja)
+  @supported_locales ~w(en es ko zh_CN zh_TW ja)
 
   def build(filename, attrs, body) do
     parts = filename |> Path.rootname() |> Path.split()

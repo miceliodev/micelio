@@ -172,7 +172,7 @@
 
 .docs-sidebar {
   position: sticky;
-  top: calc(56px + var(--theme-ui-space-2));
+  top: var(--theme-ui-space-2);
   align-self: start;
   padding: var(--theme-ui-space-2);
   background-color: var(--theme-ui-colors-surface);

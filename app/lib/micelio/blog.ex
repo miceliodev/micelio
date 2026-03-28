@@ -18,7 +18,7 @@ defmodule Micelio.Blog do
 
   require Micelio.SyntaxHighlighting
 
-  @supported_locales ~w(en ko zh_CN zh_TW ja)
+  @supported_locales ~w(en es ko zh_CN zh_TW ja)
 
   # Use NimblePublisher to build all posts from all locales
 
