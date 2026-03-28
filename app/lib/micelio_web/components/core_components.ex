@@ -772,11 +772,11 @@ defmodule MicelioWeb.CoreComponents do
       >
         <%= for {code, name} <- @locales do %>
           <%= if code == @current_locale do %>
-            <option value={locale_path(@current_path, code)} selected>
+            <option value={locale_url_for(@current_path, code)} selected>
               {name}
             </option>
           <% else %>
-            <option value={locale_path(@current_path, code)}>
+            <option value={locale_url_for(@current_path, code)}>
               {name}
             </option>
           <% end %>
@@ -788,10 +788,10 @@ defmodule MicelioWeb.CoreComponents do
 
   @locale_codes ~w(es ko zh_CN zh_TW ja)
 
-  defp locale_path(path, "en"), do: path
-  defp locale_path("/", locale), do: "/#{locale}"
+  defp locale_url_for(path, "en"), do: path
+  defp locale_url_for("/", locale), do: "/#{locale}"
 
-  defp locale_path(path, locale) do
+  defp locale_url_for(path, locale) do
     # Remove any existing locale prefix and add the new one
     path_without_locale =
       case String.split(path, "/", parts: 3) do
