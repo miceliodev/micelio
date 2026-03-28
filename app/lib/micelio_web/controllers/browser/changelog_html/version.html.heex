@@ -7,8 +7,8 @@
 >
   <div class="changelog-container">
     <.header>
-      Version {@version}
-      <:subtitle>All changes included in version {@version}.</:subtitle>
+      {dgettext("changelog", "Version %{version}", version: @version)}
+      <:subtitle>{dgettext("changelog", "All changes included in version %{version}.", version: @version)}</:subtitle>
     </.header>
 
     <div class="content-card-list">
@@ -30,7 +30,7 @@
     </div>
 
     <%= if Enum.empty?(@entries) do %>
-      <div class="changelog-empty">
+      <div class="changelog-empty page-empty-state">
         <div class="changelog-empty-icon" aria-hidden="true">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
             <path
@@ -41,9 +41,9 @@
             <path d="M8 11h8M8 15h8M8 19h6" stroke-linecap="round" />
           </svg>
         </div>
-        <h3 class="changelog-empty-title">No entries for this version</h3>
+        <h3 class="changelog-empty-title">{dgettext("changelog", "No entries for this version")}</h3>
         <p class="changelog-empty-message">
-          No changelog entries found for version {@version}.
+          {dgettext("changelog", "No changelog entries found for version %{version}.", version: @version)}
         </p>
       </div>
     <% end %>

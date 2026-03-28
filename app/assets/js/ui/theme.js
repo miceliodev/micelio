@@ -42,11 +42,15 @@ function applyThemePreference(preference) {
     const effective = getEffectiveTheme();
     const textEl = document.getElementById("theme-toggle-text");
     if (textEl) {
-      textEl.textContent = effective === "dark" ? "Light" : "Dark";
+      const lightLabel = toggle.dataset.lightLabel || "Light";
+      const darkLabel = toggle.dataset.darkLabel || "Dark";
+      textEl.textContent = effective === "dark" ? lightLabel : darkLabel;
     }
+    const switchToLight = toggle.dataset.switchToLight || "Switch to light mode";
+    const switchToDark = toggle.dataset.switchToDark || "Switch to dark mode";
     toggle.setAttribute(
       "aria-label",
-      effective === "dark" ? "Switch to light mode" : "Switch to dark mode",
+      effective === "dark" ? switchToLight : switchToDark,
     );
   }
 

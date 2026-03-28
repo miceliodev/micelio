@@ -9,14 +9,14 @@
     <.header>
       {String.capitalize(@category)}
       <:subtitle>
-        All changelog entries categorized under "{@category}".
+        {dgettext("changelog", "All changelog entries categorized under \"%{category}\".", category: @category)}
       </:subtitle>
     </.header>
 
     <div class="changelog-filters">
       <div class="changelog-categories">
-        <span class="changelog-category-label">Filter by category:</span>
-        <.badge navigate={~p"/changelog"}>All</.badge>
+        <span class="changelog-category-label">{dgettext("changelog", "Filter by category:")}</span>
+        <.badge navigate={~p"/changelog"}>{dgettext("changelog", "All")}</.badge>
         <%= for category <- @categories do %>
           <.badge
             navigate={~p"/changelog/category/#{category}"}
@@ -48,7 +48,7 @@
     </div>
 
     <%= if Enum.empty?(@entries) do %>
-      <div class="changelog-empty">
+      <div class="changelog-empty page-empty-state">
         <div class="changelog-empty-icon" aria-hidden="true">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
             <path
@@ -59,9 +59,9 @@
             <path d="M8 11h8M8 15h8M8 19h6" stroke-linecap="round" />
           </svg>
         </div>
-        <h3 class="changelog-empty-title">No entries in this category</h3>
+        <h3 class="changelog-empty-title">{dgettext("changelog", "No entries in this category")}</h3>
         <p class="changelog-empty-message">
-          No changelog entries found for the "{@category}" category.
+          {dgettext("changelog", "No changelog entries found for the \"%{category}\" category.", category: @category)}
         </p>
       </div>
     <% end %>

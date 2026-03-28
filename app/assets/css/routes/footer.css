@@ -7,13 +7,14 @@
   border-top: var(--theme-ui-borders-thin);
   color: var(--theme-ui-colors-muted);
   font-size: 12px;
+  flex-shrink: 0;
 }
 
 .site-footer-content {
   max-width: var(--theme-ui-sizes-container);
   margin: 0 auto;
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
   justify-content: space-between;
   gap: 12px;

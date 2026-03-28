@@ -1,0 +1,37 @@
+## This file is a PO Template file.
+##
+## "msgid"s here are often extracted from source code.
+## Add new messages manually only if they're dynamic
+## messages that can't be statically extracted.
+##
+## Run "mix gettext.extract" to bring this file up to
+## date. Leave "msgstr"s empty as changing them here has no
+## effect: edit them in PO (.po) files instead.
+#
+msgid ""
+msgstr ""
+
+#: lib/micelio_web/controllers/browser/blog_html/index.html.heex:10
+#, elixir-autogen, elixir-format
+msgid "Blog"
+msgstr ""
+
+#: lib/micelio_web/controllers/browser/blog_html/index.html.heex:34
+#, elixir-autogen, elixir-format
+msgid "Check back soon for updates!"
+msgstr ""
+
+#: lib/micelio_web/controllers/browser/blog_html/index.html.heex:33
+#, elixir-autogen, elixir-format
+msgid "No blog posts yet"
+msgstr ""
+
+#: lib/micelio_web/controllers/browser/blog_html/index.html.heex:12
+#, elixir-autogen, elixir-format
+msgid "Updates and insights from the Micelio team about building the future of agent-first software development."
+msgstr ""
+
+#: lib/micelio_web/controllers/browser/blog_html/index.html.heex:43
+#, elixir-autogen, elixir-format
+msgid "by %{author}"
+msgstr ""

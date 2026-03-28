@@ -1,0 +1,52 @@
+## "msgid"s in this file come from POT (.pot) files.
+###
+### Do not add, change, or remove "msgid"s manually here as
+### they're tied to the ones in the corresponding POT file
+### (with the same domain).
+###
+### Use "mix gettext.extract --merge" or "mix gettext.merge"
+### to merge POT files into PO files.
+msgid ""
+msgstr ""
+"Language: en\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: lib/micelio_web/controllers/browser/legal_html/cookies.html.heex:10
+#, elixir-autogen, elixir-format
+msgid "Cookie Policy"
+msgstr "Cookie Policy"
+
+#: lib/micelio_web/controllers/browser/legal_html/cookies.html.heex:12
+#, elixir-autogen, elixir-format
+msgid "Cookie policy for a service operated from Germany. This references GDPR and § 25 TTDSG (device storage/access consent rules)."
+msgstr "Cookie policy for a service operated from Germany. This references GDPR and § 25 TTDSG (device storage/access consent rules)."
+
+#: lib/micelio_web/controllers/browser/legal_html/impressum.html.heex:10
+#, elixir-autogen, elixir-format
+msgid "Impressum"
+msgstr "Impressum"
+
+#: lib/micelio_web/controllers/browser/legal_html/privacy.html.heex:10
+#, elixir-autogen, elixir-format
+msgid "Privacy Policy"
+msgstr "Privacy Policy"
+
+#: lib/micelio_web/controllers/browser/legal_html/impressum.html.heex:12
+#, elixir-autogen, elixir-format
+msgid "Provider identification for a service operated from Germany. Required under § 5 DDG and, where applicable, § 18 MStV."
+msgstr "Provider identification for a service operated from Germany. Required under § 5 DDG and, where applicable, § 18 MStV."
+
+#: lib/micelio_web/controllers/browser/legal_html/terms.html.heex:12
+#, elixir-autogen, elixir-format
+msgid "Terms for a service operated from Germany."
+msgstr "Terms for a service operated from Germany."
+
+#: lib/micelio_web/controllers/browser/legal_html/terms.html.heex:10
+#, elixir-autogen, elixir-format
+msgid "Terms of Service"
+msgstr "Terms of Service"
+
+#: lib/micelio_web/controllers/browser/legal_html/privacy.html.heex:12
+#, elixir-autogen, elixir-format
+msgid "This policy applies to a service operated from Germany. It references GDPR (EU) and German data protection and cookie rules."
+msgstr "This policy applies to a service operated from Germany. It references GDPR (EU) and German data protection and cookie rules."

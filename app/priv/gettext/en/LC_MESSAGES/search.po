@@ -1,0 +1,49 @@
+## "msgid"s in this file come from POT (.pot) files.
+###
+### Do not add, change, or remove "msgid"s manually here as
+### they're tied to the ones in the corresponding POT file
+### (with the same domain).
+###
+### Use "mix gettext.extract --merge" or "mix gettext.merge"
+### to merge POT files into PO files.
+msgid ""
+msgstr ""
+"Language: en\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: lib/micelio_web/controllers/browser/search_html/index.html.heex:35
+#, elixir-autogen, elixir-format
+msgid "%{count} result for \"%{query}\""
+msgid_plural "%{count} results for \"%{query}\""
+msgstr[0] "%{count} result for \"%{query}\""
+msgstr[1] "%{count} results for \"%{query}\""
+
+#: lib/micelio_web/controllers/browser/search_html/index.html.heex:58
+#, elixir-autogen, elixir-format
+msgid "No description provided."
+msgstr "No description provided."
+
+#: lib/micelio_web/controllers/browser/search_html/index.html.heex:41
+#, elixir-autogen, elixir-format
+msgid "No repositories matched your query."
+msgstr "No repositories matched your query."
+
+#: lib/micelio_web/controllers/browser/search_html/index.html.heex:10
+#, elixir-autogen, elixir-format
+msgid "Repository search"
+msgstr "Repository search"
+
+#: lib/micelio_web/controllers/browser/search_html/index.html.heex:29
+#, elixir-autogen, elixir-format
+msgid "Search"
+msgstr "Search"
+
+#: lib/micelio_web/controllers/browser/search_html/index.html.heex:11
+#, elixir-autogen, elixir-format
+msgid "Search public repositories by name or description."
+msgstr "Search public repositories by name or description."
+
+#: lib/micelio_web/controllers/browser/search_html/index.html.heex:25
+#, elixir-autogen, elixir-format
+msgid "Search repositories"
+msgstr "Search repositories"

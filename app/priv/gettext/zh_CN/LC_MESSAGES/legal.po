@@ -1,0 +1,52 @@
+## "msgid"s in this file come from POT (.pot) files.
+###
+### Do not add, change, or remove "msgid"s manually here as
+### they're tied to the ones in the corresponding POT file
+### (with the same domain).
+###
+### Use "mix gettext.extract --merge" or "mix gettext.merge"
+### to merge POT files into PO files.
+msgid ""
+msgstr ""
+"Language: zh_CN\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+#: lib/micelio_web/controllers/browser/legal_html/cookies.html.heex:10
+#, elixir-autogen, elixir-format
+msgid "Cookie Policy"
+msgstr "Cookie 政策"
+
+#: lib/micelio_web/controllers/browser/legal_html/cookies.html.heex:12
+#, elixir-autogen, elixir-format
+msgid "Cookie policy for a service operated from Germany. This references GDPR and § 25 TTDSG (device storage/access consent rules)."
+msgstr "从德国运营的服务的 Cookie 政策。参考了 GDPR 和 § 25 TTDSG(设备存储/访问同意规则)。"
+
+#: lib/micelio_web/controllers/browser/legal_html/impressum.html.heex:10
+#, elixir-autogen, elixir-format
+msgid "Impressum"
+msgstr "出版说明"
+
+#: lib/micelio_web/controllers/browser/legal_html/privacy.html.heex:10
+#, elixir-autogen, elixir-format
+msgid "Privacy Policy"
+msgstr "隐私政策"
+
+#: lib/micelio_web/controllers/browser/legal_html/impressum.html.heex:12
+#, elixir-autogen, elixir-format
+msgid "Provider identification for a service operated from Germany. Required under § 5 DDG and, where applicable, § 18 MStV."
+msgstr "从德国运营的服务的提供者信息。根据 § 5 DDG 及适用情况下的 § 18 MStV 要求提供。"
+
+#: lib/micelio_web/controllers/browser/legal_html/terms.html.heex:12
+#, elixir-autogen, elixir-format
+msgid "Terms for a service operated from Germany."
+msgstr "从德国运营的服务的使用条款。"
+
+#: lib/micelio_web/controllers/browser/legal_html/terms.html.heex:10
+#, elixir-autogen, elixir-format
+msgid "Terms of Service"
+msgstr "服务条款"
+
+#: lib/micelio_web/controllers/browser/legal_html/privacy.html.heex:12
+#, elixir-autogen, elixir-format
+msgid "This policy applies to a service operated from Germany. It references GDPR (EU) and German data protection and cookie rules."
+msgstr "本政策适用于从德国运营的服务。参考了 GDPR(欧盟)及德国数据保护和 Cookie 规则。"

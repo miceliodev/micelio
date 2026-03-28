@@ -7,9 +7,9 @@
 >
   <div class="blog-container">
     <.header>
-      Blog
+      {dgettext("blog", "Blog")}
       <:subtitle>
-        Updates and insights from the Micelio team about building the future of agent-first software development.
+        {dgettext("blog", "Updates and insights from the Micelio team about building the future of agent-first software development.")}
       </:subtitle>
       <:actions>
         <.badge href={~p"/blog/rss"}>RSS</.badge>
@@ -18,7 +18,7 @@
     </.header>
 
     <%= if Enum.empty?(@posts) do %>
-      <div class="blog-empty">
+      <div class="blog-empty page-empty-state">
         <div class="blog-empty-icon" aria-hidden="true">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
             <path
@@ -30,8 +30,8 @@
             <path d="M7 16h10" stroke-linecap="round" />
           </svg>
         </div>
-        <h3 class="blog-empty-title">{gettext("No blog posts yet")}</h3>
-        <p class="blog-empty-message">{gettext("Check back soon for updates!")}</p>
+        <h3 class="blog-empty-title">{dgettext("blog", "No blog posts yet")}</h3>
+        <p class="blog-empty-message">{dgettext("blog", "Check back soon for updates!")}</p>
       </div>
     <% else %>
       <div class="content-card-list">
@@ -40,7 +40,7 @@
             <:title>{post.title}</:title>
             <:subtitle>
               <time datetime={post.date}>{format_date(post.date)}</time>
-              <span>by {author_name(post.author)}</span>
+              <span>{dgettext("blog", "by %{author}", author: author_name(post.author))}</span>
               <%= if length(post.tags) > 0 do %>
                 <%= for tag <- post.tags do %>
                   <.badge>{tag}</.badge>

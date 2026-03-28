@@ -77,7 +77,7 @@ defmodule MicelioWeb.CoreComponents do
           data-flash-dismiss
           data-flash-target={@id}
           phx-click={JS.push("lv:clear-flash", value: %{key: @kind}) |> JS.hide(to: "##{@id}")}
-          aria-label={gettext("close")}
+          aria-label={dgettext("layouts", "close")}
         >
           <span aria-hidden="true">×</span>
         </button>
@@ -480,7 +480,7 @@ defmodule MicelioWeb.CoreComponents do
         <tr>
           <th :for={col <- @col}>{col[:label]}</th>
           <th :if={@action != []}>
-            <span class="sr-only">{gettext("Actions")}</span>
+            <span class="sr-only">{dgettext("layouts", "Actions")}</span>
           </th>
         </tr>
       </thead>
@@ -746,6 +746,7 @@ defmodule MicelioWeb.CoreComponents do
 
   @supported_locales [
     {"en", "English"},
+    {"es", "Español"},
     {"ko", "한국어"},
     {"zh_CN", "简体中文"},
     {"zh_TW", "繁體中文"},
@@ -759,14 +760,14 @@ defmodule MicelioWeb.CoreComponents do
     <div
       class={["language-selector", @class]}
       role="navigation"
-      aria-label={gettext("Language selection")}
+      aria-label={dgettext("layouts", "Language selection")}
     >
-      <label for="language-select" class="sr-only">{gettext("Select language")}</label>
+      <label for="language-select" class="sr-only">{dgettext("layouts", "Select language")}</label>
       <select
         id="language-select"
         name="locale"
         class="compact-select"
-        aria-label={gettext("Select language")}
+        aria-label={dgettext("layouts", "Select language")}
         onchange="window.location.href = this.value"
       >
         <%= for {code, name} <- @locales do %>
@@ -785,7 +786,7 @@ defmodule MicelioWeb.CoreComponents do
     """
   end
 
-  @locale_codes ~w(ko zh_CN zh_TW ja)
+  @locale_codes ~w(es ko zh_CN zh_TW ja)
 
   defp locale_path(path, "en"), do: path
   defp locale_path("/", locale), do: "/#{locale}"
@@ -881,7 +882,7 @@ defmodule MicelioWeb.CoreComponents do
                 data-count={count}
               >
                 <title>
-                  {Date.to_iso8601(date)}: {count} {ngettext("contribution", "contributions", count)}
+                  {Date.to_iso8601(date)}: {count} {dngettext("layouts", "contribution", "contributions", count)}
                 </title>
               </rect>
             <% end %>
@@ -935,7 +936,7 @@ defmodule MicelioWeb.CoreComponents do
   def collapsible_toc(assigns) do
     ~H"""
     <details :if={@toc != []} class={["collapsible-toc", @class]}>
-      <summary class="collapsible-toc-summary">{gettext("On this page")}</summary>
+      <summary class="collapsible-toc-summary">{dgettext("layouts", "On this page")}</summary>
       <nav class="collapsible-toc-nav">
         <a
           :for={entry <- @toc}

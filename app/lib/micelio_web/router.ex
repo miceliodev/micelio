@@ -510,7 +510,7 @@ defmodule MicelioWeb.Router do
   end
 
   # Locale-prefixed marketing routes (for SEO and explicit locale selection)
-  for locale <- ~w(ko zh_CN zh_TW ja) do
+  for locale <- ~w(es ko zh_CN zh_TW ja) do
     scope "/#{locale}", MicelioWeb.Browser do
       pipe_through([:browser])
 
@@ -519,6 +519,28 @@ defmodule MicelioWeb.Router do
       get("/terms", LegalController, :terms)
       get("/cookies", LegalController, :cookies)
       get("/impressum", LegalController, :impressum)
+      get("/search", SearchController, :index)
+
+      get("/blog", BlogController, :index)
+      get("/blog/:id", BlogController, :show)
+
+      get("/changelog", ChangelogController, :index)
+      get("/changelog/category/:category", ChangelogController, :category)
+      get("/changelog/version/:version", ChangelogController, :version)
+      get("/changelog/:id", ChangelogController, :show)
+
+      get("/docs/cli-reference", DocsController, :cli_reference)
+      get("/docs/:category", DocsController, :category)
+      get("/docs/:category/:id", DocsController, :show)
+    end
+
+    scope "/#{locale}", MicelioWeb do
+      pipe_through([:browser])
+
+      live_session :"docs_#{locale}",
+        on_mount: [{MicelioWeb.LiveAuth, :current_user}, MicelioWeb.LiveOpenGraphCacheBuster] do
+        live("/docs", DocsLive.Index, :index)
+      end
     end
   end
 

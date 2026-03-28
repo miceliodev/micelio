@@ -11,37 +11,14 @@
 msgid ""
 msgstr ""
 
-#: lib/micelio_web/components/layouts.ex:146
-#, elixir-autogen, elixir-format
-msgid "Account (@%{handle})"
-msgstr ""
-
-#: lib/micelio_web/components/core_components.ex:483
 #: lib/micelio_web/live/session_live/show.ex:743
 #, elixir-autogen, elixir-format
 msgid "Actions"
 msgstr ""
 
-#: lib/micelio_web/components/layouts.ex:643
-#: lib/micelio_web/components/layouts.ex:651
-#, elixir-autogen, elixir-format
-msgid "Attempting to reconnect"
-msgstr ""
-
 #: lib/micelio_web/controllers/browser/page_html.ex:35
 #, elixir-autogen, elixir-format
 msgid "Explore what the community is building."
-msgstr ""
-
-#: lib/micelio_web/components/layouts.ex:162
-#: lib/micelio_web/components/layouts.ex:537
-#, elixir-autogen, elixir-format
-msgid "Get started"
-msgstr ""
-
-#: lib/micelio_web/components/layouts.ex:578
-#, elixir-autogen, elixir-format
-msgid "Legal"
 msgstr ""
 
 #: lib/micelio_web/live/repository_live/index.ex:48
@@ -62,64 +39,6 @@ msgstr ""
 #: lib/micelio_web/controllers/browser/page_html.ex:97
 #, elixir-autogen, elixir-format
 msgid "Previous"
-msgstr ""
-
-#: lib/micelio_web/components/core_components.ex:764
-#: lib/micelio_web/components/core_components.ex:769
-#, elixir-autogen, elixir-format
-msgid "Select language"
-msgstr ""
-
-#: lib/micelio_web/components/layouts.ex:649
-#, elixir-autogen, elixir-format
-msgid "Something went wrong!"
-msgstr ""
-
-#: lib/micelio_web/components/layouts.ex:545
-#, elixir-autogen, elixir-format
-msgid "Toggle theme"
-msgstr ""
-
-#: lib/micelio_web/components/layouts.ex:641
-#, elixir-autogen, elixir-format
-msgid "We can't find the internet"
-msgstr ""
-
-#: lib/micelio_web/components/core_components.ex:80
-#, elixir-autogen, elixir-format
-msgid "close"
-msgstr ""
-
-#: lib/micelio_web/components/core_components.ex:884
-#, elixir-autogen, elixir-format
-msgid "contribution"
-msgid_plural "contributions"
-msgstr[0] ""
-msgstr[1] ""
-
-#: lib/micelio_web/components/layouts.ex:581
-#, elixir-autogen, elixir-format
-msgid "cookies"
-msgstr ""
-
-#: lib/micelio_web/components/layouts.ex:582
-#, elixir-autogen, elixir-format
-msgid "impressum"
-msgstr ""
-
-#: lib/micelio_web/components/layouts.ex:580
-#, elixir-autogen, elixir-format
-msgid "privacy"
-msgstr ""
-
-#: lib/micelio_web/components/layouts.ex:579
-#, elixir-autogen, elixir-format
-msgid "terms"
-msgstr ""
-
-#: lib/micelio_web/components/core_components.ex:762
-#, elixir-autogen, elixir-format
-msgid "Language selection"
 msgstr ""
 
 #: lib/micelio_web/controllers/browser/auth_html/new.html.heex:52
@@ -309,7 +228,6 @@ msgstr ""
 msgid "No results found. Try a different search term."
 msgstr ""
 
-#: lib/micelio_web/components/layouts.ex:435
 #: lib/micelio_web/controllers/browser/docs_html/search.html.heex:12
 #, elixir-autogen, elixir-format
 msgid "Search"
@@ -379,7 +297,6 @@ msgstr ""
 msgid "Default:"
 msgstr ""
 
-#: lib/micelio_web/components/layouts.ex:387
 #: lib/micelio_web/controllers/browser/docs_controller.ex:15
 #, elixir-autogen, elixir-format
 msgid "Docs"
@@ -566,7 +483,6 @@ msgstr ""
 msgid "Recent repositories"
 msgstr ""
 
-#: lib/micelio_web/components/layouts.ex:333
 #: lib/micelio_web/controllers/browser/profile_html/show.html.heex:383
 #: lib/micelio_web/controllers/browser/profile_html/show.html.heex:404
 #: lib/micelio_web/live/repository_live/index.ex:19
@@ -578,18 +494,6 @@ msgstr ""
 #: lib/micelio_web/live/repository_live/index.ex:65
 #, elixir-autogen, elixir-format
 msgid "Repositories help you organize your code and collaborate with others."
-msgstr ""
-
-#: lib/micelio_web/components/layouts.ex:119
-#: lib/micelio_web/components/layouts.ex:281
-#, elixir-autogen, elixir-format
-msgid "Sessions"
-msgstr ""
-
-#: lib/micelio_web/components/layouts.ex:120
-#: lib/micelio_web/components/layouts.ex:307
-#, elixir-autogen, elixir-format
-msgid "Settings"
 msgstr ""
 
 #: lib/micelio_web/controllers/browser/repository_html/show.html.heex:194
@@ -761,11 +665,6 @@ msgstr ""
 msgid "Download"
 msgstr ""
 
-#: lib/micelio_web/components/layouts.ex:79
-#, elixir-autogen, elixir-format
-msgid "Toggle navigation"
-msgstr ""
-
 #: lib/micelio_web/live/plan_live/index.ex:236
 #: lib/micelio_web/live/plan_live/show.ex:634
 #, elixir-autogen, elixir-format
@@ -870,7 +769,6 @@ msgstr ""
 msgid "Authentication & Authorization"
 msgstr ""
 
-#: lib/micelio_web/components/core_components.ex:938
 #: lib/micelio_web/controllers/browser/docs_html/show.html.heex:23
 #, elixir-autogen, elixir-format
 msgid "On this page"
@@ -1253,41 +1151,6 @@ msgstr ""
 msgid "Website"
 msgstr ""
 
-#: lib/micelio_web/components/layouts.ex:464
-#, elixir-autogen, elixir-format
-msgid "Account"
-msgstr ""
-
-#: lib/micelio_web/components/layouts.ex:489
-#, elixir-autogen, elixir-format
-msgid "Admin"
-msgstr ""
-
-#: lib/micelio_web/components/layouts.ex:358
-#, elixir-autogen, elixir-format
-msgid "Blog"
-msgstr ""
-
-#: lib/micelio_web/components/layouts.ex:411
-#, elixir-autogen, elixir-format
-msgid "Changelog"
-msgstr ""
-
-#: lib/micelio_web/components/layouts.ex:517
-#, elixir-autogen, elixir-format
-msgid "Logout"
-msgstr ""
-
-#: lib/micelio_web/components/layouts.ex:171
-#, elixir-autogen, elixir-format
-msgid "Main navigation"
-msgstr ""
-
-#: lib/micelio_web/components/layouts.ex:562
-#, elixir-autogen, elixir-format
-msgid "Theme"
-msgstr ""
-
 #: lib/micelio_web/controllers/browser/blog_controller.ex:43
 #, elixir-autogen, elixir-format
 msgid "Blog post not found."
@@ -1296,16 +1159,6 @@ msgstr ""
 #: lib/micelio_web/controllers/browser/changelog_controller.ex:43
 #, elixir-autogen, elixir-format
 msgid "Changelog entry not found."
-msgstr ""
-
-#: lib/micelio_web/controllers/browser/blog_html/index.html.heex:34
-#, elixir-autogen, elixir-format
-msgid "Check back soon for updates!"
-msgstr ""
-
-#: lib/micelio_web/controllers/browser/blog_html/index.html.heex:33
-#, elixir-autogen, elixir-format
-msgid "No blog posts yet"
 msgstr ""
 
 #: lib/micelio_web/live/plan_live/show.ex:445
@@ -1373,16 +1226,9 @@ msgstr ""
 msgid "You need write access to start a coding session."
 msgstr ""
 
-#: lib/micelio_web/components/layouts.ex:118
-#: lib/micelio_web/components/layouts.ex:256
 #: lib/micelio_web/live/plan_live/index.ex:15
 #, elixir-autogen, elixir-format
 msgid "Prompt requests"
-msgstr ""
-
-#: lib/micelio_web/components/layouts.ex:230
-#, elixir-autogen, elixir-format
-msgid "Home"
 msgstr ""
 
 #: lib/micelio_web/controllers/browser/page_html/home.html.heex:31

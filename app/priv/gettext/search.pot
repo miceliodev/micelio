@@ -1,0 +1,49 @@
+## This file is a PO Template file.
+##
+## "msgid"s here are often extracted from source code.
+## Add new messages manually only if they're dynamic
+## messages that can't be statically extracted.
+##
+## Run "mix gettext.extract" to bring this file up to
+## date. Leave "msgstr"s empty as changing them here has no
+## effect: edit them in PO (.po) files instead.
+#
+msgid ""
+msgstr ""
+
+#: lib/micelio_web/controllers/browser/search_html/index.html.heex:35
+#, elixir-autogen, elixir-format
+msgid "%{count} result for \"%{query}\""
+msgid_plural "%{count} results for \"%{query}\""
+msgstr[0] ""
+msgstr[1] ""
+
+#: lib/micelio_web/controllers/browser/search_html/index.html.heex:58
+#, elixir-autogen, elixir-format
+msgid "No description provided."
+msgstr ""
+
+#: lib/micelio_web/controllers/browser/search_html/index.html.heex:41
+#, elixir-autogen, elixir-format
+msgid "No repositories matched your query."
+msgstr ""
+
+#: lib/micelio_web/controllers/browser/search_html/index.html.heex:10
+#, elixir-autogen, elixir-format
+msgid "Repository search"
+msgstr ""
+
+#: lib/micelio_web/controllers/browser/search_html/index.html.heex:29
+#, elixir-autogen, elixir-format
+msgid "Search"
+msgstr ""
+
+#: lib/micelio_web/controllers/browser/search_html/index.html.heex:11
+#, elixir-autogen, elixir-format
+msgid "Search public repositories by name or description."
+msgstr ""
+
+#: lib/micelio_web/controllers/browser/search_html/index.html.heex:25
+#, elixir-autogen, elixir-format
+msgid "Search repositories"
+msgstr ""

@@ -15,7 +15,7 @@ defmodule MicelioWeb.LocalePlug do
   import Plug.Conn
 
   @default_locale "en"
-  @supported_locales ~w(en ko zh_CN zh_TW ja)
+  @supported_locales ~w(en es ko zh_CN zh_TW ja)
 
   def init(opts), do: opts
 

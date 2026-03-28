@@ -1,0 +1,194 @@
+## "msgid"s in this file come from POT (.pot) files.
+###
+### Do not add, change, or remove "msgid"s manually here as
+### they're tied to the ones in the corresponding POT file
+### (with the same domain).
+###
+### Use "mix gettext.extract --merge" or "mix gettext.merge"
+### to merge POT files into PO files.
+msgid ""
+msgstr ""
+"Language: es\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: lib/micelio_web/components/layouts.ex:464
+#, elixir-autogen, elixir-format
+msgid "Account"
+msgstr "Cuenta"
+
+#: lib/micelio_web/components/layouts.ex:146
+#, elixir-autogen, elixir-format
+msgid "Account (@%{handle})"
+msgstr "Cuenta (@%{handle})"
+
+#: lib/micelio_web/components/layouts.ex:489
+#, elixir-autogen, elixir-format
+msgid "Admin"
+msgstr "Administracion"
+
+#: lib/micelio_web/components/layouts.ex:603
+#: lib/micelio_web/components/layouts.ex:611
+#, elixir-autogen, elixir-format
+msgid "Attempting to reconnect"
+msgstr "Intentando reconectar"
+
+#: lib/micelio_web/components/layouts.ex:358
+#, elixir-autogen, elixir-format
+msgid "Blog"
+msgstr "Blog"
+
+#: lib/micelio_web/components/layouts.ex:411
+#, elixir-autogen, elixir-format
+msgid "Changelog"
+msgstr "Registro de cambios"
+
+#: lib/micelio_web/components/layouts.ex:503
+#, elixir-autogen, elixir-format
+msgid "Dark"
+msgstr "Oscuro"
+
+#: lib/micelio_web/components/layouts.ex:387
+#, elixir-autogen, elixir-format
+msgid "Docs"
+msgstr "Documentacion"
+
+#: lib/micelio_web/components/layouts.ex:162
+#, elixir-autogen, elixir-format
+msgid "Get started"
+msgstr "Comenzar"
+
+#: lib/micelio_web/components/layouts.ex:230
+#, elixir-autogen, elixir-format
+msgid "Home"
+msgstr "Inicio"
+
+#: lib/micelio_web/components/core_components.ex:763
+#, elixir-autogen, elixir-format
+msgid "Language selection"
+msgstr "Seleccion de idioma"
+
+#: lib/micelio_web/components/layouts.ex:538
+#, elixir-autogen, elixir-format
+msgid "Legal"
+msgstr "Legal"
+
+#: lib/micelio_web/components/layouts.ex:502
+#, elixir-autogen, elixir-format
+msgid "Light"
+msgstr "Claro"
+
+#: lib/micelio_web/components/layouts.ex:171
+#, elixir-autogen, elixir-format
+msgid "Main navigation"
+msgstr "Navegacion principal"
+
+#: lib/micelio_web/components/layouts.ex:118
+#: lib/micelio_web/components/layouts.ex:256
+#, elixir-autogen, elixir-format
+msgid "Prompt requests"
+msgstr "Solicitudes de prompt"
+
+#: lib/micelio_web/components/layouts.ex:333
+#, elixir-autogen, elixir-format
+msgid "Repositories"
+msgstr "Repositorios"
+
+#: lib/micelio_web/components/layouts.ex:435
+#, elixir-autogen, elixir-format
+msgid "Search"
+msgstr "Buscar"
+
+#: lib/micelio_web/components/core_components.ex:765
+#: lib/micelio_web/components/core_components.ex:770
+#, elixir-autogen, elixir-format
+msgid "Select language"
+msgstr "Seleccionar idioma"
+
+#: lib/micelio_web/components/layouts.ex:119
+#: lib/micelio_web/components/layouts.ex:281
+#, elixir-autogen, elixir-format
+msgid "Sessions"
+msgstr "Sesiones"
+
+#: lib/micelio_web/components/layouts.ex:120
+#: lib/micelio_web/components/layouts.ex:307
+#, elixir-autogen, elixir-format
+msgid "Settings"
+msgstr "Configuracion"
+
+#: lib/micelio_web/components/layouts.ex:609
+#, elixir-autogen, elixir-format
+msgid "Something went wrong!"
+msgstr "Algo salio mal."
+
+#: lib/micelio_web/components/layouts.ex:505
+#, elixir-autogen, elixir-format
+msgid "Switch to dark mode"
+msgstr "Cambiar a modo oscuro"
+
+#: lib/micelio_web/components/layouts.ex:504
+#, elixir-autogen, elixir-format
+msgid "Switch to light mode"
+msgstr "Cambiar a modo claro"
+
+#: lib/micelio_web/components/layouts.ex:522
+#, elixir-autogen, elixir-format
+msgid "Theme"
+msgstr "Tema"
+
+#: lib/micelio_web/components/layouts.ex:79
+#, elixir-autogen, elixir-format
+msgid "Toggle navigation"
+msgstr "Alternar navegacion"
+
+#: lib/micelio_web/components/layouts.ex:501
+#, elixir-autogen, elixir-format
+msgid "Toggle theme"
+msgstr "Alternar tema"
+
+#: lib/micelio_web/components/layouts.ex:601
+#, elixir-autogen, elixir-format
+msgid "We can't find the internet"
+msgstr "No se puede encontrar la conexion a internet"
+
+#: lib/micelio_web/components/core_components.ex:80
+#, elixir-autogen, elixir-format
+msgid "close"
+msgstr "cerrar"
+
+#: lib/micelio_web/components/layouts.ex:541
+#, elixir-autogen, elixir-format
+msgid "cookies"
+msgstr "cookies"
+
+#: lib/micelio_web/components/layouts.ex:542
+#, elixir-autogen, elixir-format
+msgid "impressum"
+msgstr "impressum"
+
+#: lib/micelio_web/components/layouts.ex:540
+#, elixir-autogen, elixir-format
+msgid "privacy"
+msgstr "privacidad"
+
+#: lib/micelio_web/components/layouts.ex:539
+#, elixir-autogen, elixir-format
+msgid "terms"
+msgstr "terminos"
+
+#: lib/micelio_web/components/core_components.ex:483
+#, elixir-autogen, elixir-format
+msgid "Actions"
+msgstr "Acciones"
+
+#: lib/micelio_web/components/core_components.ex:939
+#, elixir-autogen, elixir-format
+msgid "On this page"
+msgstr "En esta pagina"
+
+#: lib/micelio_web/components/core_components.ex:885
+#, elixir-autogen, elixir-format
+msgid "contribution"
+msgid_plural "contributions"
+msgstr[0] "contribucion"
+msgstr[1] "contribuciones"
