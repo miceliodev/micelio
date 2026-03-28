@@ -1,3 +1,6 @@
+# OS files
+.DS_Store
+
 # The directory Mix will write compiled artifacts to.
 /app/_build/
 
