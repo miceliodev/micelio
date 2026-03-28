@@ -26,9 +26,13 @@
           <span class="changelog-category-label">
             {dgettext("changelog", "Filter by category:")}
           </span>
-          <.badge navigate={~p"/changelog"} active={true}>{dgettext("changelog", "All")}</.badge>
+          <.badge navigate={locale_path(assigns, "/changelog")} active={true}>
+            {dgettext("changelog", "All")}
+          </.badge>
           <%= for category <- @categories do %>
-            <.badge navigate={~p"/changelog/category/#{category}"} caps>{category}</.badge>
+            <.badge navigate={locale_path(assigns, "/changelog/category/#{category}")} caps>
+              {category}
+            </.badge>
           <% end %>
         </div>
       </div>

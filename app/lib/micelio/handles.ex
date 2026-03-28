@@ -135,7 +135,15 @@ defmodule Micelio.Handles do
     "micelio",
     "github",
     "gitlab",
-    "bitbucket"
+    "bitbucket",
+
+    # Locale prefixes (used for SEO-friendly locale routing)
+    "en",
+    "es",
+    "ko",
+    "ja",
+    "zh_cn",
+    "zh_tw"
   ]
 
   @doc """

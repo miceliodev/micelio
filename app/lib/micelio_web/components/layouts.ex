@@ -6,19 +6,6 @@ defmodule MicelioWeb.Layouts do
   use MicelioWeb, :html
   use Gettext, backend: MicelioWeb.Gettext
 
-  @non_english_locales ~w(es ko zh_CN zh_TW ja)
-
-  # Helper to build locale-aware paths for marketing pages
-  defp locale_path(assigns, path) do
-    locale = assigns[:locale] || "en"
-
-    if locale in @non_english_locales do
-      "/#{locale}#{path}"
-    else
-      path
-    end
-  end
-
   defp sidebar_active?(current_path, link_path) do
     if link_path == "/" do
       current_path == "/"
@@ -496,6 +483,31 @@ defmodule MicelioWeb.Layouts do
         </nav>
 
         <div class="sidebar-bottom">
+          <%= if assigns[:current_user] do %>
+            <form action={~p"/auth/logout"} method="post" class="sidebar-logout-form">
+              <input type="hidden" name="_csrf_token" value={Phoenix.Controller.get_csrf_token()} />
+              <input type="hidden" name="_method" value="delete" />
+              <button type="submit" class="sidebar-logout-btn">
+                <span class="sidebar-link-icon">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M14 8v-2a2 2 0 0 0 -2 -2h-7a2 2 0 0 0 -2 2v12a2 2 0 0 0 2 2h7a2 2 0 0 0 2 -2v-2" /><path d="M9 12h12l-3 -3" /><path d="M18 15l3 -3" />
+                  </svg>
+                </span>
+                {dgettext("layouts", "Logout")}
+              </button>
+            </form>
+          <% end %>
+
           <button
             id="theme-toggle"
             type="button"
