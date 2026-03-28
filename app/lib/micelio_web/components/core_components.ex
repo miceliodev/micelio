@@ -882,7 +882,12 @@ defmodule MicelioWeb.CoreComponents do
                 data-count={count}
               >
                 <title>
-                  {Date.to_iso8601(date)}: {count} {dngettext("layouts", "contribution", "contributions", count)}
+                  {Date.to_iso8601(date)}: {count} {dngettext(
+                    "layouts",
+                    "contribution",
+                    "contributions",
+                    count
+                  )}
                 </title>
               </rect>
             <% end %>

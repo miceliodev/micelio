@@ -26,13 +26,22 @@
         class="search-input"
         autocomplete="off"
       />
-      <button type="submit" class="search-submit" id="repository-search-submit">{dgettext("search", "Search")}</button>
+      <button type="submit" class="search-submit" id="repository-search-submit">
+        {dgettext("search", "Search")}
+      </button>
     </.form>
 
     <div class="search-results" id="repository-search-results">
       <%= if @query != "" do %>
         <p class="search-results-count" id="repository-search-count">
-          {dngettext("search", "%{count} result for \"%{query}\"", "%{count} results for \"%{query}\"", length(@results), query: @query, count: length(@results))}
+          {dngettext(
+            "search",
+            "%{count} result for \"%{query}\"",
+            "%{count} results for \"%{query}\"",
+            length(@results),
+            query: @query,
+            count: length(@results)
+          )}
         </p>
       <% end %>
 

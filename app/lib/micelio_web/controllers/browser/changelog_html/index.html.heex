@@ -9,7 +9,10 @@
     <.header>
       {dgettext("changelog", "Changelog")}
       <:subtitle>
-        {dgettext("changelog", "Stay up to date with the latest changes, improvements, and new features in Micelio.")}
+        {dgettext(
+          "changelog",
+          "Stay up to date with the latest changes, improvements, and new features in Micelio."
+        )}
       </:subtitle>
       <:actions>
         <.badge href={~p"/changelog/rss"}>RSS</.badge>
@@ -20,7 +23,9 @@
     <%= if Enum.any?(@categories) do %>
       <div class="changelog-filters">
         <div class="changelog-categories">
-          <span class="changelog-category-label">{dgettext("changelog", "Filter by category:")}</span>
+          <span class="changelog-category-label">
+            {dgettext("changelog", "Filter by category:")}
+          </span>
           <.badge navigate={~p"/changelog"} active={true}>{dgettext("changelog", "All")}</.badge>
           <%= for category <- @categories do %>
             <.badge navigate={~p"/changelog/category/#{category}"} caps>{category}</.badge>
@@ -60,7 +65,9 @@
           </svg>
         </div>
         <h3 class="changelog-empty-title">{dgettext("changelog", "No changelog entries yet")}</h3>
-        <p class="changelog-empty-message">{dgettext("changelog", "Check back soon for updates!")}</p>
+        <p class="changelog-empty-message">
+          {dgettext("changelog", "Check back soon for updates!")}
+        </p>
       </div>
     <% end %>
   </div>

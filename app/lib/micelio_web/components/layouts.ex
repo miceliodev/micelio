@@ -76,7 +76,7 @@ defmodule MicelioWeb.Layouts do
             id="navbar-hamburger"
             aria-expanded="false"
             aria-controls="sidebar"
-            aria-label={dgettext("layouts","Toggle navigation")}
+            aria-label={dgettext("layouts", "Toggle navigation")}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -115,9 +115,9 @@ defmodule MicelioWeb.Layouts do
                 "/#{@repository_nav.account_handle}/#{@repository_nav.repository_handle}" %>
             <% active_label =
               case @repository_nav[:active] do
-                :prompt_requests -> dgettext("layouts","Prompt requests")
-                :sessions -> dgettext("layouts","Sessions")
-                :settings -> dgettext("layouts","Settings")
+                :prompt_requests -> dgettext("layouts", "Prompt requests")
+                :sessions -> dgettext("layouts", "Sessions")
+                :settings -> dgettext("layouts", "Settings")
                 _ -> nil
               end %>
             <div class="navbar-breadcrumb">
@@ -143,7 +143,9 @@ defmodule MicelioWeb.Layouts do
               class="navbar-user-avatar"
               id="navbar-user"
               aria-label={
-                dgettext("layouts","Account (@%{handle})", handle: assigns.current_user.account.handle)
+                dgettext("layouts", "Account (@%{handle})",
+                  handle: assigns.current_user.account.handle
+                )
               }
               title={"@#{assigns.current_user.account.handle}"}
             >
@@ -159,7 +161,7 @@ defmodule MicelioWeb.Layouts do
             </a>
           <% else %>
             <a href={~p"/auth/login"} class="navbar-cta">
-              {dgettext("layouts","Get started")}
+              {dgettext("layouts", "Get started")}
             </a>
           <% end %>
         </div>
@@ -168,7 +170,7 @@ defmodule MicelioWeb.Layouts do
     <.flash_group flash={@flash} />
 
     <div class="app-shell">
-      <aside class="sidebar" id="sidebar" aria-label={dgettext("layouts","Main navigation")}>
+      <aside class="sidebar" id="sidebar" aria-label={dgettext("layouts", "Main navigation")}>
         <nav class="sidebar-nav">
           <div class="sidebar-section">
             <%= if @repository_nav do %>
@@ -227,7 +229,7 @@ defmodule MicelioWeb.Layouts do
                     <path d="M9 21v-6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v6" />
                   </svg>
                 </span>
-                {dgettext("layouts","Home")}
+                {dgettext("layouts", "Home")}
               </.link>
               <.link
                 navigate={prompt_requests_path}
@@ -253,7 +255,7 @@ defmodule MicelioWeb.Layouts do
                     <path d="M9 18h-3a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3h12a3 3 0 0 1 3 3v8a3 3 0 0 1-3 3h-3l-3 3-3-3z" />
                   </svg>
                 </span>
-                {dgettext("layouts","Prompt requests")}
+                {dgettext("layouts", "Prompt requests")}
               </.link>
               <.link
                 navigate={sessions_path}
@@ -278,7 +280,7 @@ defmodule MicelioWeb.Layouts do
                     <circle cx="12" cy="12" r="9" />
                   </svg>
                 </span>
-                {dgettext("layouts","Sessions")}
+                {dgettext("layouts", "Sessions")}
               </.link>
               <.link
                 :if={@repository_nav[:show_settings?]}
@@ -304,7 +306,7 @@ defmodule MicelioWeb.Layouts do
                     <circle cx="12" cy="12" r="3" />
                   </svg>
                 </span>
-                {dgettext("layouts","Settings")}
+                {dgettext("layouts", "Settings")}
               </.link>
             <% else %>
               <%= if assigns[:current_user] do %>
@@ -330,7 +332,7 @@ defmodule MicelioWeb.Layouts do
                       <path d="M5 4h4l3 3h7a2 2 0 0 1 2 2v8a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-11a2 2 0 0 1 2 -2" />
                     </svg>
                   </span>
-                  {dgettext("layouts","Repositories")}
+                  {dgettext("layouts", "Repositories")}
                 </a>
               <% end %>
               <a
@@ -355,7 +357,7 @@ defmodule MicelioWeb.Layouts do
                     <path d="M3 4m0 2a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2z" /><path d="M7 8h10" /><path d="M7 12h10" /><path d="M7 16h10" />
                   </svg>
                 </span>
-                {dgettext("layouts","Blog")}
+                {dgettext("layouts", "Blog")}
               </a>
               <a
                 href={locale_path(assigns, "/docs")}
@@ -384,7 +386,7 @@ defmodule MicelioWeb.Layouts do
                     /><line x1="12" y1="6" x2="12" y2="19" /><line x1="21" y1="6" x2="21" y2="19" />
                   </svg>
                 </span>
-                {dgettext("layouts","Docs")}
+                {dgettext("layouts", "Docs")}
               </a>
               <a
                 href={locale_path(assigns, "/changelog")}
@@ -408,7 +410,7 @@ defmodule MicelioWeb.Layouts do
                     <polyline points="12 8 12 12 14 14" /><path d="M3.05 11a9 9 0 1 1 .5 4m-.5 5v-5h5" />
                   </svg>
                 </span>
-                {dgettext("layouts","Changelog")}
+                {dgettext("layouts", "Changelog")}
               </a>
               <a
                 href={locale_path(assigns, "/search")}
@@ -432,7 +434,7 @@ defmodule MicelioWeb.Layouts do
                     <circle cx="10" cy="10" r="7" /><line x1="21" y1="21" x2="15" y2="15" />
                   </svg>
                 </span>
-                {dgettext("layouts","Search")}
+                {dgettext("layouts", "Search")}
               </a>
             <% end %>
           </div>
@@ -461,7 +463,7 @@ defmodule MicelioWeb.Layouts do
                     <circle cx="12" cy="7" r="4" /><path d="M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" />
                   </svg>
                 </span>
-                {dgettext("layouts","Account")}
+                {dgettext("layouts", "Account")}
               </a>
               <%= if Micelio.Admin.admin_user?(assigns.current_user) do %>
                 <a
@@ -486,7 +488,7 @@ defmodule MicelioWeb.Layouts do
                       <path d="M12 3a12 12 0 0 0 8.5 3a12 12 0 0 1 -8.5 15a12 12 0 0 1 -8.5 -15a12 12 0 0 0 8.5 -3" />
                     </svg>
                   </span>
-                  {dgettext("layouts","Admin")}
+                  {dgettext("layouts", "Admin")}
                 </a>
               <% end %>
             </div>
@@ -498,11 +500,11 @@ defmodule MicelioWeb.Layouts do
             id="theme-toggle"
             type="button"
             class="sidebar-logout-btn"
-            aria-label={dgettext("layouts","Toggle theme")}
-            data-light-label={dgettext("layouts","Light")}
-            data-dark-label={dgettext("layouts","Dark")}
-            data-switch-to-light={dgettext("layouts","Switch to light mode")}
-            data-switch-to-dark={dgettext("layouts","Switch to dark mode")}
+            aria-label={dgettext("layouts", "Toggle theme")}
+            data-light-label={dgettext("layouts", "Light")}
+            data-dark-label={dgettext("layouts", "Dark")}
+            data-switch-to-light={dgettext("layouts", "Switch to light mode")}
+            data-switch-to-dark={dgettext("layouts", "Switch to dark mode")}
           >
             <span class="sidebar-link-icon">
               <svg
@@ -519,7 +521,7 @@ defmodule MicelioWeb.Layouts do
                 <path d="M12 12m-4 0a4 4 0 1 0 8 0a4 4 0 1 0 -8 0" /><path d="M3 12h1m8 -9v1m8 8h1m-9 8v1m-6.4 -15.4l.7 .7m12.1 -.7l-.7 .7m0 11.4l.7 .7m-12.1 -.7l-.7 .7" />
               </svg>
             </span>
-            <span id="theme-toggle-text">{dgettext("layouts","Theme")}</span>
+            <span id="theme-toggle-text">{dgettext("layouts", "Theme")}</span>
           </button>
         </div>
       </aside>
@@ -535,11 +537,11 @@ defmodule MicelioWeb.Layouts do
         <footer class="site-footer" id="site-footer">
           <div class="site-footer-content">
             <%= if marketing_footer?(assigns) do %>
-              <nav class="site-footer-nav" aria-label={dgettext("layouts","Legal")}>
-                <a href={locale_path(assigns, "/terms")}>{dgettext("layouts","terms")}</a>
-                <a href={locale_path(assigns, "/privacy")}>{dgettext("layouts","privacy")}</a>
-                <a href={locale_path(assigns, "/cookies")}>{dgettext("layouts","cookies")}</a>
-                <a href={locale_path(assigns, "/impressum")}>{dgettext("layouts","impressum")}</a>
+              <nav class="site-footer-nav" aria-label={dgettext("layouts", "Legal")}>
+                <a href={locale_path(assigns, "/terms")}>{dgettext("layouts", "terms")}</a>
+                <a href={locale_path(assigns, "/privacy")}>{dgettext("layouts", "privacy")}</a>
+                <a href={locale_path(assigns, "/cookies")}>{dgettext("layouts", "cookies")}</a>
+                <a href={locale_path(assigns, "/impressum")}>{dgettext("layouts", "impressum")}</a>
               </nav>
             <% end %>
 
@@ -598,17 +600,17 @@ defmodule MicelioWeb.Layouts do
       <.flash
         id="client-error"
         kind={:error}
-        title={dgettext("layouts","We can't find the internet")}
+        title={dgettext("layouts", "We can't find the internet")}
       >
-        {dgettext("layouts","Attempting to reconnect")}
+        {dgettext("layouts", "Attempting to reconnect")}
       </.flash>
 
       <.flash
         id="server-error"
         kind={:error}
-        title={dgettext("layouts","Something went wrong!")}
+        title={dgettext("layouts", "Something went wrong!")}
       >
-        {dgettext("layouts","Attempting to reconnect")}
+        {dgettext("layouts", "Attempting to reconnect")}
       </.flash>
     </div>
     """
