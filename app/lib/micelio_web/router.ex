@@ -135,6 +135,7 @@ defmodule MicelioWeb.Router do
     live_session :docs,
       on_mount: [{MicelioWeb.LiveAuth, :current_user}] do
       live("/", DocsLive.Index, :index)
+      live("/:category/:id", DocsLive.Show, :show)
     end
   end
 
@@ -143,7 +144,6 @@ defmodule MicelioWeb.Router do
 
     get("/cli-reference", DocsController, :cli_reference)
     get("/:category", DocsController, :category)
-    get("/:category/:id", DocsController, :show)
   end
 
   # API try-it proxy (session-authenticated, for interactive docs)
@@ -531,7 +531,6 @@ defmodule MicelioWeb.Router do
 
       get("/docs/cli-reference", DocsController, :cli_reference)
       get("/docs/:category", DocsController, :category)
-      get("/docs/:category/:id", DocsController, :show)
     end
 
     scope "/#{locale}", MicelioWeb do
@@ -540,6 +539,7 @@ defmodule MicelioWeb.Router do
       live_session :"docs_#{locale}",
         on_mount: [{MicelioWeb.LiveAuth, :current_user}] do
         live("/docs", DocsLive.Index, :index)
+        live("/docs/:category/:id", DocsLive.Show, :show)
       end
     end
   end
