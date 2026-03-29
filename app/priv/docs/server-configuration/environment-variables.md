@@ -140,8 +140,11 @@ Micelio emits traces via [OpenTelemetry](https://opentelemetry.io/) and exposes 
 
 Alloy acts as the collector that receives OTLP data from Micelio and forwards traces to Tempo, logs to Loki, and metrics to Prometheus. The metrics endpoint at `/metrics` is protected by a bearer token.
 
+For Loki integration, set `MICELIO_LOG_FORMAT=json` to output structured JSON logs. In production this is the default. Alloy or Promtail can then scrape container logs and forward them to Loki with full structured metadata (request IDs, trace IDs, log levels).
+
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
+| `MICELIO_LOG_FORMAT` | No | `json` (prod), `text` (dev) | Log output format: `json` for structured logging (Loki), `text` for human-readable |
 | `MICELIO_OTEL_EXPORTER_OTLP_ENDPOINT` | No | `http://micelio-alloy:4317` | OTLP collector endpoint (e.g. Grafana Alloy) |
 | `MICELIO_OTEL_EXPORTER_OTLP_PROTOCOL` | No | `grpc` | Export protocol: `grpc` or `http_protobuf` |
 | `MICELIO_OTEL_SERVICE_NAME` | No | `micelio-web` | Service name attached to traces and metrics |

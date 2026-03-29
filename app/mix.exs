@@ -101,7 +101,8 @@ defmodule Micelio.MixProject do
       {:uuid_v7, "~> 0.6"},
       {:acpex, "~> 0.1.0"},
       {:carta, git: "https://github.com/pepicrft/carta", branch: "main"},
-      {:browse_chrome, git: "https://github.com/pepicrft/browse_chrome", branch: "main"}
+      {:browse_chrome, git: "https://github.com/pepicrft/browse_chrome", branch: "main"},
+      {:logger_json, "~> 7.0"}
     ]
   end
 

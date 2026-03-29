@@ -14,6 +14,19 @@ if (System.get_env("MICELIO_SERVER") || System.get_env("PHX_SERVER")) == "true" 
   config :micelio, MicelioWeb.Endpoint, server: true
 end
 
+# Log format: "text" (default in dev) or "json" (default in prod, for Loki/structured logging)
+log_format =
+  case System.get_env("MICELIO_LOG_FORMAT") do
+    "json" -> :json
+    "text" -> :text
+    nil -> if(config_env() == :prod, do: :json, else: :text)
+    _ -> :text
+  end
+
+if log_format == :json do
+  config :logger, :default_handler, formatter: {LoggerJSON.Formatters.GoogleCloud, metadata: :all}
+end
+
 external_sentry_enabled =
   (System.get_env("MICELIO_ENABLE_EXTERNAL_SENTRY") || System.get_env("ENABLE_EXTERNAL_SENTRY") ||
      "false") == "true"
