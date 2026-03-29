@@ -136,13 +136,17 @@ The `hif` CLI communicates with Micelio via gRPC for operations like authenticat
 
 ## Observability
 
+Micelio emits traces via OpenTelemetry and exposes a Prometheus-compatible metrics endpoint. The recommended observability stack is Grafana Alloy (collector), Tempo (traces), Loki (logs), and Prometheus (metrics), though any OTLP-compatible backend works.
+
+Alloy acts as the collector that receives OTLP data from Micelio and forwards traces to Tempo, logs to Loki, and metrics to Prometheus. The metrics endpoint at `/metrics` is protected by a bearer token.
+
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
-| `MICELIO_OTEL_EXPORTER_OTLP_ENDPOINT` | No | `http://micelio-alloy:4317` | OpenTelemetry collector endpoint |
-| `MICELIO_OTEL_EXPORTER_OTLP_PROTOCOL` | No | `grpc` | Protocol: `grpc` or `http_protobuf` |
-| `MICELIO_OTEL_SERVICE_NAME` | No | `micelio-web` | Service name in traces |
-| `MICELIO_OTEL_DEPLOYMENT_ENVIRONMENT` | No | `production` | Deployment environment label |
-| `MICELIO_METRICS_BEARER_TOKEN` | Yes (prod) | — | Bearer token for the metrics endpoint |
+| `MICELIO_OTEL_EXPORTER_OTLP_ENDPOINT` | No | `http://micelio-alloy:4317` | OTLP collector endpoint (e.g. Grafana Alloy) |
+| `MICELIO_OTEL_EXPORTER_OTLP_PROTOCOL` | No | `grpc` | Export protocol: `grpc` or `http_protobuf` |
+| `MICELIO_OTEL_SERVICE_NAME` | No | `micelio-web` | Service name attached to traces and metrics |
+| `MICELIO_OTEL_DEPLOYMENT_ENVIRONMENT` | No | `production` | Deployment environment label in traces |
+| `MICELIO_METRICS_BEARER_TOKEN` | Yes (prod) | — | Bearer token protecting the `/metrics` endpoint |
 
 ## Error Tracking
 
