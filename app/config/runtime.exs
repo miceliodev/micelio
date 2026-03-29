@@ -350,8 +350,8 @@ grpc_tls_mode =
 {grpc_tls_certfile, grpc_tls_keyfile} =
   case {grpc_tls_certfile, grpc_tls_keyfile} do
     {nil, nil} ->
-      cert_pem = System.get_env("TLS_CERT_PEM")
-      key_pem = System.get_env("TLS_KEY_PEM")
+      cert_pem = System.get_env("MICELIO_TLS_CERT_PEM") || System.get_env("TLS_CERT_PEM")
+      key_pem = System.get_env("MICELIO_TLS_KEY_PEM") || System.get_env("TLS_KEY_PEM")
 
       if grpc_tls_mode != :proxy and is_binary(cert_pem) and is_binary(key_pem) do
         tls_dir = Path.join([System.tmp_dir!(), "micelio", "grpc-tls"])
@@ -392,24 +392,33 @@ github_oauth =
   [
     client_id:
       if config_env() == :dev do
-        System.get_env("GITHUB_OAUTH_CLIENT_ID_DEV") ||
+        System.get_env("MICELIO_GITHUB_OAUTH_CLIENT_ID_DEV") ||
+          System.get_env("GITHUB_OAUTH_CLIENT_ID_DEV") ||
+          System.get_env("MICELIO_GITHUB_OAUTH_CLIENT_ID") ||
           System.get_env("GITHUB_OAUTH_CLIENT_ID")
       else
-        System.get_env("GITHUB_OAUTH_CLIENT_ID")
+        System.get_env("MICELIO_GITHUB_OAUTH_CLIENT_ID") ||
+          System.get_env("GITHUB_OAUTH_CLIENT_ID")
       end,
     client_secret:
       if config_env() == :dev do
-        System.get_env("GITHUB_OAUTH_CLIENT_SECRET_DEV") ||
+        System.get_env("MICELIO_GITHUB_OAUTH_CLIENT_SECRET_DEV") ||
+          System.get_env("GITHUB_OAUTH_CLIENT_SECRET_DEV") ||
+          System.get_env("MICELIO_GITHUB_OAUTH_CLIENT_SECRET") ||
           System.get_env("GITHUB_OAUTH_CLIENT_SECRET")
       else
-        System.get_env("GITHUB_OAUTH_CLIENT_SECRET")
+        System.get_env("MICELIO_GITHUB_OAUTH_CLIENT_SECRET") ||
+          System.get_env("GITHUB_OAUTH_CLIENT_SECRET")
       end,
     redirect_uri:
       if config_env() == :dev do
-        System.get_env("GITHUB_OAUTH_REDIRECT_URI_DEV") ||
+        System.get_env("MICELIO_GITHUB_OAUTH_REDIRECT_URI_DEV") ||
+          System.get_env("GITHUB_OAUTH_REDIRECT_URI_DEV") ||
+          System.get_env("MICELIO_GITHUB_OAUTH_REDIRECT_URI") ||
           System.get_env("GITHUB_OAUTH_REDIRECT_URI")
       else
-        System.get_env("GITHUB_OAUTH_REDIRECT_URI")
+        System.get_env("MICELIO_GITHUB_OAUTH_REDIRECT_URI") ||
+          System.get_env("GITHUB_OAUTH_REDIRECT_URI")
       end
   ]
   |> Enum.reject(fn {_key, value} -> is_nil(value) or value == "" end)
@@ -483,31 +492,43 @@ gitlab_oauth =
   [
     client_id:
       if config_env() == :dev do
-        System.get_env("GITLAB_OAUTH_CLIENT_ID_DEV") ||
+        System.get_env("MICELIO_GITLAB_OAUTH_CLIENT_ID_DEV") ||
+          System.get_env("GITLAB_OAUTH_CLIENT_ID_DEV") ||
+          System.get_env("MICELIO_GITLAB_OAUTH_CLIENT_ID") ||
           System.get_env("GITLAB_OAUTH_CLIENT_ID")
       else
-        System.get_env("GITLAB_OAUTH_CLIENT_ID")
+        System.get_env("MICELIO_GITLAB_OAUTH_CLIENT_ID") ||
+          System.get_env("GITLAB_OAUTH_CLIENT_ID")
       end,
     client_secret:
       if config_env() == :dev do
-        System.get_env("GITLAB_OAUTH_CLIENT_SECRET_DEV") ||
+        System.get_env("MICELIO_GITLAB_OAUTH_CLIENT_SECRET_DEV") ||
+          System.get_env("GITLAB_OAUTH_CLIENT_SECRET_DEV") ||
+          System.get_env("MICELIO_GITLAB_OAUTH_CLIENT_SECRET") ||
           System.get_env("GITLAB_OAUTH_CLIENT_SECRET")
       else
-        System.get_env("GITLAB_OAUTH_CLIENT_SECRET")
+        System.get_env("MICELIO_GITLAB_OAUTH_CLIENT_SECRET") ||
+          System.get_env("GITLAB_OAUTH_CLIENT_SECRET")
       end,
     redirect_uri:
       if config_env() == :dev do
-        System.get_env("GITLAB_OAUTH_REDIRECT_URI_DEV") ||
+        System.get_env("MICELIO_GITLAB_OAUTH_REDIRECT_URI_DEV") ||
+          System.get_env("GITLAB_OAUTH_REDIRECT_URI_DEV") ||
+          System.get_env("MICELIO_GITLAB_OAUTH_REDIRECT_URI") ||
           System.get_env("GITLAB_OAUTH_REDIRECT_URI")
       else
-        System.get_env("GITLAB_OAUTH_REDIRECT_URI")
+        System.get_env("MICELIO_GITLAB_OAUTH_REDIRECT_URI") ||
+          System.get_env("GITLAB_OAUTH_REDIRECT_URI")
       end,
     scope:
       if config_env() == :dev do
-        System.get_env("GITLAB_OAUTH_SCOPE_DEV") ||
+        System.get_env("MICELIO_GITLAB_OAUTH_SCOPE_DEV") ||
+          System.get_env("GITLAB_OAUTH_SCOPE_DEV") ||
+          System.get_env("MICELIO_GITLAB_OAUTH_SCOPE") ||
           System.get_env("GITLAB_OAUTH_SCOPE")
       else
-        System.get_env("GITLAB_OAUTH_SCOPE")
+        System.get_env("MICELIO_GITLAB_OAUTH_SCOPE") ||
+          System.get_env("GITLAB_OAUTH_SCOPE")
       end
   ]
   |> Enum.reject(fn {_key, value} -> is_nil(value) or value == "" end)
@@ -696,7 +717,8 @@ if config_env() == :prod do
       else: []
 
   otel_protocol =
-    case System.get_env("OTEL_EXPORTER_OTLP_PROTOCOL", "grpc") do
+    case System.get_env("MICELIO_OTEL_EXPORTER_OTLP_PROTOCOL") ||
+           System.get_env("OTEL_EXPORTER_OTLP_PROTOCOL") || "grpc" do
       "grpc" -> :grpc
       "http_protobuf" -> :http_protobuf
       protocol -> raise "unsupported OTEL_EXPORTER_OTLP_PROTOCOL=#{inspect(protocol)}"
@@ -724,18 +746,24 @@ if config_env() == :prod do
       """
 
   host = System.get_env("MICELIO_HOST") || System.get_env("PHX_HOST") || "example.com"
-  otel_service_name = System.get_env("OTEL_SERVICE_NAME", "micelio-web")
-  otel_deployment_environment = System.get_env("OTEL_DEPLOYMENT_ENVIRONMENT", "production")
+
+  otel_service_name =
+    System.get_env("MICELIO_OTEL_SERVICE_NAME") || System.get_env("OTEL_SERVICE_NAME") ||
+      "micelio-web"
+
+  otel_deployment_environment =
+    System.get_env("MICELIO_OTEL_DEPLOYMENT_ENVIRONMENT") ||
+      System.get_env("OTEL_DEPLOYMENT_ENVIRONMENT") || "production"
 
   # Configure SMTP mailer
-  smtp_host = System.get_env("SMTP_HOST")
-  smtp_username = System.get_env("SMTP_USERNAME")
-  smtp_password = System.get_env("SMTP_PASSWORD")
+  smtp_host = System.get_env("MICELIO_SMTP_HOST") || System.get_env("SMTP_HOST")
+  smtp_username = System.get_env("MICELIO_SMTP_USERNAME") || System.get_env("SMTP_USERNAME")
+  smtp_password = System.get_env("MICELIO_SMTP_PASSWORD") || System.get_env("SMTP_PASSWORD")
 
   required_smtp_vars = [
-    {"SMTP_HOST", smtp_host},
-    {"SMTP_USERNAME", smtp_username},
-    {"SMTP_PASSWORD", smtp_password}
+    {"MICELIO_SMTP_HOST", smtp_host},
+    {"MICELIO_SMTP_USERNAME", smtp_username},
+    {"MICELIO_SMTP_PASSWORD", smtp_password}
   ]
 
   missing_smtp_vars =
@@ -785,7 +813,9 @@ if config_env() == :prod do
 
   config :opentelemetry_exporter,
     otlp_protocol: otel_protocol,
-    otlp_endpoint: System.get_env("OTEL_EXPORTER_OTLP_ENDPOINT", "http://micelio-alloy:4317")
+    otlp_endpoint:
+      System.get_env("MICELIO_OTEL_EXPORTER_OTLP_ENDPOINT") ||
+        System.get_env("OTEL_EXPORTER_OTLP_ENDPOINT") || "http://micelio-alloy:4317"
 
   if Enum.any?(missing_smtp_vars) do
     raise """
@@ -813,15 +843,21 @@ if config_env() == :prod do
     """
   end
 
-  smtp_port = System.get_env("SMTP_PORT") || "587"
-  smtp_from_email = System.get_env("SMTP_FROM_EMAIL") || "noreply@micelio.dev"
-  smtp_from_name = System.get_env("SMTP_FROM_NAME") || "Micelio"
+  smtp_port = System.get_env("MICELIO_SMTP_PORT") || System.get_env("SMTP_PORT") || "587"
+
+  smtp_from_email =
+    System.get_env("MICELIO_SMTP_FROM_EMAIL") || System.get_env("SMTP_FROM_EMAIL") ||
+      "noreply@micelio.dev"
+
+  smtp_from_name =
+    System.get_env("MICELIO_SMTP_FROM_NAME") || System.get_env("SMTP_FROM_NAME") || "Micelio"
 
   # Parse SSL/TLS settings from environment variables
-  smtp_ssl = System.get_env("SMTP_SSL", "false") == "true"
+  smtp_ssl =
+    (System.get_env("MICELIO_SMTP_SSL") || System.get_env("SMTP_SSL") || "false") == "true"
 
   smtp_tls =
-    case System.get_env("SMTP_TLS", "if_available") do
+    case System.get_env("MICELIO_SMTP_TLS") || System.get_env("SMTP_TLS") || "if_available" do
       "true" -> :always
       "always" -> :always
       "if_available" -> :if_available
@@ -832,8 +868,12 @@ if config_env() == :prod do
 
   # Configure TLS options for SMTP.
   # Default to peer verification and allow optional CA overrides.
-  smtp_tls_verify = System.get_env("SMTP_TLS_VERIFY", "true") != "false"
-  smtp_tls_ca_cert_path = System.get_env("SMTP_TLS_CA_CERTS_PATH")
+  smtp_tls_verify =
+    (System.get_env("MICELIO_SMTP_TLS_VERIFY") || System.get_env("SMTP_TLS_VERIFY") || "true") !=
+      "false"
+
+  smtp_tls_ca_cert_path =
+    System.get_env("MICELIO_SMTP_TLS_CA_CERTS_PATH") || System.get_env("SMTP_TLS_CA_CERTS_PATH")
 
   smtp_default_cacerts =
     case :public_key.cacerts_get() do
@@ -842,7 +882,10 @@ if config_env() == :prod do
     end
 
   smtp_system_ca_path = "/etc/ssl/certs/ca-certificates.crt"
-  smtp_tls_server_name = System.get_env("SMTP_TLS_SERVER_NAME") || smtp_host
+
+  smtp_tls_server_name =
+    System.get_env("MICELIO_SMTP_TLS_SERVER_NAME") || System.get_env("SMTP_TLS_SERVER_NAME") ||
+      smtp_host
 
   smtp_tls_options =
     cond do

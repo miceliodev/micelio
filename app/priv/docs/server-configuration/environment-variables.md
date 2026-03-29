@@ -80,6 +80,8 @@ Specific endpoints can have their own limits via domain overrides (e.g. the Open
 
 ## gRPC
 
+The `hif` CLI communicates with Micelio via gRPC for operations like authentication, repository management, session handling, and content access. The gRPC server is optional and disabled by default.
+
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
 | `MICELIO_GRPC_ENABLED` | No | `false` | Enable the gRPC server |
@@ -88,8 +90,8 @@ Specific endpoints can have their own limits via domain overrides (e.g. the Open
 | `MICELIO_GRPC_TLS_CERTFILE` | No | — | Path to TLS certificate file |
 | `MICELIO_GRPC_TLS_KEYFILE` | No | — | Path to TLS private key file |
 | `MICELIO_GRPC_TLS_CACERTFILE` | No | — | Path to CA certificate file |
-| `TLS_CERT_PEM` | No | — | Inline TLS certificate PEM (alternative to file path) |
-| `TLS_KEY_PEM` | No | — | Inline TLS private key PEM (alternative to file path) |
+| `MICELIO_TLS_CERT_PEM` | No | — | Inline TLS certificate PEM (alternative to file path) |
+| `MICELIO_TLS_KEY_PEM` | No | — | Inline TLS private key PEM (alternative to file path) |
 | `MICELIO_WORKSPACE_PATH` | No | — | Path to local workspace directory |
 
 ## OAuth Providers
@@ -98,46 +100,46 @@ Specific endpoints can have their own limits via domain overrides (e.g. the Open
 
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
-| `GITHUB_OAUTH_CLIENT_ID` | No | — | GitHub OAuth app client ID |
-| `GITHUB_OAUTH_CLIENT_SECRET` | No | — | GitHub OAuth app client secret |
-| `GITHUB_OAUTH_REDIRECT_URI` | No | — | OAuth callback URL |
+| `MICELIO_GITHUB_OAUTH_CLIENT_ID` | No | — | GitHub OAuth app client ID |
+| `MICELIO_GITHUB_OAUTH_CLIENT_SECRET` | No | — | GitHub OAuth app client secret |
+| `MICELIO_GITHUB_OAUTH_REDIRECT_URI` | No | — | OAuth callback URL |
 
 ### GitLab
 
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
-| `GITLAB_OAUTH_CLIENT_ID` | No | — | GitLab OAuth app client ID |
-| `GITLAB_OAUTH_CLIENT_SECRET` | No | — | GitLab OAuth app client secret |
-| `GITLAB_OAUTH_REDIRECT_URI` | No | — | OAuth callback URL |
-| `GITLAB_OAUTH_SCOPE` | No | — | Requested OAuth scopes |
+| `MICELIO_GITLAB_OAUTH_CLIENT_ID` | No | — | GitLab OAuth app client ID |
+| `MICELIO_GITLAB_OAUTH_CLIENT_SECRET` | No | — | GitLab OAuth app client secret |
+| `MICELIO_GITLAB_OAUTH_REDIRECT_URI` | No | — | OAuth callback URL |
+| `MICELIO_GITLAB_OAUTH_SCOPE` | No | — | Requested OAuth scopes |
 
 > [!NOTE]
-> In development, `_DEV` suffixed variants (e.g. `GITHUB_OAUTH_CLIENT_ID_DEV`) take priority over the base variable name.
+> In development, `_DEV` suffixed variants (e.g. `MICELIO_GITHUB_OAUTH_CLIENT_ID_DEV`) take priority over the base variable name.
 
 ## Email (SMTP)
 
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
-| `SMTP_HOST` | Yes (prod) | — | SMTP server hostname |
-| `SMTP_USERNAME` | Yes (prod) | — | SMTP username |
-| `SMTP_PASSWORD` | Yes (prod) | — | SMTP password |
-| `SMTP_PORT` | No | `587` | SMTP port |
-| `SMTP_SSL` | No | `false` | Enable SSL for SMTP |
-| `SMTP_TLS` | No | `if_available` | TLS mode: `true`/`always`, `if_available`, `false`/`never` |
-| `SMTP_FROM_EMAIL` | No | `noreply@micelio.dev` | Sender email address |
-| `SMTP_FROM_NAME` | No | `Micelio` | Sender display name |
-| `SMTP_TLS_VERIFY` | No | `true` | Enable TLS certificate verification |
-| `SMTP_TLS_CA_CERTS_PATH` | No | system | Path to CA certificates file |
-| `SMTP_TLS_SERVER_NAME` | No | `SMTP_HOST` | TLS server name for SNI |
+| `MICELIO_SMTP_HOST` | Yes (prod) | — | SMTP server hostname |
+| `MICELIO_SMTP_USERNAME` | Yes (prod) | — | SMTP username |
+| `MICELIO_SMTP_PASSWORD` | Yes (prod) | — | SMTP password |
+| `MICELIO_SMTP_PORT` | No | `587` | SMTP port |
+| `MICELIO_SMTP_SSL` | No | `false` | Enable SSL for SMTP |
+| `MICELIO_SMTP_TLS` | No | `if_available` | TLS mode: `true`/`always`, `if_available`, `false`/`never` |
+| `MICELIO_SMTP_FROM_EMAIL` | No | `noreply@micelio.dev` | Sender email address |
+| `MICELIO_SMTP_FROM_NAME` | No | `Micelio` | Sender display name |
+| `MICELIO_SMTP_TLS_VERIFY` | No | `true` | Enable TLS certificate verification |
+| `MICELIO_SMTP_TLS_CA_CERTS_PATH` | No | system | Path to CA certificates file |
+| `MICELIO_SMTP_TLS_SERVER_NAME` | No | `MICELIO_SMTP_HOST` | TLS server name for SNI |
 
 ## Observability
 
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
-| `OTEL_EXPORTER_OTLP_ENDPOINT` | No | `http://micelio-alloy:4317` | OpenTelemetry collector endpoint |
-| `OTEL_EXPORTER_OTLP_PROTOCOL` | No | `grpc` | Protocol: `grpc` or `http_protobuf` |
-| `OTEL_SERVICE_NAME` | No | `micelio-web` | Service name in traces |
-| `OTEL_DEPLOYMENT_ENVIRONMENT` | No | `production` | Deployment environment label |
+| `MICELIO_OTEL_EXPORTER_OTLP_ENDPOINT` | No | `http://micelio-alloy:4317` | OpenTelemetry collector endpoint |
+| `MICELIO_OTEL_EXPORTER_OTLP_PROTOCOL` | No | `grpc` | Protocol: `grpc` or `http_protobuf` |
+| `MICELIO_OTEL_SERVICE_NAME` | No | `micelio-web` | Service name in traces |
+| `MICELIO_OTEL_DEPLOYMENT_ENVIRONMENT` | No | `production` | Deployment environment label |
 | `MICELIO_METRICS_BEARER_TOKEN` | Yes (prod) | — | Bearer token for the metrics endpoint |
 
 ## Error Tracking
