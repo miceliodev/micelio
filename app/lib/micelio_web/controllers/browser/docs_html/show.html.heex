@@ -8,7 +8,7 @@
   <div class="docs-container docs-show">
     <aside class="docs-sidebar">
       <h4 class="docs-sidebar-title">{@category_info.title}</h4>
-      <nav class="docs-sidebar-nav">
+      <nav class="docs-sidebar-nav" aria-label={gettext("Category pages")}>
         <%= for page <- @pages do %>
           <a
             href={~p"/docs/#{@category}/#{page.id}"}
@@ -19,7 +19,7 @@
         <% end %>
       </nav>
       <%= if @toc != [] do %>
-        <nav class="docs-sidebar-toc" id="docs-toc">
+        <nav class="docs-sidebar-toc" id="docs-toc" aria-label={gettext("On this page")}>
           <h4 class="docs-sidebar-toc-title">{gettext("On this page")}</h4>
           <%= for entry <- @toc do %>
             <a
