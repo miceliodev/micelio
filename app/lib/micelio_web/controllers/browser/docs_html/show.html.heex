@@ -19,7 +19,7 @@
         <% end %>
       </nav>
       <%= if @toc != [] do %>
-        <nav class="docs-sidebar-toc">
+        <nav class="docs-sidebar-toc" id="docs-toc">
           <h4 class="docs-sidebar-toc-title">{gettext("On this page")}</h4>
           <%= for entry <- @toc do %>
             <a
@@ -30,6 +30,36 @@
             </a>
           <% end %>
         </nav>
+        <script>
+          (function() {
+            var nav = document.getElementById("docs-toc");
+            if (!nav) return;
+            var links = nav.querySelectorAll("a[href^='#']");
+            var headings = Array.from(links)
+              .map(function(a) { return document.getElementById(a.getAttribute("href").slice(1)); })
+              .filter(Boolean);
+            if (headings.length === 0) return;
+
+            function update() {
+              var scrollY = window.scrollY + 100;
+              var current = null;
+              for (var i = headings.length - 1; i >= 0; i--) {
+                if (headings[i].offsetTop <= scrollY) {
+                  current = headings[i];
+                  break;
+                }
+              }
+              links.forEach(function(a) { a.classList.remove("docs-sidebar-toc-link-active"); });
+              if (current) {
+                var active = nav.querySelector('a[href="#' + current.id + '"]');
+                if (active) active.classList.add("docs-sidebar-toc-link-active");
+              }
+            }
+
+            window.addEventListener("scroll", update, { passive: true });
+            update();
+          })();
+        </script>
       <% end %>
       <div class="docs-sidebar-back">
         <a href={~p"/docs"}>{gettext("All documentation")}</a>

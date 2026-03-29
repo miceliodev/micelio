@@ -248,6 +248,11 @@
   text-decoration: none;
 }
 
+.docs-sidebar-toc-link-active {
+  color: var(--theme-ui-colors-primary);
+  font-weight: var(--theme-ui-font-weights-semibold);
+}
+
 .docs-sidebar-toc-link-nested {
   padding-left: var(--theme-ui-space-2);
   font-size: var(--theme-ui-font-size-xs);
