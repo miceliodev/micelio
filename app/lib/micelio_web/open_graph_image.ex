@@ -6,7 +6,7 @@ defmodule MicelioWeb.OpenGraphImage do
   and store the resulting artifact under that hash. The first request to the image
   endpoint generates and persists it.
 
-  When `MICELIO_OG_ENABLED=true`, images are rendered using Carta (HTML to JPEG via
+  When `MICELIO_OPEN_GRAPH_ENABLED=true`, images are rendered using Carta (HTML to JPEG via
   a headless Chromium pool). When disabled, OG image URLs are not generated.
   """
 

@@ -27,7 +27,7 @@ defmodule MicelioWeb.Plugs.OGRateLimitPlug do
     default_limit = Keyword.get(rate_limits, :default, 200)
     window_ms = Keyword.get(rate_limits, :window_ms, 60_000)
     overrides = Keyword.get(rate_limits, :overrides, %{})
-    limit = Map.get(overrides, "og", default_limit)
+    limit = Map.get(overrides, "open_graph", default_limit)
 
     ip = get_client_ip(conn)
     key = "rate:og:ip:#{ip}"

@@ -56,13 +56,15 @@ When `MICELIO_STORAGE_BACKEND=tiered`, Micelio uses a multi-tier cache: RAM, SSD
 
 ## Open Graph Images
 
-Browser-based OG image generation using Carta and headless Chromium.
+When links to Micelio are shared on platforms like Slack, Discord, or X, those platforms unfurl the link and show a preview card. Micelio generates rich Open Graph images for every page using [Carta](https://github.com/pepicrft/carta), which renders HTML templates into JPEG images via a pool of headless Chromium instances.
+
+Images are lazily generated on first request and cached in storage (local filesystem or S3). We recommend enabling this feature to make shared links more visually informative.
 
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
-| `MICELIO_OG_ENABLED` | No | `true` (dev), `false` (prod) | Enable OG image generation |
-| `MICELIO_OG_POOL_SIZE` | No | `1` (dev), `2` (prod) | Number of Chromium instances in the browser pool |
-| `MICELIO_OG_CHROME_PATH` | No | auto-detect | Path to Chromium binary |
+| `MICELIO_OPEN_GRAPH_ENABLED` | No | `true` (dev), `false` (prod) | Enable Open Graph image generation |
+| `MICELIO_OPEN_GRAPH_POOL_SIZE` | No | `1` (dev), `2` (prod) | Number of Chromium instances in the browser pool |
+| `MICELIO_OPEN_GRAPH_CHROME_PATH` | No | auto-detect | Path to Chromium binary |
 
 ## Rate Limiting
 
@@ -72,22 +74,22 @@ Global rate limiting with per-domain overrides.
 |----------|----------|---------|-------------|
 | `MICELIO_RATE_LIMIT_DEFAULT` | No | `200` | Default requests per window per IP |
 | `MICELIO_RATE_LIMIT_WINDOW_MS` | No | `60000` | Rate limit window in milliseconds |
-| `MICELIO_RATE_LIMIT_OG` | No | `30` | Rate limit override for the `/og` endpoint |
+| `MICELIO_RATE_LIMIT_OPEN_GRAPH` | No | `30` | Rate limit override for the `/og` endpoint |
 
-## OG Cache Busters
+## Open Graph Cache Busters
 
 Per-platform cache busters appended to OG image URLs. Useful for forcing social platforms to refetch images after changes.
 
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
-| `MICELIO_OG_CACHE_BUSTER_DEFAULT` | No | — | Default cache buster string |
-| `MICELIO_OG_CACHE_BUSTER_TWITTER` | No | — | Cache buster for Twitter/X |
-| `MICELIO_OG_CACHE_BUSTER_LINKEDIN` | No | — | Cache buster for LinkedIn |
-| `MICELIO_OG_CACHE_BUSTER_FACEBOOK` | No | — | Cache buster for Facebook |
-| `MICELIO_OG_CACHE_BUSTER_SLACK` | No | — | Cache buster for Slack |
-| `MICELIO_OG_CACHE_BUSTER_DISCORD` | No | — | Cache buster for Discord |
-| `MICELIO_OG_CACHE_BUSTER_TELEGRAM` | No | — | Cache buster for Telegram |
-| `MICELIO_OG_CACHE_BUSTER_PINTEREST` | No | — | Cache buster for Pinterest |
+| `MICELIO_OPEN_GRAPH_CACHE_BUSTER_DEFAULT` | No | — | Default cache buster string |
+| `MICELIO_OPEN_GRAPH_CACHE_BUSTER_TWITTER` | No | — | Cache buster for Twitter/X |
+| `MICELIO_OPEN_GRAPH_CACHE_BUSTER_LINKEDIN` | No | — | Cache buster for LinkedIn |
+| `MICELIO_OPEN_GRAPH_CACHE_BUSTER_FACEBOOK` | No | — | Cache buster for Facebook |
+| `MICELIO_OPEN_GRAPH_CACHE_BUSTER_SLACK` | No | — | Cache buster for Slack |
+| `MICELIO_OPEN_GRAPH_CACHE_BUSTER_DISCORD` | No | — | Cache buster for Discord |
+| `MICELIO_OPEN_GRAPH_CACHE_BUSTER_TELEGRAM` | No | — | Cache buster for Telegram |
+| `MICELIO_OPEN_GRAPH_CACHE_BUSTER_PINTEREST` | No | — | Cache buster for Pinterest |
 
 ## gRPC
 

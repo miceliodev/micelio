@@ -518,14 +518,14 @@ end
 
 og_cache_busters =
   [
-    {"default", "MICELIO_OG_CACHE_BUSTER_DEFAULT", "OG_CACHE_BUSTER_DEFAULT"},
-    {"twitter", "MICELIO_OG_CACHE_BUSTER_TWITTER", "OG_CACHE_BUSTER_TWITTER"},
-    {"linkedin", "MICELIO_OG_CACHE_BUSTER_LINKEDIN", "OG_CACHE_BUSTER_LINKEDIN"},
-    {"facebook", "MICELIO_OG_CACHE_BUSTER_FACEBOOK", "OG_CACHE_BUSTER_FACEBOOK"},
-    {"slack", "MICELIO_OG_CACHE_BUSTER_SLACK", "OG_CACHE_BUSTER_SLACK"},
-    {"discord", "MICELIO_OG_CACHE_BUSTER_DISCORD", "OG_CACHE_BUSTER_DISCORD"},
-    {"telegram", "MICELIO_OG_CACHE_BUSTER_TELEGRAM", "OG_CACHE_BUSTER_TELEGRAM"},
-    {"pinterest", "MICELIO_OG_CACHE_BUSTER_PINTEREST", "OG_CACHE_BUSTER_PINTEREST"}
+    {"default", "MICELIO_OPEN_GRAPH_CACHE_BUSTER_DEFAULT", "OG_CACHE_BUSTER_DEFAULT"},
+    {"twitter", "MICELIO_OPEN_GRAPH_CACHE_BUSTER_TWITTER", "OG_CACHE_BUSTER_TWITTER"},
+    {"linkedin", "MICELIO_OPEN_GRAPH_CACHE_BUSTER_LINKEDIN", "OG_CACHE_BUSTER_LINKEDIN"},
+    {"facebook", "MICELIO_OPEN_GRAPH_CACHE_BUSTER_FACEBOOK", "OG_CACHE_BUSTER_FACEBOOK"},
+    {"slack", "MICELIO_OPEN_GRAPH_CACHE_BUSTER_SLACK", "OG_CACHE_BUSTER_SLACK"},
+    {"discord", "MICELIO_OPEN_GRAPH_CACHE_BUSTER_DISCORD", "OG_CACHE_BUSTER_DISCORD"},
+    {"telegram", "MICELIO_OPEN_GRAPH_CACHE_BUSTER_TELEGRAM", "OG_CACHE_BUSTER_TELEGRAM"},
+    {"pinterest", "MICELIO_OPEN_GRAPH_CACHE_BUSTER_PINTEREST", "OG_CACHE_BUSTER_PINTEREST"}
   ]
   |> Enum.reduce(%{}, fn {key, env, old_env}, acc ->
     case System.get_env(env) || System.get_env(old_env) do
@@ -543,20 +543,20 @@ if og_cache_busters != %{} do
 end
 
 # Open Graph image generation via Carta (opt-in in prod, enabled by default in dev)
-# Set MICELIO_OG_ENABLED=true/false to override. Requires Chromium on the system.
+# Set MICELIO_OPEN_GRAPH_ENABLED=true/false to override. Requires Chromium on the system.
 og_enabled =
-  case System.get_env("MICELIO_OG_ENABLED") do
+  case System.get_env("MICELIO_OPEN_GRAPH_ENABLED") do
     nil -> config_env() == :dev
     value -> value == "true"
   end
 
 og_pool_size =
-  case System.get_env("MICELIO_OG_POOL_SIZE") do
+  case System.get_env("MICELIO_OPEN_GRAPH_POOL_SIZE") do
     nil -> if(config_env() == :dev, do: 1, else: 2)
     value -> String.to_integer(value)
   end
 
-og_chrome_path = System.get_env("MICELIO_OG_CHROME_PATH")
+og_chrome_path = System.get_env("MICELIO_OPEN_GRAPH_CHROME_PATH")
 
 og_config =
   [enabled: og_enabled, pool_size: og_pool_size]
@@ -567,7 +567,7 @@ og_config =
 # Global rate limiting with per-domain overrides
 # MICELIO_RATE_LIMIT_DEFAULT: requests per window (default: 200)
 # MICELIO_RATE_LIMIT_WINDOW_MS: window duration in ms (default: 60000)
-# MICELIO_RATE_LIMIT_OG: override for OG image endpoint (default: 30)
+# MICELIO_RATE_LIMIT_OPEN_GRAPH: override for OG image endpoint (default: 30)
 rate_limit_default =
   case System.get_env("MICELIO_RATE_LIMIT_DEFAULT") do
     nil -> 200
@@ -581,7 +581,7 @@ rate_limit_window_ms =
   end
 
 rate_limit_overrides =
-  [{"og", "MICELIO_RATE_LIMIT_OG", 30}]
+  [{"open_graph", "MICELIO_RATE_LIMIT_OPEN_GRAPH", 30}]
   |> Enum.reduce(%{}, fn {domain, env_var, default}, acc ->
     value =
       case System.get_env(env_var) do
