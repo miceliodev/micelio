@@ -36,6 +36,12 @@ defmodule Micelio.Docs do
       description:
         gettext_noop("OAuth2 authentication, token scopes, and authorization for both APIs."),
       kind: :reference
+    },
+    "server-configuration" => %{
+      title: gettext_noop("Server Configuration"),
+      description:
+        gettext_noop("Environment variables and configuration options for hosting Micelio."),
+      kind: :reference
     }
   }
 
