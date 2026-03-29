@@ -297,8 +297,6 @@
   margin: var(--theme-ui-space-2) 0 var(--theme-ui-space-3);
   border: 1px solid var(--theme-ui-colors-border);
   border-radius: var(--theme-ui-radii-default);
-  overflow-x: auto;
-  display: block;
 }
 
 .docs-content th,
