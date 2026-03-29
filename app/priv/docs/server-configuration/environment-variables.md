@@ -185,12 +185,3 @@ Optionally, errors can also be forwarded to [Sentry](https://sentry.io/) by sett
 | `MICELIO_ERROR_RATE_LIMIT_TOTAL_PER_MINUTE` | No | `1000` | Max total errors per minute |
 | `MICELIO_ERROR_SAMPLING_AFTER_OCCURRENCES` | No | `100` | Start sampling after this many occurrences |
 | `MICELIO_ERROR_SAMPLING_RATE` | No | `0.1` | Sampling rate (0.0 to 1.0) after threshold |
-
-## Analytics
-
-| Variable | Required | Default | Description |
-|----------|----------|---------|-------------|
-| `MICELIO_CLICKHOUSE_URL` | No | — | ClickHouse server URL |
-| `MICELIO_CLICKHOUSE_USER` | No | — | ClickHouse username |
-| `MICELIO_CLICKHOUSE_PASSWORD` | No | — | ClickHouse password |
-| `MICELIO_CLICKHOUSE_DATABASE` | No | `micelio` | ClickHouse database name |
