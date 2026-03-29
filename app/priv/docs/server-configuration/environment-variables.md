@@ -138,18 +138,27 @@ The `hif` CLI communicates with Micelio via gRPC for operations like authenticat
 
 Micelio emits traces via [OpenTelemetry](https://opentelemetry.io/) and exposes a [Prometheus](https://prometheus.io/)-compatible metrics endpoint. The recommended observability stack is [Grafana Alloy](https://grafana.com/oss/alloy/) (collector), [Tempo](https://grafana.com/oss/tempo/) (traces), [Loki](https://grafana.com/oss/loki/) (logs), and Prometheus (metrics), though any OTLP-compatible backend works.
 
-Alloy acts as the collector that receives OTLP data from Micelio and forwards traces to Tempo, logs to Loki, and metrics to Prometheus. The metrics endpoint at `/metrics` is protected by a bearer token.
+Alloy acts as the collector that receives OTLP data from Micelio and forwards traces to Tempo and metrics to Prometheus. The metrics endpoint at `/metrics` is protected by a bearer token.
 
-For Loki integration, set `MICELIO_LOG_FORMAT=json` to output structured JSON logs. In production this is the default. Alloy or Promtail can then scrape container logs and forward them to Loki with full structured metadata (request IDs, trace IDs, log levels).
+For logs, Micelio pushes directly to [Loki](https://grafana.com/oss/loki/) via its HTTP API. No log scraping or Alloy configuration needed for logs. Set `MICELIO_LOKI_HOST` to enable. Logs are batched, compressed, and pushed asynchronously with request IDs, trace IDs, and module metadata attached.
+
+### Traces and Metrics
 
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
-| `MICELIO_LOG_FORMAT` | No | `json` (prod), `text` (dev) | Log output format: `json` for structured logging (Loki), `text` for human-readable |
 | `MICELIO_OTEL_EXPORTER_OTLP_ENDPOINT` | No | `http://micelio-alloy:4317` | OTLP collector endpoint (e.g. Grafana Alloy) |
 | `MICELIO_OTEL_EXPORTER_OTLP_PROTOCOL` | No | `grpc` | Export protocol: `grpc` or `http_protobuf` |
 | `MICELIO_OTEL_SERVICE_NAME` | No | `micelio-web` | Service name attached to traces and metrics |
 | `MICELIO_OTEL_DEPLOYMENT_ENVIRONMENT` | No | `production` | Deployment environment label in traces |
 | `MICELIO_METRICS_BEARER_TOKEN` | Yes (prod) | — | Bearer token protecting the `/metrics` endpoint |
+
+### Logs (Loki)
+
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `MICELIO_LOKI_HOST` | No | — | Loki HTTP endpoint (e.g. `http://micelio-loki:3100`). Enables push-based log shipping when set |
+| `MICELIO_LOKI_LABELS` | No | `app=micelio,environment=prod` | Comma-separated `key=value` labels attached to log streams |
+| `MICELIO_LOKI_BATCH_SIZE` | No | `100` | Log entries buffered before pushing to Loki |
 
 ## Error Tracking
 

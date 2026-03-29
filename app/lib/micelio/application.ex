@@ -11,6 +11,7 @@ defmodule Micelio.Application do
   def start(_type, _args) do
     Micelio.OTel.setup()
     maybe_add_logger_backend()
+    maybe_attach_loki_handler()
     ensure_ets_tables()
 
     children =
@@ -140,6 +141,16 @@ defmodule Micelio.Application do
 
       {:error, _reason} ->
         false
+    end
+  end
+
+  defp maybe_attach_loki_handler do
+    case Application.get_env(:micelio, :loki) do
+      config when is_list(config) and config != [] ->
+        LokiLoggerHandler.attach(:micelio_loki, config)
+
+      _ ->
+        :ok
     end
   end
 

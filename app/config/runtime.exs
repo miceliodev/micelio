@@ -14,17 +14,47 @@ if (System.get_env("MICELIO_SERVER") || System.get_env("PHX_SERVER")) == "true" 
   config :micelio, MicelioWeb.Endpoint, server: true
 end
 
-# Log format: "text" (default in dev) or "json" (default in prod, for Loki/structured logging)
-log_format =
-  case System.get_env("MICELIO_LOG_FORMAT") do
-    "json" -> :json
-    "text" -> :text
-    nil -> if(config_env() == :prod, do: :json, else: :text)
-    _ -> :text
-  end
+# Loki log shipping (push-based). Set MICELIO_LOKI_HOST to enable.
+loki_host = System.get_env("MICELIO_LOKI_HOST")
 
-if log_format == :json do
-  config :logger, :default_handler, formatter: {LoggerJSON.Formatters.GoogleCloud, metadata: :all}
+if is_binary(loki_host) and loki_host != "" do
+  loki_labels =
+    case System.get_env("MICELIO_LOKI_LABELS") do
+      nil ->
+        %{
+          app: {:static, "micelio"},
+          environment: {:static, to_string(config_env())},
+          level: :level
+        }
+
+      value ->
+        value
+        |> String.split(",", trim: true)
+        |> Enum.reduce(%{level: :level}, fn pair, acc ->
+          case String.split(pair, "=", parts: 2) do
+            [key, val] ->
+              Map.put(acc, String.to_atom(String.trim(key)), {:static, String.trim(val)})
+
+            _ ->
+              acc
+          end
+        end)
+    end
+
+  loki_batch_size =
+    case System.get_env("MICELIO_LOKI_BATCH_SIZE") do
+      nil -> 100
+      value -> String.to_integer(value)
+    end
+
+  loki_config = [
+    loki_url: loki_host,
+    labels: loki_labels,
+    batch_size: loki_batch_size,
+    storage: :memory
+  ]
+
+  config :micelio, :loki, loki_config
 end
 
 external_sentry_enabled =
