@@ -350,8 +350,13 @@ grpc_tls_mode =
 {grpc_tls_certfile, grpc_tls_keyfile} =
   case {grpc_tls_certfile, grpc_tls_keyfile} do
     {nil, nil} ->
-      cert_pem = System.get_env("MICELIO_TLS_CERT_PEM") || System.get_env("TLS_CERT_PEM")
-      key_pem = System.get_env("MICELIO_TLS_KEY_PEM") || System.get_env("TLS_KEY_PEM")
+      cert_pem =
+        System.get_env("MICELIO_GRPC_TLS_CERT_PEM") || System.get_env("MICELIO_TLS_CERT_PEM") ||
+          System.get_env("TLS_CERT_PEM")
+
+      key_pem =
+        System.get_env("MICELIO_GRPC_TLS_KEY_PEM") || System.get_env("MICELIO_TLS_KEY_PEM") ||
+          System.get_env("TLS_KEY_PEM")
 
       if grpc_tls_mode != :proxy and is_binary(cert_pem) and is_binary(key_pem) do
         tls_dir = Path.join([System.tmp_dir!(), "micelio", "grpc-tls"])

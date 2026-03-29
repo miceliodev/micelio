@@ -93,14 +93,8 @@ The `hif` CLI communicates with Micelio via gRPC for operations like authenticat
 | `MICELIO_GRPC_TLS_CERTFILE` | No | — | Path to TLS certificate file |
 | `MICELIO_GRPC_TLS_KEYFILE` | No | — | Path to TLS private key file |
 | `MICELIO_GRPC_TLS_CACERTFILE` | No | — | Path to CA certificate file |
-| `MICELIO_TLS_CERT_PEM` | No | — | Inline TLS certificate PEM content, used when cert files cannot be mounted (e.g. Kamal secrets) |
-| `MICELIO_TLS_KEY_PEM` | No | — | Inline TLS private key PEM content, used when key files cannot be mounted |
-
-## Workspaces
-
-| Variable | Required | Default | Description |
-|----------|----------|---------|-------------|
-| `MICELIO_WORKSPACE_PATH` | No | — | Path to local workspace directory for `hif checkout` |
+| `MICELIO_GRPC_TLS_CERT_PEM` | No | — | Inline TLS certificate PEM content, used when cert files cannot be mounted (e.g. Kamal secrets) |
+| `MICELIO_GRPC_TLS_KEY_PEM` | No | — | Inline TLS private key PEM content, used when key files cannot be mounted |
 
 ## OAuth Providers
 
