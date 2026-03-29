@@ -165,6 +165,8 @@ Micelio pushes logs directly to Loki via its HTTP API. Set `MICELIO_LOKI_HOST` t
 
 ## Error Tracking
 
+Micelio has a built-in error tracking system that captures exceptions, agent crashes, and LiveView errors into PostgreSQL. Errors are deduplicated by fingerprint within a configurable time window so repeated failures don't flood the database. The admin dashboard at `/admin/errors` lets you browse, filter, resolve, and get notified about errors via email, Slack, or webhooks. Retention policies automatically clean up old errors, with optional archiving to S3 before deletion.
+
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
 | `MICELIO_ENABLE_EXTERNAL_SENTRY` | No | `false` | Forward errors to external Sentry |
