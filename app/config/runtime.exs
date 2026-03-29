@@ -197,7 +197,7 @@ local_path_default =
     end
 
 cache_path_default =
-  System.get_env("MICELIO_STORAGE_CACHE_PATH") ||
+  System.get_env("MICELIO_STORAGE_DISK_PATH") ||
     System.get_env("STORAGE_CACHE_PATH") ||
     case config_env() do
       :prod -> "/var/micelio/cache"
@@ -218,21 +218,21 @@ origin_backend =
   end
 
 cache_memory_max_bytes =
-  case System.get_env("MICELIO_STORAGE_CACHE_MEMORY_MAX_BYTES") ||
+  case System.get_env("MICELIO_STORAGE_MEMORY_MAX_BYTES") ||
          System.get_env("STORAGE_CACHE_MEMORY_MAX_BYTES") do
     nil -> nil
     value -> String.to_integer(value)
   end
 
 cache_timeout_ms =
-  case System.get_env("MICELIO_STORAGE_CDN_TIMEOUT_MS") ||
+  case System.get_env("MICELIO_STORAGE_CDN_TIMEOUT") ||
          System.get_env("STORAGE_CDN_TIMEOUT_MS") do
     nil -> nil
     value -> String.to_integer(value)
   end
 
 cdn_base_url =
-  System.get_env("MICELIO_STORAGE_CDN_BASE_URL") || System.get_env("STORAGE_CDN_BASE_URL")
+  System.get_env("MICELIO_STORAGE_CDN_URL") || System.get_env("STORAGE_CDN_BASE_URL")
 
 maybe_put = fn config, key, value ->
   if is_nil(value), do: config, else: Keyword.put(config, key, value)

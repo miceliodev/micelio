@@ -49,10 +49,10 @@ When `MICELIO_STORAGE_BACKEND=tiered`, Micelio uses a multi-tier cache: RAM, SSD
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
 | `MICELIO_STORAGE_ORIGIN_BACKEND` | No | auto | Origin backend: `local` or `s3`. Defaults to `s3` if `MICELIO_S3_BUCKET` is set |
-| `MICELIO_STORAGE_CACHE_PATH` | No | `/var/micelio/cache` (prod) | Disk cache path |
-| `MICELIO_STORAGE_CACHE_MEMORY_MAX_BYTES` | No | — | Max bytes for in-memory cache |
-| `MICELIO_STORAGE_CDN_BASE_URL` | No | — | CDN base URL for cache invalidation |
-| `MICELIO_STORAGE_CDN_TIMEOUT_MS` | No | — | Timeout for CDN requests |
+| `MICELIO_STORAGE_DISK_PATH` | No | `/var/micelio/cache` (prod) | Disk cache path |
+| `MICELIO_STORAGE_MEMORY_MAX_BYTES` | No | — | Max bytes for in-memory cache |
+| `MICELIO_STORAGE_CDN_URL` | No | — | CDN base URL |
+| `MICELIO_STORAGE_CDN_TIMEOUT` | No | — | Timeout for CDN requests (ms) |
 
 ## Open Graph Images
 
