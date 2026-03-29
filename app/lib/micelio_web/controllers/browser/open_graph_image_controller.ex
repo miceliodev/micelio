@@ -29,6 +29,9 @@ defmodule MicelioWeb.Browser.OpenGraphImageController do
         {:error, :not_found} ->
           send_resp(conn, 404, "Not found")
 
+        {:error, :disabled} ->
+          send_resp(conn, 404, "Not found")
+
         {:error, _reason} ->
           send_resp(conn, 500, "Error")
       end

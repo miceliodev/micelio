@@ -84,6 +84,7 @@ defmodule MicelioWeb.Router do
 
   pipeline :og_image do
     plug(:put_secure_browser_headers)
+    plug(MicelioWeb.Plugs.OGRateLimitPlug)
   end
 
   # Enable LiveDashboard and Swoosh mailbox preview in development

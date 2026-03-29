@@ -507,6 +507,56 @@ if og_cache_busters != %{} do
   config :micelio, :open_graph_cache_busters, og_cache_busters
 end
 
+# Open Graph image generation via Carta (opt-in in prod, enabled by default in dev)
+# Set MICELIO_OG_ENABLED=true/false to override. Requires Chromium on the system.
+og_enabled =
+  case System.get_env("MICELIO_OG_ENABLED") do
+    nil -> config_env() == :dev
+    value -> value == "true"
+  end
+
+og_pool_size =
+  case System.get_env("MICELIO_OG_POOL_SIZE") do
+    nil -> if(config_env() == :dev, do: 1, else: 2)
+    value -> String.to_integer(value)
+  end
+
+og_chrome_path = System.get_env("MICELIO_OG_CHROME_PATH")
+
+og_config =
+  [enabled: og_enabled, pool_size: og_pool_size]
+  |> then(fn config ->
+    if og_chrome_path, do: Keyword.put(config, :chrome_path, og_chrome_path), else: config
+  end)
+
+# Global rate limiting with per-domain overrides
+# MICELIO_RATE_LIMIT_DEFAULT: requests per window (default: 200)
+# MICELIO_RATE_LIMIT_WINDOW_MS: window duration in ms (default: 60000)
+# MICELIO_RATE_LIMIT_OG: override for OG image endpoint (default: 30)
+rate_limit_default =
+  case System.get_env("MICELIO_RATE_LIMIT_DEFAULT") do
+    nil -> 200
+    value -> String.to_integer(value)
+  end
+
+rate_limit_window_ms =
+  case System.get_env("MICELIO_RATE_LIMIT_WINDOW_MS") do
+    nil -> 60_000
+    value -> String.to_integer(value)
+  end
+
+rate_limit_overrides =
+  [{"og", "MICELIO_RATE_LIMIT_OG", 30}]
+  |> Enum.reduce(%{}, fn {domain, env_var, default}, acc ->
+    value =
+      case System.get_env(env_var) do
+        nil -> default
+        v -> String.to_integer(v)
+      end
+
+    Map.put(acc, domain, value)
+  end)
+
 daytona_base_url = System.get_env("DAYTONA_API_BASE_URL") || "https://app.daytona.io/api"
 daytona_api_key = System.get_env("DAYTONA_API_KEY")
 daytona_organization_id = System.get_env("DAYTONA_ORGANIZATION_ID")
@@ -540,6 +590,13 @@ config :micelio, :clickhouse,
   user: System.get_env("CLICKHOUSE_USER"),
   password: System.get_env("CLICKHOUSE_PASSWORD"),
   database: System.get_env("CLICKHOUSE_DATABASE") || "micelio"
+
+config :micelio, :open_graph, og_config
+
+config :micelio, :rate_limits,
+  default: rate_limit_default,
+  window_ms: rate_limit_window_ms,
+  overrides: rate_limit_overrides
 
 if grpc_enabled do
   config :micelio, Micelio.GRPC,

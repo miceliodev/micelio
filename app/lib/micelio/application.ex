@@ -38,6 +38,7 @@ defmodule Micelio.Application do
         # Start to serve requests, typically the last entry
         MicelioWeb.Endpoint
       ]
+      |> maybe_add_browser_pool()
       |> maybe_add_grpc_server()
 
     # See https://hexdocs.pm/elixir/Supervisor.html
@@ -52,6 +53,27 @@ defmodule Micelio.Application do
   def config_change(changed, _new, removed) do
     MicelioWeb.Endpoint.config_change(changed, removed)
     :ok
+  end
+
+  defp maybe_add_browser_pool(children) do
+    og_config = Application.get_env(:micelio, :open_graph, [])
+
+    if Keyword.get(og_config, :enabled, false) do
+      pool_size = Keyword.get(og_config, :pool_size, 2)
+
+      pool_opts =
+        [name: Micelio.OG.BrowserPool, pool_size: pool_size]
+        |> then(fn opts ->
+          case Keyword.get(og_config, :chrome_path) do
+            nil -> opts
+            path -> Keyword.put(opts, :chrome_path, path)
+          end
+        end)
+
+      children ++ [{BrowseChrome.BrowserPool, pool_opts}]
+    else
+      children
+    end
   end
 
   defp maybe_add_grpc_server(children) do

@@ -6,7 +6,7 @@ defmodule MicelioWeb.OpenGraphImageControllerTest do
   alias Micelio.Storage
   alias MicelioWeb.OpenGraphImage
 
-  test "home page includes og:image and it generates lazily", %{conn: conn} do
+  test "home page includes og:image URL", %{conn: conn} do
     html = html_response(get(conn, ~p"/"), 200)
     doc = LazyHTML.from_document(html)
 
@@ -19,31 +19,54 @@ defmodule MicelioWeb.OpenGraphImageControllerTest do
     assert %{"token" => token, "v" => v} = URI.decode_query(uri.query || "")
     assert is_binary(token) and token != ""
     assert v == hash
+  end
 
-    svg_key = OpenGraphImage.storage_key(hash, "svg")
-    png_key = OpenGraphImage.storage_key(hash, "png")
-    _ = Storage.delete(svg_key)
-    _ = Storage.delete(png_key)
+  test "returns 404 for unknown hash when OG rendering is disabled", %{conn: conn} do
+    conn = get(conn, ~p"/og/unknown-hash")
+    assert conn.status == 404
+  end
 
-    refute Storage.exists?(svg_key)
-    refute Storage.exists?(png_key)
+  describe "fetch_or_create with pre-stored images" do
+    test "serves a pre-stored JPEG by hash" do
+      attrs = %{
+        "title" => "Test",
+        "site_name" => "Micelio",
+        "canonical_url" => "https://micelio.dev/test"
+      }
 
-    conn = get(build_conn(), uri.path <> "?" <> uri.query)
-    assert conn.status == 200
+      hash = OpenGraphImage.hash(attrs)
+      jpeg_key = OpenGraphImage.storage_key(hash, "jpeg")
 
-    content_type = conn |> get_resp_header("content-type") |> List.first()
+      jpeg_content = <<0xFF, 0xD8, 0xFF, 0xE0, "test-jpeg">>
+      {:ok, _} = Storage.put(jpeg_key, jpeg_content)
 
-    assert String.starts_with?(content_type, "image/png") or
-             String.starts_with?(content_type, "image/svg+xml")
+      assert {:ok, %{content_type: "image/jpeg", content: ^jpeg_content}} =
+               OpenGraphImage.fetch_existing(hash)
 
-    assert Storage.exists?(svg_key) or Storage.exists?(png_key)
+      _ = Storage.delete(jpeg_key)
+    end
 
-    conn =
-      build_conn()
-      |> put_req_header("if-none-match", ~s|"#{hash}"|)
-      |> get(uri.path <> "?" <> uri.query)
+    test "returns not_found when no image exists" do
+      assert {:error, :not_found} = OpenGraphImage.fetch_existing("nonexistent-hash")
+    end
+  end
 
-    assert conn.status == 304
+  describe "hash and token" do
+    test "hash is deterministic" do
+      attrs = %{"title" => "Hello", "site_name" => "Micelio"}
+      assert OpenGraphImage.hash(attrs) == OpenGraphImage.hash(attrs)
+    end
+
+    test "token round-trips through verify" do
+      attrs = %{"title" => "Hello", "site_name" => "Micelio"}
+      token = OpenGraphImage.token(attrs)
+      assert {:ok, verified} = OpenGraphImage.verify_token(token)
+      assert verified == attrs
+    end
+
+    test "verify_token rejects tampered tokens" do
+      assert {:error, :invalid_token} = OpenGraphImage.verify_token("garbage")
+    end
   end
 
   test "social crawlers receive cache-busted og:image URLs", %{conn: conn} do
@@ -59,46 +82,5 @@ defmodule MicelioWeb.OpenGraphImageControllerTest do
 
     assert %{"v" => v} = URI.decode_query(uri.query || "")
     assert v == "#{hash}-twitter-1"
-  end
-
-  test "cache-buster changes etag for social crawlers", %{conn: conn} do
-    conn = put_req_header(conn, "user-agent", "Twitterbot/1.0")
-    html = html_response(get(conn, ~p"/"), 200)
-    doc = LazyHTML.from_document(html)
-
-    tag = LazyHTML.query(doc, ~S|meta[property="og:image"]|)
-    [image_url] = LazyHTML.attribute(tag, "content")
-
-    uri = URI.parse(image_url)
-    [_, "og", hash] = String.split(uri.path || "", "/", parts: 3)
-
-    assert %{"token" => _token, "v" => v} = URI.decode_query(uri.query || "")
-    assert v == "#{hash}-twitter-1"
-
-    svg_key = OpenGraphImage.storage_key(hash, "svg")
-    png_key = OpenGraphImage.storage_key(hash, "png")
-    _ = Storage.delete(svg_key)
-    _ = Storage.delete(png_key)
-
-    refute Storage.exists?(svg_key)
-    refute Storage.exists?(png_key)
-
-    conn = get(build_conn(), uri.path <> "?" <> uri.query)
-    assert conn.status == 200
-
-    conn =
-      build_conn()
-      |> put_req_header("if-none-match", ~s|"#{hash}"|)
-      |> get(uri.path <> "?" <> uri.query)
-
-    assert conn.status == 200
-
-    conn =
-      build_conn()
-      |> put_req_header("if-none-match", ~s|"#{v}"|)
-      |> get(uri.path <> "?" <> uri.query)
-
-    assert conn.status == 304
-    assert Storage.exists?(svg_key) or Storage.exists?(png_key)
   end
 end

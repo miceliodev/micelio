@@ -72,6 +72,7 @@ FROM ${RUNNER_IMAGE} AS final
 
 RUN apt-get update \
   && apt-get install -y --no-install-recommends libstdc++6 openssl libncurses6 locales ca-certificates libgit2-1.9 \
+     chromium \
   && rm -rf /var/lib/apt/lists/*
 
 # Set the locale
