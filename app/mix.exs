@@ -102,7 +102,8 @@ defmodule Micelio.MixProject do
       {:acpex, "~> 0.1.0"},
       {:carta, git: "https://github.com/pepicrft/carta", branch: "main"},
       {:browse_chrome, git: "https://github.com/pepicrft/browse_chrome", branch: "main"},
-      {:loki_logger_handler, "~> 0.2.0"}
+      {:loki_logger_handler, "~> 0.2.0"},
+      {:sentry, "~> 12.0"}
     ]
   end
 

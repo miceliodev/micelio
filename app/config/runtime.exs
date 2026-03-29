@@ -57,9 +57,18 @@ if is_binary(loki_host) and loki_host != "" do
   config :micelio, :loki, loki_config
 end
 
-external_sentry_enabled =
-  (System.get_env("MICELIO_ENABLE_EXTERNAL_SENTRY") || System.get_env("ENABLE_EXTERNAL_SENTRY") ||
-     "false") == "true"
+# Sentry error tracking. Set MICELIO_SENTRY_DSN to enable.
+sentry_dsn = System.get_env("MICELIO_SENTRY_DSN")
+
+if is_binary(sentry_dsn) and sentry_dsn != "" do
+  config :sentry,
+    dsn: sentry_dsn,
+    environment_name: config_env(),
+    enable_source_code_context: true,
+    root_source_code_paths: [File.cwd!()]
+end
+
+external_sentry_enabled = is_binary(sentry_dsn) and sentry_dsn != ""
 
 retention_days =
   case System.get_env("MICELIO_ERROR_RETENTION_DAYS") || System.get_env("ERROR_RETENTION_DAYS") do

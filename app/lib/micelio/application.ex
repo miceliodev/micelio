@@ -12,6 +12,7 @@ defmodule Micelio.Application do
     Micelio.OTel.setup()
     maybe_add_logger_backend()
     maybe_attach_loki_handler()
+    maybe_attach_sentry_handler()
     ensure_ets_tables()
 
     children =
@@ -141,6 +142,14 @@ defmodule Micelio.Application do
 
       {:error, _reason} ->
         false
+    end
+  end
+
+  defp maybe_attach_sentry_handler do
+    if Application.get_env(:sentry, :dsn) do
+      :logger.add_handler(:sentry_handler, Sentry.LoggerHandler, %{
+        config: %{metadata: :all}
+      })
     end
   end
 
