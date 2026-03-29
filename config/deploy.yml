@@ -63,8 +63,8 @@ env:
     SMTP_SSL: "false"
     SMTP_TLS: "always"
   secret:
-    - DATABASE_URL
-    - SECRET_KEY_BASE
+    - MICELIO_DATABASE_URL
+    - MICELIO_SECRET_KEY_BASE
     - MICELIO_ENCRYPTION_KEY
     - SMTP_HOST
     - SMTP_USERNAME

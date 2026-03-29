@@ -12,20 +12,20 @@ All Micelio configuration is done through environment variables at runtime. This
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
 | `MICELIO_SERVER` | Yes (prod) | — | Set to `true` to start the HTTP server |
-| `SECRET_KEY_BASE` | Yes (prod) | — | Secret for signing cookies and tokens. Generate with `mix phx.gen.secret` |
+| `MICELIO_SECRET_KEY_BASE` | Yes (prod) | — | Secret for signing cookies and tokens. Generate with `mix phx.gen.secret` |
 | `MICELIO_HOST` | No | `example.com` | Public hostname for URL generation |
-| `PORT` | No | `4000` | HTTP port the server listens on |
+| `MICELIO_PORT` | No | `4000` | HTTP port the server listens on |
 | `MICELIO_ENCRYPTION_KEY` | Yes | — | 32-byte base64 key for field encryption. Generate with `openssl rand -base64 32` |
 | `MICELIO_ENCRYPTION_PREVIOUS_KEYS` | No | — | Comma-separated `tag:base64` entries for key rotation |
-| `DNS_CLUSTER_QUERY` | No | — | DNS query for clustering nodes |
+| `MICELIO_DNS_CLUSTER_QUERY` | No | — | DNS query for clustering nodes |
 
 ## Database
 
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
-| `DATABASE_URL` | Yes (prod) | — | PostgreSQL connection URL, e.g. `ecto://USER:PASS@HOST/DATABASE` |
-| `POOL_SIZE` | No | `10` | Database connection pool size |
-| `ECTO_IPV6` | No | `false` | Set to `true` to enable IPv6 for database connections |
+| `MICELIO_DATABASE_URL` | Yes (prod) | — | PostgreSQL connection URL, e.g. `ecto://USER:PASS@HOST/DATABASE` |
+| `MICELIO_POOL_SIZE` | No | `10` | Database connection pool size |
+| `MICELIO_ECTO_IPV6` | No | `false` | Set to `true` to enable IPv6 for database connections |
 
 ## Storage
 
