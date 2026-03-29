@@ -598,7 +598,7 @@ end
 # Set MICELIO_OPEN_GRAPH_ENABLED=true/false to override. Requires Chromium on the system.
 og_enabled =
   case System.get_env("MICELIO_OPEN_GRAPH_ENABLED") do
-    nil -> config_env() == :dev
+    nil -> config_env() != :prod
     value -> value == "true"
   end
 

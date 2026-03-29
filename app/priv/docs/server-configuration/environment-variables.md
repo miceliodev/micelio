@@ -62,7 +62,7 @@ Images are lazily generated on first request and cached in storage (local filesy
 
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
-| `MICELIO_OPEN_GRAPH_ENABLED` | No | `true` (dev), `false` (prod) | Enable Open Graph image generation |
+| `MICELIO_OPEN_GRAPH_ENABLED` | No | `false` (prod), `true` (dev/test) | Enable Open Graph image generation |
 | `MICELIO_OPEN_GRAPH_POOL_SIZE` | No | `1` (dev), `2` (prod) | Number of Chromium instances in the browser pool |
 | `MICELIO_OPEN_GRAPH_CHROME_PATH` | No | auto-detect | Path to Chromium binary |
 

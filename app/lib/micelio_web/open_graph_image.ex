@@ -33,12 +33,19 @@ defmodule MicelioWeb.OpenGraphImage do
   @doc """
   Returns the Open Graph image URL for the given page meta, or `nil`.
 
-  URLs are always generated regardless of whether OG image rendering is enabled.
-  When disabled, the `/og/:hash` endpoint will return 404 for uncached images
-  but will still serve any previously generated images from storage.
+  URLs are only generated when OG image rendering is enabled. When disabled,
+  no `og:image` meta tags are emitted.
   """
   @spec url(PageMeta.t()) :: String.t() | nil
   def url(%PageMeta{} = meta) do
+    if not enabled?() do
+      nil
+    else
+      url_for_meta(meta)
+    end
+  end
+
+  defp url_for_meta(%PageMeta{} = meta) do
     case meta.canonical_url do
       canonical_url when is_binary(canonical_url) and canonical_url != "" ->
         attrs = attrs_from_meta(meta)
