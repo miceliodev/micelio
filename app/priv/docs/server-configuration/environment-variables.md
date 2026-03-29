@@ -80,14 +80,14 @@ Specific endpoints can have their own limits via domain overrides (e.g. the Open
 
 ## gRPC
 
-The `hif` CLI communicates with Micelio via gRPC for operations like authentication, repository management, session handling, and content access. The gRPC server is optional and disabled by default.
+The `hif` CLI communicates with Micelio via gRPC for authentication, repository management, session handling, and content access. The gRPC server must be enabled for `hif` to work.
 
 > [!NOTE]
 > We chose gRPC over REST for CLI-to-forge communication because it uses binary serialization (protobuf), which is significantly more efficient for transferring file content and tree structures. It also gives us strongly typed contracts shared between the Rust CLI and the Elixir server, and HTTP/2 multiplexing for concurrent operations over a single connection.
 
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
-| `MICELIO_GRPC_ENABLED` | No | `false` | Enable the gRPC server |
+| `MICELIO_GRPC_ENABLED` | Yes | `false` | Enable the gRPC server (required for `hif` CLI) |
 | `MICELIO_GRPC_PORT` | No | `50051` | gRPC server port |
 | `MICELIO_GRPC_TLS_MODE` | No | `required` (prod), `proxy` (dev) | TLS mode: `required`, `proxy`, or `insecure` |
 | `MICELIO_GRPC_TLS_CERTFILE` | No | — | Path to TLS certificate file |
