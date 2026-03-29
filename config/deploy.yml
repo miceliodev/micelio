@@ -11,7 +11,7 @@ servers:
       - 89.167.26.150
     env:
       clear:
-        PHX_SERVER: "true"
+        MICELIO_SERVER: "true"
         MICELIO_GRPC_ENABLED: "false"
   grpc:
     hosts:
@@ -27,7 +27,7 @@ servers:
         responses: false
     env:
       clear:
-        PHX_SERVER: "false"
+        MICELIO_SERVER: "false"
         MICELIO_GRPC_ENABLED: "true"
         MICELIO_GRPC_PORT: "50051"
         MICELIO_GRPC_TLS_MODE: "proxy"
@@ -51,43 +51,43 @@ builder:
 
 env:
   clear:
-    PHX_HOST: micelio.dev
-    STORAGE_BACKEND: s3
-    OTEL_EXPORTER_OTLP_ENDPOINT: http://micelio-alloy:4317
-    OTEL_EXPORTER_OTLP_PROTOCOL: grpc
-    OTEL_SERVICE_NAME: micelio-web
-    OTEL_DEPLOYMENT_ENVIRONMENT: production
-    CLICKHOUSE_URL: http://micelio-clickhouse:8123/micelio
-    CLICKHOUSE_USER: micelio
-    SMTP_PORT: "587"
-    SMTP_SSL: "false"
-    SMTP_TLS: "always"
+    MICELIO_HOST: micelio.dev
+    MICELIO_STORAGE_BACKEND: s3
+    MICELIO_OTEL_EXPORTER_OTLP_ENDPOINT: http://micelio-alloy:4317
+    MICELIO_OTEL_EXPORTER_OTLP_PROTOCOL: grpc
+    MICELIO_OTEL_SERVICE_NAME: micelio-web
+    MICELIO_OTEL_DEPLOYMENT_ENVIRONMENT: production
+    MICELIO_CLICKHOUSE_URL: http://micelio-clickhouse:8123/micelio
+    MICELIO_CLICKHOUSE_USER: micelio
+    MICELIO_SMTP_PORT: "587"
+    MICELIO_SMTP_SSL: "false"
+    MICELIO_SMTP_TLS: "always"
   secret:
-    - DATABASE_URL
-    - SECRET_KEY_BASE
-    - ENCRYPTION_KEY
-    - SMTP_HOST
-    - SMTP_USERNAME
-    - SMTP_PASSWORD
-    - SMTP_FROM_EMAIL
-    - SMTP_FROM_NAME
-    - S3_BUCKET
-    - S3_ENDPOINT
-    - S3_REGION
-    - S3_ACCESS_KEY_ID
-    - S3_SECRET_ACCESS_KEY
-    - S3_URL_STYLE
-    - TLS_CERT_PEM
-    - TLS_KEY_PEM
-    - THEME_LLM_API_KEY
-    - THEME_LLM_MODEL
-    - GITHUB_OAUTH_REDIRECT_URI
-    - GITHUB_OAUTH_CLIENT_ID
-    - GITHUB_OAUTH_CLIENT_SECRET
-    - DAYTONA_API_KEY
-    - DAYTONA_ORGANIZATION_ID
-    - CLICKHOUSE_PASSWORD
-    - METRICS_BEARER_TOKEN
+    - MICELIO_DATABASE_URL
+    - MICELIO_SECRET_KEY_BASE
+    - MICELIO_ENCRYPTION_KEY
+    - MICELIO_SMTP_HOST
+    - MICELIO_SMTP_USERNAME
+    - MICELIO_SMTP_PASSWORD
+    - MICELIO_SMTP_FROM_EMAIL
+    - MICELIO_SMTP_FROM_NAME
+    - MICELIO_S3_BUCKET
+    - MICELIO_S3_ENDPOINT
+    - MICELIO_S3_REGION
+    - MICELIO_S3_ACCESS_KEY_ID
+    - MICELIO_S3_SECRET_ACCESS_KEY
+    - MICELIO_S3_URL_STYLE
+    - MICELIO_GRPC_TLS_CERT_PEM
+    - MICELIO_GRPC_TLS_KEY_PEM
+    - MICELIO_THEME_LLM_API_KEY
+    - MICELIO_THEME_LLM_MODEL
+    - MICELIO_GITHUB_OAUTH_REDIRECT_URI
+    - MICELIO_GITHUB_OAUTH_CLIENT_ID
+    - MICELIO_GITHUB_OAUTH_CLIENT_SECRET
+    - MICELIO_DAYTONA_API_KEY
+    - MICELIO_DAYTONA_ORGANIZATION_ID
+    - MICELIO_CLICKHOUSE_PASSWORD
+    - MICELIO_METRICS_BEARER_TOKEN
 
 accessories:
   postgres:
@@ -166,7 +166,7 @@ accessories:
       - config/alloy/config.alloy:/etc/alloy/config.alloy
     env:
       secret:
-        - METRICS_BEARER_TOKEN
+        - MICELIO_METRICS_BEARER_TOKEN
     cmd: run --server.http.listen-addr=0.0.0.0:12345 --storage.path=/var/lib/alloy/data /etc/alloy/config.alloy
   grafana:
     image: grafana/grafana:11.5

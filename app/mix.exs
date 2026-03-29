@@ -99,7 +99,11 @@ defmodule Micelio.MixProject do
       {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false},
       {:sobelow, "~> 0.13", only: [:dev, :test], runtime: false},
       {:uuid_v7, "~> 0.6"},
-      {:acpex, "~> 0.1.0"}
+      {:acpex, "~> 0.1.0"},
+      {:carta, git: "https://github.com/pepicrft/carta", branch: "main"},
+      {:browse_chrome, git: "https://github.com/pepicrft/browse_chrome", branch: "main"},
+      {:loki_logger_handler, "~> 0.2.0"},
+      {:sentry, "~> 12.0"}
     ]
   end
 

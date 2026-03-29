@@ -248,6 +248,11 @@
   text-decoration: none;
 }
 
+.docs-sidebar-toc-link-active {
+  color: var(--theme-ui-colors-primary);
+  font-weight: var(--theme-ui-font-weights-semibold);
+}
+
 .docs-sidebar-toc-link-nested {
   padding-left: var(--theme-ui-space-2);
   font-size: var(--theme-ui-font-size-xs);
@@ -297,8 +302,6 @@
   margin: var(--theme-ui-space-2) 0 var(--theme-ui-space-3);
   border: 1px solid var(--theme-ui-colors-border);
   border-radius: var(--theme-ui-radii-default);
-  overflow-x: auto;
-  display: block;
 }
 
 .docs-content th,

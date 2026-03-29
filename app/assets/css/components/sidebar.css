@@ -71,13 +71,13 @@
 
 .sidebar-link-active {
   background-color: var(--theme-ui-colors-primary-alpha);
-  color: var(--theme-ui-colors-primary);
+  color: var(--theme-ui-colors-text);
   font-weight: var(--theme-ui-font-weights-semibold);
 }
 
 .sidebar-link-active:hover {
   background-color: var(--theme-ui-colors-primary-alpha);
-  color: var(--theme-ui-colors-primary);
+  color: var(--theme-ui-colors-text);
 }
 
 /* Icon inside sidebar link */

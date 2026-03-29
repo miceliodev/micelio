@@ -158,7 +158,7 @@ defmodule MicelioWeb.Layouts do
 
     <div class="app-shell">
       <aside class="sidebar" id="sidebar" aria-label={dgettext("layouts", "Main navigation")}>
-        <nav class="sidebar-nav">
+        <nav class="sidebar-nav" aria-label={dgettext("layouts", "Sidebar navigation")}>
           <div class="sidebar-section">
             <%= if @repository_nav do %>
               <% repository_base_path =

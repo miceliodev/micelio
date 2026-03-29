@@ -5,6 +5,9 @@ defmodule MicelioWeb.OpenGraphImage do
   Images are content-addressed: we hash the attributes required to render the image,
   and store the resulting artifact under that hash. The first request to the image
   endpoint generates and persists it.
+
+  When `MICELIO_OPEN_GRAPH_ENABLED=true`, images are rendered using Carta (HTML to JPEG via
+  a headless Chromium pool). When disabled, OG image URLs are not generated.
   """
 
   alias Micelio.Storage
@@ -12,7 +15,7 @@ defmodule MicelioWeb.OpenGraphImage do
 
   @width 1200
   @height 630
-  @template_version 2
+  @template_version 5
 
   @storage_prefix "open-graph/og"
 
@@ -20,7 +23,19 @@ defmodule MicelioWeb.OpenGraphImage do
   def height, do: @height
 
   @doc """
+  Returns true if OG image generation is enabled.
+  """
+  def enabled? do
+    Application.get_env(:micelio, :open_graph, [])
+    |> Keyword.get(:enabled, false)
+  end
+
+  @doc """
   Returns the Open Graph image URL for the given page meta, or `nil`.
+
+  URLs are always generated regardless of whether OG image rendering is enabled.
+  When disabled, the `/og/:hash` endpoint will return 404 for uncached images
+  but will still serve any previously generated images from storage.
   """
   @spec url(PageMeta.t()) :: String.t() | nil
   def url(%PageMeta{} = meta) do
@@ -29,12 +44,11 @@ defmodule MicelioWeb.OpenGraphImage do
         attrs = attrs_from_meta(meta)
         hash = hash(attrs)
         token = token(attrs)
-        cache_key = cache_key(hash, meta.open_graph)
 
         canonical_url
         |> URI.parse()
         |> Map.put(:path, "/og/#{hash}")
-        |> Map.put(:query, URI.encode_query(%{"token" => token, "v" => cache_key}))
+        |> Map.put(:query, URI.encode_query(%{"token" => token, "v" => hash}))
         |> Map.put(:fragment, nil)
         |> URI.to_string()
 
@@ -45,40 +59,6 @@ defmodule MicelioWeb.OpenGraphImage do
     _ -> nil
   end
 
-  defp cache_key(hash, open_graph) when is_binary(hash) and is_map(open_graph) do
-    case cache_buster_from_meta(open_graph) do
-      nil -> hash
-      cache_buster -> hash <> "-" <> cache_buster
-    end
-  end
-
-  defp cache_key(hash, _open_graph), do: hash
-
-  defp cache_buster_from_meta(open_graph) when is_map(open_graph) do
-    open_graph
-    |> Map.get(:cache_buster)
-    |> case do
-      nil -> Map.get(open_graph, "cache_buster")
-      value -> value
-    end
-    |> normalize_cache_buster()
-  end
-
-  defp cache_buster_from_meta(_), do: nil
-
-  defp normalize_cache_buster(nil), do: nil
-
-  defp normalize_cache_buster(value) do
-    value
-    |> to_string()
-    |> String.trim()
-    |> String.replace(~r/\s+/, "-")
-    |> case do
-      "" -> nil
-      normalized -> normalized
-    end
-  end
-
   @doc """
   Builds the attributes used both for hashing and rendering.
   """
@@ -86,6 +66,7 @@ defmodule MicelioWeb.OpenGraphImage do
   def attrs_from_meta(%PageMeta{} = meta) do
     image_template = image_template_from_meta(meta.open_graph)
     image_stats = image_stats_from_meta(meta.open_graph)
+    author_attrs = author_attrs_from_meta(meta)
 
     %{
       "v" => @template_version,
@@ -95,7 +76,8 @@ defmodule MicelioWeb.OpenGraphImage do
       "canonical_url" => meta.canonical_url,
       "type" => PageMeta.og_type(meta),
       "image_template" => image_template,
-      "image_stats" => image_stats
+      "image_stats" => image_stats,
+      "author" => author_attrs
     }
     |> drop_nil_and_blank()
   end
@@ -147,8 +129,6 @@ defmodule MicelioWeb.OpenGraphImage do
 
   @doc """
   Fetches an existing OG image, or generates and stores it if missing.
-
-  Prefers a stored PNG when available; otherwise serves SVG.
   """
   @spec fetch_or_create(String.t(), String.t() | nil) ::
           {:ok, %{content_type: String.t(), content: binary()}} | {:error, term()}
@@ -163,31 +143,14 @@ defmodule MicelioWeb.OpenGraphImage do
   @spec fetch_existing(String.t()) ::
           {:ok, %{content_type: String.t(), content: binary()}} | {:error, term()}
   def fetch_existing(hash) do
-    png_key = storage_key(hash, "png")
-    svg_key = storage_key(hash, "svg")
+    jpeg_key = storage_key(hash, "jpeg")
 
-    case Storage.get(png_key) do
+    case Storage.get(jpeg_key) do
       {:ok, content} ->
-        {:ok, %{content_type: "image/png", content: content}}
+        {:ok, %{content_type: "image/jpeg", content: content}}
 
       {:error, :not_found} ->
-        case Storage.get(svg_key) do
-          {:ok, svg} ->
-            case svg_to_png(svg) do
-              {:ok, png} ->
-                _ = Storage.put_if_none_match(png_key, png)
-                {:ok, %{content_type: "image/png", content: png}}
-
-              {:error, _reason} ->
-                {:ok, %{content_type: "image/svg+xml", content: svg}}
-            end
-
-          {:error, :not_found} ->
-            {:error, :not_found}
-
-          error ->
-            error
-        end
+        {:error, :not_found}
 
       error ->
         error
@@ -195,375 +158,473 @@ defmodule MicelioWeb.OpenGraphImage do
   end
 
   defp create_and_store(hash, token) do
-    with token when is_binary(token) and token != "" <- token,
+    with true <- enabled?(),
+         token when is_binary(token) and token != "" <- token,
          {:ok, attrs} <- verify_token(token),
          true <- hash(attrs) == hash do
-      svg = render_svg(attrs)
-      _ = Storage.put_if_none_match(storage_key(hash, "svg"), svg)
+      html = render_html(attrs)
 
-      case svg_to_png(svg) do
-        {:ok, png} ->
-          _ = Storage.put_if_none_match(storage_key(hash, "png"), png)
-          {:ok, %{content_type: "image/png", content: png}}
+      case Carta.render(Micelio.OG.BrowserPool, html, width: @width, height: @height) do
+        {:ok, jpeg} ->
+          _ = Storage.put_if_none_match(storage_key(hash, "jpeg"), jpeg)
+          {:ok, %{content_type: "image/jpeg", content: jpeg}}
 
-        {:error, _reason} ->
-          {:ok, %{content_type: "image/svg+xml", content: svg}}
+        {:error, reason} ->
+          {:error, reason}
       end
     else
+      false -> {:error, :disabled}
       _ -> {:error, :invalid_token}
     end
   end
 
-  @spec render_svg(map()) :: binary()
-  def render_svg(attrs) when is_map(attrs) do
+  @doc """
+  Renders the HTML template for the given attrs.
+  """
+  @spec render_html(map()) :: String.t()
+  def render_html(attrs) when is_map(attrs) do
     case normalize_text(attrs["image_template"]) do
-      "agent_progress" -> render_agent_progress_svg(attrs)
-      "agent_session" -> render_agent_session_svg(attrs)
-      "commit" -> render_commit_svg(attrs)
-      "pull_request" -> render_pull_request_svg(attrs)
-      _ -> render_default_svg(attrs)
+      "agent_progress" -> render_agent_progress_html(attrs)
+      "agent_session" -> render_agent_session_html(attrs)
+      "commit" -> render_commit_html(attrs)
+      "pull_request" -> render_pull_request_html(attrs)
+      _ -> render_default_html(attrs)
     end
   end
 
-  defp render_default_svg(attrs) do
+  defp render_default_html(attrs) do
     title = normalize_text(attrs["title"]) || PageMeta.site_name()
     site_name = normalize_text(attrs["site_name"]) || PageMeta.site_name()
     description = normalize_text(attrs["description"])
     canonical_url = normalize_text(attrs["canonical_url"])
-
-    title_lines = wrap_lines(title, 38, 2)
-    description_lines = wrap_lines(description, 62, 3)
     url_line = canonical_url && display_url(canonical_url)
 
-    title_y = 220
-    title_line_height = 76
-
-    description_y =
-      title_y + title_line_height * length(title_lines) + 26
-
-    description_line_height = 44
-    footer_y = 565
-
-    [
-      ~s|<svg width="#{@width}" height="#{@height}" viewBox="0 0 #{@width} #{@height}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Open Graph image">|,
-      ~s|<defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">|,
-      ~s|<stop offset="0%" stop-color="#0b0f14"/><stop offset="100%" stop-color="#111827"/>|,
-      ~s|</linearGradient></defs>|,
-      ~s|<rect width="#{@width}" height="#{@height}" fill="url(#bg)"/>|,
-      ~s|<rect x="40" y="40" width="#{@width - 80}" height="#{@height - 80}" rx="28" fill="#0f172a" stroke="#1f2a44" stroke-width="2"/>|,
-      ~s|<rect x="40" y="40" width="10" height="#{@height - 80}" rx="5" fill="#7c3aed"/>|,
-      text_el(80, 130, site_name, "28", "600", "#a7b2c8"),
-      title_text(80, title_y, title_lines, "64", "700", "#f8fafc", title_line_height),
-      description_text(
-        80,
-        description_y,
-        description_lines,
-        "30",
-        "500",
-        "#cbd5e1",
-        description_line_height
-      ),
-      footer_text(80, footer_y, url_line, "24", "500", "#94a3b8"),
-      "</svg>"
-    ]
-    |> IO.iodata_to_binary()
+    base_html(
+      accent_color: "#2f7c4c",
+      site_label: site_name,
+      title: title,
+      description: description,
+      url_line: url_line,
+      sidebar: nil,
+      author: attrs["author"]
+    )
   end
 
-  defp render_agent_progress_svg(attrs) do
+  defp render_agent_progress_html(attrs) do
     title = normalize_text(attrs["title"]) || "Agent progress"
     site_name = normalize_text(attrs["site_name"]) || PageMeta.site_name()
     description = normalize_text(attrs["description"])
     canonical_url = normalize_text(attrs["canonical_url"])
     stats = normalize_image_stats(attrs["image_stats"])
-    commits = stat_value(stats, "commits")
-    files = stat_value(stats, "files")
 
-    title_lines = wrap_lines(title, 30, 2)
-    description_lines = wrap_lines(description, 52, 3)
-    url_line = canonical_url && display_url(canonical_url)
+    sidebar = """
+    <div class="sidebar">
+      <div class="sidebar-accent" style="background: #5bbf7a;"></div>
+      <div class="sidebar-label">ACTIVITY SNAPSHOT</div>
+      <div class="sidebar-divider"></div>
+      #{stat_card("COMMITS", stat_value(stats, "commits"))}
+      #{stat_card("FILES CHANGED", stat_value(stats, "files"))}
+    </div>
+    """
 
-    title_y = 210
-    title_line_height = 72
-
-    description_y =
-      title_y + title_line_height * length(title_lines) + 18
-
-    description_line_height = 40
-    footer_y = 560
-
-    [
-      ~s|<svg width="#{@width}" height="#{@height}" viewBox="0 0 #{@width} #{@height}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Agent progress Open Graph image">|,
-      ~s|<defs><linearGradient id="bg-agent" x1="0" y1="0" x2="1" y2="1">|,
-      ~s|<stop offset="0%" stop-color="#0a0f18"/><stop offset="100%" stop-color="#0f172a"/>|,
-      ~s|</linearGradient></defs>|,
-      ~s|<rect width="#{@width}" height="#{@height}" fill="url(#bg-agent)"/>|,
-      ~s|<rect x="40" y="40" width="#{@width - 80}" height="#{@height - 80}" rx="30" fill="#0b1220" stroke="#1f2a44" stroke-width="2"/>|,
-      ~s|<rect x="40" y="40" width="#{@width - 80}" height="10" rx="5" fill="#22c55e"/>|,
-      text_el(80, 120, "#{site_name} / Agents", "26", "600", "#94a3b8"),
-      title_text(80, title_y, title_lines, "60", "700", "#f8fafc", title_line_height),
-      description_text(
-        80,
-        description_y,
-        description_lines,
-        "28",
-        "500",
-        "#cbd5f5",
-        description_line_height
-      ),
-      ~s|<rect x="740" y="160" width="380" height="330" rx="26" fill="#0f172a" stroke="#1f2a44" stroke-width="2"/>|,
-      ~s|<rect x="740" y="160" width="6" height="330" rx="3" fill="#22c55e"/>|,
-      text_el(780, 205, "ACTIVITY SNAPSHOT", "20", "700", "#a5b4fc"),
-      ~s|<line x1="780" y1="230" x2="1080" y2="230" stroke="#1f2a44" stroke-width="2"/>|,
-      ~s|<rect x="770" y="250" width="330" height="90" rx="18" fill="#111c2f" stroke="#1f2a44" stroke-width="2"/>|,
-      text_el(790, 285, "COMMITS", "20", "700", "#7dd3fc"),
-      text_el(790, 325, commits, "54", "700", "#e2e8f0"),
-      ~s|<rect x="770" y="360" width="330" height="110" rx="18" fill="#111c2f" stroke="#1f2a44" stroke-width="2"/>|,
-      text_el(790, 400, "FILES CHANGED", "20", "700", "#7dd3fc"),
-      text_el(790, 445, files, "54", "700", "#e2e8f0"),
-      footer_text(80, footer_y, url_line, "24", "500", "#94a3b8"),
-      "</svg>"
-    ]
-    |> IO.iodata_to_binary()
+    base_html(
+      accent_color: "#5bbf7a",
+      site_label: "#{site_name} / Agents",
+      title: title,
+      description: description,
+      url_line: canonical_url && display_url(canonical_url),
+      sidebar: sidebar,
+      author: attrs["author"]
+    )
   end
 
-  defp render_agent_session_svg(attrs) do
+  defp render_agent_session_html(attrs) do
     title = normalize_text(attrs["title"]) || "Agent session"
     site_name = normalize_text(attrs["site_name"]) || PageMeta.site_name()
     description = normalize_text(attrs["description"])
     canonical_url = normalize_text(attrs["canonical_url"])
     stats = normalize_image_stats(attrs["image_stats"])
-    files = stat_value(stats, "files")
-    added = stat_value(stats, "added")
-    modified = stat_value(stats, "modified")
-    deleted = stat_value(stats, "deleted")
 
-    title_lines = wrap_lines(title, 32, 2)
-    description_lines = wrap_lines(description, 56, 3)
-    url_line = canonical_url && display_url(canonical_url)
+    sidebar = """
+    <div class="sidebar">
+      <div class="sidebar-accent" style="background: #4a9ecc;"></div>
+      <div class="sidebar-label">SESSION STATS</div>
+      <div class="sidebar-divider"></div>
+      #{stat_card("FILES", stat_value(stats, "files"))}
+      #{stat_row("ADDED", stat_value(stats, "added"))}
+      #{stat_row("MODIFIED", stat_value(stats, "modified"))}
+      #{stat_row("DELETED", stat_value(stats, "deleted"))}
+    </div>
+    """
 
-    title_y = 200
-    title_line_height = 70
-
-    description_y =
-      title_y + title_line_height * length(title_lines) + 22
-
-    description_line_height = 38
-    footer_y = 560
-
-    [
-      ~s|<svg width="#{@width}" height="#{@height}" viewBox="0 0 #{@width} #{@height}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Agent session Open Graph image">|,
-      ~s|<defs><linearGradient id="bg-session" x1="0" y1="0" x2="1" y2="1">|,
-      ~s|<stop offset="0%" stop-color="#0b0f14"/><stop offset="100%" stop-color="#0c1f24"/>|,
-      ~s|</linearGradient></defs>|,
-      ~s|<rect width="#{@width}" height="#{@height}" fill="url(#bg-session)"/>|,
-      ~s|<rect x="40" y="40" width="#{@width - 80}" height="#{@height - 80}" rx="28" fill="#0b1220" stroke="#1f2a44" stroke-width="2"/>|,
-      ~s|<rect x="40" y="40" width="#{@width - 80}" height="10" rx="5" fill="#38bdf8"/>|,
-      text_el(80, 120, "#{site_name} / Sessions", "26", "600", "#93c5fd"),
-      title_text(80, title_y, title_lines, "58", "700", "#f8fafc", title_line_height),
-      description_text(
-        80,
-        description_y,
-        description_lines,
-        "28",
-        "500",
-        "#cbd5f5",
-        description_line_height
-      ),
-      ~s|<rect x="740" y="160" width="380" height="330" rx="26" fill="#0f172a" stroke="#1f2a44" stroke-width="2"/>|,
-      ~s|<rect x="740" y="160" width="6" height="330" rx="3" fill="#38bdf8"/>|,
-      text_el(780, 205, "SESSION STATS", "20", "700", "#7dd3fc"),
-      ~s|<line x1="780" y1="230" x2="1080" y2="230" stroke="#1f2a44" stroke-width="2"/>|,
-      ~s|<rect x="770" y="250" width="330" height="80" rx="18" fill="#111c2f" stroke="#1f2a44" stroke-width="2"/>|,
-      text_el(790, 282, "FILES", "20", "700", "#7dd3fc"),
-      text_el(790, 318, files, "44", "700", "#e2e8f0"),
-      ~s|<rect x="770" y="340" width="330" height="60" rx="16" fill="#111c2f" stroke="#1f2a44" stroke-width="2"/>|,
-      text_el(790, 370, "ADDED", "18", "700", "#7dd3fc"),
-      text_el(960, 370, added, "26", "700", "#e2e8f0"),
-      ~s|<rect x="770" y="410" width="330" height="60" rx="16" fill="#111c2f" stroke="#1f2a44" stroke-width="2"/>|,
-      text_el(790, 440, "MODIFIED", "18", "700", "#7dd3fc"),
-      text_el(960, 440, modified, "26", "700", "#e2e8f0"),
-      ~s|<rect x="770" y="480" width="330" height="60" rx="16" fill="#111c2f" stroke="#1f2a44" stroke-width="2"/>|,
-      text_el(790, 510, "DELETED", "18", "700", "#7dd3fc"),
-      text_el(960, 510, deleted, "26", "700", "#e2e8f0"),
-      footer_text(80, footer_y, url_line, "24", "500", "#94a3b8"),
-      "</svg>"
-    ]
-    |> IO.iodata_to_binary()
+    base_html(
+      accent_color: "#4a9ecc",
+      site_label: "#{site_name} / Sessions",
+      title: title,
+      description: description,
+      url_line: canonical_url && display_url(canonical_url),
+      sidebar: sidebar
+    )
   end
 
-  defp render_commit_svg(attrs) do
+  defp render_commit_html(attrs) do
     title = normalize_text(attrs["title"]) || "Commit"
     site_name = normalize_text(attrs["site_name"]) || PageMeta.site_name()
     description = normalize_text(attrs["description"])
     canonical_url = normalize_text(attrs["canonical_url"])
     stats = normalize_image_stats(attrs["image_stats"])
-    files = stat_value(stats, "files")
-    additions = stat_value(stats, "additions")
-    deletions = stat_value(stats, "deletions")
 
-    title_lines = wrap_lines(title, 32, 2)
-    description_lines = wrap_lines(description, 54, 3)
-    url_line = canonical_url && display_url(canonical_url)
+    sidebar = """
+    <div class="sidebar">
+      <div class="sidebar-accent" style="background: #6a9fd8;"></div>
+      <div class="sidebar-label">CHANGESET</div>
+      <div class="sidebar-divider"></div>
+      #{stat_card("FILES", stat_value(stats, "files"))}
+      #{stat_row("ADDITIONS", stat_value(stats, "additions"))}
+      #{stat_row("DELETIONS", stat_value(stats, "deletions"))}
+    </div>
+    """
 
-    title_y = 200
-    title_line_height = 70
-
-    description_y =
-      title_y + title_line_height * length(title_lines) + 22
-
-    description_line_height = 38
-    footer_y = 560
-
-    [
-      ~s|<svg width="#{@width}" height="#{@height}" viewBox="0 0 #{@width} #{@height}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Commit Open Graph image">|,
-      ~s|<defs><linearGradient id="bg-commit" x1="0" y1="0" x2="1" y2="1">|,
-      ~s|<stop offset="0%" stop-color="#0b1220"/><stop offset="100%" stop-color="#111827"/>|,
-      ~s|</linearGradient></defs>|,
-      ~s|<rect width="#{@width}" height="#{@height}" fill="url(#bg-commit)"/>|,
-      ~s|<rect x="40" y="40" width="#{@width - 80}" height="#{@height - 80}" rx="28" fill="#0b1220" stroke="#1f2a44" stroke-width="2"/>|,
-      ~s|<rect x="40" y="40" width="#{@width - 80}" height="10" rx="5" fill="#60a5fa"/>|,
-      text_el(80, 120, "#{site_name} / Commit", "26", "600", "#93c5fd"),
-      title_text(80, title_y, title_lines, "58", "700", "#f8fafc", title_line_height),
-      description_text(
-        80,
-        description_y,
-        description_lines,
-        "28",
-        "500",
-        "#cbd5f5",
-        description_line_height
-      ),
-      ~s|<rect x="740" y="180" width="380" height="300" rx="26" fill="#0f172a" stroke="#1f2a44" stroke-width="2"/>|,
-      ~s|<rect x="740" y="180" width="6" height="300" rx="3" fill="#60a5fa"/>|,
-      text_el(780, 225, "CHANGESET", "20", "700", "#7dd3fc"),
-      ~s|<line x1="780" y1="250" x2="1080" y2="250" stroke="#1f2a44" stroke-width="2"/>|,
-      ~s|<rect x="770" y="270" width="330" height="70" rx="18" fill="#111c2f" stroke="#1f2a44" stroke-width="2"/>|,
-      text_el(790, 300, "FILES", "20", "700", "#7dd3fc"),
-      text_el(790, 330, files, "38", "700", "#e2e8f0"),
-      ~s|<rect x="770" y="350" width="330" height="60" rx="16" fill="#111c2f" stroke="#1f2a44" stroke-width="2"/>|,
-      text_el(790, 380, "ADDITIONS", "18", "700", "#7dd3fc"),
-      text_el(980, 380, additions, "26", "700", "#e2e8f0"),
-      ~s|<rect x="770" y="420" width="330" height="60" rx="16" fill="#111c2f" stroke="#1f2a44" stroke-width="2"/>|,
-      text_el(790, 450, "DELETIONS", "18", "700", "#7dd3fc"),
-      text_el(980, 450, deletions, "26", "700", "#e2e8f0"),
-      footer_text(80, footer_y, url_line, "24", "500", "#94a3b8"),
-      "</svg>"
-    ]
-    |> IO.iodata_to_binary()
+    base_html(
+      accent_color: "#6a9fd8",
+      site_label: "#{site_name} / Commit",
+      title: title,
+      description: description,
+      url_line: canonical_url && display_url(canonical_url),
+      sidebar: sidebar
+    )
   end
 
-  defp render_pull_request_svg(attrs) do
+  defp render_pull_request_html(attrs) do
     title = normalize_text(attrs["title"]) || "Pull request"
     site_name = normalize_text(attrs["site_name"]) || PageMeta.site_name()
     description = normalize_text(attrs["description"])
     canonical_url = normalize_text(attrs["canonical_url"])
     stats = normalize_image_stats(attrs["image_stats"])
-    commits = stat_value(stats, "commits")
-    files = stat_value(stats, "files")
-    comments = stat_value(stats, "comments")
 
-    title_lines = wrap_lines(title, 32, 2)
-    description_lines = wrap_lines(description, 54, 3)
-    url_line = canonical_url && display_url(canonical_url)
+    sidebar = """
+    <div class="sidebar">
+      <div class="sidebar-accent" style="background: #d4a03a;"></div>
+      <div class="sidebar-label" style="color: #d4a03a;">REVIEW SNAPSHOT</div>
+      <div class="sidebar-divider"></div>
+      #{stat_card("COMMITS", stat_value(stats, "commits"))}
+      #{stat_row("FILES", stat_value(stats, "files"))}
+      #{stat_row("COMMENTS", stat_value(stats, "comments"))}
+    </div>
+    """
 
-    title_y = 200
-    title_line_height = 70
-
-    description_y =
-      title_y + title_line_height * length(title_lines) + 22
-
-    description_line_height = 38
-    footer_y = 560
-
-    [
-      ~s|<svg width="#{@width}" height="#{@height}" viewBox="0 0 #{@width} #{@height}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Pull request Open Graph image">|,
-      ~s|<defs><linearGradient id="bg-pr" x1="0" y1="0" x2="1" y2="1">|,
-      ~s|<stop offset="0%" stop-color="#0f172a"/><stop offset="100%" stop-color="#1f2937"/>|,
-      ~s|</linearGradient></defs>|,
-      ~s|<rect width="#{@width}" height="#{@height}" fill="url(#bg-pr)"/>|,
-      ~s|<rect x="40" y="40" width="#{@width - 80}" height="#{@height - 80}" rx="28" fill="#0f172a" stroke="#1f2a44" stroke-width="2"/>|,
-      ~s|<rect x="40" y="40" width="#{@width - 80}" height="10" rx="5" fill="#f59e0b"/>|,
-      text_el(80, 120, "#{site_name} / Pull Requests", "26", "600", "#fcd34d"),
-      title_text(80, title_y, title_lines, "58", "700", "#f8fafc", title_line_height),
-      description_text(
-        80,
-        description_y,
-        description_lines,
-        "28",
-        "500",
-        "#e5e7eb",
-        description_line_height
-      ),
-      ~s|<rect x="740" y="180" width="380" height="300" rx="26" fill="#111827" stroke="#1f2a44" stroke-width="2"/>|,
-      ~s|<rect x="740" y="180" width="6" height="300" rx="3" fill="#f59e0b"/>|,
-      text_el(780, 225, "REVIEW SNAPSHOT", "20", "700", "#fcd34d"),
-      ~s|<line x1="780" y1="250" x2="1080" y2="250" stroke="#1f2a44" stroke-width="2"/>|,
-      ~s|<rect x="770" y="270" width="330" height="70" rx="18" fill="#111c2f" stroke="#1f2a44" stroke-width="2"/>|,
-      text_el(790, 300, "COMMITS", "20", "700", "#fcd34d"),
-      text_el(790, 330, commits, "38", "700", "#f8fafc"),
-      ~s|<rect x="770" y="350" width="330" height="60" rx="16" fill="#111c2f" stroke="#1f2a44" stroke-width="2"/>|,
-      text_el(790, 380, "FILES", "18", "700", "#fcd34d"),
-      text_el(980, 380, files, "26", "700", "#f8fafc"),
-      ~s|<rect x="770" y="420" width="330" height="60" rx="16" fill="#111c2f" stroke="#1f2a44" stroke-width="2"/>|,
-      text_el(790, 450, "COMMENTS", "18", "700", "#fcd34d"),
-      text_el(980, 450, comments, "26", "700", "#f8fafc"),
-      footer_text(80, footer_y, url_line, "24", "500", "#9ca3af"),
-      "</svg>"
-    ]
-    |> IO.iodata_to_binary()
+    base_html(
+      accent_color: "#d4a03a",
+      site_label: "#{site_name} / Pull Requests",
+      title: title,
+      description: description,
+      url_line: canonical_url && display_url(canonical_url),
+      sidebar: sidebar,
+      author: attrs["author"]
+    )
   end
 
-  defp title_text(_x, _y, [], _size, _weight, _fill, _line_height), do: ""
+  defp base_html(opts) do
+    accent_color = Keyword.fetch!(opts, :accent_color)
+    site_label = Keyword.fetch!(opts, :site_label)
+    title = Keyword.fetch!(opts, :title)
+    description = Keyword.get(opts, :description)
+    url_line = Keyword.get(opts, :url_line)
+    sidebar = Keyword.get(opts, :sidebar)
+    author = Keyword.get(opts, :author)
 
-  defp title_text(x, y, lines, size, weight, fill, line_height) do
-    tspans =
-      lines
-      |> Enum.with_index()
-      |> Enum.map(fn {line, idx} ->
-        dy = if idx == 0, do: "0", else: Integer.to_string(line_height)
-        ~s|<tspan x="#{x}" dy="#{dy}">#{escape(line)}</tspan>|
-      end)
+    description_html =
+      if description do
+        ~s|<p class="description">#{escape(description)}</p>|
+      else
+        ""
+      end
 
-    [
-      ~s|<text x="#{x}" y="#{y}" fill="#{fill}" font-family="#{font_family()}" font-size="#{size}" font-weight="#{weight}">|,
-      tspans,
-      "</text>"
-    ]
-    |> IO.iodata_to_binary()
+    footer_html = render_footer(url_line, author)
+
+    sidebar_html = sidebar || ""
+
+    has_sidebar = sidebar != nil
+
+    content_style =
+      if has_sidebar do
+        "max-width: 660px;"
+      else
+        ""
+      end
+
+    """
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8" />
+      <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+          width: #{@width}px;
+          height: #{@height}px;
+          background: #f6f8f5;
+          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          overflow: hidden;
+        }
+
+        .card {
+          position: relative;
+          width: #{@width - 80}px;
+          height: #{@height - 80}px;
+          background: #ffffff;
+          border: 1px solid #d0d7ce;
+          border-radius: 12px;
+          display: flex;
+          overflow: hidden;
+        }
+
+        .accent-bar {
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          height: 5px;
+          background: #{accent_color};
+        }
+
+        .content {
+          flex: 1;
+          padding: 48px 48px 40px;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          #{content_style}
+        }
+
+        .site-label {
+          font-size: 22px;
+          font-weight: 600;
+          color: #2f7c4c;
+          margin-bottom: 20px;
+          letter-spacing: 0.02em;
+        }
+
+        .title {
+          font-size: 52px;
+          font-weight: 700;
+          color: #1f2d23;
+          line-height: 1.15;
+          margin-bottom: 16px;
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+        }
+
+        .description {
+          font-size: 24px;
+          font-weight: 400;
+          color: #5a6b58;
+          line-height: 1.4;
+          display: -webkit-box;
+          -webkit-line-clamp: 3;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+        }
+
+        .footer {
+          position: absolute;
+          bottom: 36px;
+          left: 48px;
+          right: 48px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          font-size: 18px;
+          font-weight: 400;
+          color: #8fa891;
+        }
+
+        .footer-url {
+          font-size: 18px;
+          color: #8fa891;
+        }
+
+        .author {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+        }
+
+        .author-avatar {
+          width: 36px;
+          height: 36px;
+          border-radius: 50%;
+          border: 2px solid #d0d7ce;
+        }
+
+        .author-name {
+          font-size: 16px;
+          font-weight: 600;
+          color: #5a6b58;
+        }
+
+        .sidebar {
+          position: absolute;
+          right: 40px;
+          top: 50%;
+          transform: translateY(-50%);
+          width: 340px;
+          background: #f6f8f5;
+          border: 1px solid #d0d7ce;
+          border-radius: 10px;
+          padding: 24px;
+          overflow: hidden;
+        }
+
+        .sidebar-accent {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 4px;
+          height: 100%;
+        }
+
+        .sidebar-label {
+          font-size: 16px;
+          font-weight: 700;
+          color: #2f7c4c;
+          letter-spacing: 0.08em;
+          margin-bottom: 12px;
+          padding-left: 8px;
+        }
+
+        .sidebar-divider {
+          height: 1px;
+          background: #d0d7ce;
+          margin-bottom: 16px;
+        }
+
+        .stat-card {
+          background: #ffffff;
+          border: 1px solid #d0d7ce;
+          border-radius: 10px;
+          padding: 14px 16px;
+          margin-bottom: 12px;
+        }
+
+        .stat-card-label {
+          font-size: 14px;
+          font-weight: 700;
+          color: #2f7c4c;
+          letter-spacing: 0.06em;
+          margin-bottom: 4px;
+        }
+
+        .stat-card-value {
+          font-size: 40px;
+          font-weight: 700;
+          color: #1f2d23;
+          line-height: 1.1;
+        }
+
+        .stat-row {
+          background: #ffffff;
+          border: 1px solid #d0d7ce;
+          border-radius: 8px;
+          padding: 10px 16px;
+          margin-bottom: 8px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+        }
+
+        .stat-row-label {
+          font-size: 13px;
+          font-weight: 700;
+          color: #2f7c4c;
+          letter-spacing: 0.06em;
+        }
+
+        .stat-row-value {
+          font-size: 20px;
+          font-weight: 700;
+          color: #1f2d23;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="card">
+        <div class="accent-bar"></div>
+        <div class="content">
+          <div class="site-label">#{escape(site_label)}</div>
+          <div class="title">#{escape(title)}</div>
+          #{description_html}
+        </div>
+        #{sidebar_html}
+        #{footer_html}
+      </div>
+    </body>
+    </html>
+    """
   end
 
-  defp description_text(_x, _y, [], _size, _weight, _fill, _line_height), do: ""
+  defp render_footer(nil, nil), do: ""
 
-  defp description_text(x, y, lines, size, weight, fill, line_height) do
-    tspans =
-      lines
-      |> Enum.with_index()
-      |> Enum.map(fn {line, idx} ->
-        dy = if idx == 0, do: "0", else: Integer.to_string(line_height)
-        ~s|<tspan x="#{x}" dy="#{dy}">#{escape(line)}</tspan>|
-      end)
+  defp render_footer(url_line, author) do
+    url_html =
+      if url_line do
+        ~s|<span class="footer-url">#{escape(url_line)}</span>|
+      else
+        "<span></span>"
+      end
 
-    [
-      ~s|<text x="#{x}" y="#{y}" fill="#{fill}" font-family="#{font_family()}" font-size="#{size}" font-weight="#{weight}">|,
-      tspans,
-      "</text>"
-    ]
-    |> IO.iodata_to_binary()
+    author_html =
+      case author do
+        %{"name" => name, "avatar_url" => avatar_url} when is_binary(avatar_url) ->
+          ~s|<div class="author"><img class="author-avatar" src="#{escape(avatar_url)}" /><span class="author-name">#{escape(name)}</span></div>|
+
+        %{"name" => name} ->
+          ~s|<div class="author"><span class="author-name">#{escape(name)}</span></div>|
+
+        _ ->
+          ""
+      end
+
+    ~s|<div class="footer">#{url_html}#{author_html}</div>|
   end
 
-  defp footer_text(_x, _y, nil, _size, _weight, _fill), do: ""
-
-  defp footer_text(x, y, line, size, weight, fill) do
-    text_el(x, y, line, size, weight, fill)
+  defp stat_card(label, value) do
+    """
+    <div class="stat-card">
+      <div class="stat-card-label">#{escape(label)}</div>
+      <div class="stat-card-value">#{escape(value)}</div>
+    </div>
+    """
   end
 
-  defp text_el(x, y, content, size, weight, fill) do
-    ~s|<text x="#{x}" y="#{y}" fill="#{fill}" font-family="#{font_family()}" font-size="#{size}" font-weight="#{weight}">#{escape(content)}</text>|
+  defp stat_row(label, value) do
+    """
+    <div class="stat-row">
+      <span class="stat-row-label">#{escape(label)}</span>
+      <span class="stat-row-value">#{escape(value)}</span>
+    </div>
+    """
   end
 
-  defp font_family do
-    "ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif"
+  defp author_attrs_from_meta(%PageMeta{author: %{name: name} = author}) when is_binary(name) do
+    avatar_url = Micelio.Blog.People.gravatar_url(author, 120)
+
+    %{"name" => name, "avatar_url" => avatar_url}
+    |> Enum.reject(fn {_k, v} -> is_nil(v) end)
+    |> Map.new()
+    |> case do
+      attrs when map_size(attrs) > 0 -> attrs
+      _ -> nil
+    end
   end
+
+  defp author_attrs_from_meta(_), do: nil
 
   defp image_template_from_meta(open_graph) when is_map(open_graph) do
     normalize_text(Map.get(open_graph, "image_template") || Map.get(open_graph, :image_template))
@@ -607,63 +668,6 @@ defmodule MicelioWeb.OpenGraphImage do
     end
   end
 
-  defp wrap_lines(nil, _max_chars, _max_lines), do: []
-
-  defp wrap_lines(text, max_chars, max_lines) when is_binary(text) do
-    words =
-      text
-      |> String.split(~r/\s+/, trim: true)
-
-    {lines, current} =
-      Enum.reduce(words, {[], ""}, fn word, {lines, current} ->
-        candidate =
-          if current == "" do
-            word
-          else
-            current <> " " <> word
-          end
-
-        if String.length(candidate) <= max_chars do
-          {lines, candidate}
-        else
-          {[current | lines], word}
-        end
-      end)
-
-    lines =
-      [current | lines]
-      |> Enum.reverse()
-      |> Enum.reject(&(&1 == ""))
-
-    case lines do
-      [] ->
-        []
-
-      _ ->
-        if length(lines) > max_lines do
-          {head, tail} = Enum.split(lines, max_lines)
-
-          List.replace_at(
-            head,
-            max_lines - 1,
-            truncate_ellipsis(Enum.at(tail, 0) || Enum.at(head, max_lines - 1))
-          )
-        else
-          lines
-        end
-    end
-  end
-
-  defp truncate_ellipsis(text) when is_binary(text) do
-    max = 60
-
-    if String.length(text) <= max do
-      text <> "…"
-    else
-      String.slice(text, 0, max) <> "…"
-    end
-  end
-
   defp display_url(url) when is_binary(url) do
     case URI.parse(url) do
       %URI{host: host, path: path} when is_binary(host) ->
@@ -701,60 +705,6 @@ defmodule MicelioWeb.OpenGraphImage do
     map
     |> Enum.reject(fn {_k, v} -> is_nil(v) or v == "" end)
     |> Map.new()
-  end
-
-  defp svg_to_png(svg) when is_binary(svg) do
-    case find_svg_converter() do
-      {:ok, exec} ->
-        args = [
-          "-w",
-          Integer.to_string(@width),
-          "-h",
-          Integer.to_string(@height),
-          "-f",
-          "png",
-          temp_svg_path()
-        ]
-
-        path = List.last(args)
-
-        try do
-          :ok = File.write(path, svg)
-          {png, status} = MuonTrap.cmd(exec, args)
-          if status == 0, do: {:ok, png}, else: {:error, :convert_failed}
-        after
-          _ = File.rm(path)
-        end
-
-      :error ->
-        {:error, :no_converter}
-    end
-  rescue
-    _ -> {:error, :convert_failed}
-  end
-
-  defp temp_svg_path do
-    suffix =
-      16
-      |> :crypto.strong_rand_bytes()
-      |> Base.encode16(case: :lower)
-
-    Path.join(System.tmp_dir!(), "micelio-og-#{suffix}.svg")
-  end
-
-  defp find_svg_converter do
-    case System.find_executable("rsvg-convert") do
-      nil ->
-        ["/opt/homebrew/bin/rsvg-convert", "/usr/local/bin/rsvg-convert", "/usr/bin/rsvg-convert"]
-        |> Enum.find(&File.regular?/1)
-        |> case do
-          nil -> :error
-          path -> {:ok, path}
-        end
-
-      path ->
-        {:ok, path}
-    end
   end
 
   defp secret do
