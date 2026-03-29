@@ -68,7 +68,9 @@ Images are lazily generated on first request and cached in storage (local filesy
 
 ## Rate Limiting
 
-Global rate limiting with per-domain overrides.
+Micelio uses per-IP token bucket rate limiting. Each IP address gets a fixed number of requests per time window. When the limit is exceeded, the server responds with `429 Too Many Requests` and includes `retry-after` and `x-ratelimit-*` headers.
+
+Specific endpoints can have their own limits via domain overrides (e.g. the Open Graph image endpoint has a lower limit since rendering is expensive). If the same IP repeatedly exceeds the rate limit (10 violations within 5 minutes), it is blocked for 1 hour.
 
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
