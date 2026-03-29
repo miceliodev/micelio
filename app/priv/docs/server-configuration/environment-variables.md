@@ -136,7 +136,7 @@ The `hif` CLI communicates with Micelio via gRPC for operations like authenticat
 
 ## Observability
 
-Traces via [OpenTelemetry](https://opentelemetry.io/), metrics via [Prometheus](https://prometheus.io/), logs via [Loki](https://grafana.com/oss/loki/). The recommended stack is [Grafana Alloy](https://grafana.com/oss/alloy/) + [Tempo](https://grafana.com/oss/tempo/) + Loki + Prometheus.
+Micelio integrates with the [Grafana](https://grafana.com/) observability ecosystem. Traces are exported via [OpenTelemetry](https://opentelemetry.io/) to [Tempo](https://grafana.com/oss/tempo/), metrics are exposed as a [Prometheus](https://prometheus.io/)-compatible endpoint, and logs are pushed directly to [Loki](https://grafana.com/oss/loki/) via its HTTP API. [Grafana Alloy](https://grafana.com/oss/alloy/) acts as the collector that receives OTLP trace data and forwards it to Tempo.
 
 ### Traces
 
