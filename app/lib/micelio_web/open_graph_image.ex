@@ -62,8 +62,6 @@ defmodule MicelioWeb.OpenGraphImage do
       _ ->
         nil
     end
-  rescue
-    _ -> nil
   end
 
   @doc """
@@ -684,8 +682,6 @@ defmodule MicelioWeb.OpenGraphImage do
       _ ->
         url
     end
-  rescue
-    _ -> url
   end
 
   defp escape(text) when is_binary(text) do
