@@ -82,6 +82,9 @@ Specific endpoints can have their own limits via domain overrides (e.g. the Open
 
 The `hif` CLI communicates with Micelio via gRPC for operations like authentication, repository management, session handling, and content access. The gRPC server is optional and disabled by default.
 
+> [!NOTE]
+> We chose gRPC over REST for CLI-to-forge communication because it uses binary serialization (protobuf), which is significantly more efficient for transferring file content and tree structures. It also gives us strongly typed contracts shared between the Rust CLI and the Elixir server, and HTTP/2 multiplexing for concurrent operations over a single connection.
+
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
 | `MICELIO_GRPC_ENABLED` | No | `false` | Enable the gRPC server |
