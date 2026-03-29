@@ -44,12 +44,11 @@ defmodule MicelioWeb.OpenGraphImage do
         attrs = attrs_from_meta(meta)
         hash = hash(attrs)
         token = token(attrs)
-        cache_key = cache_key(hash, meta.open_graph)
 
         canonical_url
         |> URI.parse()
         |> Map.put(:path, "/og/#{hash}")
-        |> Map.put(:query, URI.encode_query(%{"token" => token, "v" => cache_key}))
+        |> Map.put(:query, URI.encode_query(%{"token" => token, "v" => hash}))
         |> Map.put(:fragment, nil)
         |> URI.to_string()
 
@@ -58,40 +57,6 @@ defmodule MicelioWeb.OpenGraphImage do
     end
   rescue
     _ -> nil
-  end
-
-  defp cache_key(hash, open_graph) when is_binary(hash) and is_map(open_graph) do
-    case cache_buster_from_meta(open_graph) do
-      nil -> hash
-      cache_buster -> hash <> "-" <> cache_buster
-    end
-  end
-
-  defp cache_key(hash, _open_graph), do: hash
-
-  defp cache_buster_from_meta(open_graph) when is_map(open_graph) do
-    open_graph
-    |> Map.get(:cache_buster)
-    |> case do
-      nil -> Map.get(open_graph, "cache_buster")
-      value -> value
-    end
-    |> normalize_cache_buster()
-  end
-
-  defp cache_buster_from_meta(_), do: nil
-
-  defp normalize_cache_buster(nil), do: nil
-
-  defp normalize_cache_buster(value) do
-    value
-    |> to_string()
-    |> String.trim()
-    |> String.replace(~r/\s+/, "-")
-    |> case do
-      "" -> nil
-      normalized -> normalized
-    end
   end
 
   @doc """

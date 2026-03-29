@@ -22,7 +22,6 @@ defmodule MicelioWeb.Router do
     plug(:put_root_layout, html: {MicelioWeb.Layouts, :root})
     plug(:protect_from_forgery)
     plug(:put_secure_browser_headers)
-    plug(MicelioWeb.Plugs.OpenGraphCacheBuster)
     plug(MicelioWeb.LocalePlug)
     plug(MicelioWeb.AuthenticationPlug)
     plug(MicelioWeb.Plugs.RateLimitPlug, limit: 200, window_ms: 60_000, bucket_prefix: "browser")
@@ -134,7 +133,7 @@ defmodule MicelioWeb.Router do
     pipe_through(:browser)
 
     live_session :docs,
-      on_mount: [{MicelioWeb.LiveAuth, :current_user}, MicelioWeb.LiveOpenGraphCacheBuster] do
+      on_mount: [{MicelioWeb.LiveAuth, :current_user}] do
       live("/", DocsLive.Index, :index)
     end
   end
@@ -392,7 +391,7 @@ defmodule MicelioWeb.Router do
     pipe_through([:browser, :require_auth])
 
     live_session :repositories,
-      on_mount: [{MicelioWeb.LiveAuth, :require_auth}, MicelioWeb.LiveOpenGraphCacheBuster] do
+      on_mount: [{MicelioWeb.LiveAuth, :require_auth}] do
       live("/", RepositoryLive.Index, :index)
       live("/new", RepositoryLive.New, :new)
     end
@@ -404,7 +403,7 @@ defmodule MicelioWeb.Router do
     pipe_through([:browser, :require_auth, :load_resources])
 
     live_session :repository_management,
-      on_mount: [{MicelioWeb.LiveAuth, :require_auth}, MicelioWeb.LiveOpenGraphCacheBuster] do
+      on_mount: [{MicelioWeb.LiveAuth, :require_auth}] do
       live("/:account/:repository/edit", RepositoryLive.Edit, :edit)
       live("/:account/:repository/sessions", SessionLive.Index, :index)
       live("/:account/:repository/sessions/:id", SessionLive.Show, :show)
@@ -425,7 +424,7 @@ defmodule MicelioWeb.Router do
     pipe_through([:browser, :require_auth])
 
     live_session :organization_settings,
-      on_mount: [{MicelioWeb.LiveAuth, :require_auth}, MicelioWeb.LiveOpenGraphCacheBuster] do
+      on_mount: [{MicelioWeb.LiveAuth, :require_auth}] do
       live("/:organization_handle/settings", OrganizationLive.Settings, :edit)
     end
   end
@@ -442,7 +441,7 @@ defmodule MicelioWeb.Router do
     pipe_through([:browser, :require_auth, :require_admin])
 
     live_session :admin,
-      on_mount: [{MicelioWeb.LiveAuth, :require_auth}, MicelioWeb.LiveOpenGraphCacheBuster] do
+      on_mount: [{MicelioWeb.LiveAuth, :require_auth}] do
       live("/prompts", AdminPromptRegistryLive.Index, :index)
       live("/prompt-templates", AdminPlanTemplatesLive.Index, :index)
       live("/errors", AdminErrorsLive.Index, :index)
@@ -455,7 +454,7 @@ defmodule MicelioWeb.Router do
     pipe_through([:browser, :require_auth])
 
     live_session :account_settings,
-      on_mount: [{MicelioWeb.LiveAuth, :require_auth}, MicelioWeb.LiveOpenGraphCacheBuster] do
+      on_mount: [{MicelioWeb.LiveAuth, :require_auth}] do
       live("/storage", StorageSettingsLive, :edit)
     end
   end
@@ -481,7 +480,7 @@ defmodule MicelioWeb.Router do
     pipe_through([:browser, :require_auth, :load_resources])
 
     live_session :repository_settings,
-      on_mount: [{MicelioWeb.LiveAuth, :require_auth}, MicelioWeb.LiveOpenGraphCacheBuster] do
+      on_mount: [{MicelioWeb.LiveAuth, :require_auth}] do
       live("/:account/:repository/settings", RepositoryLive.Settings, :edit)
       live("/:account/:repository/settings/webhooks", RepositoryLive.Webhooks, :index)
     end
@@ -503,7 +502,7 @@ defmodule MicelioWeb.Router do
     pipe_through([:browser, :load_resources])
 
     live_session :public,
-      on_mount: [{MicelioWeb.LiveAuth, :current_user}, MicelioWeb.LiveOpenGraphCacheBuster] do
+      on_mount: [{MicelioWeb.LiveAuth, :current_user}] do
       live("/:account/:repository/agents", AgentLive.Index, :index)
       live("/:account/:repository/prompt-requests", PlanLive.Index, :index)
       live("/:account/:repository/prompt-requests/:number", PlanLive.Show, :show)
@@ -539,7 +538,7 @@ defmodule MicelioWeb.Router do
       pipe_through([:browser])
 
       live_session :"docs_#{locale}",
-        on_mount: [{MicelioWeb.LiveAuth, :current_user}, MicelioWeb.LiveOpenGraphCacheBuster] do
+        on_mount: [{MicelioWeb.LiveAuth, :current_user}] do
         live("/docs", DocsLive.Index, :index)
       end
     end

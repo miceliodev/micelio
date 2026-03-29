@@ -126,14 +126,12 @@ defmodule MicelioWeb.PageMeta do
         :site_name,
         :image_template,
         :image_stats,
-        :cache_buster,
         "image_template",
-        "image_stats",
-        "cache_buster"
+        "image_stats"
       ])
 
     if has_og_image?(og) do
-      maybe_apply_cache_buster(og, meta)
+      og
     else
       case MicelioWeb.OpenGraphImage.url(meta) do
         nil ->
@@ -278,82 +276,4 @@ defmodule MicelioWeb.PageMeta do
       "og:" <> key
     end
   end
-
-  defp maybe_apply_cache_buster(og, %__MODULE__{} = meta) when is_map(og) do
-    case cache_buster(meta.open_graph) do
-      nil -> og
-      cache_buster -> update_og_image_urls(og, cache_buster)
-    end
-  end
-
-  defp maybe_apply_cache_buster(og, _meta), do: og
-
-  defp cache_buster(open_graph) when is_map(open_graph) do
-    open_graph
-    |> Map.get(:cache_buster)
-    |> case do
-      nil -> Map.get(open_graph, "cache_buster")
-      value -> value
-    end
-    |> normalize_cache_buster()
-  end
-
-  defp cache_buster(_open_graph), do: nil
-
-  defp normalize_cache_buster(nil), do: nil
-
-  defp normalize_cache_buster(value) do
-    value
-    |> to_string()
-    |> String.trim()
-    |> String.replace(~r/\s+/, "-")
-    |> case do
-      "" -> nil
-      normalized -> normalized
-    end
-  end
-
-  defp update_og_image_urls(og, cache_buster) when is_map(og) and is_binary(cache_buster) do
-    keys = [
-      :image,
-      "image",
-      "og:image",
-      :"og:image",
-      "og:image:secure_url",
-      :"og:image:secure_url"
-    ]
-
-    Enum.reduce(keys, og, fn key, acc ->
-      case Map.fetch(acc, key) do
-        {:ok, value} -> Map.put(acc, key, append_cache_buster(value, cache_buster))
-        :error -> acc
-      end
-    end)
-  end
-
-  defp update_og_image_urls(og, _cache_buster), do: og
-
-  defp append_cache_buster(url, cache_buster) when is_binary(url) and is_binary(cache_buster) do
-    with %URI{} = uri <- URI.parse(url),
-         false <- uri.scheme == "data" do
-      query =
-        uri.query
-        |> case do
-          nil -> %{}
-          "" -> %{}
-          existing -> URI.decode_query(existing)
-        end
-        |> Map.put("v", cache_buster)
-
-      uri
-      |> Map.put(:query, URI.encode_query(query))
-      |> URI.to_string()
-    else
-      _ -> url
-    end
-  rescue
-    _ -> url
-  end
-
-  defp append_cache_buster(url, _cache_buster), do: url
 end

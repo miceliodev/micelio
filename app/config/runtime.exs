@@ -516,32 +516,6 @@ if gitlab_oauth != [] do
   config :micelio, :gitlab_oauth, gitlab_oauth
 end
 
-og_cache_busters =
-  [
-    {"default", "MICELIO_OPEN_GRAPH_CACHE_BUSTER_DEFAULT", "OG_CACHE_BUSTER_DEFAULT"},
-    {"twitter", "MICELIO_OPEN_GRAPH_CACHE_BUSTER_TWITTER", "OG_CACHE_BUSTER_TWITTER"},
-    {"linkedin", "MICELIO_OPEN_GRAPH_CACHE_BUSTER_LINKEDIN", "OG_CACHE_BUSTER_LINKEDIN"},
-    {"facebook", "MICELIO_OPEN_GRAPH_CACHE_BUSTER_FACEBOOK", "OG_CACHE_BUSTER_FACEBOOK"},
-    {"slack", "MICELIO_OPEN_GRAPH_CACHE_BUSTER_SLACK", "OG_CACHE_BUSTER_SLACK"},
-    {"discord", "MICELIO_OPEN_GRAPH_CACHE_BUSTER_DISCORD", "OG_CACHE_BUSTER_DISCORD"},
-    {"telegram", "MICELIO_OPEN_GRAPH_CACHE_BUSTER_TELEGRAM", "OG_CACHE_BUSTER_TELEGRAM"},
-    {"pinterest", "MICELIO_OPEN_GRAPH_CACHE_BUSTER_PINTEREST", "OG_CACHE_BUSTER_PINTEREST"}
-  ]
-  |> Enum.reduce(%{}, fn {key, env, old_env}, acc ->
-    case System.get_env(env) || System.get_env(old_env) do
-      nil ->
-        acc
-
-      value ->
-        trimmed = String.trim(value)
-        if trimmed == "", do: acc, else: Map.put(acc, key, trimmed)
-    end
-  end)
-
-if og_cache_busters != %{} do
-  config :micelio, :open_graph_cache_busters, og_cache_busters
-end
-
 # Open Graph image generation via Carta (opt-in in prod, enabled by default in dev)
 # Set MICELIO_OPEN_GRAPH_ENABLED=true/false to override. Requires Chromium on the system.
 og_enabled =

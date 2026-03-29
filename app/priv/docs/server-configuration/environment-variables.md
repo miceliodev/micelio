@@ -76,21 +76,6 @@ Global rate limiting with per-domain overrides.
 | `MICELIO_RATE_LIMIT_WINDOW_MS` | No | `60000` | Rate limit window in milliseconds |
 | `MICELIO_RATE_LIMIT_OPEN_GRAPH` | No | `30` | Rate limit override for the `/og` endpoint |
 
-## Open Graph Cache Busters
-
-Per-platform cache busters appended to OG image URLs. Useful for forcing social platforms to refetch images after changes.
-
-| Variable | Required | Default | Description |
-|----------|----------|---------|-------------|
-| `MICELIO_OPEN_GRAPH_CACHE_BUSTER_DEFAULT` | No | — | Default cache buster string |
-| `MICELIO_OPEN_GRAPH_CACHE_BUSTER_TWITTER` | No | — | Cache buster for Twitter/X |
-| `MICELIO_OPEN_GRAPH_CACHE_BUSTER_LINKEDIN` | No | — | Cache buster for LinkedIn |
-| `MICELIO_OPEN_GRAPH_CACHE_BUSTER_FACEBOOK` | No | — | Cache buster for Facebook |
-| `MICELIO_OPEN_GRAPH_CACHE_BUSTER_SLACK` | No | — | Cache buster for Slack |
-| `MICELIO_OPEN_GRAPH_CACHE_BUSTER_DISCORD` | No | — | Cache buster for Discord |
-| `MICELIO_OPEN_GRAPH_CACHE_BUSTER_TELEGRAM` | No | — | Cache buster for Telegram |
-| `MICELIO_OPEN_GRAPH_CACHE_BUSTER_PINTEREST` | No | — | Cache buster for Pinterest |
-
 ## gRPC
 
 | Variable | Required | Default | Description |
