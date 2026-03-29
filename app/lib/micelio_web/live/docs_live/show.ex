@@ -49,111 +49,119 @@ defmodule MicelioWeb.DocsLive.Show do
   @impl true
   def render(assigns) do
     ~H"""
-    <div class="docs-container docs-show">
-      <aside class="docs-sidebar">
-        <h4 class="docs-sidebar-title">{@category_info.title}</h4>
-        <nav class="docs-sidebar-nav" aria-label={gettext("Category pages")}>
-          <a
-            :for={page <- @pages}
-            href={~p"/docs/#{@category}/#{page.id}"}
-            class={["docs-sidebar-link", page.id == @page.id && "docs-sidebar-link-active"]}
+    <Layouts.app
+      flash={@flash}
+      current_scope={assigns[:current_scope]}
+      current_user={assigns[:current_user]}
+      locale={assigns[:locale] || "en"}
+      current_path={assigns[:current_path] || "/"}
+    >
+      <div class="docs-container docs-show">
+        <aside class="docs-sidebar">
+          <h4 class="docs-sidebar-title">{@category_info.title}</h4>
+          <nav class="docs-sidebar-nav" aria-label={gettext("Category pages")}>
+            <a
+              :for={page <- @pages}
+              href={~p"/docs/#{@category}/#{page.id}"}
+              class={["docs-sidebar-link", page.id == @page.id && "docs-sidebar-link-active"]}
+            >
+              {page.title}
+            </a>
+          </nav>
+          <nav
+            :if={@toc != []}
+            class="docs-sidebar-toc"
+            id="docs-toc"
+            phx-hook=".DocsTocScrollSpy"
+            phx-update="ignore"
+            aria-label={gettext("On this page")}
           >
-            {page.title}
-          </a>
-        </nav>
-        <nav
-          :if={@toc != []}
-          class="docs-sidebar-toc"
-          id="docs-toc"
-          phx-hook=".DocsTocScrollSpy"
-          phx-update="ignore"
-          aria-label={gettext("On this page")}
-        >
-          <h4 class="docs-sidebar-toc-title">{gettext("On this page")}</h4>
-          <a
-            :for={entry <- @toc}
-            href={"##{entry.id}"}
-            class={["docs-sidebar-toc-link", entry.level == 3 && "docs-sidebar-toc-link-nested"]}
-          >
-            {entry.text}
-          </a>
-        </nav>
-        <script :type={Phoenix.LiveView.ColocatedHook} name=".DocsTocScrollSpy">
-          export default {
-            mounted() {
-              const nav = this.el;
-              const links = nav.querySelectorAll("a[href^='#']");
-              const headings = Array.from(links)
-                .map(a => document.getElementById(a.getAttribute("href").slice(1)))
-                .filter(Boolean);
-              if (headings.length === 0) return;
+            <h4 class="docs-sidebar-toc-title">{gettext("On this page")}</h4>
+            <a
+              :for={entry <- @toc}
+              href={"##{entry.id}"}
+              class={["docs-sidebar-toc-link", entry.level == 3 && "docs-sidebar-toc-link-nested"]}
+            >
+              {entry.text}
+            </a>
+          </nav>
+          <script :type={Phoenix.LiveView.ColocatedHook} name=".DocsTocScrollSpy">
+            export default {
+              mounted() {
+                const nav = this.el;
+                const links = nav.querySelectorAll("a[href^='#']");
+                const headings = Array.from(links)
+                  .map(a => document.getElementById(a.getAttribute("href").slice(1)))
+                  .filter(Boolean);
+                if (headings.length === 0) return;
 
-              const update = () => {
-                const scrollY = window.scrollY + 100;
-                let current = null;
-                for (let i = headings.length - 1; i >= 0; i--) {
-                  if (headings[i].offsetTop <= scrollY) {
-                    current = headings[i];
-                    break;
+                const update = () => {
+                  const scrollY = window.scrollY + 100;
+                  let current = null;
+                  for (let i = headings.length - 1; i > -1; i--) {
+                    if (!(headings[i].offsetTop > scrollY)) {
+                      current = headings[i];
+                      break;
+                    }
                   }
-                }
-                links.forEach(a => a.classList.remove("docs-sidebar-toc-link-active"));
-                if (current) {
-                  const active = nav.querySelector(`a[href="#${current.id}"]`);
-                  if (active) active.classList.add("docs-sidebar-toc-link-active");
-                }
-              };
+                  links.forEach(a => a.classList.remove("docs-sidebar-toc-link-active"));
+                  if (current) {
+                    const active = nav.querySelector(`a[href="#${current.id}"]`);
+                    if (active) active.classList.add("docs-sidebar-toc-link-active");
+                  }
+                };
 
-              window.addEventListener("scroll", update, { passive: true });
-              update();
-              this._scrollHandler = update;
-            },
-            destroyed() {
-              if (this._scrollHandler) {
-                window.removeEventListener("scroll", this._scrollHandler);
+                window.addEventListener("scroll", update, { passive: true });
+                update();
+                this._scrollHandler = update;
+              },
+              destroyed() {
+                if (this._scrollHandler) {
+                  window.removeEventListener("scroll", this._scrollHandler);
+                }
               }
             }
-          }
-        </script>
-        <div class="docs-sidebar-back">
-          <a href={~p"/docs"}>{gettext("All documentation")}</a>
-        </div>
-      </aside>
+          </script>
+          <div class="docs-sidebar-back">
+            <a href={~p"/docs"}>{gettext("All documentation")}</a>
+          </div>
+        </aside>
 
-      <article class="docs-content">
-        <nav class="docs-breadcrumb" aria-label={gettext("Breadcrumb")}>
-          <a href={~p"/docs"}>{gettext("Documentation")}</a>
-          <span class="docs-breadcrumb-separator">/</span>
-          <a href={~p"/docs/#{@category}"}>{@category_info.title}</a>
-          <span class="docs-breadcrumb-separator">/</span>
-          <span class="docs-breadcrumb-current">{@page.title}</span>
-        </nav>
+        <article class="docs-content">
+          <nav class="docs-breadcrumb" aria-label={gettext("Breadcrumb")}>
+            <a href={~p"/docs"}>{gettext("Documentation")}</a>
+            <span class="docs-breadcrumb-separator">/</span>
+            <a href={~p"/docs/#{@category}"}>{@category_info.title}</a>
+            <span class="docs-breadcrumb-separator">/</span>
+            <span class="docs-breadcrumb-current">{@page.title}</span>
+          </nav>
 
-        <.header>
-          {@page.title}
-          <:subtitle>
-            {@page.description}
-          </:subtitle>
-        </.header>
+          <.header>
+            {@page.title}
+            <:subtitle>
+              {@page.description}
+            </:subtitle>
+          </.header>
 
-        <.collapsible_toc toc={@toc} />
+          <.collapsible_toc toc={@toc} />
 
-        <div
-          class="docs-page-content prose"
-          data-api-try-auth={to_string(@api_try_authenticated)}
-        >
-          {raw(@page.body)}
-        </div>
-        <div
-          id="api-try-i18n"
-          hidden
-          data-sign-in-label={gettext("Sign in to try this")}
-          data-send-label={gettext("Send request")}
-          data-sending-label={gettext("Sending...")}
-        >
-        </div>
-      </article>
-    </div>
+          <div
+            class="docs-page-content prose"
+            data-api-try-auth={to_string(@api_try_authenticated)}
+          >
+            {raw(@page.body)}
+          </div>
+          <div
+            id="api-try-i18n"
+            hidden
+            data-sign-in-label={gettext("Sign in to try this")}
+            data-send-label={gettext("Send request")}
+            data-sending-label={gettext("Sending...")}
+          >
+          </div>
+        </article>
+      </div>
+    </Layouts.app>
     """
   end
 end
