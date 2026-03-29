@@ -11,12 +11,12 @@ All Micelio configuration is done through environment variables at runtime. This
 
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
-| `PHX_SERVER` | Yes (prod) | — | Set to `true` to start the HTTP server |
+| `MICELIO_SERVER` | Yes (prod) | — | Set to `true` to start the HTTP server |
 | `SECRET_KEY_BASE` | Yes (prod) | — | Secret for signing cookies and tokens. Generate with `mix phx.gen.secret` |
-| `PHX_HOST` | No | `example.com` | Public hostname for URL generation |
+| `MICELIO_HOST` | No | `example.com` | Public hostname for URL generation |
 | `PORT` | No | `4000` | HTTP port the server listens on |
-| `ENCRYPTION_KEY` | Yes | — | 32-byte base64 key for field encryption. Generate with `openssl rand -base64 32` |
-| `ENCRYPTION_PREVIOUS_KEYS` | No | — | Comma-separated `tag:base64` entries for key rotation |
+| `MICELIO_ENCRYPTION_KEY` | Yes | — | 32-byte base64 key for field encryption. Generate with `openssl rand -base64 32` |
+| `MICELIO_ENCRYPTION_PREVIOUS_KEYS` | No | — | Comma-separated `tag:base64` entries for key rotation |
 | `DNS_CLUSTER_QUERY` | No | — | DNS query for clustering nodes |
 
 ## Database
@@ -33,26 +33,26 @@ Micelio supports local filesystem, S3, or tiered (RAM + disk cache + CDN + origi
 
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
-| `STORAGE_BACKEND` | No | `local` | Storage backend: `local`, `s3`, or `tiered` |
-| `STORAGE_LOCAL_PATH` | No | `/var/micelio/storage` (prod) | Local filesystem path for storage |
-| `S3_BUCKET` | Yes (if s3) | — | S3 bucket name |
-| `S3_REGION` | No | `us-east-1` | S3 region |
-| `S3_ENDPOINT` | No | — | Custom S3 endpoint for S3-compatible services (MinIO, R2, etc.) |
-| `S3_ACCESS_KEY_ID` | No | — | S3 access key (optional if using IAM roles) |
-| `S3_SECRET_ACCESS_KEY` | No | — | S3 secret key (optional if using IAM roles) |
-| `S3_URL_STYLE` | No | `virtual` | S3 URL style: `virtual` or `path` |
+| `MICELIO_STORAGE_BACKEND` | No | `local` | Storage backend: `local`, `s3`, or `tiered` |
+| `MICELIO_STORAGE_LOCAL_PATH` | No | `/var/micelio/storage` (prod) | Local filesystem path for storage |
+| `MICELIO_S3_BUCKET` | Yes (if s3) | — | S3 bucket name |
+| `MICELIO_S3_REGION` | No | `us-east-1` | S3 region |
+| `MICELIO_S3_ENDPOINT` | No | — | Custom S3 endpoint for S3-compatible services (MinIO, R2, etc.) |
+| `MICELIO_S3_ACCESS_KEY_ID` | No | — | S3 access key (optional if using IAM roles) |
+| `MICELIO_S3_SECRET_ACCESS_KEY` | No | — | S3 secret key (optional if using IAM roles) |
+| `MICELIO_S3_URL_STYLE` | No | `virtual` | S3 URL style: `virtual` or `path` |
 
 ### Tiered storage
 
-When `STORAGE_BACKEND=tiered`, Micelio uses a multi-tier cache: RAM, SSD disk, CDN, then origin (local or S3).
+When `MICELIO_STORAGE_BACKEND=tiered`, Micelio uses a multi-tier cache: RAM, SSD disk, CDN, then origin (local or S3).
 
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
-| `STORAGE_ORIGIN_BACKEND` | No | auto | Origin backend: `local` or `s3`. Defaults to `s3` if `S3_BUCKET` is set |
-| `STORAGE_CACHE_PATH` | No | `/var/micelio/cache` (prod) | Disk cache path |
-| `STORAGE_CACHE_MEMORY_MAX_BYTES` | No | — | Max bytes for in-memory cache |
-| `STORAGE_CDN_BASE_URL` | No | — | CDN base URL for cache invalidation |
-| `STORAGE_CDN_TIMEOUT_MS` | No | — | Timeout for CDN requests |
+| `MICELIO_STORAGE_ORIGIN_BACKEND` | No | auto | Origin backend: `local` or `s3`. Defaults to `s3` if `MICELIO_S3_BUCKET` is set |
+| `MICELIO_STORAGE_CACHE_PATH` | No | `/var/micelio/cache` (prod) | Disk cache path |
+| `MICELIO_STORAGE_CACHE_MEMORY_MAX_BYTES` | No | — | Max bytes for in-memory cache |
+| `MICELIO_STORAGE_CDN_BASE_URL` | No | — | CDN base URL for cache invalidation |
+| `MICELIO_STORAGE_CDN_TIMEOUT_MS` | No | — | Timeout for CDN requests |
 
 ## Open Graph Images
 
@@ -80,14 +80,14 @@ Per-platform cache busters appended to OG image URLs. Useful for forcing social 
 
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
-| `OG_CACHE_BUSTER_DEFAULT` | No | — | Default cache buster string |
-| `OG_CACHE_BUSTER_TWITTER` | No | — | Cache buster for Twitter/X |
-| `OG_CACHE_BUSTER_LINKEDIN` | No | — | Cache buster for LinkedIn |
-| `OG_CACHE_BUSTER_FACEBOOK` | No | — | Cache buster for Facebook |
-| `OG_CACHE_BUSTER_SLACK` | No | — | Cache buster for Slack |
-| `OG_CACHE_BUSTER_DISCORD` | No | — | Cache buster for Discord |
-| `OG_CACHE_BUSTER_TELEGRAM` | No | — | Cache buster for Telegram |
-| `OG_CACHE_BUSTER_PINTEREST` | No | — | Cache buster for Pinterest |
+| `MICELIO_OG_CACHE_BUSTER_DEFAULT` | No | — | Default cache buster string |
+| `MICELIO_OG_CACHE_BUSTER_TWITTER` | No | — | Cache buster for Twitter/X |
+| `MICELIO_OG_CACHE_BUSTER_LINKEDIN` | No | — | Cache buster for LinkedIn |
+| `MICELIO_OG_CACHE_BUSTER_FACEBOOK` | No | — | Cache buster for Facebook |
+| `MICELIO_OG_CACHE_BUSTER_SLACK` | No | — | Cache buster for Slack |
+| `MICELIO_OG_CACHE_BUSTER_DISCORD` | No | — | Cache buster for Discord |
+| `MICELIO_OG_CACHE_BUSTER_TELEGRAM` | No | — | Cache buster for Telegram |
+| `MICELIO_OG_CACHE_BUSTER_PINTEREST` | No | — | Cache buster for Pinterest |
 
 ## gRPC
 
@@ -149,32 +149,32 @@ Per-platform cache busters appended to OG image URLs. Useful for forcing social 
 | `OTEL_EXPORTER_OTLP_PROTOCOL` | No | `grpc` | Protocol: `grpc` or `http_protobuf` |
 | `OTEL_SERVICE_NAME` | No | `micelio-web` | Service name in traces |
 | `OTEL_DEPLOYMENT_ENVIRONMENT` | No | `production` | Deployment environment label |
-| `METRICS_BEARER_TOKEN` | Yes (prod) | — | Bearer token for the metrics endpoint |
+| `MICELIO_METRICS_BEARER_TOKEN` | Yes (prod) | — | Bearer token for the metrics endpoint |
 
 ## Error Tracking
 
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
-| `ENABLE_EXTERNAL_SENTRY` | No | `false` | Forward errors to external Sentry |
-| `ERROR_CAPTURE_ENABLED` | No | `true` | Enable error capture |
-| `ERROR_RETENTION_DAYS` | No | `90` | Days to retain errors |
-| `ERROR_RESOLVED_RETENTION_DAYS` | No | `30` | Days to retain resolved errors |
-| `ERROR_UNRESOLVED_RETENTION_DAYS` | No | `90` | Days to retain unresolved errors |
-| `ERROR_RETENTION_ARCHIVE_ENABLED` | No | `false` | Archive errors before deletion |
-| `ERROR_RETENTION_ARCHIVE_PREFIX` | No | `errors/archives` | Storage prefix for archived errors |
-| `ERROR_RETENTION_VACUUM_ENABLED` | No | `true` | Vacuum tables after cleanup |
-| `ERROR_RETENTION_TABLE_WARN_THRESHOLD` | No | `100000` | Log warning when error count exceeds this |
-| `ERROR_DEDUPE_WINDOW_SECONDS` | No | `300` | Window for deduplicating identical errors |
-| `ERROR_RATE_LIMIT_PER_KIND_PER_MINUTE` | No | `100` | Max errors per kind per minute |
-| `ERROR_RATE_LIMIT_TOTAL_PER_MINUTE` | No | `1000` | Max total errors per minute |
-| `ERROR_SAMPLING_AFTER_OCCURRENCES` | No | `100` | Start sampling after this many occurrences |
-| `ERROR_SAMPLING_RATE` | No | `0.1` | Sampling rate (0.0 to 1.0) after threshold |
+| `MICELIO_ENABLE_EXTERNAL_SENTRY` | No | `false` | Forward errors to external Sentry |
+| `MICELIO_ERROR_CAPTURE_ENABLED` | No | `true` | Enable error capture |
+| `MICELIO_ERROR_RETENTION_DAYS` | No | `90` | Days to retain errors |
+| `MICELIO_ERROR_RESOLVED_RETENTION_DAYS` | No | `30` | Days to retain resolved errors |
+| `MICELIO_ERROR_UNRESOLVED_RETENTION_DAYS` | No | `90` | Days to retain unresolved errors |
+| `MICELIO_ERROR_RETENTION_ARCHIVE_ENABLED` | No | `false` | Archive errors before deletion |
+| `MICELIO_ERROR_RETENTION_ARCHIVE_PREFIX` | No | `errors/archives` | Storage prefix for archived errors |
+| `MICELIO_ERROR_RETENTION_VACUUM_ENABLED` | No | `true` | Vacuum tables after cleanup |
+| `MICELIO_ERROR_RETENTION_TABLE_WARN_THRESHOLD` | No | `100000` | Log warning when error count exceeds this |
+| `MICELIO_ERROR_DEDUPE_WINDOW_SECONDS` | No | `300` | Window for deduplicating identical errors |
+| `MICELIO_ERROR_RATE_LIMIT_PER_KIND_PER_MINUTE` | No | `100` | Max errors per kind per minute |
+| `MICELIO_ERROR_RATE_LIMIT_TOTAL_PER_MINUTE` | No | `1000` | Max total errors per minute |
+| `MICELIO_ERROR_SAMPLING_AFTER_OCCURRENCES` | No | `100` | Start sampling after this many occurrences |
+| `MICELIO_ERROR_SAMPLING_RATE` | No | `0.1` | Sampling rate (0.0 to 1.0) after threshold |
 
 ## Analytics
 
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
-| `CLICKHOUSE_URL` | No | — | ClickHouse server URL |
-| `CLICKHOUSE_USER` | No | — | ClickHouse username |
-| `CLICKHOUSE_PASSWORD` | No | — | ClickHouse password |
-| `CLICKHOUSE_DATABASE` | No | `micelio` | ClickHouse database name |
+| `MICELIO_CLICKHOUSE_URL` | No | — | ClickHouse server URL |
+| `MICELIO_CLICKHOUSE_USER` | No | — | ClickHouse username |
+| `MICELIO_CLICKHOUSE_PASSWORD` | No | — | ClickHouse password |
+| `MICELIO_CLICKHOUSE_DATABASE` | No | `micelio` | ClickHouse database name |

@@ -9,21 +9,17 @@ import Config
 
 # ## Using releases
 #
-# If you use `mix release`, you need to explicitly enable the server
-# by passing the PHX_SERVER=true when you start it:
-#
-#     PHX_SERVER=true bin/micelio start
-#
-# Alternatively, you can use `mix phx.gen.release` to generate a `bin/server`
-# script that automatically sets the env var above.
-if System.get_env("PHX_SERVER") == "true" do
+# Enable the HTTP server. Set MICELIO_SERVER=true to start serving requests.
+if (System.get_env("MICELIO_SERVER") || System.get_env("PHX_SERVER")) == "true" do
   config :micelio, MicelioWeb.Endpoint, server: true
 end
 
-external_sentry_enabled = System.get_env("ENABLE_EXTERNAL_SENTRY", "false") == "true"
+external_sentry_enabled =
+  (System.get_env("MICELIO_ENABLE_EXTERNAL_SENTRY") || System.get_env("ENABLE_EXTERNAL_SENTRY") ||
+     "false") == "true"
 
 retention_days =
-  case System.get_env("ERROR_RETENTION_DAYS") do
+  case System.get_env("MICELIO_ERROR_RETENTION_DAYS") || System.get_env("ERROR_RETENTION_DAYS") do
     nil ->
       Application.get_env(:micelio, :errors, [])
       |> Keyword.get(:retention_days, 90)
@@ -36,7 +32,8 @@ retention_days =
   end
 
 resolved_retention_days =
-  case System.get_env("ERROR_RESOLVED_RETENTION_DAYS") do
+  case System.get_env("MICELIO_ERROR_RESOLVED_RETENTION_DAYS") ||
+         System.get_env("ERROR_RESOLVED_RETENTION_DAYS") do
     nil ->
       Application.get_env(:micelio, :errors, [])
       |> Keyword.get(:resolved_retention_days, 30)
@@ -49,7 +46,8 @@ resolved_retention_days =
   end
 
 unresolved_retention_days =
-  case System.get_env("ERROR_UNRESOLVED_RETENTION_DAYS") do
+  case System.get_env("MICELIO_ERROR_UNRESOLVED_RETENTION_DAYS") ||
+         System.get_env("ERROR_UNRESOLVED_RETENTION_DAYS") do
     nil ->
       Application.get_env(:micelio, :errors, [])
       |> Keyword.get(:unresolved_retention_days, 90)
@@ -62,7 +60,7 @@ unresolved_retention_days =
   end
 
 capture_enabled =
-  case System.get_env("ERROR_CAPTURE_ENABLED") do
+  case System.get_env("MICELIO_ERROR_CAPTURE_ENABLED") || System.get_env("ERROR_CAPTURE_ENABLED") do
     nil ->
       Application.get_env(:micelio, :errors, [])
       |> Keyword.get(:capture_enabled, true)
@@ -72,7 +70,8 @@ capture_enabled =
   end
 
 retention_archive_enabled =
-  case System.get_env("ERROR_RETENTION_ARCHIVE_ENABLED") do
+  case System.get_env("MICELIO_ERROR_RETENTION_ARCHIVE_ENABLED") ||
+         System.get_env("ERROR_RETENTION_ARCHIVE_ENABLED") do
     nil ->
       Application.get_env(:micelio, :errors, [])
       |> Keyword.get(:retention_archive_enabled, false)
@@ -82,12 +81,14 @@ retention_archive_enabled =
   end
 
 retention_archive_prefix =
-  System.get_env("ERROR_RETENTION_ARCHIVE_PREFIX") ||
+  System.get_env("MICELIO_ERROR_RETENTION_ARCHIVE_PREFIX") ||
+    System.get_env("ERROR_RETENTION_ARCHIVE_PREFIX") ||
     Application.get_env(:micelio, :errors, [])
     |> Keyword.get(:retention_archive_prefix, "errors/archives")
 
 retention_vacuum_enabled =
-  case System.get_env("ERROR_RETENTION_VACUUM_ENABLED") do
+  case System.get_env("MICELIO_ERROR_RETENTION_VACUUM_ENABLED") ||
+         System.get_env("ERROR_RETENTION_VACUUM_ENABLED") do
     nil ->
       Application.get_env(:micelio, :errors, [])
       |> Keyword.get(:retention_vacuum_enabled, true)
@@ -97,7 +98,8 @@ retention_vacuum_enabled =
   end
 
 retention_table_warn_threshold =
-  case System.get_env("ERROR_RETENTION_TABLE_WARN_THRESHOLD") do
+  case System.get_env("MICELIO_ERROR_RETENTION_TABLE_WARN_THRESHOLD") ||
+         System.get_env("ERROR_RETENTION_TABLE_WARN_THRESHOLD") do
     nil ->
       Application.get_env(:micelio, :errors, [])
       |> Keyword.get(:retention_table_warn_threshold, 100_000)
@@ -110,7 +112,8 @@ retention_table_warn_threshold =
   end
 
 dedupe_window_seconds =
-  case System.get_env("ERROR_DEDUPE_WINDOW_SECONDS") do
+  case System.get_env("MICELIO_ERROR_DEDUPE_WINDOW_SECONDS") ||
+         System.get_env("ERROR_DEDUPE_WINDOW_SECONDS") do
     nil ->
       Application.get_env(:micelio, :errors, [])
       |> Keyword.get(:dedupe_window_seconds, 300)
@@ -123,7 +126,8 @@ dedupe_window_seconds =
   end
 
 rate_limit_per_kind =
-  case System.get_env("ERROR_RATE_LIMIT_PER_KIND_PER_MINUTE") do
+  case System.get_env("MICELIO_ERROR_RATE_LIMIT_PER_KIND_PER_MINUTE") ||
+         System.get_env("ERROR_RATE_LIMIT_PER_KIND_PER_MINUTE") do
     nil ->
       Application.get_env(:micelio, :errors, [])
       |> Keyword.get(:capture_rate_limit_per_kind_per_minute, 100)
@@ -136,7 +140,8 @@ rate_limit_per_kind =
   end
 
 rate_limit_total =
-  case System.get_env("ERROR_RATE_LIMIT_TOTAL_PER_MINUTE") do
+  case System.get_env("MICELIO_ERROR_RATE_LIMIT_TOTAL_PER_MINUTE") ||
+         System.get_env("ERROR_RATE_LIMIT_TOTAL_PER_MINUTE") do
     nil ->
       Application.get_env(:micelio, :errors, [])
       |> Keyword.get(:capture_rate_limit_total_per_minute, 1000)
@@ -149,7 +154,8 @@ rate_limit_total =
   end
 
 sampling_after_occurrences =
-  case System.get_env("ERROR_SAMPLING_AFTER_OCCURRENCES") do
+  case System.get_env("MICELIO_ERROR_SAMPLING_AFTER_OCCURRENCES") ||
+         System.get_env("ERROR_SAMPLING_AFTER_OCCURRENCES") do
     nil ->
       Application.get_env(:micelio, :errors, [])
       |> Keyword.get(:sampling_after_occurrences, 100)
@@ -162,7 +168,7 @@ sampling_after_occurrences =
   end
 
 sampling_rate =
-  case System.get_env("ERROR_SAMPLING_RATE") do
+  case System.get_env("MICELIO_ERROR_SAMPLING_RATE") || System.get_env("ERROR_SAMPLING_RATE") do
     nil ->
       Application.get_env(:micelio, :errors, [])
       |> Keyword.get(:sampling_rate, 0.1)
@@ -176,46 +182,57 @@ sampling_rate =
 
 # Storage configuration (local by default, S3 opt-in)
 storage_backend =
-  case System.get_env("STORAGE_BACKEND") do
+  case System.get_env("MICELIO_STORAGE_BACKEND") || System.get_env("STORAGE_BACKEND") do
     "tiered" -> :tiered
     "s3" -> :s3
     _ -> :local
   end
 
 local_path_default =
-  System.get_env("STORAGE_LOCAL_PATH") ||
+  System.get_env("MICELIO_STORAGE_LOCAL_PATH") ||
+    System.get_env("STORAGE_LOCAL_PATH") ||
     case config_env() do
       :prod -> "/var/micelio/storage"
       _ -> Path.join([System.tmp_dir!(), "micelio", "storage"])
     end
 
 cache_path_default =
-  System.get_env("STORAGE_CACHE_PATH") ||
+  System.get_env("MICELIO_STORAGE_CACHE_PATH") ||
+    System.get_env("STORAGE_CACHE_PATH") ||
     case config_env() do
       :prod -> "/var/micelio/cache"
       _ -> Path.join([System.tmp_dir!(), "micelio", "cache"])
     end
 
 origin_backend =
-  case System.get_env("STORAGE_ORIGIN_BACKEND") do
-    "s3" -> :s3
-    "local" -> :local
-    _ -> if System.get_env("S3_BUCKET"), do: :s3, else: :local
+  case System.get_env("MICELIO_STORAGE_ORIGIN_BACKEND") ||
+         System.get_env("STORAGE_ORIGIN_BACKEND") do
+    "s3" ->
+      :s3
+
+    "local" ->
+      :local
+
+    _ ->
+      if System.get_env("MICELIO_S3_BUCKET") || System.get_env("S3_BUCKET"), do: :s3, else: :local
   end
 
 cache_memory_max_bytes =
-  case System.get_env("STORAGE_CACHE_MEMORY_MAX_BYTES") do
+  case System.get_env("MICELIO_STORAGE_CACHE_MEMORY_MAX_BYTES") ||
+         System.get_env("STORAGE_CACHE_MEMORY_MAX_BYTES") do
     nil -> nil
     value -> String.to_integer(value)
   end
 
 cache_timeout_ms =
-  case System.get_env("STORAGE_CDN_TIMEOUT_MS") do
+  case System.get_env("MICELIO_STORAGE_CDN_TIMEOUT_MS") ||
+         System.get_env("STORAGE_CDN_TIMEOUT_MS") do
     nil -> nil
     value -> String.to_integer(value)
   end
 
-cdn_base_url = System.get_env("STORAGE_CDN_BASE_URL")
+cdn_base_url =
+  System.get_env("MICELIO_STORAGE_CDN_BASE_URL") || System.get_env("STORAGE_CDN_BASE_URL")
 
 maybe_put = fn config, key, value ->
   if is_nil(value), do: config, else: Keyword.put(config, key, value)
@@ -225,7 +242,9 @@ storage_config =
   case storage_backend do
     :local ->
       if config_env() == :prod do
-        IO.warn("STORAGE_BACKEND is set to local in production; S3 is strongly recommended.")
+        IO.warn(
+          "MICELIO_STORAGE_BACKEND is set to local in production; S3 is strongly recommended."
+        )
       end
 
       [
@@ -237,12 +256,18 @@ storage_config =
     :s3 ->
       [
         backend: :s3,
-        s3_bucket: System.fetch_env!("S3_BUCKET"),
-        s3_region: System.get_env("S3_REGION") || "us-east-1",
-        s3_endpoint: System.get_env("S3_ENDPOINT"),
-        s3_access_key_id: System.get_env("S3_ACCESS_KEY_ID"),
-        s3_secret_access_key: System.get_env("S3_SECRET_ACCESS_KEY"),
-        s3_url_style: System.get_env("S3_URL_STYLE") || "virtual"
+        s3_bucket:
+          System.get_env("MICELIO_S3_BUCKET") || System.get_env("S3_BUCKET") ||
+            raise("environment variable MICELIO_S3_BUCKET is missing."),
+        s3_region:
+          System.get_env("MICELIO_S3_REGION") || System.get_env("S3_REGION") || "us-east-1",
+        s3_endpoint: System.get_env("MICELIO_S3_ENDPOINT") || System.get_env("S3_ENDPOINT"),
+        s3_access_key_id:
+          System.get_env("MICELIO_S3_ACCESS_KEY_ID") || System.get_env("S3_ACCESS_KEY_ID"),
+        s3_secret_access_key:
+          System.get_env("MICELIO_S3_SECRET_ACCESS_KEY") || System.get_env("S3_SECRET_ACCESS_KEY"),
+        s3_url_style:
+          System.get_env("MICELIO_S3_URL_STYLE") || System.get_env("S3_URL_STYLE") || "virtual"
       ]
       |> maybe_put.(:cdn_base_url, cdn_base_url)
 
@@ -263,12 +288,20 @@ storage_config =
         :s3 ->
           base_config ++
             [
-              s3_bucket: System.fetch_env!("S3_BUCKET"),
-              s3_region: System.get_env("S3_REGION") || "us-east-1",
-              s3_endpoint: System.get_env("S3_ENDPOINT"),
-              s3_access_key_id: System.get_env("S3_ACCESS_KEY_ID"),
-              s3_secret_access_key: System.get_env("S3_SECRET_ACCESS_KEY"),
-              s3_url_style: System.get_env("S3_URL_STYLE") || "virtual"
+              s3_bucket:
+                System.get_env("MICELIO_S3_BUCKET") || System.get_env("S3_BUCKET") ||
+                  raise("environment variable MICELIO_S3_BUCKET is missing."),
+              s3_region:
+                System.get_env("MICELIO_S3_REGION") || System.get_env("S3_REGION") || "us-east-1",
+              s3_endpoint: System.get_env("MICELIO_S3_ENDPOINT") || System.get_env("S3_ENDPOINT"),
+              s3_access_key_id:
+                System.get_env("MICELIO_S3_ACCESS_KEY_ID") || System.get_env("S3_ACCESS_KEY_ID"),
+              s3_secret_access_key:
+                System.get_env("MICELIO_S3_SECRET_ACCESS_KEY") ||
+                  System.get_env("S3_SECRET_ACCESS_KEY"),
+              s3_url_style:
+                System.get_env("MICELIO_S3_URL_STYLE") || System.get_env("S3_URL_STYLE") ||
+                  "virtual"
             ]
 
         :local ->
@@ -399,15 +432,17 @@ config :micelio, :errors,
 
 if config_env() != :test do
   encryption_key =
-    System.get_env("ENCRYPTION_KEY") ||
+    System.get_env("MICELIO_ENCRYPTION_KEY") ||
+      System.get_env("ENCRYPTION_KEY") ||
       raise """
-      environment variable ENCRYPTION_KEY is missing.
+      environment variable MICELIO_ENCRYPTION_KEY is missing.
       Generate a 32-byte key and set it as base64, for example:
       `openssl rand -base64 32`
       """
 
   previous_keys =
-    System.get_env("ENCRYPTION_PREVIOUS_KEYS", "")
+    (System.get_env("MICELIO_ENCRYPTION_PREVIOUS_KEYS") ||
+       System.get_env("ENCRYPTION_PREVIOUS_KEYS") || "")
     |> String.split(",", trim: true)
     |> Enum.map(fn entry ->
       case String.split(entry, ":", parts: 2) do
@@ -483,17 +518,17 @@ end
 
 og_cache_busters =
   [
-    {"default", "OG_CACHE_BUSTER_DEFAULT"},
-    {"twitter", "OG_CACHE_BUSTER_TWITTER"},
-    {"linkedin", "OG_CACHE_BUSTER_LINKEDIN"},
-    {"facebook", "OG_CACHE_BUSTER_FACEBOOK"},
-    {"slack", "OG_CACHE_BUSTER_SLACK"},
-    {"discord", "OG_CACHE_BUSTER_DISCORD"},
-    {"telegram", "OG_CACHE_BUSTER_TELEGRAM"},
-    {"pinterest", "OG_CACHE_BUSTER_PINTEREST"}
+    {"default", "MICELIO_OG_CACHE_BUSTER_DEFAULT", "OG_CACHE_BUSTER_DEFAULT"},
+    {"twitter", "MICELIO_OG_CACHE_BUSTER_TWITTER", "OG_CACHE_BUSTER_TWITTER"},
+    {"linkedin", "MICELIO_OG_CACHE_BUSTER_LINKEDIN", "OG_CACHE_BUSTER_LINKEDIN"},
+    {"facebook", "MICELIO_OG_CACHE_BUSTER_FACEBOOK", "OG_CACHE_BUSTER_FACEBOOK"},
+    {"slack", "MICELIO_OG_CACHE_BUSTER_SLACK", "OG_CACHE_BUSTER_SLACK"},
+    {"discord", "MICELIO_OG_CACHE_BUSTER_DISCORD", "OG_CACHE_BUSTER_DISCORD"},
+    {"telegram", "MICELIO_OG_CACHE_BUSTER_TELEGRAM", "OG_CACHE_BUSTER_TELEGRAM"},
+    {"pinterest", "MICELIO_OG_CACHE_BUSTER_PINTEREST", "OG_CACHE_BUSTER_PINTEREST"}
   ]
-  |> Enum.reduce(%{}, fn {key, env}, acc ->
-    case System.get_env(env) do
+  |> Enum.reduce(%{}, fn {key, env, old_env}, acc ->
+    case System.get_env(env) || System.get_env(old_env) do
       nil ->
         acc
 
@@ -557,20 +592,43 @@ rate_limit_overrides =
     Map.put(acc, domain, value)
   end)
 
-daytona_base_url = System.get_env("DAYTONA_API_BASE_URL") || "https://app.daytona.io/api"
-daytona_api_key = System.get_env("DAYTONA_API_KEY")
-daytona_organization_id = System.get_env("DAYTONA_ORGANIZATION_ID")
-daytona_preview_port = String.to_integer(System.get_env("DAYTONA_PREVIEW_PORT") || "3000")
+daytona_base_url =
+  System.get_env("MICELIO_DAYTONA_API_BASE_URL") || System.get_env("DAYTONA_API_BASE_URL") ||
+    "https://app.daytona.io/api"
+
+daytona_api_key = System.get_env("MICELIO_DAYTONA_API_KEY") || System.get_env("DAYTONA_API_KEY")
+
+daytona_organization_id =
+  System.get_env("MICELIO_DAYTONA_ORGANIZATION_ID") || System.get_env("DAYTONA_ORGANIZATION_ID")
+
+daytona_preview_port =
+  String.to_integer(
+    System.get_env("MICELIO_DAYTONA_PREVIEW_PORT") || System.get_env("DAYTONA_PREVIEW_PORT") ||
+      "3000"
+  )
 
 daytona_auto_stop_interval =
-  String.to_integer(System.get_env("DAYTONA_AUTO_STOP_MINUTES") || "15")
+  String.to_integer(
+    System.get_env("MICELIO_DAYTONA_AUTO_STOP_MINUTES") ||
+      System.get_env("DAYTONA_AUTO_STOP_MINUTES") || "15"
+  )
 
 daytona_auto_archive_interval =
-  String.to_integer(System.get_env("DAYTONA_AUTO_ARCHIVE_MINUTES") || "30")
+  String.to_integer(
+    System.get_env("MICELIO_DAYTONA_AUTO_ARCHIVE_MINUTES") ||
+      System.get_env("DAYTONA_AUTO_ARCHIVE_MINUTES") || "30"
+  )
 
-daytona_checkout_root = System.get_env("DAYTONA_LOCAL_CHECKOUT_ROOT")
-sandbox_provider = System.get_env("SANDBOX_PROVIDER") || "daytona"
-sandbox_module_server_url = System.get_env("SANDBOX_MODULE_SERVER_URL")
+daytona_checkout_root =
+  System.get_env("MICELIO_DAYTONA_LOCAL_CHECKOUT_ROOT") ||
+    System.get_env("DAYTONA_LOCAL_CHECKOUT_ROOT")
+
+sandbox_provider =
+  System.get_env("MICELIO_SANDBOX_PROVIDER") || System.get_env("SANDBOX_PROVIDER") || "daytona"
+
+sandbox_module_server_url =
+  System.get_env("MICELIO_SANDBOX_MODULE_SERVER_URL") ||
+    System.get_env("SANDBOX_MODULE_SERVER_URL")
 
 config :micelio, Micelio.Sandboxes,
   default_provider: sandbox_provider,
@@ -586,10 +644,13 @@ config :micelio, Micelio.Sandboxes.DaytonaProvider,
   local_checkout_root: daytona_checkout_root
 
 config :micelio, :clickhouse,
-  url: System.get_env("CLICKHOUSE_URL"),
-  user: System.get_env("CLICKHOUSE_USER"),
-  password: System.get_env("CLICKHOUSE_PASSWORD"),
-  database: System.get_env("CLICKHOUSE_DATABASE") || "micelio"
+  url: System.get_env("MICELIO_CLICKHOUSE_URL") || System.get_env("CLICKHOUSE_URL"),
+  user: System.get_env("MICELIO_CLICKHOUSE_USER") || System.get_env("CLICKHOUSE_USER"),
+  password:
+    System.get_env("MICELIO_CLICKHOUSE_PASSWORD") || System.get_env("CLICKHOUSE_PASSWORD"),
+  database:
+    System.get_env("MICELIO_CLICKHOUSE_DATABASE") || System.get_env("CLICKHOUSE_DATABASE") ||
+      "micelio"
 
 config :micelio, :open_graph, og_config
 
@@ -661,9 +722,10 @@ if config_env() == :prod do
     end
 
   metrics_bearer_token =
-    System.get_env("METRICS_BEARER_TOKEN") ||
+    System.get_env("MICELIO_METRICS_BEARER_TOKEN") ||
+      System.get_env("METRICS_BEARER_TOKEN") ||
       raise """
-      environment variable METRICS_BEARER_TOKEN is missing.
+      environment variable MICELIO_METRICS_BEARER_TOKEN is missing.
       Generate one with: mix phx.gen.secret 32
       """
 
@@ -679,7 +741,7 @@ if config_env() == :prod do
       You can generate one by calling: mix phx.gen.secret
       """
 
-  host = System.get_env("PHX_HOST") || "example.com"
+  host = System.get_env("MICELIO_HOST") || System.get_env("PHX_HOST") || "example.com"
   otel_service_name = System.get_env("OTEL_SERVICE_NAME", "micelio-web")
   otel_deployment_environment = System.get_env("OTEL_DEPLOYMENT_ENVIRONMENT", "production")
 
