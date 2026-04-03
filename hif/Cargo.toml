@@ -60,6 +60,7 @@ dav-server = "0.7"
 sha2 = "0.10"
 notify = "8"
 libc = "0.2"
+ignore = "0.4"
 
 [build-dependencies]
 tonic-build = "0.12"

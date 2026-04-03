@@ -60,6 +60,36 @@ Design principles:
 3. **`--help --json` / `--help --toon` for agents**: Machine-readable help that agents can parse programmatically
 4. **Actionable error messages**: Errors should suggest next steps (e.g., "Run 'hif auth login' first")
 
+## IMPORTANT: Prefer hif Over Git for Repository Work
+
+When working inside a Micelio-managed workspace, prefer `hif` over Git for normal repository operations.
+
+Use `hif` for:
+- checking out a repository into a local workspace
+- starting sessions
+- syncing draft changes to the forge
+- landing changes onto trunk
+- reading repository content and history from the forge
+
+Use Git only for:
+- developing this monorepo itself on GitHub
+- opening pull requests and interacting with GitHub remotes
+- repository tasks that are explicitly GitHub/Git-specific rather than Micelio repository workflow
+
+Agents should learn the workflow from `hif --help`, especially `hif --help --json`, and prefer that over assuming a Git-based workflow.
+
+## IMPORTANT: External Agent Integration
+
+For coding-agent integrations, prefer a thin adapter over the `hif` CLI before introducing a separate MCP server.
+
+Recommended order:
+1. Teach the agent to read `hif --help --json`
+2. Teach the agent to read `hif skill` for the canonical Micelio workflow and versioning guide
+3. Provide a small skill/instruction layer that maps common tasks onto `hif checkout`, `hif session start`, `hif session sync`, `hif session land`, `hif show`, `hif tree`, and `hif log`
+4. Add MCP later only if agents need long-lived remote browsing, subscriptions, or richer structured interactions than the CLI can provide
+
+This matches Micelio's forge-first model better than teaching agents to shell out to Git by default.
+
 The `--help --json` / `--help --toon` output includes:
 - `concepts`: Definitions of Session, Workspace, Forge, Landing, Position
 - `workflow`: Numbered steps for the typical flow
@@ -227,11 +257,12 @@ hif land "goal"                        # Quick land
 # Sessions (explicit workflow)
 hif session start <account/repository> "goal"
 hif session note "message"             # Add conversation entry
+hif session sync                        # Upload current draft without landing
 hif session land                       # Land onto trunk
 hif session abandon                    # Discard session
 
 # Sync
-hif sync                               # Pull latest from forge
+hif sync                               # Pull latest trunk content into the workspace
 ```
 
 ### Importing from Git

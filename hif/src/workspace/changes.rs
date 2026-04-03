@@ -5,6 +5,8 @@
 
 use crate::error::Result;
 use crate::workspace::{is_safe_path, is_workspace_metadata_path, WorkspaceManifest};
+use ignore::DirEntry;
+use ignore::WalkBuilder;
 use sha2::{Digest, Sha256};
 use std::collections::HashMap;
 use std::fs;
@@ -54,35 +56,26 @@ pub fn collect_changes(
 ) -> Result<Vec<WorkspaceChange>> {
     let mut changes = Vec::new();
 
-    // Build a map of known files from manifest
     let mut known_files: HashMap<String, String> = manifest
         .entries
         .iter()
         .map(|e| (e.path.clone(), e.hash.clone()))
         .collect();
 
-    // Scan the workspace for files
-    let ignore = load_ignore_patterns(workspace_root);
-    let files = scan_files(workspace_root, &ignore)?;
+    let files = scan_files(workspace_root)?;
 
-    // Check for added and modified files
     for file_path in &files {
         let relative = file_path
             .strip_prefix(workspace_root)
             .unwrap_or(file_path)
             .to_string_lossy()
-            .to_string();
+            .replace(std::path::MAIN_SEPARATOR, "/");
 
-        if !is_safe_path(&relative) {
-            continue;
-        }
-
-        if is_workspace_metadata_path(&relative) {
+        if !is_safe_path(&relative) || is_workspace_metadata_path(&relative) {
             continue;
         }
 
         if let Some(known_hash) = known_files.remove(&relative) {
-            // File exists in manifest - check if modified
             let content = fs::read(file_path)?;
             let current_hash = micelio_blob_hash_hex(&content);
 
@@ -93,7 +86,6 @@ pub fn collect_changes(
                 });
             }
         } else {
-            // New file
             changes.push(WorkspaceChange {
                 path: relative,
                 change_type: ChangeType::Added,
@@ -101,7 +93,6 @@ pub fn collect_changes(
         }
     }
 
-    // Remaining files in known_files are deleted
     for path in known_files.keys() {
         changes.push(WorkspaceChange {
             path: path.clone(),
@@ -109,160 +100,60 @@ pub fn collect_changes(
         });
     }
 
-    // Sort by path
     changes.sort_by(|a, b| a.path.cmp(&b.path));
 
     Ok(changes)
 }
 
-/// Scan files in the workspace.
-fn scan_files(root: &Path, ignore: &IgnorePatterns) -> Result<Vec<PathBuf>> {
+/// Scan files in the workspace using `.gitignore`-compatible `.hifignore` rules.
+fn scan_files(root: &Path) -> Result<Vec<PathBuf>> {
+    let mut builder = WalkBuilder::new(root);
+    builder
+        .hidden(false)
+        .git_ignore(false)
+        .git_global(false)
+        .git_exclude(false)
+        .ignore(false)
+        .parents(true)
+        .require_git(false)
+        .add_custom_ignore_filename(".hifignore");
+    builder.filter_entry(|entry| !is_default_ignored_entry(entry));
+
     let mut files = Vec::new();
-    scan_dir(root, root, ignore, &mut files)?;
-    Ok(files)
-}
 
-/// Recursively scan a directory.
-fn scan_dir(
-    root: &Path,
-    dir: &Path,
-    ignore: &IgnorePatterns,
-    files: &mut Vec<PathBuf>,
-) -> Result<()> {
-    if !dir.is_dir() {
-        return Ok(());
-    }
+    for entry in builder.build() {
+        let entry = match entry {
+            Ok(entry) => entry,
+            Err(error) => {
+                return Err(std::io::Error::other(error.to_string()).into());
+            }
+        };
 
-    for entry in fs::read_dir(dir)? {
-        let entry = entry?;
-        let path = entry.path();
-        let relative = path
-            .strip_prefix(root)
-            .unwrap_or(&path)
-            .to_string_lossy()
-            .to_string();
-
-        // Skip ignored files
-        if ignore.is_ignored(&relative) {
+        if entry.depth() == 0 || entry.file_type().map(|kind| kind.is_dir()).unwrap_or(false) {
             continue;
         }
 
-        if path.is_dir() {
-            // Skip .hif and .git directories
-            let name = path.file_name().and_then(|n| n.to_str()).unwrap_or("");
-            if name == ".hif" || name == ".git" || name == "node_modules" {
-                continue;
-            }
-            scan_dir(root, &path, ignore, files)?;
-        } else {
-            files.push(path);
-        }
+        files.push(entry.into_path());
     }
 
-    Ok(())
+    Ok(files)
 }
 
-/// Ignore patterns for workspace scanning.
-#[derive(Debug, Default)]
-pub struct IgnorePatterns {
-    patterns: Vec<String>,
-}
-
-impl IgnorePatterns {
-    /// Create with default patterns.
-    pub fn new() -> Self {
-        Self {
-            patterns: vec![
-                ".hif".to_string(),
-                ".hif/".to_string(),
-                ".git".to_string(),
-                ".git/".to_string(),
-                "node_modules".to_string(),
-                "node_modules/".to_string(),
-                ".DS_Store".to_string(),
-                "._*".to_string(),
-                "*.swp".to_string(),
-                "*~".to_string(),
-            ],
-        }
-    }
-
-    /// Add a pattern.
-    pub fn add(&mut self, pattern: &str) {
-        self.patterns.push(pattern.to_string());
-    }
-
-    /// Check if a path is ignored.
-    pub fn is_ignored(&self, path: &str) -> bool {
-        for pattern in &self.patterns {
-            if matches_pattern(path, pattern) {
-                return true;
-            }
-        }
-        false
-    }
-}
-
-/// Simple pattern matching.
-fn matches_pattern(path: &str, pattern: &str) -> bool {
-    // Exact match
-    if path == pattern {
-        return true;
-    }
-
-    // Directory prefix match
-    if pattern.ends_with('/') {
-        let prefix = &pattern[..pattern.len() - 1];
-        if path == prefix || path.starts_with(pattern) {
-            return true;
-        }
-    }
-
-    // Glob pattern with *
-    if pattern.ends_with('*') {
-        let prefix = &pattern[..pattern.len() - 1];
-        if path.starts_with(prefix)
-            || path
-                .split('/')
-                .any(|component| component.starts_with(prefix))
-        {
-            return true;
-        }
-    }
-
-    if pattern.starts_with('*') {
-        let suffix = &pattern[1..];
-        if path.ends_with(suffix) {
-            return true;
-        }
-    }
-
-    // Check if any path component matches
-    for component in path.split('/') {
-        if component == pattern {
-            return true;
-        }
-    }
-
-    false
-}
-
-/// Load ignore patterns from .hifignore file.
-fn load_ignore_patterns(workspace_root: &Path) -> IgnorePatterns {
-    let mut patterns = IgnorePatterns::new();
-
-    let ignore_file = workspace_root.join(".hifignore");
-    if let Ok(content) = fs::read_to_string(&ignore_file) {
-        for line in content.lines() {
-            let line = line.trim();
-            // Skip empty lines and comments
-            if !line.is_empty() && !line.starts_with('#') {
-                patterns.add(line);
-            }
-        }
-    }
-
-    patterns
+fn is_default_ignored_entry(entry: &DirEntry) -> bool {
+    matches!(
+        entry.file_name().to_str(),
+        Some(".hif" | ".git" | "node_modules")
+    ) || entry
+        .path()
+        .file_name()
+        .and_then(|name| name.to_str())
+        .map(|name| {
+            name == ".DS_Store"
+                || name.starts_with("._")
+                || name.ends_with(".swp")
+                || name.ends_with('~')
+        })
+        .unwrap_or(false)
 }
 
 fn micelio_blob_hash_hex(content: &[u8]) -> String {
@@ -274,6 +165,7 @@ fn micelio_blob_hash_hex(content: &[u8]) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::fs;
     use tempfile::tempdir;
 
     #[test]
@@ -284,37 +176,9 @@ mod tests {
     }
 
     #[test]
-    fn test_ignore_patterns() {
-        let ignore = IgnorePatterns::new();
-
-        assert!(ignore.is_ignored(".hif"));
-        assert!(ignore.is_ignored(".hif/session.bin"));
-        assert!(ignore.is_ignored(".git"));
-        assert!(ignore.is_ignored("node_modules"));
-        assert!(ignore.is_ignored("test.swp"));
-        assert!(ignore.is_ignored("src/._main.rs"));
-
-        assert!(!ignore.is_ignored("src/main.rs"));
-        assert!(!ignore.is_ignored("README.md"));
-    }
-
-    #[test]
-    fn test_matches_pattern() {
-        assert!(matches_pattern(".git", ".git"));
-        assert!(matches_pattern(".git/config", ".git/"));
-        assert!(matches_pattern("test.swp", "*.swp"));
-        assert!(matches_pattern("path/to/.DS_Store", ".DS_Store"));
-        assert!(matches_pattern("src/._main.rs", "._*"));
-
-        assert!(!matches_pattern("src/main.rs", ".git"));
-        assert!(!matches_pattern("test.txt", "*.swp"));
-    }
-
-    #[test]
     fn test_scan_empty_dir() {
         let dir = tempdir().unwrap();
-        let ignore = IgnorePatterns::new();
-        let files = scan_files(dir.path(), &ignore).unwrap();
+        let files = scan_files(dir.path()).unwrap();
         assert!(files.is_empty());
     }
 
@@ -325,23 +189,94 @@ mod tests {
         fs::create_dir(dir.path().join("subdir")).unwrap();
         fs::write(dir.path().join("subdir/nested.txt"), "nested").unwrap();
 
-        let ignore = IgnorePatterns::new();
-        let files = scan_files(dir.path(), &ignore).unwrap();
+        let files = scan_files(dir.path()).unwrap();
 
-        assert_eq!(files.len(), 2);
+        assert_eq!(
+            relative_paths(dir.path(), &files),
+            vec!["file.txt", "subdir/nested.txt"]
+        );
     }
 
     #[test]
-    fn test_scan_ignores_mic_dir() {
+    fn test_scan_ignores_default_directories() {
         let dir = tempdir().unwrap();
         fs::write(dir.path().join("file.txt"), "content").unwrap();
         fs::create_dir(dir.path().join(".hif")).unwrap();
         fs::write(dir.path().join(".hif/session.bin"), "session").unwrap();
+        fs::create_dir(dir.path().join("node_modules")).unwrap();
+        fs::write(dir.path().join("node_modules/pkg.js"), "pkg").unwrap();
 
-        let ignore = IgnorePatterns::new();
-        let files = scan_files(dir.path(), &ignore).unwrap();
+        let files = scan_files(dir.path()).unwrap();
 
-        assert_eq!(files.len(), 1);
-        assert!(files[0].ends_with("file.txt"));
+        assert_eq!(relative_paths(dir.path(), &files), vec!["file.txt"]);
+    }
+
+    #[test]
+    fn test_hifignore_supports_gitignore_globs() {
+        let dir = tempdir().unwrap();
+        fs::create_dir_all(dir.path().join("build/cache")).unwrap();
+        fs::create_dir_all(dir.path().join("src")).unwrap();
+        fs::write(dir.path().join("build/output.js"), "ignored").unwrap();
+        fs::write(dir.path().join("build/cache/keep.txt"), "ignored").unwrap();
+        fs::write(dir.path().join("src/main.rs"), "kept").unwrap();
+        fs::write(dir.path().join("temp.log"), "ignored").unwrap();
+        fs::write(dir.path().join(".hifignore"), "build/\n*.log\n").unwrap();
+
+        let files = scan_files(dir.path()).unwrap();
+
+        assert_eq!(
+            relative_paths(dir.path(), &files),
+            vec![".hifignore", "src/main.rs"]
+        );
+    }
+
+    #[test]
+    fn test_hifignore_supports_negation_inside_ignored_directory() {
+        let dir = tempdir().unwrap();
+        fs::create_dir_all(dir.path().join("dist/assets")).unwrap();
+        fs::write(dir.path().join("dist/app.js"), "ignored").unwrap();
+        fs::write(dir.path().join("dist/assets/keep.js"), "kept").unwrap();
+        fs::write(
+            dir.path().join(".hifignore"),
+            "dist/**\n!dist/assets/\n!dist/assets/keep.js\n",
+        )
+        .unwrap();
+
+        let files = scan_files(dir.path()).unwrap();
+
+        assert_eq!(
+            relative_paths(dir.path(), &files),
+            vec![".hifignore", "dist/assets/keep.js"]
+        );
+    }
+
+    #[test]
+    fn test_nested_hifignore_files_are_applied() {
+        let dir = tempdir().unwrap();
+        fs::create_dir_all(dir.path().join("docs/drafts")).unwrap();
+        fs::write(dir.path().join("docs/.hifignore"), "drafts/\n").unwrap();
+        fs::write(dir.path().join("docs/guide.md"), "keep").unwrap();
+        fs::write(dir.path().join("docs/drafts/wip.md"), "ignore").unwrap();
+
+        let files = scan_files(dir.path()).unwrap();
+
+        assert_eq!(
+            relative_paths(dir.path(), &files),
+            vec!["docs/.hifignore", "docs/guide.md"]
+        );
+    }
+
+    fn relative_paths(root: &Path, files: &[PathBuf]) -> Vec<String> {
+        let mut paths = files
+            .iter()
+            .map(|path| {
+                path.strip_prefix(root)
+                    .unwrap()
+                    .to_string_lossy()
+                    .replace(std::path::MAIN_SEPARATOR, "/")
+            })
+            .collect::<Vec<_>>();
+        paths.sort();
+        paths
     }
 }

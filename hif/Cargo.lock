@@ -1150,6 +1150,7 @@ dependencies = [
  "http",
  "hyper",
  "hyper-util",
+ "ignore",
  "libc",
  "notify",
  "predicates",

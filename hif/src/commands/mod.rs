@@ -15,6 +15,7 @@ pub mod org;
 pub mod repository;
 pub mod session;
 pub mod show;
+pub mod skill;
 pub mod status;
 pub mod sync;
 pub mod tree;

@@ -51,6 +51,10 @@ defmodule Micelio.GRPC.Repositories.V1.ProjectService.Server do
     end
   end
 
+  def list_repositories(%ListProjectsRequest{} = request, stream) do
+    list_projects(request, stream)
+  end
+
   def get_project(%GetProjectRequest{} = request, stream) do
     with :ok <- require_field(request.organization_handle, "organization_handle"),
          :ok <- require_field(request.handle, "handle"),
@@ -64,6 +68,10 @@ defmodule Micelio.GRPC.Repositories.V1.ProjectService.Server do
       {:error, :not_found} -> {:error, not_found_status("Organization not found.")}
       {:error, status} -> {:error, status}
     end
+  end
+
+  def get_repository(%GetProjectRequest{} = request, stream) do
+    get_project(request, stream)
   end
 
   def create_project(%CreateProjectRequest{} = request, stream) do
@@ -94,6 +102,10 @@ defmodule Micelio.GRPC.Repositories.V1.ProjectService.Server do
       {:error, status} -> {:error, status}
       false -> {:error, forbidden_status("You do not have access to this organization.")}
     end
+  end
+
+  def create_repository(%CreateProjectRequest{} = request, stream) do
+    create_project(request, stream)
   end
 
   def update_project(%UpdateProjectRequest{} = request, stream) do
@@ -127,6 +139,10 @@ defmodule Micelio.GRPC.Repositories.V1.ProjectService.Server do
     end
   end
 
+  def update_repository(%UpdateProjectRequest{} = request, stream) do
+    update_project(request, stream)
+  end
+
   def delete_project(%DeleteProjectRequest{} = request, stream) do
     with :ok <- require_field(request.organization_handle, "organization_handle"),
          :ok <- require_field(request.handle, "handle"),
@@ -143,6 +159,10 @@ defmodule Micelio.GRPC.Repositories.V1.ProjectService.Server do
       {:error, status} -> {:error, status}
       false -> {:error, forbidden_status("You do not have access to this organization.")}
     end
+  end
+
+  def delete_repository(%DeleteProjectRequest{} = request, stream) do
+    delete_project(request, stream)
   end
 
   defp repository_to_proto(repository, organization) do

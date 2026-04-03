@@ -1,8 +1,8 @@
 defmodule MicelioWeb.SessionLiveTest do
   use MicelioWeb.ConnCase
 
-  import Phoenix.LiveViewTest
   import Mimic
+  import Phoenix.LiveViewTest
 
   alias Micelio.Mic.Landing
   alias Micelio.Sessions.OGSummary
