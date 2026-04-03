@@ -11,7 +11,7 @@ msgstr ""
 "Language: ja\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 
-#: lib/micelio_web/live/session_live/show.ex:743
+#: lib/micelio_web/live/session_live/show.ex:869
 #, elixir-autogen, elixir-format
 msgid "Actions"
 msgstr "アクション"
@@ -163,7 +163,7 @@ msgid "GitHub App installed successfully."
 msgstr ""
 
 #: lib/micelio_web/controllers/browser/docs_html/cli_reference.html.heex:22
-#: lib/micelio_web/controllers/browser/docs_html/show.html.heex:35
+#: lib/micelio_web/live/docs_live/show.ex:126
 #, elixir-autogen, elixir-format
 msgid "All documentation"
 msgstr "すべてのドキュメント"
@@ -172,8 +172,8 @@ msgstr "すべてのドキュメント"
 #: lib/micelio_web/controllers/browser/docs_html/cli_reference.html.heex:28
 #: lib/micelio_web/controllers/browser/docs_html/index.html.heex:10
 #: lib/micelio_web/controllers/browser/docs_html/search.html.heex:10
-#: lib/micelio_web/controllers/browser/docs_html/show.html.heex:41
 #: lib/micelio_web/live/docs_live/index.ex:156
+#: lib/micelio_web/live/docs_live/show.ex:132
 #, elixir-autogen, elixir-format
 msgid "Documentation"
 msgstr "ドキュメント"
@@ -184,8 +184,8 @@ msgid "Documentation for Micelio users and hosters."
 msgstr "Micelioユーザーとホスター向けのドキュメント。"
 
 #: lib/micelio_web/controllers/browser/docs_controller.ex:35
-#: lib/micelio_web/controllers/browser/docs_controller.ex:63
 #: lib/micelio_web/live/docs_live/index.ex:29
+#: lib/micelio_web/live/docs_live/show.ex:27
 #, elixir-autogen, elixir-format
 msgid "docs"
 msgstr "ドキュメント"
@@ -193,7 +193,7 @@ msgstr "ドキュメント"
 #: lib/micelio_web/controllers/browser/docs_html/category.html.heex:9
 #: lib/micelio_web/controllers/browser/docs_html/cli_reference.html.heex:27
 #: lib/micelio_web/controllers/browser/docs_html/search.html.heex:9
-#: lib/micelio_web/controllers/browser/docs_html/show.html.heex:40
+#: lib/micelio_web/live/docs_live/show.ex:131
 #, elixir-autogen, elixir-format
 msgid "Breadcrumb"
 msgstr "パンくずリスト"
@@ -419,13 +419,13 @@ msgstr ""
 msgid "References"
 msgstr ""
 
-#: lib/micelio_web/controllers/browser/repository_html/show.html.heex:368
+#: lib/micelio_web/controllers/browser/repository_html/show.html.heex:351
 #, elixir-autogen, elixir-format
 msgid "About"
 msgstr ""
 
 #: lib/micelio_web/controllers/browser/repository_html/blob.html.heex:77
-#: lib/micelio_web/controllers/browser/repository_html/show.html.heex:316
+#: lib/micelio_web/controllers/browser/repository_html/show.html.heex:299
 #, elixir-autogen, elixir-format
 msgid "Binary file (%{size} bytes) cannot be displayed."
 msgstr ""
@@ -461,7 +461,7 @@ msgid "No repositories yet"
 msgstr ""
 
 #: lib/micelio_web/controllers/browser/repository_html/blob.html.heex:32
-#: lib/micelio_web/controllers/browser/repository_html/show.html.heex:173
+#: lib/micelio_web/controllers/browser/repository_html/show.html.heex:156
 #, elixir-autogen, elixir-format
 msgid "Path"
 msgstr ""
@@ -494,7 +494,7 @@ msgstr ""
 msgid "Repositories help you organize your code and collaborate with others."
 msgstr ""
 
-#: lib/micelio_web/controllers/browser/repository_html/show.html.heex:194
+#: lib/micelio_web/controllers/browser/repository_html/show.html.heex:177
 #, elixir-autogen, elixir-format
 msgid "This repository is empty"
 msgstr ""
@@ -546,7 +546,7 @@ msgid "Sort order"
 msgstr ""
 
 #: lib/micelio_web/live/session_live/index.ex:194
-#: lib/micelio_web/live/session_live/show.ex:630
+#: lib/micelio_web/live/session_live/show.ex:753
 #, elixir-autogen, elixir-format
 msgid "Status"
 msgstr ""
@@ -561,89 +561,68 @@ msgstr "と"
 msgid "started"
 msgstr ""
 
-#: lib/micelio_web/live/session_live/show.ex:385
+#: lib/micelio_web/live/session_live/show.ex:428
 #, elixir-autogen, elixir-format
 msgid "AI"
 msgstr ""
 
-#: lib/micelio_web/live/session_live/show.ex:387
+#: lib/micelio_web/live/session_live/show.ex:430
 #, elixir-autogen, elixir-format
 msgid "AI + Human"
 msgstr ""
 
-#: lib/micelio_web/live/session_live/show.ex:751
+#: lib/micelio_web/live/session_live/show.ex:885
 #, elixir-autogen, elixir-format, fuzzy
 msgid "Abandon"
 msgstr ""
 
-#: lib/micelio_web/live/session_live/show.ex:749
+#: lib/micelio_web/live/session_live/show.ex:883
 #, elixir-autogen, elixir-format
 msgid "Abandon this session?"
 msgstr ""
 
-#: lib/micelio_web/live/session_live/show.ex:573
-#: lib/micelio_web/live/session_live/show.ex:707
+#: lib/micelio_web/live/session_live/show.ex:678
+#: lib/micelio_web/live/session_live/show.ex:833
 #, elixir-autogen, elixir-format
 msgid "Changes"
 msgstr ""
 
 #: lib/micelio_web/live/plan_live/show.ex:535
-#: lib/micelio_web/live/session_live/show.ex:546
 #, elixir-autogen, elixir-format
 msgid "Connecting..."
 msgstr ""
 
-#: lib/micelio_web/live/session_live/show.ex:551
-#, elixir-autogen, elixir-format
-msgid "Filter session events"
-msgstr ""
-
-#: lib/micelio_web/live/session_live/show.ex:386
+#: lib/micelio_web/live/session_live/show.ex:429
 #, elixir-autogen, elixir-format
 msgid "Human"
 msgstr ""
 
-#: lib/micelio_web/live/session_live/show.ex:566
-#, elixir-autogen, elixir-format, fuzzy
-msgid "No events yet."
-msgstr "説明はまだありません。"
-
-#: lib/micelio_web/live/session_live/show.ex:613
+#: lib/micelio_web/live/session_live/show.ex:744
 #, elixir-autogen, elixir-format
 msgid "No file changes in this session"
 msgstr ""
 
-#: lib/micelio_web/live/session_live/show.ex:785
+#: lib/micelio_web/live/session_live/show.ex:919
 #, elixir-autogen, elixir-format, fuzzy
 msgid "Output"
 msgstr ""
 
-#: lib/micelio_web/live/session_live/show.ex:621
-#, elixir-autogen, elixir-format
-msgid "Raw metadata"
-msgstr ""
-
-#: lib/micelio_web/live/session_live/show.ex:645
-#, elixir-autogen, elixir-format, fuzzy
-msgid "Attribution"
-msgstr "コントリビューション"
-
-#: lib/micelio_web/live/session_live/show.ex:638
+#: lib/micelio_web/live/session_live/show.ex:761
 #, elixir-autogen, elixir-format
 msgid "Author"
 msgstr ""
 
-#: lib/micelio_web/live/session_live/show.ex:711
+#: lib/micelio_web/live/session_live/show.ex:837
 #, elixir-autogen, elixir-format, fuzzy
 msgid "added"
 msgstr "と"
 
-#: lib/micelio_web/live/session_live/show.ex:721
+#: lib/micelio_web/live/session_live/show.ex:847
 #, elixir-autogen, elixir-format, fuzzy
 msgid "deleted"
 msgstr "削除"
 
-#: lib/micelio_web/live/session_live/show.ex:716
+#: lib/micelio_web/live/session_live/show.ex:842
 #, elixir-autogen, elixir-format
 msgid "modified"
 msgstr ""
@@ -767,22 +746,23 @@ msgstr ""
 msgid "Authentication & Authorization"
 msgstr ""
 
-#: lib/micelio_web/controllers/browser/docs_html/show.html.heex:23
+#: lib/micelio_web/live/docs_live/show.ex:77
+#: lib/micelio_web/live/docs_live/show.ex:79
 #, elixir-autogen, elixir-format
 msgid "On this page"
 msgstr ""
 
-#: lib/micelio_web/controllers/browser/docs_html/show.html.heex:64
+#: lib/micelio_web/live/docs_live/show.ex:158
 #, elixir-autogen, elixir-format
 msgid "Send request"
 msgstr ""
 
-#: lib/micelio_web/controllers/browser/docs_html/show.html.heex:65
+#: lib/micelio_web/live/docs_live/show.ex:159
 #, elixir-autogen, elixir-format
 msgid "Sending..."
 msgstr ""
 
-#: lib/micelio_web/controllers/browser/docs_html/show.html.heex:63
+#: lib/micelio_web/live/docs_live/show.ex:157
 #, elixir-autogen, elixir-format
 msgid "Sign in to try this"
 msgstr ""
@@ -1295,7 +1275,7 @@ msgstr ""
 msgid "Open"
 msgstr ""
 
-#: lib/micelio_web/live/session_live/show.ex:730
+#: lib/micelio_web/live/session_live/show.ex:856
 #, elixir-autogen, elixir-format, fuzzy
 msgid "Prompt request"
 msgstr ""
@@ -1554,4 +1534,19 @@ msgstr "micとMicelioの使い方、または自分のインスタンスをホ�
 #: lib/micelio_web/controllers/browser/docs_html/cli_reference.html.heex:297
 #, elixir-autogen, elixir-format, fuzzy
 msgid "When an error occurs, hif returns a JSON error with a code. Here's how to resolve common errors:"
+msgstr ""
+
+#: lib/micelio_web/live/docs_live/show.ex:62
+#, elixir-autogen, elixir-format
+msgid "Category pages"
+msgstr ""
+
+#: lib/micelio/docs.ex:43
+#, elixir-autogen, elixir-format
+msgid "Environment variables and configuration options for hosting Micelio."
+msgstr ""
+
+#: lib/micelio/docs.ex:41
+#, elixir-autogen, elixir-format
+msgid "Server Configuration"
 msgstr ""

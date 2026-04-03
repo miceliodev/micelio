@@ -17,6 +17,7 @@
 @import "./routes/auth.css";
 @import "./routes/repositories.css";
 @import "./routes/plans.css";
+@import "../vendor/diff2html.min.css";
 @import "./routes/sessions.css";
 @import "./routes/agent_progress.css";
 @import "./routes/organizations.css";

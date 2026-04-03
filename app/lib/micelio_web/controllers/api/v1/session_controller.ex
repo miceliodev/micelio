@@ -7,8 +7,8 @@ defmodule MicelioWeb.Api.V1.SessionController do
   alias MicelioWeb.Api.Helpers
   alias MicelioWeb.Api.Schemas
 
-  plug MicelioWeb.Plugs.ApiScopePlug, ["sessions:read"] when action in [:index, :show]
-  plug MicelioWeb.Plugs.ApiScopePlug, ["sessions:write"] when action in [:create, :land]
+  plug(MicelioWeb.Plugs.ApiScopePlug, ["sessions:read"] when action in [:index, :show])
+  plug(MicelioWeb.Plugs.ApiScopePlug, ["sessions:write"] when action in [:create, :land])
 
   tags(["Sessions"])
 
@@ -144,12 +144,28 @@ defmodule MicelioWeb.Api.V1.SessionController do
          %Sessions.Session{} = session <-
            Sessions.get_session_with_associations_by_identifier(session_id),
          :ok <- Authorization.authorize(:repository_write, user, session.repository) do
-      case Sessions.land_session(session) do
+      case Sessions.land_session_to_trunk(session) do
         {:ok, landed} ->
           json(conn, %{data: serialize_session(landed)})
 
+        {:error, :not_active} ->
+          Helpers.error_response(
+            conn,
+            :unprocessable_entity,
+            "validation_error",
+            "Only active sessions can be landed"
+          )
+
         {:error, %Ecto.Changeset{} = changeset} ->
           Helpers.handle_error(conn, {:error, changeset})
+
+        {:error, reason} ->
+          Helpers.error_response(
+            conn,
+            :unprocessable_entity,
+            "landing_failed",
+            "Unable to land session: #{inspect(reason)}"
+          )
       end
     else
       nil -> Helpers.handle_error(conn, {:error, :not_found})

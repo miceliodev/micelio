@@ -778,6 +778,7 @@ For `phx-hook`, always set `phx-update="ignore"` if the hook manages its own DOM
 - Use vanilla modern CSS only
 - Design inspiration: GitHub Primer design system
 - **No emojis** in UI or content
+- Do not hardcode spacing, color, radius, or typography values when a theme token exists; use `var(--theme-ui-...)`
 
 #### Selector Strategy
 
@@ -786,6 +787,7 @@ CSS selectors must follow this pattern:
 1. **Use `#id` selectors** to identify pages and reusable Phoenix LiveView components (e.g., `#blog-page`, `#language-selector`)
 2. **Nest child selectors using `data-part`** attribute (e.g., `#blog-page [data-part="empty-state"]`, `#blog-page [data-part="post-list"]`)
 3. **Do not reuse CSS classes** across components — the only shared layer is theme CSS variables from `tokens.css`
+4. **Do not use utility classes** for page/component styling; scope styles through the component `#id` and `data-part` structure instead
 
 Each page/component gets its own self-contained styles scoped by its `#id`. This keeps styles isolated and avoids coupling between components.
 

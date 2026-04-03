@@ -1,8 +1,11 @@
 defmodule MicelioWeb.Api.V1.SessionControllerTest do
   use MicelioWeb.ConnCase, async: true
 
+  import Mimic
+
   alias Boruta.Oauth.ResourceOwner
   alias Micelio.Accounts
+  alias Micelio.Mic.Landing
   alias Micelio.OAuth
   alias Micelio.OAuth.AccessTokens
   alias Micelio.OAuth.Clients
@@ -151,6 +154,11 @@ defmodule MicelioWeb.Api.V1.SessionControllerTest do
       repository: repository,
       user: user
     } do
+      expect(Landing, :land_session, fn _, _opts ->
+        {:ok,
+         %{position: 2, tree_hash: :crypto.strong_rand_bytes(32), landed_at: DateTime.utc_now()}}
+      end)
+
       session_id = Ecto.UUID.generate()
 
       {:ok, _session} =

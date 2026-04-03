@@ -9,7 +9,6 @@ alias Micelio.Mic.Seed
 alias Micelio.Repo
 alias Micelio.Repositories
 alias Micelio.Repositories.Repository
-alias Micelio.Sessions
 
 user_email = "test@micelio.dev"
 org_handle = "micelio"
@@ -234,75 +233,13 @@ SOFTWARE.
   IO.puts("Wrote .hif/workspace.json (position=#{position})")
 
   # ---------------------------------------------------------------------------
-  # 5. Seed sample sessions
-  # ---------------------------------------------------------------------------
-
-  IO.puts("\nSeeding sessions...")
-
-  {:ok, session1} =
-    Sessions.create_session(%{
-      session_id: "seed-add-greeting-#{System.unique_integer([:positive])}",
-      goal: "Add configurable greeting",
-      repository_id: repository.id,
-      user_id: user.id,
-      conversation: [
-        %{
-          "role" => "user",
-          "content" => "Make the greeting configurable via a command-line argument.",
-          "timestamp" => DateTime.utc_now() |> DateTime.add(-3600) |> DateTime.to_iso8601()
-        },
-        %{
-          "role" => "assistant",
-          "content" =>
-            "Updated main.js to read the name from process.argv. Defaults to \"world\" when no argument is provided.",
-          "timestamp" => DateTime.utc_now() |> DateTime.add(-3500) |> DateTime.to_iso8601()
-        }
-      ],
-      metadata: %{
-        "contributor_type" => "ai",
-        "model_id" => "claude-sonnet-4-20250514",
-        "tool_name" => "Claude Code",
-        "tool_version" => "1.0.0"
-      }
-    })
-
-  {:ok, _session1} = Sessions.land_session(session1)
-
-  Sessions.create_session_change(%{
-    session_id: session1.id,
-    file_path: "main.js",
-    change_type: "modified",
-    content: "const name = process.argv[2] || \"world\";\nconsole.log(greet(name));",
-    metadata: %{"size" => 120}
-  })
-
-  IO.puts("  Created session: #{session1.goal} (landed)")
-
-  {:ok, session2} =
-    Sessions.create_session(%{
-      session_id: "seed-add-tests-#{System.unique_integer([:positive])}",
-      goal: "Add unit tests",
-      repository_id: repository.id,
-      user_id: user.id,
-      conversation: [
-        %{
-          "role" => "user",
-          "content" => "Add a test file for the greet function.",
-          "timestamp" => DateTime.utc_now() |> DateTime.add(-900) |> DateTime.to_iso8601()
-        }
-      ],
-      metadata: %{"contributor_type" => "human"}
-    })
-
-  IO.puts("  Created session: #{session2.goal} (active)")
-
-  # ---------------------------------------------------------------------------
-  # Done
+  # 5. Done
   # ---------------------------------------------------------------------------
 
   IO.puts("\nLocal development setup complete!")
   IO.puts("  Repository: #{org_handle}/#{repository.handle}")
   IO.puts("  Workspace:  #{workspace_root}")
+  IO.puts("  Sessions:   none seeded")
   IO.puts("  Login with: #{user.email}")
   IO.puts("  gRPC:       #{grpc_url}")
 else

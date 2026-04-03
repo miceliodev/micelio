@@ -11,8 +11,8 @@ msgstr ""
 "Language: en\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: lib/micelio_web/controllers/browser/changelog_html/category.html.heex:19
-#: lib/micelio_web/controllers/browser/changelog_html/index.html.heex:24
+#: lib/micelio_web/controllers/browser/changelog_html/category.html.heex:24
+#: lib/micelio_web/controllers/browser/changelog_html/index.html.heex:30
 #, elixir-autogen, elixir-format
 msgid "All"
 msgstr "All"
@@ -22,7 +22,7 @@ msgstr "All"
 msgid "All changelog entries categorized under \"%{category}\"."
 msgstr "All changelog entries categorized under \"%{category}\"."
 
-#: lib/micelio_web/controllers/browser/changelog_html/version.html.heex:11
+#: lib/micelio_web/controllers/browser/changelog_html/version.html.heex:12
 #, elixir-autogen, elixir-format
 msgid "All changes included in version %{version}."
 msgstr "All changes included in version %{version}."
@@ -32,38 +32,38 @@ msgstr "All changes included in version %{version}."
 msgid "Changelog"
 msgstr "Changelog"
 
-#: lib/micelio_web/controllers/browser/changelog_html/index.html.heex:63
+#: lib/micelio_web/controllers/browser/changelog_html/index.html.heex:73
 #, elixir-autogen, elixir-format
 msgid "Check back soon for updates!"
 msgstr "Check back soon for updates!"
 
-#: lib/micelio_web/controllers/browser/changelog_html/category.html.heex:18
-#: lib/micelio_web/controllers/browser/changelog_html/index.html.heex:23
+#: lib/micelio_web/controllers/browser/changelog_html/category.html.heex:21
+#: lib/micelio_web/controllers/browser/changelog_html/index.html.heex:27
 #, elixir-autogen, elixir-format
 msgid "Filter by category:"
 msgstr "Filter by category:"
 
-#: lib/micelio_web/controllers/browser/changelog_html/category.html.heex:64
+#: lib/micelio_web/controllers/browser/changelog_html/category.html.heex:72
 #, elixir-autogen, elixir-format
 msgid "No changelog entries found for the \"%{category}\" category."
 msgstr "No changelog entries found for the \"%{category}\" category."
 
-#: lib/micelio_web/controllers/browser/changelog_html/version.html.heex:46
+#: lib/micelio_web/controllers/browser/changelog_html/version.html.heex:50
 #, elixir-autogen, elixir-format
 msgid "No changelog entries found for version %{version}."
 msgstr "No changelog entries found for version %{version}."
 
-#: lib/micelio_web/controllers/browser/changelog_html/index.html.heex:62
+#: lib/micelio_web/controllers/browser/changelog_html/index.html.heex:71
 #, elixir-autogen, elixir-format
 msgid "No changelog entries yet"
 msgstr "No changelog entries yet"
 
-#: lib/micelio_web/controllers/browser/changelog_html/version.html.heex:44
+#: lib/micelio_web/controllers/browser/changelog_html/version.html.heex:47
 #, elixir-autogen, elixir-format
 msgid "No entries for this version"
 msgstr "No entries for this version"
 
-#: lib/micelio_web/controllers/browser/changelog_html/category.html.heex:62
+#: lib/micelio_web/controllers/browser/changelog_html/category.html.heex:69
 #, elixir-autogen, elixir-format
 msgid "No entries in this category"
 msgstr "No entries in this category"

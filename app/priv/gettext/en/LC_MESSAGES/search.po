@@ -11,19 +11,19 @@ msgstr ""
 "Language: en\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: lib/micelio_web/controllers/browser/search_html/index.html.heex:35
+#: lib/micelio_web/controllers/browser/search_html/index.html.heex:37
 #, elixir-autogen, elixir-format
 msgid "%{count} result for \"%{query}\""
 msgid_plural "%{count} results for \"%{query}\""
 msgstr[0] "%{count} result for \"%{query}\""
 msgstr[1] "%{count} results for \"%{query}\""
 
-#: lib/micelio_web/controllers/browser/search_html/index.html.heex:58
+#: lib/micelio_web/controllers/browser/search_html/index.html.heex:67
 #, elixir-autogen, elixir-format
 msgid "No description provided."
 msgstr "No description provided."
 
-#: lib/micelio_web/controllers/browser/search_html/index.html.heex:41
+#: lib/micelio_web/controllers/browser/search_html/index.html.heex:50
 #, elixir-autogen, elixir-format
 msgid "No repositories matched your query."
 msgstr "No repositories matched your query."
@@ -33,7 +33,7 @@ msgstr "No repositories matched your query."
 msgid "Repository search"
 msgstr "Repository search"
 
-#: lib/micelio_web/controllers/browser/search_html/index.html.heex:29
+#: lib/micelio_web/controllers/browser/search_html/index.html.heex:30
 #, elixir-autogen, elixir-format
 msgid "Search"
 msgstr "Search"

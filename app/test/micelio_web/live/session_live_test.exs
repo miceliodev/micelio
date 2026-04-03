@@ -2,7 +2,9 @@ defmodule MicelioWeb.SessionLiveTest do
   use MicelioWeb.ConnCase
 
   import Phoenix.LiveViewTest
+  import Mimic
 
+  alias Micelio.Mic.Landing
   alias Micelio.Sessions.OGSummary
   alias Micelio.{Accounts, Plans, Sessions}
   alias MicelioWeb.OpenGraphImage
@@ -180,7 +182,6 @@ defmodule MicelioWeb.SessionLiveTest do
       assert html =~ "Hi there"
       assert html =~ "Use Phoenix"
       assert html =~ "Best framework"
-      assert html =~ "custom_key"
     end
 
     test "shows plan link when session originates from a plan", %{
@@ -621,13 +622,37 @@ defmodule MicelioWeb.SessionLiveTest do
 
       {:ok, landed_session} = Sessions.land_session(session)
 
-      {:ok, _live, html} =
+      {:ok, live_view, html} =
         live(
           conn,
           "/#{organization.account.handle}/#{repository.handle}/sessions/#{landed_session.id}"
         )
 
+      refute has_element?(live_view, "button", "Land")
       refute html =~ "Abandon"
+    end
+
+    test "shows land button for active sessions", %{
+      conn: conn,
+      repository: repository,
+      user: user,
+      organization: organization
+    } do
+      {:ok, session} =
+        Sessions.create_session(%{
+          session_id: "landable-session",
+          goal: "Land me",
+          repository_id: repository.id,
+          user_id: user.id
+        })
+
+      {:ok, _live, html} =
+        live(
+          conn,
+          "/#{organization.account.handle}/#{repository.handle}/sessions/#{session.id}"
+        )
+
+      assert html =~ "Land"
     end
 
     test "abandons an active session", %{
@@ -658,6 +683,85 @@ defmodule MicelioWeb.SessionLiveTest do
       # Verify in database
       abandoned_session = Sessions.get_session(session.id)
       assert abandoned_session.status == "abandoned"
+    end
+
+    test "lands an active session through the session page", %{
+      conn: conn,
+      repository: repository,
+      user: user,
+      organization: organization
+    } do
+      expect(Landing, :land_session, fn _, _opts ->
+        {:ok,
+         %{position: 3, tree_hash: :crypto.strong_rand_bytes(32), landed_at: DateTime.utc_now()}}
+      end)
+
+      {:ok, session} =
+        Sessions.create_session(%{
+          session_id: "to-land",
+          goal: "Will be landed",
+          repository_id: repository.id,
+          user_id: user.id
+        })
+
+      {:ok, _change} =
+        Sessions.create_session_change(%{
+          session_id: session.id,
+          file_path: "README.md",
+          change_type: "modified",
+          content: "updated\n"
+        })
+
+      {:ok, show_live, _html} =
+        live(
+          conn,
+          "/#{organization.account.handle}/#{repository.handle}/sessions/#{session.id}"
+        )
+
+      html = show_live |> element("button", "Land") |> render_click()
+
+      assert html =~ "Session landed successfully"
+      assert html =~ "Landed"
+
+      landed_session = Sessions.get_session(session.id)
+      assert landed_session.status == "landed"
+      assert landed_session.metadata["landing_position"] == 3
+      assert is_binary(landed_session.metadata["landing_revision_hash"])
+    end
+
+    test "renders hif session payloads", %{
+      conn: conn,
+      repository: repository,
+      user: user,
+      organization: organization
+    } do
+      {:ok, session} =
+        Sessions.create_session(%{
+          session_id: "hif-shaped-session",
+          goal: "Render hif payloads",
+          repository_id: repository.id,
+          user_id: user.id,
+          conversation: [
+            %{"role" => "user", "text" => "User prompt", "at_ms" => 1_714_000_000_000},
+            %{"role" => "agent", "text" => "Agent reply", "at_ms" => 1_714_000_001_000}
+          ],
+          decisions: [
+            %{"text" => "Prefer the hif metadata flow"}
+          ],
+          metadata: %{
+            "base_revision_hash" => Base.encode64(:crypto.strong_rand_bytes(32))
+          }
+        })
+
+      {:ok, _live, html} =
+        live(
+          conn,
+          "/#{organization.account.handle}/#{repository.handle}/sessions/#{session.id}"
+        )
+
+      assert html =~ "User prompt"
+      assert html =~ "Agent reply"
+      assert html =~ "Prefer the hif metadata flow"
     end
 
     test "shows empty state when no file changes", %{

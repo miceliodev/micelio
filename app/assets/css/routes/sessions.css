@@ -349,6 +349,10 @@
   height: 12px;
 }
 
+.session-sidebar-muted {
+  color: var(--theme-ui-colors-muted);
+}
+
 .session-sidebar-actions {
   display: flex;
   flex-direction: column;
@@ -411,12 +415,14 @@
 }
 
 /* Vertical connecting line through the avatar column */
-.session-timeline::before {
+/* Timeline connector: line from avatar bottom edge to bottom of message,
+   across the gap, and into the next message's padding to reach the next avatar. */
+.session-tl-message:not(:last-child)::before {
   content: "";
   position: absolute;
   left: 13px; /* center of 28px avatar column */
-  top: 0;
-  bottom: 0;
+  top: calc(var(--theme-ui-space-2) + 28px); /* top padding + avatar height */
+  bottom: calc(-1 * var(--theme-ui-space-0) - var(--theme-ui-space-2)); /* across gap + next padding */
   width: 2px;
   background-color: var(--theme-ui-colors-border);
   z-index: 0;
@@ -429,6 +435,7 @@
   gap: var(--theme-ui-space-1);
   align-items: flex-start;
   padding: var(--theme-ui-space-2) 0;
+  position: relative;
 }
 
 .session-tl-avatar {
@@ -906,15 +913,199 @@ details[open] > .session-tl-tool-summary::before {
 }
 
 .session-file-tree-item {
-  display: flex;
-  align-items: center;
-  gap: var(--theme-ui-space-1);
-  padding: var(--theme-ui-space-0) var(--theme-ui-space-2);
   border-bottom: var(--theme-ui-borders-thin);
 }
 
 .session-file-tree-item:last-child {
   border-bottom: none;
+}
+
+.session-file-tree-summary {
+  display: flex;
+  align-items: center;
+  gap: var(--theme-ui-space-1);
+  padding: var(--theme-ui-space-0) var(--theme-ui-space-2);
+  cursor: pointer;
+  user-select: none;
+}
+
+.session-file-tree-summary:hover {
+  background-color: var(--theme-ui-colors-surface);
+}
+
+.session-file-content {
+  margin: 0;
+  padding: var(--theme-ui-space-2);
+  background-color: var(--theme-ui-colors-surface);
+  border-top: var(--theme-ui-borders-thin);
+  font-family: var(--theme-ui-fonts-mono);
+  font-size: var(--theme-ui-font-size-sm);
+  overflow-x: auto;
+  white-space: pre;
+  line-height: 1.5;
+}
+
+.session-file-content code {
+  font-family: inherit;
+}
+
+.session-file-content-deleted,
+.session-file-content-external {
+  padding: var(--theme-ui-space-1) var(--theme-ui-space-2);
+  border-top: var(--theme-ui-borders-thin);
+  color: var(--theme-ui-colors-muted);
+  font-size: var(--theme-ui-font-size-sm);
+  font-style: italic;
+}
+
+/* -- Diff viewer (diff2html overrides) -- */
+
+.session-file-diff {
+  border-top: var(--theme-ui-borders-thin);
+  overflow-x: auto;
+}
+
+.session-file-diff .d2h-wrapper {
+  border: none;
+  margin: 0;
+}
+
+.session-file-diff .d2h-file-wrapper {
+  border: none;
+  margin: 0;
+  border-radius: 0;
+}
+
+.session-file-diff .d2h-file-header {
+  display: none;
+}
+
+.session-file-diff .d2h-diff-table {
+  font-family: var(--theme-ui-fonts-mono);
+  font-size: var(--theme-ui-font-size-sm);
+}
+
+/* Override diff2html colors to match GitHub style */
+.session-file-diff .d2h-info,
+.session-file-diff .d2h-light-color-scheme .d2h-info {
+  background-color: #f1f8ff;
+  border-color: #e1e4e8;
+  color: rgba(27, 31, 36, 0.7);
+}
+
+.session-file-diff .d2h-del,
+.session-file-diff .d2h-light-color-scheme .d2h-del {
+  background-color: #ffebe9;
+}
+
+.session-file-diff .d2h-del .d2h-code-linenumber,
+.session-file-diff .d2h-light-color-scheme .d2h-del .d2h-code-linenumber {
+  background-color: #ffd7d5;
+  border-color: #ffc1bf;
+  color: rgba(27, 31, 36, 0.7);
+}
+
+.session-file-diff .d2h-ins,
+.session-file-diff .d2h-light-color-scheme .d2h-ins {
+  background-color: #e6ffec;
+}
+
+.session-file-diff .d2h-ins .d2h-code-linenumber,
+.session-file-diff .d2h-light-color-scheme .d2h-ins .d2h-code-linenumber {
+  background-color: #ccffd8;
+  border-color: #abf2bc;
+  color: rgba(27, 31, 36, 0.7);
+}
+
+.session-file-diff .d2h-code-linenumber {
+  color: rgba(27, 31, 36, 0.5);
+}
+
+.session-file-diff del,
+.session-file-diff .d2h-light-color-scheme del {
+  background-color: #ff818266;
+}
+
+.session-file-diff ins,
+.session-file-diff .d2h-light-color-scheme ins {
+  background-color: #abf2bc;
+}
+
+/* Dark mode overrides */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .session-file-diff .d2h-info {
+    background-color: rgba(56, 139, 253, 0.1);
+    color: #8b949e;
+  }
+
+  :root:not([data-theme="light"]) .session-file-diff .d2h-del {
+    background-color: rgba(248, 81, 73, 0.1);
+  }
+
+  :root:not([data-theme="light"]) .session-file-diff .d2h-del .d2h-code-linenumber {
+    background-color: rgba(248, 81, 73, 0.15);
+    border-color: transparent;
+    color: #8b949e;
+  }
+
+  :root:not([data-theme="light"]) .session-file-diff .d2h-ins {
+    background-color: rgba(63, 185, 80, 0.1);
+  }
+
+  :root:not([data-theme="light"]) .session-file-diff .d2h-ins .d2h-code-linenumber {
+    background-color: rgba(63, 185, 80, 0.15);
+    border-color: transparent;
+    color: #8b949e;
+  }
+
+  :root:not([data-theme="light"]) .session-file-diff .d2h-code-linenumber {
+    color: #8b949e;
+  }
+
+  :root:not([data-theme="light"]) .session-file-diff del {
+    background-color: rgba(248, 81, 73, 0.4);
+  }
+
+  :root:not([data-theme="light"]) .session-file-diff ins {
+    background-color: rgba(63, 185, 80, 0.4);
+  }
+}
+
+:root[data-theme="dark"] .session-file-diff .d2h-info {
+  background-color: rgba(56, 139, 253, 0.1);
+  color: #8b949e;
+}
+
+:root[data-theme="dark"] .session-file-diff .d2h-del {
+  background-color: rgba(248, 81, 73, 0.1);
+}
+
+:root[data-theme="dark"] .session-file-diff .d2h-del .d2h-code-linenumber {
+  background-color: rgba(248, 81, 73, 0.15);
+  border-color: transparent;
+  color: #8b949e;
+}
+
+:root[data-theme="dark"] .session-file-diff .d2h-ins {
+  background-color: rgba(63, 185, 80, 0.1);
+}
+
+:root[data-theme="dark"] .session-file-diff .d2h-ins .d2h-code-linenumber {
+  background-color: rgba(63, 185, 80, 0.15);
+  border-color: transparent;
+  color: #8b949e;
+}
+
+:root[data-theme="dark"] .session-file-diff .d2h-code-linenumber {
+  color: #8b949e;
+}
+
+:root[data-theme="dark"] .session-file-diff del {
+  background-color: rgba(248, 81, 73, 0.4);
+}
+
+:root[data-theme="dark"] .session-file-diff ins {
+  background-color: rgba(63, 185, 80, 0.4);
 }
 
 .session-file-change-badge {
@@ -1007,7 +1198,7 @@ details[open] > .session-tl-tool-summary::before {
     align-items: flex-start;
   }
 
-  .session-timeline::before {
+  .session-tl-message .session-tl-avatar::after {
     display: none;
   }
 

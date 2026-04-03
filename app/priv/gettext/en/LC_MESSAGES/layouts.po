@@ -11,53 +11,53 @@ msgstr ""
 "Language: en\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: lib/micelio_web/components/layouts.ex:464
+#: lib/micelio_web/components/layouts.ex:453
 #, elixir-autogen, elixir-format
 msgid "Account"
 msgstr "Account"
 
-#: lib/micelio_web/components/layouts.ex:146
+#: lib/micelio_web/components/layouts.ex:133
 #, elixir-autogen, elixir-format
 msgid "Account (@%{handle})"
 msgstr "Account (@%{handle})"
 
-#: lib/micelio_web/components/layouts.ex:489
+#: lib/micelio_web/components/layouts.ex:478
 #, elixir-autogen, elixir-format
 msgid "Admin"
 msgstr "Admin"
 
-#: lib/micelio_web/components/layouts.ex:603
-#: lib/micelio_web/components/layouts.ex:611
+#: lib/micelio_web/components/layouts.ex:617
+#: lib/micelio_web/components/layouts.ex:625
 #, elixir-autogen, elixir-format
 msgid "Attempting to reconnect"
 msgstr "Attempting to reconnect"
 
-#: lib/micelio_web/components/layouts.ex:358
+#: lib/micelio_web/components/layouts.ex:347
 #, elixir-autogen, elixir-format
 msgid "Blog"
 msgstr "Blog"
 
-#: lib/micelio_web/components/layouts.ex:411
+#: lib/micelio_web/components/layouts.ex:400
 #, elixir-autogen, elixir-format
 msgid "Changelog"
 msgstr "Changelog"
 
-#: lib/micelio_web/components/layouts.ex:503
+#: lib/micelio_web/components/layouts.ex:517
 #, elixir-autogen, elixir-format
 msgid "Dark"
 msgstr "Dark"
 
-#: lib/micelio_web/components/layouts.ex:387
+#: lib/micelio_web/components/layouts.ex:376
 #, elixir-autogen, elixir-format
 msgid "Docs"
 msgstr "Docs"
 
-#: lib/micelio_web/components/layouts.ex:162
+#: lib/micelio_web/components/layouts.ex:151
 #, elixir-autogen, elixir-format
 msgid "Get started"
 msgstr "Get started"
 
-#: lib/micelio_web/components/layouts.ex:230
+#: lib/micelio_web/components/layouts.ex:219
 #, elixir-autogen, elixir-format
 msgid "Home"
 msgstr "Home"
@@ -67,33 +67,33 @@ msgstr "Home"
 msgid "Language selection"
 msgstr "Language selection"
 
-#: lib/micelio_web/components/layouts.ex:538
+#: lib/micelio_web/components/layouts.ex:552
 #, elixir-autogen, elixir-format
 msgid "Legal"
 msgstr "Legal"
 
-#: lib/micelio_web/components/layouts.ex:502
+#: lib/micelio_web/components/layouts.ex:516
 #, elixir-autogen, elixir-format
 msgid "Light"
 msgstr "Light"
 
-#: lib/micelio_web/components/layouts.ex:171
+#: lib/micelio_web/components/layouts.ex:160
 #, elixir-autogen, elixir-format
 msgid "Main navigation"
 msgstr "Main navigation"
 
-#: lib/micelio_web/components/layouts.ex:118
-#: lib/micelio_web/components/layouts.ex:256
+#: lib/micelio_web/components/layouts.ex:105
+#: lib/micelio_web/components/layouts.ex:245
 #, elixir-autogen, elixir-format
 msgid "Prompt requests"
 msgstr "Prompt requests"
 
-#: lib/micelio_web/components/layouts.ex:333
+#: lib/micelio_web/components/layouts.ex:322
 #, elixir-autogen, elixir-format
 msgid "Repositories"
 msgstr "Repositories"
 
-#: lib/micelio_web/components/layouts.ex:435
+#: lib/micelio_web/components/layouts.ex:424
 #, elixir-autogen, elixir-format
 msgid "Search"
 msgstr "Search"
@@ -104,49 +104,49 @@ msgstr "Search"
 msgid "Select language"
 msgstr "Select language"
 
-#: lib/micelio_web/components/layouts.ex:119
-#: lib/micelio_web/components/layouts.ex:281
+#: lib/micelio_web/components/layouts.ex:106
+#: lib/micelio_web/components/layouts.ex:270
 #, elixir-autogen, elixir-format
 msgid "Sessions"
 msgstr "Sessions"
 
-#: lib/micelio_web/components/layouts.ex:120
-#: lib/micelio_web/components/layouts.ex:307
+#: lib/micelio_web/components/layouts.ex:107
+#: lib/micelio_web/components/layouts.ex:296
 #, elixir-autogen, elixir-format
 msgid "Settings"
 msgstr "Settings"
 
-#: lib/micelio_web/components/layouts.ex:609
+#: lib/micelio_web/components/layouts.ex:623
 #, elixir-autogen, elixir-format
 msgid "Something went wrong!"
 msgstr "Something went wrong!"
 
-#: lib/micelio_web/components/layouts.ex:505
+#: lib/micelio_web/components/layouts.ex:519
 #, elixir-autogen, elixir-format
 msgid "Switch to dark mode"
 msgstr "Switch to dark mode"
 
-#: lib/micelio_web/components/layouts.ex:504
+#: lib/micelio_web/components/layouts.ex:518
 #, elixir-autogen, elixir-format
 msgid "Switch to light mode"
 msgstr "Switch to light mode"
 
-#: lib/micelio_web/components/layouts.ex:522
+#: lib/micelio_web/components/layouts.ex:536
 #, elixir-autogen, elixir-format
 msgid "Theme"
 msgstr "Theme"
 
-#: lib/micelio_web/components/layouts.ex:79
+#: lib/micelio_web/components/layouts.ex:66
 #, elixir-autogen, elixir-format
 msgid "Toggle navigation"
 msgstr "Toggle navigation"
 
-#: lib/micelio_web/components/layouts.ex:501
+#: lib/micelio_web/components/layouts.ex:515
 #, elixir-autogen, elixir-format
 msgid "Toggle theme"
 msgstr "Toggle theme"
 
-#: lib/micelio_web/components/layouts.ex:601
+#: lib/micelio_web/components/layouts.ex:615
 #, elixir-autogen, elixir-format
 msgid "We can't find the internet"
 msgstr "We can't find the internet"
@@ -156,22 +156,22 @@ msgstr "We can't find the internet"
 msgid "close"
 msgstr "close"
 
-#: lib/micelio_web/components/layouts.ex:541
+#: lib/micelio_web/components/layouts.ex:555
 #, elixir-autogen, elixir-format
 msgid "cookies"
 msgstr "cookies"
 
-#: lib/micelio_web/components/layouts.ex:542
+#: lib/micelio_web/components/layouts.ex:556
 #, elixir-autogen, elixir-format
 msgid "impressum"
 msgstr "impressum"
 
-#: lib/micelio_web/components/layouts.ex:540
+#: lib/micelio_web/components/layouts.ex:554
 #, elixir-autogen, elixir-format
 msgid "privacy"
 msgstr "privacy"
 
-#: lib/micelio_web/components/layouts.ex:539
+#: lib/micelio_web/components/layouts.ex:553
 #, elixir-autogen, elixir-format
 msgid "terms"
 msgstr "terms"
@@ -181,7 +181,7 @@ msgstr "terms"
 msgid "Actions"
 msgstr "Actions"
 
-#: lib/micelio_web/components/core_components.ex:939
+#: lib/micelio_web/components/core_components.ex:944
 #, elixir-autogen, elixir-format
 msgid "On this page"
 msgstr "On this page"
@@ -192,3 +192,13 @@ msgid "contribution"
 msgid_plural "contributions"
 msgstr[0] "contribution"
 msgstr[1] "contributions"
+
+#: lib/micelio_web/components/layouts.ex:506
+#, elixir-autogen, elixir-format
+msgid "Logout"
+msgstr ""
+
+#: lib/micelio_web/components/layouts.ex:161
+#, elixir-autogen, elixir-format, fuzzy
+msgid "Sidebar navigation"
+msgstr "Main navigation"

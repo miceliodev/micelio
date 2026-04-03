@@ -16,12 +16,12 @@ msgstr ""
 msgid "Blog"
 msgstr "博客"
 
-#: lib/micelio_web/controllers/browser/blog_html/index.html.heex:34
+#: lib/micelio_web/controllers/browser/blog_html/index.html.heex:37
 #, elixir-autogen, elixir-format
 msgid "Check back soon for updates!"
 msgstr "请稍后回来查看更新!"
 
-#: lib/micelio_web/controllers/browser/blog_html/index.html.heex:33
+#: lib/micelio_web/controllers/browser/blog_html/index.html.heex:36
 #, elixir-autogen, elixir-format
 msgid "No blog posts yet"
 msgstr "暂无博客文章"
@@ -31,7 +31,7 @@ msgstr "暂无博客文章"
 msgid "Updates and insights from the Micelio team about building the future of agent-first software development."
 msgstr "Micelio 团队关于构建代理优先软件开发未来的最新动态和见解。"
 
-#: lib/micelio_web/controllers/browser/blog_html/index.html.heex:43
+#: lib/micelio_web/controllers/browser/blog_html/index.html.heex:46
 #, elixir-autogen, elixir-format
 msgid "by %{author}"
 msgstr "%{author} 著"

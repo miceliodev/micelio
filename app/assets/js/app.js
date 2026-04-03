@@ -24,6 +24,7 @@ import { Socket } from "phoenix";
 import { LiveSocket } from "phoenix_live_view";
 import { hooks as colocatedHooks } from "phoenix-colocated/micelio";
 import topbar from "../vendor/topbar";
+import * as Diff2HtmlModule from "../vendor/diff2html.min.js";
 import "../css/app.css";
 
 // Feature modules
@@ -579,6 +580,28 @@ const hooks = {
       }
 
       return svg;
+    },
+  },
+  DiffViewer: {
+    mounted() {
+      this.renderDiff();
+    },
+    updated() {
+      this.renderDiff();
+    },
+    renderDiff() {
+      const diffString = this.el.dataset.diff;
+      if (!diffString) return;
+
+      const D2H = Diff2HtmlModule.default || Diff2HtmlModule;
+      const html = D2H.html(diffString, {
+        drawFileList: false,
+        matching: "lines",
+        outputFormat: "line-by-line",
+        renderNothingWhenEmpty: false,
+      });
+
+      this.el.innerHTML = html;
     },
   },
 };

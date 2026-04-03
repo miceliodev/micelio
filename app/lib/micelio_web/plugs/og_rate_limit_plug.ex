@@ -23,7 +23,9 @@ defmodule MicelioWeb.Plugs.OGRateLimitPlug do
 
   @impl true
   def call(conn, opts) do
-    rate_limits = Keyword.get(opts, :rate_limits) || Application.get_env(:micelio, :rate_limits, [])
+    rate_limits =
+      Keyword.get(opts, :rate_limits) || Application.get_env(:micelio, :rate_limits, [])
+
     default_limit = Keyword.get(rate_limits, :default, 200)
     window_ms = Keyword.get(rate_limits, :window_ms, 60_000)
     overrides = Keyword.get(rate_limits, :overrides, %{})

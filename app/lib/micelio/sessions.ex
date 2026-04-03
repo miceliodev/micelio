@@ -6,6 +6,7 @@ defmodule Micelio.Sessions do
   import Ecto.Query, warn: false
 
   alias Micelio.Accounts.User
+  alias Micelio.Mic.Landing
   alias Micelio.Repo
   alias Micelio.Repositories.Repository
   alias Micelio.Sessions.EventCapture
@@ -141,6 +142,26 @@ defmodule Micelio.Sessions do
     session
     |> Session.land_changeset(attrs)
     |> Repo.update()
+  end
+
+  @doc """
+  Lands an active session onto repository trunk and persists landing metadata.
+  """
+  def land_session_to_trunk(%Session{} = session, opts \\ []) do
+    with "active" <- session.status,
+         {:ok, landing} <- Landing.land_session(session, opts) do
+      metadata =
+        session.metadata
+        |> normalize_session_metadata()
+        |> Map.put("landing_position", landing.position)
+        |> Map.put("landing_revision_hash", Base.encode64(landing.tree_hash))
+        |> Map.delete("virtual_conflict")
+
+      land_session(session, %{landed_at: landing.landed_at, metadata: metadata})
+    else
+      status when is_binary(status) and status != "active" -> {:error, :not_active}
+      error -> error
+    end
   end
 
   @doc """
@@ -602,4 +623,7 @@ defmodule Micelio.Sessions do
     |> Enum.group_by(&DateTime.to_date/1)
     |> Map.new(fn {date, sessions} -> {date, length(sessions)} end)
   end
+
+  defp normalize_session_metadata(metadata) when is_map(metadata), do: metadata
+  defp normalize_session_metadata(_), do: %{}
 end

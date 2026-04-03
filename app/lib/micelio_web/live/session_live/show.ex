@@ -1,6 +1,7 @@
 defmodule MicelioWeb.SessionLive.Show do
   use MicelioWeb, :live_view
 
+  alias Micelio.Mic.{Diff, Project}
   alias Micelio.Sessions.{EventSchema, Session}
   alias Micelio.{Authorization, Sessions}
   alias MicelioWeb.PageMeta
@@ -50,6 +51,8 @@ defmodule MicelioWeb.SessionLive.Show do
                   |> assign(:contributor_type, Session.contributor_type(session))
                   |> assign(:model_id, Session.model_id(session))
                   |> assign(:tool_name, Session.tool_name(session))
+                  |> assign(:tool_version, Session.tool_version(session))
+                  |> assign(:diffs, compute_diffs(session, repository))
                   |> load_event_snapshot()
                   |> assign_timeline()
                   |> assign_session_og_summary()
@@ -97,6 +100,42 @@ defmodule MicelioWeb.SessionLive.Show do
     end
   end
 
+  @impl true
+  def handle_event("land", _params, socket) do
+    session = socket.assigns.session
+
+    case Sessions.land_session_to_trunk(session) do
+      {:ok, _landed_session} ->
+        refreshed_session = Sessions.get_session_with_changes(session.id)
+
+        {:noreply,
+         socket
+         |> assign(:session, refreshed_session)
+         |> assign(:change_stats, Sessions.get_session_change_stats(refreshed_session))
+         |> assign(:diffs, compute_diffs(refreshed_session, socket.assigns.repository))
+         |> load_event_snapshot()
+         |> assign_timeline()
+         |> put_flash(:info, dgettext("sessions", "Session landed successfully."))}
+
+      {:error, :not_active} ->
+        {:noreply,
+         put_flash(socket, :error, dgettext("sessions", "Only active sessions can be landed."))}
+
+      {:error, {:conflicts, paths}} ->
+        {:noreply,
+         put_flash(
+           socket,
+           :error,
+           dgettext("sessions", "Landing failed due to conflicts: %{paths}",
+             paths: Enum.join(paths, ", ")
+           )
+         )}
+
+      {:error, _reason} ->
+        {:noreply, put_flash(socket, :error, dgettext("sessions", "Failed to land session."))}
+    end
+  end
+
   # Timeline builder
 
   defp assign_timeline(socket) do
@@ -114,15 +153,19 @@ defmodule MicelioWeb.SessionLive.Show do
         %{
           type: :message,
           role: msg["role"] || "unknown",
-          content: msg["content"] || "",
-          timestamp: msg["timestamp"]
+          content: msg["content"] || msg["text"] || "",
+          timestamp: normalize_timeline_timestamp(msg["timestamp"] || msg["at_ms"])
         }
       end)
 
     decision_items =
       (session.decisions || [])
       |> Enum.map(fn dec ->
-        %{type: :decision, decision: dec["decision"], reasoning: dec["reasoning"]}
+        %{
+          type: :decision,
+          decision: dec["decision"] || dec["text"],
+          reasoning: dec["reasoning"]
+        }
       end)
 
     event_items =
@@ -387,6 +430,66 @@ defmodule MicelioWeb.SessionLive.Show do
   defp contributor_label("mixed"), do: gettext("AI + Human")
   defp contributor_label(_), do: nil
 
+  defp event_status_label("active"), do: dgettext("sessions", "Connecting...")
+  defp event_status_label("landed"), do: dgettext("sessions", "Completed")
+  defp event_status_label("abandoned"), do: dgettext("sessions", "Ended")
+  defp event_status_label(_), do: dgettext("sessions", "Connecting...")
+
+  defp compute_diffs(session, repository) do
+    base_tree = load_base_tree(session, repository)
+
+    session.changes
+    |> Map.new(fn change ->
+      diff = compute_change_diff(change, base_tree, repository)
+      {change.file_path, diff}
+    end)
+  end
+
+  defp load_base_tree(session, repository) do
+    with encoded_hash when is_binary(encoded_hash) <- base_tree_hash(session),
+         {:ok, tree_hash} <- Base.decode64(encoded_hash),
+         {:ok, tree} <- Project.get_tree(repository.id, tree_hash) do
+      tree
+    else
+      _ -> %{}
+    end
+  end
+
+  defp compute_change_diff(change, base_tree, repository) do
+    new_content = change.content
+    old_content = load_base_content(change.file_path, base_tree, repository)
+
+    case Diff.unified_diff(old_content, new_content, change.file_path) do
+      {:ok, nil} -> nil
+      {:ok, diff} -> diff
+    end
+  end
+
+  defp load_base_content(file_path, base_tree, repository) do
+    with blob_hash when is_binary(blob_hash) <- Project.blob_hash_for_path(base_tree, file_path),
+         {:ok, content} <- Project.get_blob(repository.id, blob_hash) do
+      content
+    else
+      _ -> nil
+    end
+  end
+
+  defp base_tree_hash(%{metadata: metadata}) when is_map(metadata) do
+    metadata["base_tree_hash"] || metadata["base_revision_hash"]
+  end
+
+  defp base_tree_hash(_session), do: nil
+
+  defp normalize_timeline_timestamp(nil), do: nil
+
+  defp normalize_timeline_timestamp(timestamp) when is_integer(timestamp) do
+    DateTime.from_unix!(timestamp, :millisecond)
+    |> DateTime.truncate(:second)
+    |> DateTime.to_iso8601()
+  end
+
+  defp normalize_timeline_timestamp(timestamp) when is_binary(timestamp), do: timestamp
+
   @impl true
   def render(assigns) do
     ~H"""
@@ -527,45 +630,47 @@ defmodule MicelioWeb.SessionLive.Show do
               <% end %>
             </div>
 
-            <%!-- Event streaming (SSE hook) --%>
-            <div
-              id="session-event-viewer"
-              phx-hook="SessionEventViewer"
-              data-events-url={~p"/api/sessions/#{@session.session_id}/events/stream"}
-              data-after={@event_after_cursor}
-              data-max-events={@max_session_events}
-              data-target-id="session-timeline"
-              data-session-status={@session.status}
-            >
-              <div class="session-tl-event-controls">
-                <span
-                  class="session-tl-event-status"
-                  data-role="event-status"
-                  data-state="connecting"
-                >
-                  {gettext("Connecting...")}
-                </span>
-                <div
-                  class="session-tl-event-filters"
-                  role="group"
-                  aria-label={gettext("Filter session events")}
-                >
-                  <%= for type <- @event_types do %>
-                    <label class="session-tl-event-filter">
-                      <input type="checkbox" name="event-types" value={type} checked />
-                      {String.capitalize(type)}
-                    </label>
-                  <% end %>
-                </div>
-              </div>
-              <p
-                class="session-tl-event-empty"
-                data-role="event-empty"
-                hidden={Enum.any?(@event_snapshot)}
+            <%!-- Event streaming (SSE hook) - only show for active sessions or sessions with events --%>
+            <%= if @session.status == "active" or Enum.any?(@event_snapshot) do %>
+              <div
+                id="session-event-viewer"
+                phx-hook="SessionEventViewer"
+                data-events-url={~p"/api/sessions/#{@session.session_id}/events/stream"}
+                data-after={@event_after_cursor}
+                data-max-events={@max_session_events}
+                data-target-id="session-timeline"
+                data-session-status={@session.status}
               >
-                {gettext("No events yet.")}
-              </p>
-            </div>
+                <div class="session-tl-event-controls">
+                  <span
+                    class="session-tl-event-status"
+                    data-role="event-status"
+                    data-state={if(@session.status == "active", do: "connecting", else: "live")}
+                  >
+                    {event_status_label(@session.status)}
+                  </span>
+                  <div
+                    class="session-tl-event-filters"
+                    role="group"
+                    aria-label={dgettext("sessions", "Filter session events")}
+                  >
+                    <%= for type <- @event_types do %>
+                      <label class="session-tl-event-filter">
+                        <input type="checkbox" name="event-types" value={type} checked />
+                        {String.capitalize(type)}
+                      </label>
+                    <% end %>
+                  </div>
+                </div>
+                <p
+                  class="session-tl-event-empty"
+                  data-role="event-empty"
+                  hidden={Enum.any?(@event_snapshot)}
+                >
+                  {dgettext("sessions", "No events yet.")}
+                </p>
+              </div>
+            <% end %>
 
             <%!-- Changes file tree --%>
             <section class="session-changes-section">
@@ -588,24 +693,50 @@ defmodule MicelioWeb.SessionLive.Show do
               <%= if @change_stats.total > 0 do %>
                 <div class="session-file-tree">
                   <%= for change <- @session.changes do %>
-                    <div class="session-file-tree-item">
-                      <span class={"session-file-change-badge session-file-change-#{change.change_type}"}>
-                        <%= case change.change_type do %>
-                          <% "added" -> %>
-                            +
-                          <% "modified" -> %>
-                            ~
-                          <% "deleted" -> %>
-                            -
-                        <% end %>
-                      </span>
-                      <span class="session-file-path">{change.file_path}</span>
-                      <%= if change.metadata["size"] do %>
-                        <span class="session-file-size">
-                          {format_file_size(change.metadata["size"])}
+                    <details class="session-file-tree-item">
+                      <summary class="session-file-tree-summary">
+                        <span class={"session-file-change-badge session-file-change-#{change.change_type}"}>
+                          <%= case change.change_type do %>
+                            <% "added" -> %>
+                              +
+                            <% "modified" -> %>
+                              ~
+                            <% "deleted" -> %>
+                              -
+                          <% end %>
                         </span>
+                        <span class="session-file-path">{change.file_path}</span>
+                        <%= if change.metadata["size"] do %>
+                          <span class="session-file-size">
+                            {format_file_size(change.metadata["size"])}
+                          </span>
+                        <% end %>
+                      </summary>
+                      <%= if diff = Map.get(@diffs, change.file_path) do %>
+                        <div
+                          class="session-file-diff"
+                          id={"diff-#{change.id}"}
+                          phx-hook="DiffViewer"
+                          phx-update="ignore"
+                          data-diff={diff}
+                        >
+                        </div>
+                      <% else %>
+                        <%= if change.change_type == "deleted" do %>
+                          <div class="session-file-content-deleted">
+                            {dgettext("sessions", "File deleted")}
+                          </div>
+                        <% else %>
+                          <%= if change.content do %>
+                            <pre class="session-file-content"><code>{change.content}</code></pre>
+                          <% else %>
+                            <div class="session-file-content-external">
+                              {dgettext("sessions", "Content stored externally")}
+                            </div>
+                          <% end %>
+                        <% end %>
                       <% end %>
-                    </div>
+                    </details>
                   <% end %>
                 </div>
               <% else %>
@@ -614,14 +745,6 @@ defmodule MicelioWeb.SessionLive.Show do
                 </p>
               <% end %>
             </section>
-
-            <%!-- Raw metadata (collapsible) --%>
-            <%= if @session.metadata && map_size(@session.metadata) > 0 do %>
-              <details class="session-raw-metadata">
-                <summary>{gettext("Raw metadata")}</summary>
-                <pre><code>{Jason.encode!(@session.metadata, pretty: true)}</code></pre>
-              </details>
-            <% end %>
           </div>
 
           <%!-- Right sidebar --%>
@@ -642,64 +765,67 @@ defmodule MicelioWeb.SessionLive.Show do
 
             <%= if contributor_label(@contributor_type) do %>
               <div class="session-sidebar-section">
-                <span class="session-sidebar-label">{gettext("Attribution")}</span>
-                <div class="session-sidebar-value">
-                  <div>
-                    <span class="session-sidebar-badge">
-                      <%= if @contributor_type in ["ai", "mixed"] do %>
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          width="12"
-                          height="12"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          stroke-width="2"
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                        >
-                          <path d="M12 8V4H8" /><rect
-                            width="16"
-                            height="12"
-                            x="4"
-                            y="8"
-                            rx="2"
-                          /><path d="M2 14h2" /><path d="M20 14h2" /><path d="M15 13v2" /><path d="M9 13v2" />
-                        </svg>
-                      <% else %>
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          width="12"
-                          height="12"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          stroke-width="2"
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                        >
-                          <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /><circle
-                            cx="12"
-                            cy="7"
-                            r="4"
-                          />
-                        </svg>
-                      <% end %>
-                      {contributor_label(@contributor_type)}
-                    </span>
-                  </div>
-                  <%= if @model_id do %>
-                    <div style="margin-top: 4px;">
-                      <span class="session-sidebar-badge">{@model_id}</span>
-                    </div>
+                <span class="session-sidebar-label">{dgettext("sessions", "Contributor")}</span>
+                <span class="session-sidebar-badge">
+                  <%= if @contributor_type in ["ai", "mixed"] do %>
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="12"
+                      height="12"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <path d="M12 8V4H8" /><rect
+                        width="16"
+                        height="12"
+                        x="4"
+                        y="8"
+                        rx="2"
+                      /><path d="M2 14h2" /><path d="M20 14h2" /><path d="M15 13v2" /><path d="M9 13v2" />
+                    </svg>
+                  <% else %>
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="12"
+                      height="12"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /><circle
+                        cx="12"
+                        cy="7"
+                        r="4"
+                      />
+                    </svg>
                   <% end %>
-                  <%= if @tool_name do %>
-                    <div style="margin-top: 4px;">
-                      <span class="session-sidebar-value">{@tool_name}</span>
-                    </div>
-                  <% end %>
-                </div>
+                  {contributor_label(@contributor_type)}
+                </span>
               </div>
+              <%= if @tool_name do %>
+                <div class="session-sidebar-section">
+                  <span class="session-sidebar-label">{dgettext("sessions", "Tool")}</span>
+                  <span class="session-sidebar-value">
+                    {@tool_name}
+                    <%= if @tool_version do %>
+                      <span class="session-sidebar-muted">{@tool_version}</span>
+                    <% end %>
+                  </span>
+                </div>
+              <% end %>
+              <%= if @model_id do %>
+                <div class="session-sidebar-section">
+                  <span class="session-sidebar-label">{dgettext("sessions", "Model")}</span>
+                  <span class="session-sidebar-value">{@model_id}</span>
+                </div>
+              <% end %>
             <% end %>
 
             <%= if @change_stats.total > 0 do %>
@@ -742,6 +868,14 @@ defmodule MicelioWeb.SessionLive.Show do
               <div class="session-sidebar-section">
                 <span class="session-sidebar-label">{gettext("Actions")}</span>
                 <div class="session-sidebar-actions">
+                  <button
+                    type="button"
+                    class="session-action session-action-land"
+                    phx-click="land"
+                    phx-confirm={dgettext("sessions", "Land this session?")}
+                  >
+                    {dgettext("sessions", "Land")}
+                  </button>
                   <button
                     type="button"
                     class="session-action session-action-abandon"

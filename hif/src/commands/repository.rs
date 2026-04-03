@@ -114,11 +114,11 @@ async fn list(account: &str) -> Result<()> {
     let client = GrpcClient::new(endpoint);
 
     let mut request = Vec::new();
-    write_length_delimited(&mut request, 1, account.as_bytes());
+    write_length_delimited(&mut request, 2, account.as_bytes());
 
     let response = client
         .unary_call_authed(
-            "/micelio.repositories.v1.RepositoryService/ListRepositories",
+            "/micelio.repositories.v1.ProjectService/ListProjects",
             &request,
         )
         .await?;
@@ -171,16 +171,16 @@ async fn create(account: &str, handle: &str, name: &str, description: Option<&st
     let client = GrpcClient::new(endpoint);
 
     let mut request = Vec::new();
-    write_length_delimited(&mut request, 1, account.as_bytes());
-    write_length_delimited(&mut request, 2, handle.as_bytes());
-    write_length_delimited(&mut request, 3, name.as_bytes());
+    write_length_delimited(&mut request, 2, account.as_bytes());
+    write_length_delimited(&mut request, 3, handle.as_bytes());
+    write_length_delimited(&mut request, 4, name.as_bytes());
     if let Some(desc) = description {
-        write_length_delimited(&mut request, 4, desc.as_bytes());
+        write_length_delimited(&mut request, 5, desc.as_bytes());
     }
 
     let _ = client
         .unary_call_authed(
-            "/micelio.repositories.v1.RepositoryService/CreateRepository",
+            "/micelio.repositories.v1.ProjectService/CreateProject",
             &request,
         )
         .await?;
@@ -209,12 +209,12 @@ async fn info(account: &str, handle: &str) -> Result<()> {
     let client = GrpcClient::new(endpoint);
 
     let mut request = Vec::new();
-    write_length_delimited(&mut request, 1, account.as_bytes());
-    write_length_delimited(&mut request, 2, handle.as_bytes());
+    write_length_delimited(&mut request, 2, account.as_bytes());
+    write_length_delimited(&mut request, 3, handle.as_bytes());
 
     let response = client
         .unary_call_authed(
-            "/micelio.repositories.v1.RepositoryService/GetRepository",
+            "/micelio.repositories.v1.ProjectService/GetProject",
             &request,
         )
         .await?;
@@ -256,18 +256,18 @@ async fn update(
     let client = GrpcClient::new(endpoint);
 
     let mut request = Vec::new();
-    write_length_delimited(&mut request, 1, account.as_bytes());
-    write_length_delimited(&mut request, 2, handle.as_bytes());
+    write_length_delimited(&mut request, 2, account.as_bytes());
+    write_length_delimited(&mut request, 3, handle.as_bytes());
     if let Some(n) = name {
-        write_length_delimited(&mut request, 3, n.as_bytes());
+        write_length_delimited(&mut request, 5, n.as_bytes());
     }
     if let Some(d) = description {
-        write_length_delimited(&mut request, 4, d.as_bytes());
+        write_length_delimited(&mut request, 6, d.as_bytes());
     }
 
     let _ = client
         .unary_call_authed(
-            "/micelio.repositories.v1.RepositoryService/UpdateRepository",
+            "/micelio.repositories.v1.ProjectService/UpdateProject",
             &request,
         )
         .await?;
@@ -296,12 +296,12 @@ async fn delete(account: &str, handle: &str) -> Result<()> {
     let client = GrpcClient::new(endpoint);
 
     let mut request = Vec::new();
-    write_length_delimited(&mut request, 1, account.as_bytes());
-    write_length_delimited(&mut request, 2, handle.as_bytes());
+    write_length_delimited(&mut request, 2, account.as_bytes());
+    write_length_delimited(&mut request, 3, handle.as_bytes());
 
     let _ = client
         .unary_call_authed(
-            "/micelio.repositories.v1.RepositoryService/DeleteRepository",
+            "/micelio.repositories.v1.ProjectService/DeleteProject",
             &request,
         )
         .await?;
@@ -329,8 +329,8 @@ fn parse_repository(data: &[u8]) -> (String, String) {
     while pos < data.len() {
         if let Some((field_number, _, field_data)) = read_field(data, &mut pos) {
             match field_number {
-                1 => handle = read_string(field_data),
-                2 => name = read_string(field_data),
+                4 => handle = read_string(field_data),
+                5 => name = read_string(field_data),
                 _ => {}
             }
         }
@@ -348,11 +348,21 @@ fn parse_repository_details(data: &[u8]) -> (String, String, String) {
 
     while pos < data.len() {
         if let Some((field_number, _, field_data)) = read_field(data, &mut pos) {
-            match field_number {
-                1 => handle = read_string(field_data),
-                2 => name = read_string(field_data),
-                3 => description = read_string(field_data),
-                _ => {}
+            if field_number == 1 {
+                let mut project_pos = 0;
+
+                while project_pos < field_data.len() {
+                    if let Some((project_field_number, _, project_field_data)) =
+                        read_field(field_data, &mut project_pos)
+                    {
+                        match project_field_number {
+                            4 => handle = read_string(project_field_data),
+                            5 => name = read_string(project_field_data),
+                            6 => description = read_string(project_field_data),
+                            _ => {}
+                        }
+                    }
+                }
             }
         }
     }

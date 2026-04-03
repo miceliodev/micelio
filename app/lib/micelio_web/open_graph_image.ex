@@ -38,9 +38,7 @@ defmodule MicelioWeb.OpenGraphImage do
   """
   @spec url(PageMeta.t()) :: String.t() | nil
   def url(%PageMeta{} = meta) do
-    if not enabled?() do
-      nil
-    else
+    if enabled?() do
       url_for_meta(meta)
     end
   end
