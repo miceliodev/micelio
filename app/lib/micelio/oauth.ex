@@ -26,6 +26,33 @@ defmodule Micelio.OAuth do
   @refresh_token_ttl 2_592_000
   @authorization_code_ttl 60
   @id_token_ttl 86_400
+  @default_hif_client_id "ad79f0f6-8dbd-4ced-b629-567e764d2379"
+  @default_hif_client_name "hif CLI"
+
+  def cli_client_id do
+    case System.get_env("MICELIO_HIF_CLIENT_ID") do
+      value when is_binary(value) and value != "" -> value
+      _ -> @default_hif_client_id
+    end
+  end
+
+  def ensure_cli_device_client do
+    client_id = cli_client_id()
+
+    case get_device_client(client_id) do
+      %DeviceClient{} = client ->
+        {:ok, client}
+
+      nil ->
+        case register_device_client(%{
+               "name" => @default_hif_client_name,
+               "client_id" => client_id
+             }) do
+          {:ok, client} -> {:ok, client}
+          {:error, _changeset} -> {:ok, get_device_client(client_id)}
+        end
+    end
+  end
 
   @doc """
   Registers a new device client.
@@ -34,8 +61,8 @@ defmodule Micelio.OAuth do
     name = Map.get(attrs, "name") || "Micelio CLI"
 
     # Generate UUIDs for client_id to match Boruta's expectations
-    client_id = Ecto.UUID.generate()
-    client_secret = generate_token(48)
+    client_id = Map.get(attrs, "client_id") || Ecto.UUID.generate()
+    client_secret = Map.get(attrs, "client_secret") || generate_token(48)
 
     defaults = %{
       "client_id" => client_id,

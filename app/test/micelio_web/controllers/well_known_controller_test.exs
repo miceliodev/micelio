@@ -8,6 +8,7 @@ defmodule MicelioWeb.WellKnownControllerTest do
     assert response["service"] == "micelio"
     assert is_binary(response["web_url"])
     assert is_binary(response["grpc_url"])
+    assert response["client_id"] == Micelio.OAuth.cli_client_id()
     assert response["api_base_path"] == "/api"
     assert response["rest_api_base"] == response["web_url"] <> "/api"
   end

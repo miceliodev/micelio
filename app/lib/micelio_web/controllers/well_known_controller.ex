@@ -10,6 +10,7 @@ defmodule MicelioWeb.WellKnownController do
         service: "micelio",
         web_url: web_url,
         grpc_url: grpc_url,
+        client_id: Micelio.OAuth.cli_client_id(),
         api_base_path: "/api",
         rest_api_base: "#{web_url}/api",
         grpc_enabled: grpc_enabled?()

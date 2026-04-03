@@ -22,6 +22,7 @@ defmodule Micelio.Application do
         Micelio.Mic.Telemetry,
         Micelio.Cloak,
         Micelio.Repo,
+        {Task, fn -> Micelio.OAuth.ensure_cli_device_client() end},
         Micelio.Abuse.Blocklist,
         {Task.Supervisor, name: Micelio.Webhooks.Supervisor},
         {Task.Supervisor, name: Micelio.Notifications.Supervisor},
