@@ -1,0 +1,93 @@
+## "msgid"s in this file come from POT (.pot) files.
+###
+### Do not add, change, or remove "msgid"s manually here as
+### they're tied to the ones in the corresponding POT file
+### (with the same domain).
+###
+### Use "mix gettext.extract --merge" or "mix gettext.merge"
+### to merge POT files into PO files.
+msgid ""
+msgstr ""
+"Language: es\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: lib/micelio_web/live/session_live/show.ex:768
+#, elixir-autogen, elixir-format
+msgid "Contributor"
+msgstr "Colaborador"
+
+#: lib/micelio_web/live/session_live/show.ex:825
+#, elixir-autogen, elixir-format
+msgid "Model"
+msgstr "Modelo"
+
+#: lib/micelio_web/live/session_live/show.ex:814
+#, elixir-autogen, elixir-format
+msgid "Tool"
+msgstr "Herramienta"
+
+#: lib/micelio_web/live/session_live/show.ex:434
+#, elixir-autogen, elixir-format
+msgid "Completed"
+msgstr "Completada"
+
+#: lib/micelio_web/live/session_live/show.ex:433
+#: lib/micelio_web/live/session_live/show.ex:436
+#, elixir-autogen, elixir-format
+msgid "Connecting..."
+msgstr "Conectando..."
+
+#: lib/micelio_web/live/session_live/show.ex:435
+#, elixir-autogen, elixir-format
+msgid "Ended"
+msgstr "Finalizada"
+
+#: lib/micelio_web/live/session_live/show.ex:655
+#, elixir-autogen, elixir-format
+msgid "Filter session events"
+msgstr "Filtrar eventos de sesión"
+
+#: lib/micelio_web/live/session_live/show.ex:670
+#, elixir-autogen, elixir-format
+msgid "No events yet."
+msgstr "Sin eventos aún."
+
+#: lib/micelio_web/live/session_live/show.ex:734
+#, elixir-autogen, elixir-format
+msgid "Content stored externally"
+msgstr "Contenido almacenado externamente"
+
+#: lib/micelio_web/live/session_live/show.ex:727
+#, elixir-autogen, elixir-format
+msgid "File deleted"
+msgstr "Archivo eliminado"
+
+#: lib/micelio_web/live/session_live/show.ex:135
+#, elixir-autogen, elixir-format
+msgid "Failed to land session."
+msgstr ""
+
+#: lib/micelio_web/live/session_live/show.ex:877
+#, elixir-autogen, elixir-format
+msgid "Land"
+msgstr ""
+
+#: lib/micelio_web/live/session_live/show.ex:875
+#, elixir-autogen, elixir-format
+msgid "Land this session?"
+msgstr ""
+
+#: lib/micelio_web/live/session_live/show.ex:129
+#, elixir-autogen, elixir-format
+msgid "Landing failed due to conflicts: %{paths}"
+msgstr ""
+
+#: lib/micelio_web/live/session_live/show.ex:122
+#, elixir-autogen, elixir-format
+msgid "Only active sessions can be landed."
+msgstr ""
+
+#: lib/micelio_web/live/session_live/show.ex:118
+#, elixir-autogen, elixir-format
+msgid "Session landed successfully."
+msgstr ""

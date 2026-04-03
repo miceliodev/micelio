@@ -53,6 +53,12 @@ pub(crate) struct SessionNoteOutput {
 }
 
 #[derive(Serialize)]
+pub(crate) struct SessionSyncOutput {
+    session_id: String,
+    files: usize,
+}
+
+#[derive(Serialize)]
 pub(crate) struct SessionLandOutput {
     session_id: String,
     #[serde(skip_serializing_if = "String::is_empty")]
@@ -121,6 +127,7 @@ pub async fn run(cmd: SessionCommand) -> Result<()> {
         }
         SessionSubcommand::Status => status().await,
         SessionSubcommand::Note { message, role } => note(&role, &message).await,
+        SessionSubcommand::Sync => sync().await,
         SessionSubcommand::Land => land().await,
         SessionSubcommand::Abandon => abandon().await,
         SessionSubcommand::Resolve { strategy } => resolve(&strategy),
@@ -358,6 +365,31 @@ async fn note(role: &str, message: &str) -> Result<()> {
     Ok(())
 }
 
+async fn sync() -> Result<()> {
+    let state = Session::load()?.ok_or(MicError::NoActiveSession)?;
+    let file_count = sync_active_session_draft().await?;
+
+    if output::use_json() {
+        output::print_ok(
+            "session.sync",
+            SessionSyncOutput {
+                session_id: state.id,
+                files: file_count,
+            },
+        )?;
+    } else if file_count == 0 {
+        output::set_success_message("Session draft is already synced.");
+    } else {
+        output::set_success_message(format!(
+            "Synced {} file(s) to session draft {}.",
+            file_count, state.id
+        ));
+        output::add_next_step("hif session land");
+    }
+
+    Ok(())
+}
+
 /// Land the current session.
 async fn land() -> Result<()> {
     sync_active_session_draft().await?;
@@ -587,7 +619,7 @@ async fn fetch_remote_session_status(state: &SessionState) -> Result<pb::Session
     .await
 }
 
-pub(crate) async fn sync_active_session_draft() -> Result<()> {
+pub(crate) async fn sync_active_session_draft() -> Result<usize> {
     for _attempt in 0..3 {
         let files = sync_session_files_from_workspace()?;
         let state = Session::load()?.ok_or(MicError::NoActiveSession)?;
@@ -617,7 +649,7 @@ pub(crate) async fn sync_active_session_draft() -> Result<()> {
         match response {
             Ok(_info) => {
                 Session::set_sync_epoch(epoch)?;
-                return Ok(());
+                return Ok(files.len());
             }
             Err(MicError::GrpcError(message)) if message.contains("Epoch already processed") => {
                 continue;
@@ -767,6 +799,16 @@ mod tests {
     fn ui_snapshot_session_note_without_active_session() {
         assert_output_snapshot(
             &["session", "note", "hello"],
+            1,
+            "",
+            "error: No active session. Start one with 'hif session start'.\n",
+        );
+    }
+
+    #[test]
+    fn ui_snapshot_session_sync_without_active_session() {
+        assert_output_snapshot(
+            &["session", "sync"],
             1,
             "",
             "error: No active session. Start one with 'hif session start'.\n",

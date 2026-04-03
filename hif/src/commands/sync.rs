@@ -54,6 +54,12 @@ pub(crate) struct SyncOutput {
     revision: String,
 }
 
+#[derive(Debug, Clone)]
+pub(crate) struct UpstreamTree {
+    pub entries: HashMap<String, String>,
+    pub revision_hash: Vec<u8>,
+}
+
 /// Run the sync command.
 pub async fn run(cmd: SyncCommand) -> Result<()> {
     let strategy = MergeStrategy::parse(&cmd.strategy)
@@ -139,8 +145,9 @@ async fn sync_workspace(
     let client = GrpcClient::new(endpoint);
 
     // Fetch latest tree from forge
-    let (upstream_tree, revision_hash) =
-        fetch_upstream_tree(&client, &manifest.account, &manifest.repository).await?;
+    let upstream = fetch_upstream_tree(&client, &manifest.account, &manifest.repository).await?;
+    let upstream_tree = upstream.entries;
+    let revision_hash = upstream.revision_hash;
 
     // Get local session changes if any
     let local_changes = if let Some(state) = Session::load()? {
@@ -329,11 +336,11 @@ fn prompt_conflict_resolution(path: &str) -> Result<ConflictResolution> {
 }
 
 /// Fetch the upstream tree.
-async fn fetch_upstream_tree(
+pub(crate) async fn fetch_upstream_tree(
     client: &GrpcClient,
     organization: &str,
     repository: &str,
-) -> Result<(HashMap<String, String>, Vec<u8>)> {
+) -> Result<UpstreamTree> {
     let repository = repository_ref(organization, repository);
     let head: pb::RepositoryHeadResponse = call(
         client,
@@ -360,17 +367,20 @@ async fn fetch_upstream_tree(
     )
     .await?;
 
-    let tree = tree_response
+    let entries = tree_response
         .entries
         .into_iter()
         .map(|entry| (entry.path, entry.hash))
         .collect();
 
-    Ok((tree, revision_hash))
+    Ok(UpstreamTree {
+        entries,
+        revision_hash,
+    })
 }
 
 /// Fetch file content from the forge.
-async fn fetch_file_content(
+pub(crate) async fn fetch_file_content(
     client: &GrpcClient,
     organization: &str,
     repository: &str,
@@ -392,7 +402,7 @@ async fn fetch_file_content(
 }
 
 /// Write content to a file.
-fn write_file(path: &str, content: &str) -> Result<()> {
+pub(crate) fn write_file(path: &str, content: &str) -> Result<()> {
     // Ensure parent directory exists
     if let Some(parent) = std::path::Path::new(path).parent() {
         if !parent.as_os_str().is_empty() && !parent.exists() {
@@ -405,14 +415,14 @@ fn write_file(path: &str, content: &str) -> Result<()> {
 }
 
 /// Delete a file.
-fn delete_file(path: &str) -> Result<()> {
+pub(crate) fn delete_file(path: &str) -> Result<()> {
     if std::path::Path::new(path).exists() {
         fs::remove_file(path)?;
     }
     Ok(())
 }
 
-fn format_revision_hash(hash: &[u8]) -> String {
+pub(crate) fn format_revision_hash(hash: &[u8]) -> String {
     if hash.is_empty() {
         return "0000000000000000000000000000000000000000000000000000000000000000".to_string();
     }

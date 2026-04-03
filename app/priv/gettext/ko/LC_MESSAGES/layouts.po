@@ -11,53 +11,53 @@ msgstr ""
 "Language: ko\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 
-#: lib/micelio_web/components/layouts.ex:464
+#: lib/micelio_web/components/layouts.ex:453
 #, elixir-autogen, elixir-format
 msgid "Account"
 msgstr "계정"
 
-#: lib/micelio_web/components/layouts.ex:146
+#: lib/micelio_web/components/layouts.ex:133
 #, elixir-autogen, elixir-format
 msgid "Account (@%{handle})"
 msgstr "계정 (@%{handle})"
 
-#: lib/micelio_web/components/layouts.ex:489
+#: lib/micelio_web/components/layouts.ex:478
 #, elixir-autogen, elixir-format
 msgid "Admin"
 msgstr "관리자"
 
-#: lib/micelio_web/components/layouts.ex:603
-#: lib/micelio_web/components/layouts.ex:611
+#: lib/micelio_web/components/layouts.ex:617
+#: lib/micelio_web/components/layouts.ex:625
 #, elixir-autogen, elixir-format
 msgid "Attempting to reconnect"
 msgstr "재연결 시도 중"
 
-#: lib/micelio_web/components/layouts.ex:358
+#: lib/micelio_web/components/layouts.ex:347
 #, elixir-autogen, elixir-format
 msgid "Blog"
 msgstr "블로그"
 
-#: lib/micelio_web/components/layouts.ex:411
+#: lib/micelio_web/components/layouts.ex:400
 #, elixir-autogen, elixir-format
 msgid "Changelog"
 msgstr "변경 로그"
 
-#: lib/micelio_web/components/layouts.ex:503
+#: lib/micelio_web/components/layouts.ex:517
 #, elixir-autogen, elixir-format
 msgid "Dark"
 msgstr "다크"
 
-#: lib/micelio_web/components/layouts.ex:387
+#: lib/micelio_web/components/layouts.ex:376
 #, elixir-autogen, elixir-format
 msgid "Docs"
 msgstr "문서"
 
-#: lib/micelio_web/components/layouts.ex:162
+#: lib/micelio_web/components/layouts.ex:151
 #, elixir-autogen, elixir-format
 msgid "Get started"
 msgstr "시작하기"
 
-#: lib/micelio_web/components/layouts.ex:230
+#: lib/micelio_web/components/layouts.ex:219
 #, elixir-autogen, elixir-format
 msgid "Home"
 msgstr "홈"
@@ -67,33 +67,33 @@ msgstr "홈"
 msgid "Language selection"
 msgstr "언어 선택"
 
-#: lib/micelio_web/components/layouts.ex:538
+#: lib/micelio_web/components/layouts.ex:552
 #, elixir-autogen, elixir-format
 msgid "Legal"
 msgstr "법적 고지"
 
-#: lib/micelio_web/components/layouts.ex:502
+#: lib/micelio_web/components/layouts.ex:516
 #, elixir-autogen, elixir-format
 msgid "Light"
 msgstr "라이트"
 
-#: lib/micelio_web/components/layouts.ex:171
+#: lib/micelio_web/components/layouts.ex:160
 #, elixir-autogen, elixir-format
 msgid "Main navigation"
 msgstr "주 내비게이션"
 
-#: lib/micelio_web/components/layouts.ex:118
-#: lib/micelio_web/components/layouts.ex:256
+#: lib/micelio_web/components/layouts.ex:105
+#: lib/micelio_web/components/layouts.ex:245
 #, elixir-autogen, elixir-format
 msgid "Prompt requests"
 msgstr "프롬프트 요청"
 
-#: lib/micelio_web/components/layouts.ex:333
+#: lib/micelio_web/components/layouts.ex:322
 #, elixir-autogen, elixir-format
 msgid "Repositories"
 msgstr "저장소"
 
-#: lib/micelio_web/components/layouts.ex:435
+#: lib/micelio_web/components/layouts.ex:424
 #, elixir-autogen, elixir-format
 msgid "Search"
 msgstr "검색"
@@ -104,49 +104,49 @@ msgstr "검색"
 msgid "Select language"
 msgstr "언어 선택"
 
-#: lib/micelio_web/components/layouts.ex:119
-#: lib/micelio_web/components/layouts.ex:281
+#: lib/micelio_web/components/layouts.ex:106
+#: lib/micelio_web/components/layouts.ex:270
 #, elixir-autogen, elixir-format
 msgid "Sessions"
 msgstr "세션"
 
-#: lib/micelio_web/components/layouts.ex:120
-#: lib/micelio_web/components/layouts.ex:307
+#: lib/micelio_web/components/layouts.ex:107
+#: lib/micelio_web/components/layouts.ex:296
 #, elixir-autogen, elixir-format
 msgid "Settings"
 msgstr "설정"
 
-#: lib/micelio_web/components/layouts.ex:609
+#: lib/micelio_web/components/layouts.ex:623
 #, elixir-autogen, elixir-format
 msgid "Something went wrong!"
 msgstr "문제가 발생했습니다!"
 
-#: lib/micelio_web/components/layouts.ex:505
+#: lib/micelio_web/components/layouts.ex:519
 #, elixir-autogen, elixir-format
 msgid "Switch to dark mode"
 msgstr "다크 모드로 전환"
 
-#: lib/micelio_web/components/layouts.ex:504
+#: lib/micelio_web/components/layouts.ex:518
 #, elixir-autogen, elixir-format
 msgid "Switch to light mode"
 msgstr "라이트 모드로 전환"
 
-#: lib/micelio_web/components/layouts.ex:522
+#: lib/micelio_web/components/layouts.ex:536
 #, elixir-autogen, elixir-format
 msgid "Theme"
 msgstr "테마"
 
-#: lib/micelio_web/components/layouts.ex:79
+#: lib/micelio_web/components/layouts.ex:66
 #, elixir-autogen, elixir-format
 msgid "Toggle navigation"
 msgstr "내비게이션 전환"
 
-#: lib/micelio_web/components/layouts.ex:501
+#: lib/micelio_web/components/layouts.ex:515
 #, elixir-autogen, elixir-format
 msgid "Toggle theme"
 msgstr "테마 전환"
 
-#: lib/micelio_web/components/layouts.ex:601
+#: lib/micelio_web/components/layouts.ex:615
 #, elixir-autogen, elixir-format
 msgid "We can't find the internet"
 msgstr "인터넷 연결을 찾을 수 없습니다"
@@ -156,22 +156,22 @@ msgstr "인터넷 연결을 찾을 수 없습니다"
 msgid "close"
 msgstr "닫기"
 
-#: lib/micelio_web/components/layouts.ex:541
+#: lib/micelio_web/components/layouts.ex:555
 #, elixir-autogen, elixir-format
 msgid "cookies"
 msgstr "쿠키"
 
-#: lib/micelio_web/components/layouts.ex:542
+#: lib/micelio_web/components/layouts.ex:556
 #, elixir-autogen, elixir-format
 msgid "impressum"
 msgstr "임프레숨"
 
-#: lib/micelio_web/components/layouts.ex:540
+#: lib/micelio_web/components/layouts.ex:554
 #, elixir-autogen, elixir-format
 msgid "privacy"
 msgstr "개인정보 보호"
 
-#: lib/micelio_web/components/layouts.ex:539
+#: lib/micelio_web/components/layouts.ex:553
 #, elixir-autogen, elixir-format
 msgid "terms"
 msgstr "이용약관"
@@ -181,7 +181,7 @@ msgstr "이용약관"
 msgid "Actions"
 msgstr "작업"
 
-#: lib/micelio_web/components/core_components.ex:939
+#: lib/micelio_web/components/core_components.ex:944
 #, elixir-autogen, elixir-format
 msgid "On this page"
 msgstr "이 페이지에서"
@@ -191,3 +191,13 @@ msgstr "이 페이지에서"
 msgid "contribution"
 msgid_plural "contributions"
 msgstr[0] "기여"
+
+#: lib/micelio_web/components/layouts.ex:506
+#, elixir-autogen, elixir-format
+msgid "Logout"
+msgstr ""
+
+#: lib/micelio_web/components/layouts.ex:161
+#, elixir-autogen, elixir-format, fuzzy
+msgid "Sidebar navigation"
+msgstr "주 내비게이션"

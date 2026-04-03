@@ -11,8 +11,8 @@ msgstr ""
 "Language: zh_TW\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 
-#: lib/micelio_web/controllers/browser/changelog_html/category.html.heex:19
-#: lib/micelio_web/controllers/browser/changelog_html/index.html.heex:24
+#: lib/micelio_web/controllers/browser/changelog_html/category.html.heex:24
+#: lib/micelio_web/controllers/browser/changelog_html/index.html.heex:30
 #, elixir-autogen, elixir-format
 msgid "All"
 msgstr "全部"
@@ -22,7 +22,7 @@ msgstr "全部"
 msgid "All changelog entries categorized under \"%{category}\"."
 msgstr "\"%{category}\" 分類下的所有變更日誌項目。"
 
-#: lib/micelio_web/controllers/browser/changelog_html/version.html.heex:11
+#: lib/micelio_web/controllers/browser/changelog_html/version.html.heex:12
 #, elixir-autogen, elixir-format
 msgid "All changes included in version %{version}."
 msgstr "版本 %{version} 中包含的所有變更。"
@@ -32,38 +32,38 @@ msgstr "版本 %{version} 中包含的所有變更。"
 msgid "Changelog"
 msgstr "變更日誌"
 
-#: lib/micelio_web/controllers/browser/changelog_html/index.html.heex:63
+#: lib/micelio_web/controllers/browser/changelog_html/index.html.heex:73
 #, elixir-autogen, elixir-format
 msgid "Check back soon for updates!"
 msgstr "請稍後回來查看更新!"
 
-#: lib/micelio_web/controllers/browser/changelog_html/category.html.heex:18
-#: lib/micelio_web/controllers/browser/changelog_html/index.html.heex:23
+#: lib/micelio_web/controllers/browser/changelog_html/category.html.heex:21
+#: lib/micelio_web/controllers/browser/changelog_html/index.html.heex:27
 #, elixir-autogen, elixir-format
 msgid "Filter by category:"
 msgstr "依分類篩選:"
 
-#: lib/micelio_web/controllers/browser/changelog_html/category.html.heex:64
+#: lib/micelio_web/controllers/browser/changelog_html/category.html.heex:72
 #, elixir-autogen, elixir-format
 msgid "No changelog entries found for the \"%{category}\" category."
 msgstr "未找到 \"%{category}\" 分類的變更日誌項目。"
 
-#: lib/micelio_web/controllers/browser/changelog_html/version.html.heex:46
+#: lib/micelio_web/controllers/browser/changelog_html/version.html.heex:50
 #, elixir-autogen, elixir-format
 msgid "No changelog entries found for version %{version}."
 msgstr "未找到版本 %{version} 的變更日誌項目。"
 
-#: lib/micelio_web/controllers/browser/changelog_html/index.html.heex:62
+#: lib/micelio_web/controllers/browser/changelog_html/index.html.heex:71
 #, elixir-autogen, elixir-format
 msgid "No changelog entries yet"
 msgstr "目前尚無變更日誌項目"
 
-#: lib/micelio_web/controllers/browser/changelog_html/version.html.heex:44
+#: lib/micelio_web/controllers/browser/changelog_html/version.html.heex:47
 #, elixir-autogen, elixir-format
 msgid "No entries for this version"
 msgstr "此版本尚無項目"
 
-#: lib/micelio_web/controllers/browser/changelog_html/category.html.heex:62
+#: lib/micelio_web/controllers/browser/changelog_html/category.html.heex:69
 #, elixir-autogen, elixir-format
 msgid "No entries in this category"
 msgstr "此分類尚無項目"

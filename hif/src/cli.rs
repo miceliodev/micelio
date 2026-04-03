@@ -232,6 +232,18 @@ NOTES:
 ")]
     Activate(ActivateCommand),
 
+    /// Print the canonical Micelio agent skill/instructions
+    #[command(after_help = "\
+EXAMPLES:
+    $ hif skill                # Print the canonical agent workflow guide
+    $ hif skill --format json  # Return the guide as structured markdown
+
+NOTES:
+    This output is the canonical agent-facing workflow document for Micelio.
+    Keep it current when hif capabilities or versioning workflow change.
+")]
+    Skill,
+
     // =========================================================================
     // Session Commands
     // =========================================================================
@@ -241,6 +253,7 @@ WORKFLOW:
     $ hif session start \"Add feature\"    # Start (repository inferred from workspace)
     $ # ... make changes ...
     $ hif session note \"Decided X\"       # Document decisions
+    $ hif session sync                    # Upload draft without landing
     $ hif session land                    # Land onto trunk
 
 EXAMPLES:
@@ -248,6 +261,7 @@ EXAMPLES:
     $ hif session start acme/myapp \"Fix bug\"   # Outside workspace
     $ hif session status                        # View current session
     $ hif session note \"Found root cause\"     # Add context
+    $ hif session sync                          # Upload current draft
     $ hif session land                          # Land the session
     $ hif session abandon                       # Discard session
 
@@ -568,6 +582,8 @@ pub enum SessionSubcommand {
         #[arg(short, long, default_value = "human", env = "HIF_SESSION_NOTE_ROLE")]
         role: String,
     },
+    /// Upload the current draft changes without landing
+    Sync,
     /// Land the session onto trunk
     Land,
     /// Abandon the session (discard changes)
@@ -902,6 +918,10 @@ pub fn generate_help_json() -> serde_json::Value {
                 "args": ["shell"],
                 "requires_auth": false
             },
+            "skill": {
+                "description": "Print the canonical Micelio agent skill",
+                "requires_auth": false
+            },
             "session": {
                 "description": "Session management",
                 "subcommands": {
@@ -912,6 +932,7 @@ pub fn generate_help_json() -> serde_json::Value {
                         "requires_workspace": "optional"
                     },
                     "status": {"description": "Show session status"},
+                    "sync": {"description": "Upload the active session draft", "requires_auth": true, "requires_session": true},
                     "note": {"description": "Add note", "args": ["message"], "requires_session": true},
                     "land": {"description": "Land onto trunk", "requires_auth": true, "requires_session": true},
                     "abandon": {"description": "Discard session", "requires_session": true},
@@ -1174,7 +1195,8 @@ pub fn generate_docs() -> serde_json::Value {
                 {"step": 3, "title": "Activate shell hooks", "command": "eval \"$(hif activate zsh)\"", "description": "Enable automatic draft sync when you enter a workspace"},
                 {"step": 4, "title": "Start session", "command": "hif session start \"Add feature\"", "description": "Begin tracking your work with a goal"},
                 {"step": 5, "title": "Make changes", "command": "# Edit files normally", "description": "Use your favorite editor, no staging needed"},
-                {"step": 6, "title": "Land changes", "command": "hif session land", "description": "Publish the session draft onto trunk"}
+                {"step": 6, "title": "Sync draft", "command": "hif session sync", "description": "Upload the current draft without landing it"},
+                {"step": 7, "title": "Land changes", "command": "hif session land", "description": "Publish the session draft onto trunk"}
             ],
             "quick_land": {
                 "description": "For small changes, combine session start and land:",
@@ -1357,6 +1379,19 @@ pub fn generate_docs() -> serde_json::Value {
                 "notes": "Use this when you have existing code you want to track. Unlike checkout, link doesn't download files."
             },
             {
+                "name": "skill",
+                "category": "Agent Integration",
+                "description": "Print the canonical Micelio agent skill and workflow guide",
+                "usage": "hif skill",
+                "args": [],
+                "options": [],
+                "examples": [
+                    {"command": "hif skill", "description": "Print the canonical agent-facing Micelio workflow guide"},
+                    {"command": "hif skill --format json", "description": "Return the guide as structured markdown for agents"}
+                ],
+                "notes": "Keep this output current when hif capabilities or Micelio versioning workflow change."
+            },
+            {
                 "name": "status",
                 "category": "Workspace",
                 "description": "Show workspace status and local changes",
@@ -1435,6 +1470,17 @@ pub fn generate_docs() -> serde_json::Value {
                         "examples": [
                             {"command": "hif session status", "description": "Show active session details"}
                         ]
+                    },
+                    {
+                        "name": "sync",
+                        "description": "Upload the current draft without landing it",
+                        "usage": "hif session sync",
+                        "args": [],
+                        "options": [],
+                        "examples": [
+                            {"command": "hif session sync", "description": "Push local changes to the active remote draft"}
+                        ],
+                        "notes": "Use this when you want the forge and other surfaces to see the current draft before you land it."
                     },
                     {
                         "name": "note",

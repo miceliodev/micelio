@@ -11,7 +11,7 @@ msgstr ""
 "Language: es\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: lib/micelio_web/live/session_live/show.ex:743
+#: lib/micelio_web/live/session_live/show.ex:869
 #, elixir-autogen, elixir-format
 msgid "Actions"
 msgstr "Acciones"
@@ -163,7 +163,7 @@ msgid "GitHub App installed successfully."
 msgstr "Aplicación de GitHub instalada correctamente."
 
 #: lib/micelio_web/controllers/browser/docs_html/cli_reference.html.heex:22
-#: lib/micelio_web/controllers/browser/docs_html/show.html.heex:35
+#: lib/micelio_web/live/docs_live/show.ex:126
 #, elixir-autogen, elixir-format
 msgid "All documentation"
 msgstr "Toda la documentación"
@@ -172,8 +172,8 @@ msgstr "Toda la documentación"
 #: lib/micelio_web/controllers/browser/docs_html/cli_reference.html.heex:28
 #: lib/micelio_web/controllers/browser/docs_html/index.html.heex:10
 #: lib/micelio_web/controllers/browser/docs_html/search.html.heex:10
-#: lib/micelio_web/controllers/browser/docs_html/show.html.heex:41
 #: lib/micelio_web/live/docs_live/index.ex:156
+#: lib/micelio_web/live/docs_live/show.ex:132
 #, elixir-autogen, elixir-format
 msgid "Documentation"
 msgstr "Documentación"
@@ -184,8 +184,8 @@ msgid "Documentation for Micelio users and hosters."
 msgstr "Documentación para usuarios y administradores de Micelio."
 
 #: lib/micelio_web/controllers/browser/docs_controller.ex:35
-#: lib/micelio_web/controllers/browser/docs_controller.ex:63
 #: lib/micelio_web/live/docs_live/index.ex:29
+#: lib/micelio_web/live/docs_live/show.ex:27
 #, elixir-autogen, elixir-format
 msgid "docs"
 msgstr "documentación"
@@ -193,7 +193,7 @@ msgstr "documentación"
 #: lib/micelio_web/controllers/browser/docs_html/category.html.heex:9
 #: lib/micelio_web/controllers/browser/docs_html/cli_reference.html.heex:27
 #: lib/micelio_web/controllers/browser/docs_html/search.html.heex:9
-#: lib/micelio_web/controllers/browser/docs_html/show.html.heex:40
+#: lib/micelio_web/live/docs_live/show.ex:131
 #, elixir-autogen, elixir-format
 msgid "Breadcrumb"
 msgstr "Ruta de navegación"
@@ -421,13 +421,13 @@ msgstr "Guías"
 msgid "References"
 msgstr "Referencias"
 
-#: lib/micelio_web/controllers/browser/repository_html/show.html.heex:368
+#: lib/micelio_web/controllers/browser/repository_html/show.html.heex:351
 #, elixir-autogen, elixir-format
 msgid "About"
 msgstr "Acerca de"
 
 #: lib/micelio_web/controllers/browser/repository_html/blob.html.heex:77
-#: lib/micelio_web/controllers/browser/repository_html/show.html.heex:316
+#: lib/micelio_web/controllers/browser/repository_html/show.html.heex:299
 #, elixir-autogen, elixir-format
 msgid "Binary file (%{size} bytes) cannot be displayed."
 msgstr "No se puede mostrar el archivo binario (%{size} bytes)."
@@ -463,7 +463,7 @@ msgid "No repositories yet"
 msgstr "Aún no hay repositorios"
 
 #: lib/micelio_web/controllers/browser/repository_html/blob.html.heex:32
-#: lib/micelio_web/controllers/browser/repository_html/show.html.heex:173
+#: lib/micelio_web/controllers/browser/repository_html/show.html.heex:156
 #, elixir-autogen, elixir-format
 msgid "Path"
 msgstr "Ruta"
@@ -496,7 +496,7 @@ msgstr "Repositorios"
 msgid "Repositories help you organize your code and collaborate with others."
 msgstr "Los repositorios le ayudan a organizar su código y colaborar con otros."
 
-#: lib/micelio_web/controllers/browser/repository_html/show.html.heex:194
+#: lib/micelio_web/controllers/browser/repository_html/show.html.heex:177
 #, elixir-autogen, elixir-format
 msgid "This repository is empty"
 msgstr "Este repositorio está vacío"
@@ -548,7 +548,7 @@ msgid "Sort order"
 msgstr "Orden"
 
 #: lib/micelio_web/live/session_live/index.ex:194
-#: lib/micelio_web/live/session_live/show.ex:630
+#: lib/micelio_web/live/session_live/show.ex:753
 #, elixir-autogen, elixir-format
 msgid "Status"
 msgstr "Estado"
@@ -563,89 +563,68 @@ msgstr "aterrizada"
 msgid "started"
 msgstr "iniciada"
 
-#: lib/micelio_web/live/session_live/show.ex:385
+#: lib/micelio_web/live/session_live/show.ex:428
 #, elixir-autogen, elixir-format
 msgid "AI"
 msgstr "IA"
 
-#: lib/micelio_web/live/session_live/show.ex:387
+#: lib/micelio_web/live/session_live/show.ex:430
 #, elixir-autogen, elixir-format
 msgid "AI + Human"
 msgstr "IA + Humano"
 
-#: lib/micelio_web/live/session_live/show.ex:751
+#: lib/micelio_web/live/session_live/show.ex:885
 #, elixir-autogen, elixir-format
 msgid "Abandon"
 msgstr "Abandonar"
 
-#: lib/micelio_web/live/session_live/show.ex:749
+#: lib/micelio_web/live/session_live/show.ex:883
 #, elixir-autogen, elixir-format
 msgid "Abandon this session?"
 msgstr "¿Abandonar esta sesión?"
 
-#: lib/micelio_web/live/session_live/show.ex:573
-#: lib/micelio_web/live/session_live/show.ex:707
+#: lib/micelio_web/live/session_live/show.ex:678
+#: lib/micelio_web/live/session_live/show.ex:833
 #, elixir-autogen, elixir-format
 msgid "Changes"
 msgstr "Cambios"
 
 #: lib/micelio_web/live/plan_live/show.ex:535
-#: lib/micelio_web/live/session_live/show.ex:546
 #, elixir-autogen, elixir-format
 msgid "Connecting..."
 msgstr "Conectando..."
 
-#: lib/micelio_web/live/session_live/show.ex:551
-#, elixir-autogen, elixir-format
-msgid "Filter session events"
-msgstr "Filtrar eventos de la sesión"
-
-#: lib/micelio_web/live/session_live/show.ex:386
+#: lib/micelio_web/live/session_live/show.ex:429
 #, elixir-autogen, elixir-format
 msgid "Human"
 msgstr "Humano"
 
-#: lib/micelio_web/live/session_live/show.ex:566
-#, elixir-autogen, elixir-format
-msgid "No events yet."
-msgstr "Aún no hay eventos."
-
-#: lib/micelio_web/live/session_live/show.ex:613
+#: lib/micelio_web/live/session_live/show.ex:744
 #, elixir-autogen, elixir-format
 msgid "No file changes in this session"
 msgstr "No hay cambios de archivos en esta sesión"
 
-#: lib/micelio_web/live/session_live/show.ex:785
+#: lib/micelio_web/live/session_live/show.ex:919
 #, elixir-autogen, elixir-format
 msgid "Output"
 msgstr "Salida"
 
-#: lib/micelio_web/live/session_live/show.ex:621
-#, elixir-autogen, elixir-format
-msgid "Raw metadata"
-msgstr "Metadatos sin procesar"
-
-#: lib/micelio_web/live/session_live/show.ex:645
-#, elixir-autogen, elixir-format
-msgid "Attribution"
-msgstr "Atribución"
-
-#: lib/micelio_web/live/session_live/show.ex:638
+#: lib/micelio_web/live/session_live/show.ex:761
 #, elixir-autogen, elixir-format
 msgid "Author"
 msgstr "Autor"
 
-#: lib/micelio_web/live/session_live/show.ex:711
+#: lib/micelio_web/live/session_live/show.ex:837
 #, elixir-autogen, elixir-format
 msgid "added"
 msgstr "añadido"
 
-#: lib/micelio_web/live/session_live/show.ex:721
+#: lib/micelio_web/live/session_live/show.ex:847
 #, elixir-autogen, elixir-format
 msgid "deleted"
 msgstr "eliminado"
 
-#: lib/micelio_web/live/session_live/show.ex:716
+#: lib/micelio_web/live/session_live/show.ex:842
 #, elixir-autogen, elixir-format
 msgid "modified"
 msgstr "modificado"
@@ -769,22 +748,23 @@ msgstr "Referencia de la API REST con endpoints, formato de errores y ejemplos."
 msgid "Authentication & Authorization"
 msgstr "Autenticación y autorización"
 
-#: lib/micelio_web/controllers/browser/docs_html/show.html.heex:23
+#: lib/micelio_web/live/docs_live/show.ex:77
+#: lib/micelio_web/live/docs_live/show.ex:79
 #, elixir-autogen, elixir-format
 msgid "On this page"
 msgstr "En esta página"
 
-#: lib/micelio_web/controllers/browser/docs_html/show.html.heex:64
+#: lib/micelio_web/live/docs_live/show.ex:158
 #, elixir-autogen, elixir-format
 msgid "Send request"
 msgstr "Enviar solicitud"
 
-#: lib/micelio_web/controllers/browser/docs_html/show.html.heex:65
+#: lib/micelio_web/live/docs_live/show.ex:159
 #, elixir-autogen, elixir-format
 msgid "Sending..."
 msgstr "Enviando..."
 
-#: lib/micelio_web/controllers/browser/docs_html/show.html.heex:63
+#: lib/micelio_web/live/docs_live/show.ex:157
 #, elixir-autogen, elixir-format
 msgid "Sign in to try this"
 msgstr "Inicie sesión para probar esto"
@@ -1297,7 +1277,7 @@ msgstr "Nueva solicitud de prompt"
 msgid "Open"
 msgstr "Abierta"
 
-#: lib/micelio_web/live/session_live/show.ex:730
+#: lib/micelio_web/live/session_live/show.ex:856
 #, elixir-autogen, elixir-format
 msgid "Prompt request"
 msgstr "Solicitud de prompt"
@@ -1557,3 +1537,18 @@ msgstr "Aprenda a usar hif y Micelio, o cómo alojar su propia instancia."
 #, elixir-autogen, elixir-format
 msgid "When an error occurs, hif returns a JSON error with a code. Here's how to resolve common errors:"
 msgstr "Cuando ocurre un error, hif devuelve un error JSON con un código. A continuación se explica cómo resolver los errores comunes:"
+
+#: lib/micelio_web/live/docs_live/show.ex:62
+#, elixir-autogen, elixir-format
+msgid "Category pages"
+msgstr ""
+
+#: lib/micelio/docs.ex:43
+#, elixir-autogen, elixir-format
+msgid "Environment variables and configuration options for hosting Micelio."
+msgstr ""
+
+#: lib/micelio/docs.ex:41
+#, elixir-autogen, elixir-format
+msgid "Server Configuration"
+msgstr ""

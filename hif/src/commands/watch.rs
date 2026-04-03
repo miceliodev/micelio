@@ -196,7 +196,8 @@ fn sync_draft_once() -> Result<()> {
         .enable_all()
         .build()
         .map_err(|error| MicError::Other(format!("failed to create runtime: {}", error)))?;
-    runtime.block_on(session::sync_active_session_draft())
+    runtime.block_on(session::sync_active_session_draft())?;
+    Ok(())
 }
 
 fn spawn_watcher_process(workspace_root: &Path, session_id: &str) -> Result<()> {

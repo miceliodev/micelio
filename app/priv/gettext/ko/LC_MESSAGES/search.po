@@ -11,18 +11,18 @@ msgstr ""
 "Language: ko\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 
-#: lib/micelio_web/controllers/browser/search_html/index.html.heex:35
+#: lib/micelio_web/controllers/browser/search_html/index.html.heex:37
 #, elixir-autogen, elixir-format
 msgid "%{count} result for \"%{query}\""
 msgid_plural "%{count} results for \"%{query}\""
 msgstr[0] "\"%{query}\"에 대한 %{count}개의 결과"
 
-#: lib/micelio_web/controllers/browser/search_html/index.html.heex:58
+#: lib/micelio_web/controllers/browser/search_html/index.html.heex:67
 #, elixir-autogen, elixir-format
 msgid "No description provided."
 msgstr "설명이 제공되지 않았습니다."
 
-#: lib/micelio_web/controllers/browser/search_html/index.html.heex:41
+#: lib/micelio_web/controllers/browser/search_html/index.html.heex:50
 #, elixir-autogen, elixir-format
 msgid "No repositories matched your query."
 msgstr "검색어와 일치하는 저장소가 없습니다."
@@ -32,7 +32,7 @@ msgstr "검색어와 일치하는 저장소가 없습니다."
 msgid "Repository search"
 msgstr "저장소 검색"
 
-#: lib/micelio_web/controllers/browser/search_html/index.html.heex:29
+#: lib/micelio_web/controllers/browser/search_html/index.html.heex:30
 #, elixir-autogen, elixir-format
 msgid "Search"
 msgstr "검색"

@@ -4,6 +4,90 @@
 
 use assert_cmd::Command;
 use predicates::prelude::*;
+use prost::Message;
+use std::io::{Read, Write};
+use std::net::{TcpListener, TcpStream};
+use std::sync::{Arc, Mutex};
+use std::thread;
+
+mod pb {
+    include!(concat!(env!("OUT_DIR"), "/hif.v1.rs"));
+}
+
+#[derive(Debug, Clone)]
+struct CapturedRequest {
+    path: String,
+    body: Vec<u8>,
+}
+
+#[derive(Clone)]
+struct MockGrpcServer {
+    url: String,
+    requests: Arc<Mutex<Vec<CapturedRequest>>>,
+}
+
+struct MockGrpcResponse {
+    status: u16,
+    grpc_status: &'static str,
+    grpc_message: Option<String>,
+    payload: Vec<u8>,
+}
+
+impl MockGrpcResponse {
+    fn ok<M: Message>(message: M) -> Self {
+        Self {
+            status: 200,
+            grpc_status: "0",
+            grpc_message: None,
+            payload: grpc_frame(message.encode_to_vec()),
+        }
+    }
+}
+
+impl MockGrpcServer {
+    fn start<F>(handler: F) -> Self
+    where
+        F: Fn(&str, &[u8], &Arc<Mutex<Vec<CapturedRequest>>>) -> MockGrpcResponse
+            + Send
+            + Sync
+            + 'static,
+    {
+        let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+        let address = listener.local_addr().unwrap();
+        let requests = Arc::new(Mutex::new(Vec::new()));
+        let requests_for_thread = Arc::clone(&requests);
+        let handler = Arc::new(handler);
+
+        thread::spawn(move || {
+            for stream in listener.incoming() {
+                let Ok(mut stream) = stream else {
+                    continue;
+                };
+
+                let Ok((path, body)) = read_http_request(&mut stream) else {
+                    continue;
+                };
+
+                requests_for_thread.lock().unwrap().push(CapturedRequest {
+                    path: path.clone(),
+                    body: body.clone(),
+                });
+
+                let response = handler(&path, &body, &requests_for_thread);
+                let _ = write_http_response(&mut stream, response);
+            }
+        });
+
+        Self {
+            url: format!("http://{}", address),
+            requests,
+        }
+    }
+
+    fn requests(&self) -> Vec<CapturedRequest> {
+        self.requests.lock().unwrap().clone()
+    }
+}
 
 /// Get a command for the hif binary.
 #[allow(deprecated)]
@@ -46,6 +130,17 @@ fn subcommand_help_works() {
         .stdout(predicate::str::contains("login"))
         .stdout(predicate::str::contains("status"))
         .stdout(predicate::str::contains("logout"));
+}
+
+#[test]
+fn skill_prints_canonical_agent_guide() {
+    hif()
+        .arg("skill")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("# Micelio for AI Agents"))
+        .stdout(predicate::str::contains("hif session sync"))
+        .stdout(predicate::str::contains("hif skill"));
 }
 
 #[test]
@@ -263,6 +358,92 @@ fn status_with_cwd_flag() {
         .stderr(predicate::str::contains("No workspace"));
 }
 
+#[test]
+fn checkout_materializes_repository_files() {
+    let temp_dir = tempfile::tempdir().unwrap();
+    let server = MockGrpcServer::start(|path, body, _requests| match path {
+        "/hif.v1.VersioningService/GetRepositoryHead" => {
+            let request = decode_grpc::<pb::GetRepositoryHeadRequest>(body);
+            let repository = request.repository.unwrap();
+
+            MockGrpcResponse::ok(pb::RepositoryHeadResponse {
+                repository: Some(repository),
+                head: Some(pb::Position {
+                    hash: b"revision-hash-1".to_vec(),
+                    at: "2026-04-03T00:00:00Z".to_string(),
+                }),
+                head_etag: "etag-1".to_string(),
+            })
+        }
+        "/hif.v1.ContentService/GetTree" => MockGrpcResponse::ok(pb::TreeResponse {
+            repository: Some(pb::RepositoryRef {
+                account_handle: "micelio".to_string(),
+                repository_handle: "cli-seed".to_string(),
+            }),
+            tree_hash: b"revision-hash-1".to_vec(),
+            entries: vec![
+                pb::TreeEntry {
+                    path: "README.md".to_string(),
+                    hash: "hash-readme".to_string(),
+                },
+                pb::TreeEntry {
+                    path: "src/main.js".to_string(),
+                    hash: "hash-main".to_string(),
+                },
+            ],
+        }),
+        "/hif.v1.ContentService/GetPath" => {
+            let request = decode_grpc::<pb::GetPathRequest>(body);
+            let content = match request.path.as_str() {
+                "README.md" => b"# hello from checkout\n".to_vec(),
+                "src/main.js" => b"console.log('checkout');\n".to_vec(),
+                other => panic!("unexpected path request: {other}"),
+            };
+
+            MockGrpcResponse::ok(pb::PathResponse {
+                content_hash: content.clone(),
+                size: content.len() as u64,
+                mode: 0o100644,
+                content,
+            })
+        }
+        other => panic!("unexpected RPC path: {other}"),
+    });
+
+    let checkout_path = temp_dir.path().join("workspace");
+
+    hif()
+        .env("HIF_HOME", temp_dir.path())
+        .args([
+            "--server",
+            &server.url,
+            "--token",
+            "test-token",
+            "checkout",
+            "micelio/cli-seed",
+            "--path",
+            checkout_path.to_str().unwrap(),
+        ])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Checked out 'micelio/cli-seed'"));
+
+    assert_eq!(
+        std::fs::read_to_string(checkout_path.join("README.md")).unwrap(),
+        "# hello from checkout\n"
+    );
+    assert_eq!(
+        std::fs::read_to_string(checkout_path.join("src/main.js")).unwrap(),
+        "console.log('checkout');\n"
+    );
+
+    let manifest: serde_json::Value = serde_json::from_str(
+        &std::fs::read_to_string(checkout_path.join(".hif/manifest.json")).unwrap(),
+    )
+    .unwrap();
+    assert_eq!(manifest["entries"].as_array().unwrap().len(), 2);
+}
+
 // =============================================================================
 // Session Tests
 // =============================================================================
@@ -291,6 +472,123 @@ fn session_land_without_session() {
         .args(["session", "land"])
         .assert()
         .failure();
+}
+
+#[test]
+fn session_sync_uploads_active_draft_without_landing() {
+    let temp_dir = tempfile::tempdir().unwrap();
+    let workspace = temp_dir.path().join("workspace");
+    let hif_dir = workspace.join(".hif");
+    std::fs::create_dir_all(&hif_dir).unwrap();
+
+    std::fs::write(
+        hif_dir.join("manifest.json"),
+        serde_json::json!({
+            "version": 1,
+            "server": "http://127.0.0.1:0",
+            "account": "micelio",
+            "repository": "cli-seed",
+            "tree_hash": "",
+            "entries": []
+        })
+        .to_string(),
+    )
+    .unwrap();
+
+    std::fs::write(
+        hif_dir.join("session.bin"),
+        serde_json::json!({
+            "id": "session-sync-1",
+            "goal": "Upload draft",
+            "repository_org": "micelio",
+            "repository_handle": "cli-seed",
+            "started_at": "1234567890",
+            "conversation": [],
+            "decisions": [],
+            "files": [],
+            "sync_epoch": 0,
+            "bloom_data": null,
+            "bloom_hashes": 7
+        })
+        .to_string(),
+    )
+    .unwrap();
+
+    std::fs::write(workspace.join("draft.txt"), "draft uploaded\n").unwrap();
+
+    let server = MockGrpcServer::start(|path, body, _requests| match path {
+        "/hif.v1.VersioningService/ReplaceSessionChanges" => {
+            let request = decode_grpc::<pb::SessionChangesReplaceRequest>(body);
+            assert_eq!(request.session_id, "session-sync-1");
+            assert_eq!(request.operations.len(), 1);
+            assert_eq!(request.operations[0].path, "draft.txt");
+            assert_eq!(request.operations[0].content, b"draft uploaded\n");
+
+            MockGrpcResponse::ok(pb::SessionInfo {
+                session_id: request.session_id,
+                repository: Some(pb::RepositoryRef {
+                    account_handle: "micelio".to_string(),
+                    repository_handle: "cli-seed".to_string(),
+                }),
+                goal: "Upload draft".to_string(),
+                status: "active".to_string(),
+                base_position: Some(pb::Position {
+                    hash: b"base".to_vec(),
+                    at: "2026-04-03T00:00:00Z".to_string(),
+                }),
+                current_position: Some(pb::Position {
+                    hash: b"base".to_vec(),
+                    at: "2026-04-03T00:00:00Z".to_string(),
+                }),
+                conversation: Vec::new(),
+                decisions: Vec::new(),
+                changes: request.operations,
+                attribution: None,
+                created_at_ms: 1,
+                updated_at_ms: 2,
+                conflict: None,
+            })
+        }
+        other => panic!("unexpected RPC path: {other}"),
+    });
+
+    let manifest_path = hif_dir.join("manifest.json");
+    let manifest: serde_json::Value =
+        serde_json::from_str(&std::fs::read_to_string(&manifest_path).unwrap()).unwrap();
+    let mut updated_manifest = manifest;
+    updated_manifest["server"] = serde_json::Value::String(server.url.clone());
+    std::fs::write(
+        &manifest_path,
+        serde_json::to_string(&updated_manifest).unwrap(),
+    )
+    .unwrap();
+
+    hif()
+        .env("HIF_HOME", temp_dir.path())
+        .current_dir(&workspace)
+        .args([
+            "--server",
+            &server.url,
+            "--token",
+            "test-token",
+            "session",
+            "sync",
+        ])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains(
+            "Synced 1 file(s) to session draft session-sync-1.",
+        ));
+
+    let requests = server.requests();
+    assert_eq!(requests.len(), 1);
+    assert_eq!(
+        requests[0].path,
+        "/hif.v1.VersioningService/ReplaceSessionChanges"
+    );
+    let request = decode_grpc::<pb::SessionChangesReplaceRequest>(&requests[0].body);
+    assert_eq!(request.operations.len(), 1);
+    assert_eq!(request.operations[0].path, "draft.txt");
 }
 
 // =============================================================================
@@ -376,6 +674,7 @@ fn help_json_has_all_commands() {
     // Verify key commands are documented
     assert!(commands.contains_key("auth"));
     assert!(commands.contains_key("checkout"));
+    assert!(commands.contains_key("skill"));
     assert!(commands.contains_key("session"));
     assert!(commands.contains_key("status"));
     assert!(commands.contains_key("land"));
@@ -670,4 +969,88 @@ fn repository_list_requires_auth() {
         .assert()
         .failure()
         .stderr(predicate::str::contains("Not authenticated"));
+}
+
+fn decode_grpc<M: Message + Default>(body: &[u8]) -> M {
+    assert!(body.len() >= 5, "missing gRPC frame header");
+    let len = u32::from_be_bytes([body[1], body[2], body[3], body[4]]) as usize;
+    M::decode(&body[5..5 + len]).unwrap()
+}
+
+fn grpc_frame(payload: Vec<u8>) -> Vec<u8> {
+    let mut frame = Vec::with_capacity(5 + payload.len());
+    frame.push(0);
+    frame.extend_from_slice(&(payload.len() as u32).to_be_bytes());
+    frame.extend_from_slice(&payload);
+    frame
+}
+
+fn read_http_request(stream: &mut TcpStream) -> std::io::Result<(String, Vec<u8>)> {
+    let mut buffer = Vec::new();
+    let mut header_end = None;
+
+    while header_end.is_none() {
+        let mut chunk = [0_u8; 1024];
+        let bytes = stream.read(&mut chunk)?;
+        if bytes == 0 {
+            break;
+        }
+        buffer.extend_from_slice(&chunk[..bytes]);
+        header_end = buffer.windows(4).position(|window| window == b"\r\n\r\n");
+    }
+
+    let header_end = header_end.expect("request headers not received") + 4;
+    let headers = String::from_utf8_lossy(&buffer[..header_end]);
+    let mut lines = headers.lines();
+    let request_line = lines.next().unwrap();
+    let path = request_line.split_whitespace().nth(1).unwrap().to_string();
+    let content_length = headers
+        .lines()
+        .find_map(|line| {
+            let (name, value) = line.split_once(':')?;
+            if name.eq_ignore_ascii_case("content-length") {
+                Some(value.trim().parse::<usize>().unwrap())
+            } else {
+                None
+            }
+        })
+        .unwrap_or(0);
+
+    let mut body = buffer[header_end..].to_vec();
+    while body.len() < content_length {
+        let mut chunk = vec![0_u8; content_length - body.len()];
+        let bytes = stream.read(&mut chunk)?;
+        if bytes == 0 {
+            break;
+        }
+        body.extend_from_slice(&chunk[..bytes]);
+    }
+
+    Ok((path, body))
+}
+
+fn write_http_response(stream: &mut TcpStream, response: MockGrpcResponse) -> std::io::Result<()> {
+    let status_text = match response.status {
+        200 => "OK",
+        400 => "Bad Request",
+        500 => "Internal Server Error",
+        _ => "OK",
+    };
+
+    let mut headers = format!(
+        "HTTP/1.1 {} {}\r\ncontent-type: application/grpc+proto\r\ngrpc-status: {}\r\ncontent-length: {}\r\nconnection: close\r\n",
+        response.status,
+        status_text,
+        response.grpc_status,
+        response.payload.len()
+    );
+
+    if let Some(message) = response.grpc_message {
+        headers.push_str(&format!("grpc-message: {}\r\n", message));
+    }
+
+    headers.push_str("\r\n");
+    stream.write_all(headers.as_bytes())?;
+    stream.write_all(&response.payload)?;
+    stream.flush()
 }

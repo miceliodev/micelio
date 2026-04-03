@@ -4,7 +4,9 @@ defmodule MicelioWeb.Plugs.OGRateLimitPlugTest do
   alias MicelioWeb.Plugs.OGRateLimitPlug
 
   setup do
-    ip = "10.#{System.unique_integer([:positive]) |> rem(255)}.#{System.unique_integer([:positive]) |> rem(255)}.#{System.unique_integer([:positive]) |> rem(255)}"
+    ip =
+      "10.#{System.unique_integer([:positive]) |> rem(255)}.#{System.unique_integer([:positive]) |> rem(255)}.#{System.unique_integer([:positive]) |> rem(255)}"
+
     %{ip: ip}
   end
 

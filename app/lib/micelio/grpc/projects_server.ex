@@ -19,7 +19,7 @@ defmodule Micelio.GRPC.Repositories.V1.ProjectService.Server do
   alias Micelio.Repositories
   alias Micelio.Repositories.Repository
 
-  def list_repositories(%ListProjectsRequest{} = request, stream) do
+  def list_projects(%ListProjectsRequest{} = request, stream) do
     with :ok <- require_field(request.organization_handle, "organization_handle"),
          {:ok, organization} <- Accounts.get_organization_by_handle(request.organization_handle) do
       case fetch_optional_user(request.user_id, stream) do
@@ -51,7 +51,11 @@ defmodule Micelio.GRPC.Repositories.V1.ProjectService.Server do
     end
   end
 
-  def get_repository(%GetProjectRequest{} = request, stream) do
+  def list_repositories(%ListProjectsRequest{} = request, stream) do
+    list_projects(request, stream)
+  end
+
+  def get_project(%GetProjectRequest{} = request, stream) do
     with :ok <- require_field(request.organization_handle, "organization_handle"),
          :ok <- require_field(request.handle, "handle"),
          {:ok, organization} <- Accounts.get_organization_by_handle(request.organization_handle),
@@ -66,7 +70,11 @@ defmodule Micelio.GRPC.Repositories.V1.ProjectService.Server do
     end
   end
 
-  def create_repository(%CreateProjectRequest{} = request, stream) do
+  def get_repository(%GetProjectRequest{} = request, stream) do
+    get_project(request, stream)
+  end
+
+  def create_project(%CreateProjectRequest{} = request, stream) do
     with :ok <- require_field(request.organization_handle, "organization_handle"),
          :ok <- require_field(request.handle, "handle"),
          :ok <- require_field(request.name, "name"),
@@ -96,7 +104,11 @@ defmodule Micelio.GRPC.Repositories.V1.ProjectService.Server do
     end
   end
 
-  def update_repository(%UpdateProjectRequest{} = request, stream) do
+  def create_repository(%CreateProjectRequest{} = request, stream) do
+    create_project(request, stream)
+  end
+
+  def update_project(%UpdateProjectRequest{} = request, stream) do
     with :ok <- require_field(request.organization_handle, "organization_handle"),
          :ok <- require_field(request.handle, "handle"),
          {:ok, user} <- fetch_user(request.user_id, stream),
@@ -127,7 +139,11 @@ defmodule Micelio.GRPC.Repositories.V1.ProjectService.Server do
     end
   end
 
-  def delete_repository(%DeleteProjectRequest{} = request, stream) do
+  def update_repository(%UpdateProjectRequest{} = request, stream) do
+    update_project(request, stream)
+  end
+
+  def delete_project(%DeleteProjectRequest{} = request, stream) do
     with :ok <- require_field(request.organization_handle, "organization_handle"),
          :ok <- require_field(request.handle, "handle"),
          {:ok, user} <- fetch_user(request.user_id, stream),
@@ -143,6 +159,10 @@ defmodule Micelio.GRPC.Repositories.V1.ProjectService.Server do
       {:error, status} -> {:error, status}
       false -> {:error, forbidden_status("You do not have access to this organization.")}
     end
+  end
+
+  def delete_repository(%DeleteProjectRequest{} = request, stream) do
+    delete_project(request, stream)
   end
 
   defp repository_to_proto(repository, organization) do

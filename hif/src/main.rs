@@ -29,6 +29,7 @@
 //! # Make changes and land
 //! hif session land
 //! ```
+#![recursion_limit = "256"]
 
 mod cache;
 mod cdn;
@@ -416,6 +417,7 @@ fn command_name(command: &Commands) -> &'static str {
         Commands::Status => "status",
         Commands::Sync(_) => "sync",
         Commands::Activate(_) => "activate",
+        Commands::Skill => "skill",
         Commands::Session(_) => "session",
         Commands::Land(_) => "land",
         Commands::Debug(_) => "debug",
@@ -448,6 +450,7 @@ async fn run(command: Commands) -> Result<()> {
         Commands::Status => commands::status::run().await,
         Commands::Sync(cmd) => commands::sync::run(cmd).await,
         Commands::Activate(cmd) => commands::activate::run(cmd).await,
+        Commands::Skill => commands::skill::run().await,
 
         // Sessions
         Commands::Session(cmd) => commands::session::run(cmd).await,
